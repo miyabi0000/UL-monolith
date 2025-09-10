@@ -85,8 +85,9 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const callAPIWithRetry = async (
   endpoint: string,
-  data: any,
-  timeoutMs = API_CONFIG.timeout.standard
+  data: any = {},
+  timeoutMs = API_CONFIG.timeout.standard,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST'
 ): Promise<any> => {
   const { attempts, delay, backoff } = API_CONFIG.retry
   let lastError: Error
@@ -95,11 +96,16 @@ export const callAPIWithRetry = async (
     try {
       const url = `${API_CONFIG.baseUrl}${endpoint}`
       
-      const response = await fetchWithTimeout(url, {
-        method: 'POST',
+      const requestOptions: RequestInit = {
+        method,
         headers: getHeaders(),
-        body: JSON.stringify(data),
-      }, timeoutMs)
+      }
+
+      if (method !== 'GET' && method !== 'DELETE') {
+        requestOptions.body = JSON.stringify(data)
+      }
+
+      const response = await fetchWithTimeout(url, requestOptions, timeoutMs)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
