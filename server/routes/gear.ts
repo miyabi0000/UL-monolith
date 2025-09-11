@@ -17,9 +17,9 @@ router.post('/', handleCreateGear);
 router.put('/:id', handleUpdateGear);
 router.delete('/:id', handleDeleteGear);
 
-// Advanced operations
-router.patch('/:id', handlePatchGear);
+// Advanced operations  
 router.patch('/bulk', handleBulkOperations);
+router.patch('/:id', handlePatchGear);
 
 // History and versioning
 router.get('/:id/history', handleGetGearHistory);
