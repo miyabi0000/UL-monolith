@@ -1,4 +1,4 @@
-import { GearItemForm } from '../types';
+import { GearItemForm } from './types';
 
 /**
  * Client-side sanitization utilities

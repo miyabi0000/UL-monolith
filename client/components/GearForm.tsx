@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../../types'
-import { extractFromUrl, adaptToUserCategories } from '../../services/llmExtraction'
-import { sanitizeGearForm } from '../../utils/sanitize'
+import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../utils/types'
+import { extractFromUrl, adaptToUserCategories } from '../services/llmExtraction'
+import { sanitizeGearForm } from '../utils/helpers'
 
 interface GearFormProps {
   gear?: GearItemWithCalculated | null

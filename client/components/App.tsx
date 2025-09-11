@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { GearItemWithCalculated, ChartData, Category } from '../../types'
+import { GearItemWithCalculated, ChartData, Category } from '../utils/types'
 import GearTable from './GearTable'
 import GearChart from './GearChart'
 // 遅延インポート（コード分割）
