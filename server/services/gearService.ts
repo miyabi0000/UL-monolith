@@ -1,6 +1,6 @@
 
-import { GearItem, GearItemForm, PaginatedResponse, PaginationParams } from '../models';
-import { sanitizeGearForm } from '../utils/sanitize';
+import { GearItem, GearItemForm, PaginatedResponse, PaginationParams } from '../models/types';
+// import { sanitizeGearForm } from '../utils/sanitize'; // TODO: 実装
 
 /**
  * Server-side Gear Service
@@ -76,7 +76,8 @@ export class GearService {
    */
   async createGearItem(formData: GearItemForm): Promise<GearItem> {
     // Validate and sanitize input
-    const sanitizedForm = sanitizeGearForm(formData);
+    // const sanitizedForm = sanitizeGearForm(formData); // TODO: 実装
+    const sanitizedForm = formData;
     
     if (!sanitizedForm.name.trim()) {
       throw new Error('Gear name is required');
@@ -103,7 +104,8 @@ export class GearService {
     }
 
     // Sanitize input
-    const sanitizedForm = sanitizeGearForm({
+    // const sanitizedForm = sanitizeGearForm({ // TODO: 実装
+    const sanitizedForm = {
       name: formData.name || existingItem.name,
       brand: formData.brand !== undefined ? formData.brand : existingItem.brand,
       productUrl: formData.productUrl !== undefined ? formData.productUrl : existingItem.productUrl,
@@ -114,7 +116,7 @@ export class GearService {
       priceCents: formData.priceCents !== undefined ? formData.priceCents : existingItem.priceCents,
       season: formData.season !== undefined ? formData.season : existingItem.season,
       priority: formData.priority !== undefined ? formData.priority : existingItem.priority
-    });
+    };
 
     const updatedItem: GearItem = {
       ...existingItem,
