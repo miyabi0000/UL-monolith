@@ -1,4 +1,4 @@
-import { Category, CategoryForm } from '../models/types';
+import { Category, CategoryForm } from '../models/types.js';
 
 /**
  * Server-side Category Service

@@ -1,5 +1,5 @@
 
-import { GearItem, GearItemForm, PaginatedResponse, PaginationParams } from '../models/types';
+import { GearItem, GearItemForm, PaginatedResponse, PaginationParams } from '../models/types.js';
 // import { sanitizeGearForm } from '../utils/sanitize'; // TODO: 実装
 
 /**

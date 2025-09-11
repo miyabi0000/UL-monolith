@@ -1,6 +1,6 @@
-import { LLMExtractionResult } from '../models/types';
-import { openaiClient } from './openaiClient';
-import { PROMPTS, BRAND_PATTERNS, CATEGORY_MAP } from './llmPrompts';
+import { LLMExtractionResult } from '../models/types.js';
+import { openaiClient } from './openaiClient.js';
+import { PROMPTS, BRAND_PATTERNS, CATEGORY_MAP } from './llmPrompts.js';
 
 /**
  * Server-side LLM Service - 簡略化版
