@@ -55,7 +55,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
       ...category,
       percentage: Math.round((category.value / totalWeight) * 100),
       // アイテムも事前にソート
-      sortedItems: category.items
+      sortedItems: (category.items || [])
         .filter(item => item.totalWeight > 0)
         .sort((a, b) => b.totalWeight - a.totalWeight)
         .map(item => ({

@@ -38,11 +38,13 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
 
   // ソート・フィルタ処理
   const processedItems = useMemo(() => {
-    let filtered = items
+    // 安全性チェック: itemsが配列でない場合は空配列を使用
+    const safeItems = Array.isArray(items) ? items : [];
+    let filtered = safeItems;
     
     // カテゴリフィルタ
     if (filterCategory) {
-      filtered = items.filter(item => 
+      filtered = safeItems.filter(item => 
         item.category?.name.toLowerCase().includes(filterCategory.toLowerCase())
       )
     }

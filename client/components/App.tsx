@@ -16,38 +16,45 @@ const ChatPopup = React.lazy(() => import('./ChatPopup'));
 export default function App() {
   const { user, isAuthenticated, login, logout } = useAuth();
   const {
+    // UI状態
     showForm, setShowForm,
     editingGear, setEditingGear,
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
-    gearData, setGearData,
     showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
     successMessage, setSuccessMessage,
+    
+    // データ状態
+    gearItems,
     categories, setCategories,
-    gearItems
+    loading,
+    error,
+    
+    // API操作関数
+    handleCreateGear,
+    handleUpdateGear,
+    handleDeleteGear,
+    refreshGearItems
   } = useAppState();
 
   const chartData = calculateChartData(gearItems);
   const totals = calculateTotals(gearItems);
 
-  const handleSaveGear = (gearItem: any) => {
-    if (editingGear) {
-      const updatedData = gearData.map((item: any) =>
-        item.id === editingGear.id ? { ...item, ...gearItem } : item
-      );
-      setGearData(updatedData);
-      setSuccessMessage('ギアが正常に更新されました');
-    } else {
-      const newGear = { ...gearItem, id: `gear-${Date.now()}` };
-      setGearData([...gearData, newGear]);
-      setSuccessMessage('新しいギアが正常に追加されました');
+  const handleSaveGear = async (gearItem: any) => {
+    try {
+      if (editingGear) {
+        await handleUpdateGear(editingGear.id, gearItem);
+      } else {
+        await handleCreateGear(gearItem);
+      }
+      
+      setShowForm(false);
+      setEditingGear(null);
+    } catch (err) {
+      console.error('Error saving gear:', err);
     }
-    
-    setShowForm(false);
-    setEditingGear(null);
-    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   const handleEditGear = (gear: any) => {
@@ -55,16 +62,13 @@ export default function App() {
     setShowForm(true);
   };
 
-  const handleDeleteGear = (gearId: string) => {
-    setGearData(gearData.filter((item: any) => item.id !== gearId));
-    setSuccessMessage('ギアが正常に削除されました');
-    setTimeout(() => setSuccessMessage(''), 3000);
-  };
-
-  const handleBulkDelete = (selectedIds: string[]) => {
-    setGearData(gearData.filter((item: any) => !selectedIds.includes(item.id)));
-    setSuccessMessage(`${selectedIds.length}個のギアが削除されました`);
-    setTimeout(() => setSuccessMessage(''), 3000);
+  const handleBulkDelete = async (selectedIds: string[]) => {
+    try {
+      // 複数のアイテムを並列で削除
+      await Promise.all(selectedIds.map(id => handleDeleteGear(id)));
+    } catch (err) {
+      console.error('Error bulk deleting gear:', err);
+    }
   };
 
   const handleLoginSuccess = (userData: any) => {
@@ -91,26 +95,38 @@ export default function App() {
 
         <AppSummary totals={totals} successMessage={successMessage} />
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-blue-600 text-sm">読み込み中...</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <GearChart data={chartData} />
-          </div>
+            <GearChart data={chartData} totalWeight={totals.weight} />
+                  </div>
           <div className="space-y-6">
             {/* Additional charts or widgets can go here */}
           </div>
         </div>
 
-        <GearTable
-          gearItems={gearItems}
-          categories={categories}
-          onEdit={handleEditGear}
-          onDelete={handleDeleteGear}
-          onBulkDelete={handleBulkDelete}
-          showCheckboxes={showCheckboxes}
-        />
+          <GearTable 
+            items={gearItems} 
+            onEdit={handleEditGear}
+            onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
+            onSave={handleSaveGear}
+          onUpdateItem={() => {}} // TODO: implement if needed
+            showCheckboxes={showCheckboxes}
+          />
 
         <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-          {showForm && (
+        {showForm && (
             <GearForm
               isOpen={showForm}
               onClose={() => {
@@ -118,21 +134,21 @@ export default function App() {
                 setEditingGear(null);
               }}
               onSave={handleSaveGear}
-              categories={categories}
+            categories={categories}
               editingGear={editingGear}
             />
           )}
 
-          {showCategoryManager && (
+        {showCategoryManager && (
             <CategoryManager
               isOpen={showCategoryManager}
               onClose={() => setShowCategoryManager(false)}
               categories={categories}
               onCategoriesUpdate={setCategories}
             />
-          )}
+        )}
 
-          {showLogin && (
+        {showLogin && (
             <Login
               isOpen={showLogin}
               onClose={() => setShowLogin(false)}
@@ -141,16 +157,16 @@ export default function App() {
           )}
 
           {showChat && (
-            <ChatPopup
-              isOpen={showChat}
-              onClose={() => setShowChat(false)}
+          <ChatPopup
+            isOpen={showChat}
+            onClose={() => setShowChat(false)}
               gearItems={gearItems}
               categories={categories}
               onGearExtracted={handleSaveGear}
             />
           )}
         </Suspense>
-      </div>
+          </div>
     </div>
   );
 }
