@@ -1,6 +1,7 @@
 # UL Gear List Manager
 
-UL（ウルトラライト）志向のミニマリスト向けギア管理システム
+UL（ウルトラライト）志向のミニマリスト向けギア管理システム  
+Ultralight gear management system with LLM integration - Production ready API layer
 
 ## 🚀 クイックスタート
 
@@ -16,11 +17,15 @@ npm install
 
 ### 開発サーバー起動
 ```bash
-# 開発サーバーを起動
+# クライアント開発サーバーを起動
 npm run dev
+
+# サーバー開発環境を起動
+npm run server:dev
 ```
 
-ブラウザで http://localhost:5173/ にアクセスしてください。
+クライアント: http://localhost:3000/  
+サーバー: http://localhost:8000/
 
 ### ビルド
 ```bash
@@ -35,28 +40,18 @@ npm run preview
 
 ```
 ULモノリス/
-├── src/
-│   ├── pages/
-│   │   └── App.tsx              # メインアプリケーション
-│   ├── components/
-│   │   ├── GearTable.tsx        # ギアテーブル（ソート・フィルタ）
-│   │   ├── GearChart.tsx        # 階層型円グラフ
-│   │   └── GearForm.tsx         # ギア追加・編集フォーム
-│   ├── types/
-│   │   └── index.ts             # TypeScript型定義
-│   ├── data/
-│   │   └── seedGear.json        # サンプルデータ
-│   ├── styles.css               # TailwindCSS
-│   └── main.tsx                 # エントリーポイント
-├── docs/
-│   ├── requirements.md          # 要件定義書
-│   ├── architecture.md          # アーキテクチャ設計書
-│   └── simplified-schema.sql    # データベーススキーマ
-├── package.json
-├── vite.config.ts
-├── tailwind.config.js
-├── postcss.config.js
-└── README.md
+├── client/                     # フロントエンド
+│   ├── components/             # Reactコンポーネント
+│   ├── services/               # API通信サービス
+│   ├── utils/                  # ユーティリティ
+│   └── main.tsx                # エントリーポイント
+├── server/                     # バックエンド
+│   ├── routes/                 # APIルート
+│   ├── services/               # ビジネスロジック
+│   ├── models/                 # データモデル
+│   └── app.ts                  # サーバーエントリーポイント
+├── docs/                       # ドキュメント
+└── data/                       # サンプルデータ
 ```
 
 ## 🎯 主要機能
@@ -76,9 +71,14 @@ ULモノリス/
 - **中央表示**: 総重量 + 選択カテゴリ名
 
 ### ➕ ギア追加・編集
-- **URL自動抽出**: 商品URLからのモック抽出機能
+- **URL自動抽出**: 商品URLからのLLM抽出機能
 - **フォームバリデーション**: 必須項目チェック
 - **モーダル表示**: オーバーレイでの編集画面
+
+### 🤖 LLM統合機能
+- **商品URL解析**: WebスクレイピングによるGear情報自動抽出
+- **OpenAI GPT-4統合**: 構造化データ生成
+- **プロンプトエンジニアリング**: 高精度な情報抽出
 
 ## 🛠️ 技術スタック
 
@@ -87,6 +87,12 @@ ULモノリス/
 - **Vite** - 高速ビルドツール
 - **TailwindCSS** - ユーティリティファーストCSS
 - **Recharts** - データ可視化ライブラリ
+
+### バックエンド
+- **Node.js** + Express + TypeScript
+- **OpenAI GPT-4** - LLM統合
+- **Axios** - HTTP通信
+- **tsx** - TypeScript実行環境
 
 ### 開発ツール
 - **TypeScript** - 型安全な開発
@@ -132,8 +138,11 @@ interface GearItem {
 ## 🔧 開発コマンド
 
 ```bash
-# 開発サーバー起動
+# クライアント開発サーバー起動
 npm run dev
+
+# サーバー開発環境起動
+npm run server:dev
 
 # 本番ビルド
 npm run build
@@ -156,9 +165,10 @@ npm update
 ```bash
 # 既存プロセスを停止
 pkill -f "vite"
+pkill -f "tsx"
 
 # または別ポートで起動
-npm run dev -- --port 3000
+npm run dev -- --port 3001
 ```
 
 #### 2. 依存関係エラー
@@ -176,12 +186,13 @@ npx tsc --noEmit
 
 ## 📝 今後の開発予定
 
-### Phase 1: バックエンド統合
-- [ ] FastAPI サーバー構築
-- [ ] PostgreSQL データベース接続
-- [ ] LLM 自動抽出機能実装
+### Phase 1: バックエンド統合 ✅
+- [x] Express サーバー構築
+- [x] LLM 自動抽出機能実装
+- [x] OpenAI GPT-4統合
 
 ### Phase 2: 機能拡張
+- [ ] PostgreSQL データベース接続
 - [ ] ユーザー認証システム
 - [ ] ギアリスト共有機能
 - [ ] 印刷・エクスポート機能
@@ -207,14 +218,3 @@ MIT License
 
 **開発者**: UL Gear List Team  
 **最終更新**: 2024年8月
-
-
-
-
-
-
-
-
-
-
-
