@@ -1,24 +1,29 @@
-import { LLMExtractionResult } from '../types';
+import { LLMExtractionResult } from '../utils/types';
+import { callAPIWithRetry, API_CONFIG } from './api.client';
 
 /**
  * Client-side LLM Extraction Service
- * This will eventually call server-side APIs
  */
 
 /**
- * Extract gear information from URL (client-side wrapper)
+ * Extract gear information from URL using server-side API
  */
-export async function extractFromUrl(url: string): Promise<LLMExtractionResult> {
-  // TODO: Replace with actual API call to server
-  // For now, return mock data
-  return {
-    name: 'Extracted Product',
-    brand: 'Brand Name',
-    weightGrams: 100,
-    priceCents: 5000,
-    suggestedCategory: 'Other',
-    confidence: 0.8
-  };
+export async function extractFromUrl(url: string, userCategories?: string[]): Promise<LLMExtractionResult> {
+  try {
+    const response = await callAPIWithRetry('/llm/extract-url', {
+      url,
+      userCategories
+    }, API_CONFIG.timeout.heavy);
+    
+    return response.data;
+  } catch (error) {
+    console.error('Failed to extract from URL:', error);
+    // Fallback to mock data if API fails
+    return {
+      name: 'Unknown Product',
+      confidence: 0.1
+    };
+  }
 }
 
 /**
