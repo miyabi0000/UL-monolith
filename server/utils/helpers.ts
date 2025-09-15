@@ -15,9 +15,16 @@ export const sanitizeGearData = (data: any) => {
 };
 
 export const calculateGearFields = (item: any) => {
+  const requiredQuantity = item.requiredQuantity || 1;
+  const ownedQuantity = item.ownedQuantity || 0;
+  const weightGrams = item.weightGrams || 0;
+  const priceCents = item.priceCents || 0;
+
   return {
     ...item,
-    shortage: item.requiredQuantity - item.ownedQuantity,
-    totalWeight: (item.weightGrams || 0) * item.requiredQuantity
+    shortage: requiredQuantity - ownedQuantity,
+    totalWeight: weightGrams * requiredQuantity,
+    totalPrice: priceCents * requiredQuantity,
+    missingQuantity: Math.max(0, requiredQuantity - ownedQuantity)
   };
 };
