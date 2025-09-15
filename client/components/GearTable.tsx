@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
-import { GearItemWithCalculated } from '../../types'
+import { GearItemWithCalculated } from '../utils/types'
 
 // Price formatting helper
 const formatPrice = (priceCents?: number) => {

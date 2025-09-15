@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { ChartData } from '../../types'
+import { ChartData } from '../utils/types'
 
 // 色のバリエーションを生成するヘルパー関数
 const generateItemColor = (baseColor: string, index: number, total: number) => {

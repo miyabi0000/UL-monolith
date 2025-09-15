@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, analyzeGearList, checkAPIHealth, APIError } from '../../services/llmService'
+import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, analyzeGearList, checkAPIHealth, APIError } from '../services/llmService'
 
 interface ChatMessage {
   id: string
