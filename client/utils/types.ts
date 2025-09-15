@@ -47,10 +47,12 @@ export interface GearItem {
   updatedAt: string;
 }
 
-// 計算フィールド（フロントエンドで算出）
+// 計算フィールド（バックエンドで算出）
 export interface GearItemWithCalculated extends GearItem {
   shortage: number; // requiredQuantity - ownedQuantity
   totalWeight: number; // weightGrams * requiredQuantity
+  totalPrice: number; // priceCents * requiredQuantity
+  missingQuantity: number; // Math.max(0, requiredQuantity - ownedQuantity)
   category?: Category; // join結果
 }
 
