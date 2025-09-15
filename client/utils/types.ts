@@ -98,12 +98,29 @@ export interface GearItemForm {
 }
 
 export interface LLMExtractionResult {
+  // 基本情報 - GearItemFormと完全対応
   name?: string;
   brand?: string;
+  productUrl?: string;
+  
+  // 数量・重量
+  requiredQuantity?: number;
+  ownedQuantity?: number;
   weightGrams?: number;
+  
+  // 価格・メタ
   priceCents?: number;
+  season?: string;
+  priority?: number;
+  
+  // LLM固有
   suggestedCategory?: string;
+  categoryId?: string; // マッチしたカテゴリID
   confidence: number;
+  
+  // 抽出メタデータ
+  extractedFields: string[]; // 実際に抽出できたフィールド名
+  source: 'web_scraping' | 'llm_prompt' | 'enhanced' | 'fallback';
 }
 
 

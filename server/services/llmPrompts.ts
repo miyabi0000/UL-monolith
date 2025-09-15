@@ -1,55 +1,37 @@
 /**
- * LLM Prompts - 最小限に簡略化
+ * LLM Prompts - 最小限構成
  */
-
 export const PROMPTS = {
-  EXTRACT_GEAR: `ギア情報をJSONで抽出:
+  EXTRACT_GEAR: `以下のJSON形式でギア情報を抽出してください：
 {
   "name": "製品名",
-  "brand": "ブランド名 or null",
-  "weightGrams": 重量グラム or null,
-  "priceCents": 価格セント or null,
+  "brand": "ブランド名またはnull",
+  "weightGrams": "重量(グラム)またはnull",
+  "priceCents": "価格(セント)またはnull", 
   "suggestedCategory": "Shelter|Clothing|Cooking|Safety|Other",
-  "confidence": 0.0-1.0
+  "confidence": "0.0から1.0の信頼度"
 }`,
 
-  EXTRACT_URL: `URL情報をJSONで推測:
+  EXTRACT_URL: `以下のJSON形式でWeb情報を抽出してください：
 {
   "name": "製品名",
   "brand": "ブランド名",
-  "weightGrams": 重量推測,
-  "priceCents": 価格推測,
+  "weightGrams": "重量推測値",
+  "priceCents": "価格推測値",
   "suggestedCategory": "カテゴリ",
-  "confidence": 0.0-1.0
+  "confidence": "信頼度(0.0-1.0)"
 }`,
 
-  ENHANCE_PROMPT: `既存データを追加情報で更新:`,
-
-  EXTRACT_CATEGORY: `カテゴリをJSONで抽出:
+  EXTRACT_CATEGORY: `以下のJSON形式でカテゴリを抽出してください：
 {
-  "name": "日本語名",
-  "englishName": "英語名"
+  "name": "日本語カテゴリ名",
+  "englishName": "英語カテゴリ名"
 }
 分類: Shelter,Clothing,Cooking,Safety,Other`,
 
-  ANALYZE_LIST: `ギアリスト分析をJSONで:
+  ANALYZE_LIST: `以下のJSON形式でギアリスト分析を行ってください：
 {
-  "summary": "1-2文の分析",
-  "tips": ["改善提案1", "改善提案2"]
+  "summary": "1-2文の分析概要",
+  "tips": ["改善提案1", "改善提案2", "改善提案3"]
 }`
-};
-
-export const BRAND_PATTERNS = [
-  'Arc\'teryx', 'Patagonia', 'Montbell', 'REI', 'Osprey', 
-  'Deuter', 'MSR', 'Snow Peak', 'Coleman', 'NEMO', 'Big Agnes'
-];
-
-export const CATEGORY_MAP: Record<string, { name: string; englishName: string }> = {
-  'テント': { name: 'シェルター', englishName: 'Shelter' },
-  'シェルター': { name: 'シェルター', englishName: 'Shelter' },
-  'ジャケット': { name: 'ウェア', englishName: 'Clothing' },
-  'ウェア': { name: 'ウェア', englishName: 'Clothing' },
-  '調理': { name: '調理器具', englishName: 'Cooking' },
-  'バーナー': { name: '調理器具', englishName: 'Cooking' },
-  '安全': { name: '安全装備', englishName: 'Safety' }
 };
