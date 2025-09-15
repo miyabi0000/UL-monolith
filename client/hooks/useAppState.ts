@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
-import seedData from '../data/seedGear.json';
+import { GearApiService } from '../services/gearApiService';
 
 export const useAppState = () => {
   const [showForm, setShowForm] = useState(false);
@@ -8,10 +8,15 @@ export const useAppState = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [gearData, setGearData] = useState(seedData);
   const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  
+  // APIから取得したギアアイテム（計算済み）
+  const [gearItems, setGearItems] = useState<GearItemWithCalculated[]>([]);
+  
   const [categories, setCategories] = useState<Category[]>([
     { id: '1', name: 'Clothing', path: ['Clothing'], color: '#FF6B6B', createdAt: new Date().toISOString() },
     { id: '2', name: 'Sleep', path: ['Sleep'], color: '#4ECDC4', createdAt: new Date().toISOString() },
@@ -20,47 +25,101 @@ export const useAppState = () => {
     { id: '5', name: 'Hygiene', path: ['Hygiene'], color: '#A66DFF', createdAt: new Date().toISOString() },
   ]);
 
-  const gearItems: GearItemWithCalculated[] = useMemo(() => {
-    return (gearData as any[]).map((item, index) => {
-      const required = Math.max(1, Number(item.required_quantity) || 1);
-      const owned = Math.max(0, Number(item.owned_quantity) || 0);
-      const weight = Number(item.weight_grams) || 0;
-      const price = Number(item.price_cents) || 0;
-
-      const category = categories.find(cat => cat.name === item.category) || categories[0];
+  // ギアアイテムをAPIから取得
+  const fetchGearItems = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const items = await GearApiService.getAllGear();
       
-      return {
-        id: item.id || `gear-${index}`,
-        userId: 'user1',
-        name: item.name || 'Unknown Item',
-        brand: item.brand || 'Unknown',
-        categoryId: category.id,
-        category,
-        ownedQuantity: owned,
-        requiredQuantity: required,
-        priority: Math.max(1, Math.min(5, Number(item.priority) || 3)),
-        weightGrams: weight,
-        priceCents: price,
-        totalWeight: weight * required,
-        totalPrice: price * required,
-        missingQuantity: Math.max(0, required - owned),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-    });
-  }, [gearData, categories]);
+      // カテゴリ情報を付加
+      const enrichedItems = items.map(item => ({
+        ...item,
+        category: categories.find(cat => cat.id === item.categoryId) || categories[0]
+      }));
+      
+      setGearItems(enrichedItems);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch gear items';
+      setError(errorMessage);
+      console.error('Error fetching gear items:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 初回ロード
+  useEffect(() => {
+    fetchGearItems();
+  }, []);
+
+  // API操作関数
+  const handleCreateGear = async (gearData: any) => {
+    try {
+      setLoading(true);
+      await GearApiService.createGear(gearData);
+      await fetchGearItems(); // データを再取得
+      setSuccessMessage('ギアが正常に追加されました');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create gear item';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateGear = async (id: string, gearData: any) => {
+    try {
+      setLoading(true);
+      await GearApiService.updateGear(id, gearData);
+      await fetchGearItems(); // データを再取得
+      setSuccessMessage('ギアが正常に更新されました');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update gear item';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteGear = async (id: string) => {
+    try {
+      setLoading(true);
+      await GearApiService.deleteGear(id);
+      await fetchGearItems(); // データを再取得
+      setSuccessMessage('ギアが正常に削除されました');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete gear item';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
+    // UI状態
     showForm, setShowForm,
     editingGear, setEditingGear,
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
-    gearData, setGearData,
     showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
     successMessage, setSuccessMessage,
+    
+    // データ状態
+    gearItems,
     categories, setCategories,
-    gearItems
+    loading,
+    error,
+    
+    // API操作関数
+    handleCreateGear,
+    handleUpdateGear,
+    handleDeleteGear,
+    refreshGearItems: fetchGearItems
   };
 };

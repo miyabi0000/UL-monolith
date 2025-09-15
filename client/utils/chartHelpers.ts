@@ -15,20 +15,20 @@ export const calculateChartData = (gearItems: GearItemWithCalculated[]): ChartDa
   const categoryTotals = gearItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Other';
     if (!acc[categoryName]) {
-      acc[categoryName] = { weight: 0, price: 0, count: 0 };
+      acc[categoryName] = { weight: 0, price: 0, count: 0, items: [] };
     }
     acc[categoryName].weight += item.totalWeight;
     acc[categoryName].price += item.totalPrice;
     acc[categoryName].count += item.requiredQuantity;
+    acc[categoryName].items.push(item);
     return acc;
-  }, {} as Record<string, { weight: number; price: number; count: number }>);
+  }, {} as Record<string, { weight: number; price: number; count: number; items: GearItemWithCalculated[] }>);
 
   return Object.entries(categoryTotals).map(([name, data]) => ({
     name,
-    weight: data.weight,
-    price: data.price / 100,
-    count: data.count,
-    color: getCategoryColor(name)
+    value: data.weight, // ChartDataのvalueプロパティを追加
+    color: getCategoryColor(name),
+    items: data.items || [] // itemsプロパティを追加（空配列をフォールバック）
   }));
 };
 
