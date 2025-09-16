@@ -112,7 +112,9 @@ export class LLMService {
         weightGrams: result.weightGrams || urlData.weightGrams,
         priceCents: result.priceCents || urlData.priceCents,
         suggestedCategory: result.suggestedCategory || urlData.suggestedCategory,
-        confidence: Math.max(this.clampConfidence(result.confidence), urlData.confidence || 0.5)
+        confidence: Math.max(this.clampConfidence(result.confidence), urlData.confidence || 0.5),
+        extractedFields: urlData.extractedFields || [],
+        source: 'enhanced'
       };
     } catch (error) {
       console.error('Enhancement failed:', error);

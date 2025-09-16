@@ -17,7 +17,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   userName
 }) => {
   return (
-    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div 
+      className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg transition-all duration-300 hover:shadow-lg"
+      style={{
+        backgroundColor: 'rgba(247, 252, 252, 0.8)', // COLORS.background with transparency
+        backdropFilter: 'blur(10px)',
+        border: `1px solid ${COLORS.primary.light}`
+      }}
+    >
       <div className="flex items-center gap-4">
         <h1 
           className="text-2xl font-bold"
@@ -26,24 +33,22 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           UL GEAR
         </h1>
       </div>
-      
-      {/* Chat Button - Fixed Right */}
-      <div className="fixed top-4 right-4 z-40">
+
+      <div className="flex flex-wrap items-center gap-3">
+        {/* AI Button */}
         <button
           onClick={onToggleChat}
-          className="w-12 h-12 rounded-full text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
+          className="w-8 h-8 rounded-full text-xs font-bold transition-all duration-200 hover:scale-110"
           style={{
             backgroundColor: COLORS.primary.dark,
             color: COLORS.white,
-            border: `2px solid ${COLORS.primary.medium}`
+            border: `1px solid ${COLORS.primary.medium}`
           }}
         >
           AI
         </button>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-
+        
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
             <span 
