@@ -120,20 +120,27 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
 
         switch (promptType) {
           case 'url':
-            // 既存のURL処理
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            assistantResponse = `商品情報を抽出中です...\n\n✓ 商品名: Ultralight Hiking Jacket\n✓ ブランド: Montbell\n✓ 重量: 245g\n✓ 価格: ¥15,800\n✓ カテゴリ: Clothing\n\nこの情報でギアリストに追加しますか？`
-            shouldExtractGear = true
-            mockGearData = {
-              name: 'Ultralight Hiking Jacket',
-              brand: 'Montbell',
-              productUrl: currentInput,
-              requiredQuantity: 1,
-              ownedQuantity: 0,
-              weightGrams: 245,
-              priceCents: 1580000,
-              season: '',
-              priority: 3
+            try {
+              const extractedData = await extractFromUrl(currentInput)
+              assistantResponse = `URL から商品情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n✓ 信頼度: ${Math.round(extractedData.confidence * 100)}%\n\nこの情報でギアリストに追加しますか？`
+              shouldExtractGear = true
+              mockGearData = {
+                name: extractedData.name,
+                brand: extractedData.brand,
+                productUrl: currentInput,
+                requiredQuantity: 1,
+                ownedQuantity: 0,
+                weightGrams: extractedData.weightGrams,
+                priceCents: extractedData.priceCents,
+                season: '',
+                priority: 3
+              }
+            } catch (error) {
+              if (error instanceof APIError) {
+                assistantResponse = `URL解析エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。`
+              } else {
+                assistantResponse = `URL解析エラー: ${error instanceof Error ? error.message : 'URL からの情報抽出に失敗しました'}\n\n有効なURL を入力してください。`
+              }
             }
             break
 

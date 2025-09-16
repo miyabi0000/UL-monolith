@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
+import { llmService } from '../../services/llmService.js';
 
-export const handleExtractCategory = (req: Request, res: Response) => {
+export const handleExtractCategory = async (req: Request, res: Response) => {
   try {
     const { prompt } = req.body;
     
@@ -11,31 +12,14 @@ export const handleExtractCategory = (req: Request, res: Response) => {
       });
     }
 
-    // Mock category extraction
-    const categoryKeywords = {
-      'Shelter': ['tent', 'tarp', 'shelter', 'テント', 'タープ'],
-      'Clothing': ['jacket', 'pants', 'shirt', 'ジャケット', 'パンツ'],
-      'Cooking': ['stove', 'pot', 'cookware', 'バーナー', 'クッカー'],
-      'Safety': ['helmet', 'rope', 'harness', 'ヘルメット', 'ロープ']
-    };
+    console.log(`[LLM] Extracting category from: ${prompt.substring(0, 50)}...`);
 
-    let detectedCategory = null;
-    for (const [category, keywords] of Object.entries(categoryKeywords)) {
-      if (keywords.some(keyword => 
-        prompt.toLowerCase().includes(keyword.toLowerCase())
-      )) {
-        detectedCategory = {
-          name: category,
-          englishName: category
-        };
-        break;
-      }
-    }
+    const categoryResult = await llmService.extractCategory(prompt);
 
-    if (detectedCategory) {
+    if (categoryResult) {
       res.json({
         success: true,
-        data: detectedCategory,
+        data: categoryResult,
         message: 'Category extracted successfully'
       });
     } else {
@@ -46,6 +30,7 @@ export const handleExtractCategory = (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.error('[LLM] Category extraction error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to extract category',
@@ -54,7 +39,7 @@ export const handleExtractCategory = (req: Request, res: Response) => {
   }
 };
 
-export const handleAnalyzeGearList = (req: Request, res: Response) => {
+export const handleAnalyzeGearList = async (req: Request, res: Response) => {
   try {
     const { gearItems } = req.body;
     
@@ -65,32 +50,17 @@ export const handleAnalyzeGearList = (req: Request, res: Response) => {
       });
     }
 
-    // Mock analysis
-    const totalWeight = gearItems.reduce((sum, item) => 
-      sum + ((item.weightGrams || 0) * (item.requiredQuantity || 1)), 0
-    );
-    const totalPrice = gearItems.reduce((sum, item) => 
-      sum + ((item.priceCents || 0) * (item.requiredQuantity || 1)), 0
-    );
-    const missingItems = gearItems.filter(item => 
-      (item.requiredQuantity || 1) > (item.ownedQuantity || 0)
-    ).length;
+    console.log(`[LLM] Analyzing gear list with ${gearItems.length} items`);
 
-    const analysis = {
-      summary: `Total: ${totalWeight}g, ¥${Math.round(totalPrice / 100)}, Missing: ${missingItems} items`,
-      tips: [
-        totalWeight > 10000 ? 'Consider weight reduction - over 10kg' : 'Good weight balance',
-        missingItems > 0 ? `You need ${missingItems} more items` : 'All required items owned',
-        'Consider upgrading to lighter alternatives'
-      ].filter(tip => tip.length > 0)
-    };
+    const analysisResult = await llmService.analyzeGearList(gearItems);
 
     res.json({
       success: true,
-      data: analysis,
+      data: analysisResult,
       message: 'Gear list analysis completed'
     });
   } catch (error) {
+    console.error('[LLM] Gear list analysis error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to analyze gear list',

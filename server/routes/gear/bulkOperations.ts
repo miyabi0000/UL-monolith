@@ -120,6 +120,52 @@ export const handleBulkOperations = (req: Request, res: Response) => {
   }
 };
 
+export const handleBulkDelete = (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'IDs array is required and must not be empty'
+      });
+    }
+
+    const bulkOperationId = Date.now().toString();
+    const itemsToDelete = gearItems.filter(item => ids.includes(item.id));
+    
+    // Add history entries for each deleted item
+    itemsToDelete.forEach(item => {
+      addHistoryEntry({
+        gearId: item.id,
+        action: 'bulk_delete',
+        changes: [{ field: 'deleted', oldValue: false, newValue: true }],
+        userId: 'user1', // TODO: Get from authentication
+        metadata: { bulkOperationId, reason: 'RESTful bulk delete operation' }
+      });
+    });
+
+    // Remove items from store
+    setGearItems(gearItems.filter(item => !ids.includes(item.id)));
+    
+    res.json({
+      success: true,
+      message: `${itemsToDelete.length} gear items deleted successfully`,
+      data: {
+        deletedCount: itemsToDelete.length,
+        deletedIds: itemsToDelete.map(item => item.id),
+        bulkOperationId
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to bulk delete gear items',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
 export const handleLegacyBulkDelete = (req: Request, res: Response) => {
   try {
     const { ids } = req.body;

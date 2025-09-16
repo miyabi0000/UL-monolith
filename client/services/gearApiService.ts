@@ -121,9 +121,131 @@ export class GearApiService {
     }
   }
 
-  // TODO: 段階的に以下の操作を実装予定
-  // - createGear (Create操作)
-  // - updateGear (Update操作) 
-  // - deleteGear (Delete操作)
-  // - bulkOperations (バルク操作)
+  /**
+   * ギア作成（Create操作）
+   * POST /api/v1/gear
+   */
+  static async createGear(gearData: any): Promise<GearItemWithCalculated> {
+    try {
+      const response = await fetch(`${this.baseUrl}/gear`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gearData),
+        signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse<GearItemWithCalculated> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create gear item');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to create gear item:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ギア更新（Update操作）
+   * PUT /api/v1/gear/:id
+   */
+  static async updateGear(id: string, gearData: any): Promise<GearItemWithCalculated> {
+    try {
+      const response = await fetch(`${this.baseUrl}/gear/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gearData),
+        signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse<GearItemWithCalculated> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update gear item');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to update gear item:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ギア削除（Delete操作）
+   * DELETE /api/v1/gear/:id
+   */
+  static async deleteGear(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/gear/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete gear item');
+      }
+    } catch (error) {
+      console.error('Failed to delete gear item:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 一括削除（Bulk Delete操作）
+   * DELETE /api/v1/gear (with body containing ids)
+   */
+  static async bulkDeleteGear(ids: string[]): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/gear`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
+        signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to bulk delete gear items');
+      }
+    } catch (error) {
+      console.error('Failed to bulk delete gear items:', error);
+      throw error;
+    }
+  }
+
+  // Alias method for backward compatibility
+  static async getAllGear(): Promise<GearItemWithCalculated[]> {
+    return this.getGearList();
+  }
 }

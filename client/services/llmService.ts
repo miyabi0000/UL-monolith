@@ -1,4 +1,5 @@
 import { LLMExtractionResult } from '../types';
+import { callAPIWithRetry, API_ENDPOINTS, API_CONFIG } from './api.client';
 
 /**
  * Client-side LLM Service
@@ -16,31 +17,50 @@ export class APIError extends Error {
  * Extract gear information from prompt
  */
 export async function extractFromPrompt(prompt: string): Promise<LLMExtractionResult> {
-  // TODO: Replace with actual API call to server
-  // For now, return mock data
-  return {
-    name: 'Extracted Gear',
-    brand: 'Brand Name',
-    weightGrams: 150,
-    priceCents: 8000,
-    suggestedCategory: 'Other',
-    confidence: 0.7
-  };
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/extract-prompt',
+      { prompt },
+      API_CONFIG.timeout.standard
+    );
+    
+    if (!response.success) {
+      throw new APIError(response.message || 'Failed to extract gear from prompt');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Extract from prompt failed:', error);
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError('Failed to extract gear information from prompt');
+  }
 }
 
 /**
  * Extract gear information from URL
  */
 export async function extractFromUrl(url: string): Promise<LLMExtractionResult> {
-  // TODO: Replace with actual API call to server
-  return {
-    name: 'Product from URL',
-    brand: 'URL Brand',
-    weightGrams: 200,
-    priceCents: 12000,
-    suggestedCategory: 'Other',
-    confidence: 0.8
-  };
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/extract-url',
+      { url },
+      API_CONFIG.timeout.heavy
+    );
+    
+    if (!response.success) {
+      throw new APIError(response.message || 'Failed to extract gear from URL');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Extract from URL failed:', error);
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError('Failed to extract gear information from URL');
+  }
 }
 
 /**
@@ -50,43 +70,92 @@ export async function enhanceUrlDataWithPrompt(
   urlData: LLMExtractionResult,
   prompt: string
 ): Promise<LLMExtractionResult> {
-  // TODO: Replace with actual API call to server
-  return {
-    ...urlData,
-    confidence: Math.max(urlData.confidence, 0.85)
-  };
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/enhance-prompt',
+      { urlData, prompt },
+      API_CONFIG.timeout.standard
+    );
+    
+    if (!response.success) {
+      throw new APIError(response.message || 'Failed to enhance URL data with prompt');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Enhance with prompt failed:', error);
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError('Failed to enhance URL data with prompt');
+  }
 }
 
 /**
  * Extract category from prompt
  */
 export async function extractCategoryFromPrompt(prompt: string): Promise<{ name: string; englishName: string } | null> {
-  // TODO: Replace with actual API call to server
-  return {
-    name: 'カテゴリ名',
-    englishName: 'Category Name'
-  };
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/extract-category',
+      { prompt },
+      API_CONFIG.timeout.standard
+    );
+    
+    if (!response.success) {
+      throw new APIError(response.message || 'Failed to extract category from prompt');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Extract category failed:', error);
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError('Failed to extract category from prompt');
+  }
 }
 
 /**
  * Analyze gear list
  */
 export async function analyzeGearList(gearItems: any[]): Promise<{ summary: string; tips: string[] }> {
-  // TODO: Replace with actual API call to server
-  return {
-    summary: 'Your gear list analysis summary',
-    tips: [
-      'Consider lighter alternatives',
-      'You might be missing some essentials',
-      'Great selection overall!'
-    ]
-  };
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/analyze-gear-list',
+      { gearItems },
+      API_CONFIG.timeout.heavy
+    );
+    
+    if (!response.success) {
+      throw new APIError(response.message || 'Failed to analyze gear list');
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error('Analyze gear list failed:', error);
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError('Failed to analyze gear list');
+  }
 }
 
 /**
  * Check API health
  */
 export async function checkAPIHealth(): Promise<boolean> {
-  // TODO: Replace with actual API call to server
-  return true;
+  try {
+    const response = await callAPIWithRetry(
+      '/llm/health',
+      {},
+      API_CONFIG.timeout.light,
+      'GET'
+    );
+    
+    return response.success && response.data?.isHealthy;
+  } catch (error) {
+    console.error('Health check failed:', error);
+    return false;
+  }
 }
