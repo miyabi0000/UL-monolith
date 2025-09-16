@@ -40,14 +40,14 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
 
   return (
     <div 
-      className="rounded-lg border p-4 space-y-4"
+      className="rounded border p-2 space-y-2"
       style={{ 
         backgroundColor: COLORS.white,
         borderColor: COLORS.primary.medium
       }}
     >
       <h3 
-        className="text-sm font-semibold mb-3 border-b pb-2"
+        className="text-xs font-semibold mb-2 border-b pb-1"
         style={{ 
           color: COLORS.text.primary,
           borderBottomColor: COLORS.primary.light
@@ -55,7 +55,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
       >
 STATS
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {stats.map((stat, index) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

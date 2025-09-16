@@ -18,11 +18,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <div 
-      className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg transition-all duration-300 hover:shadow-lg"
+      className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded transition-all duration-300 hover:shadow-md"
       style={{
-        backgroundColor: 'rgba(247, 252, 252, 0.8)', // COLORS.background with transparency
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${COLORS.primary.light}`
+        backgroundColor: 'rgba(247, 252, 252, 0.85)', // Optimized transparency for readability
+        backdropFilter: 'blur(8px) saturate(1.1)', // Standard glass effect
+        border: `1px solid ${COLORS.primary.light}`,
+        WebkitBackdropFilter: 'blur(8px) saturate(1.1)' // Safari support
       }}
     >
       <div className="flex items-center gap-4">

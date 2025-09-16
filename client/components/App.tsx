@@ -79,7 +79,7 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen p-4"
+      className="min-h-screen p-2"
       style={{ backgroundColor: COLORS.background }}
     >
       <div className="max-w-7xl mx-auto">
@@ -94,7 +94,7 @@ export default function App() {
         {/* Success/Error Messages */}
         {successMessage && (
           <div 
-            className="mb-4 p-3 rounded-md border"
+            className="mb-2 p-2 rounded border"
             style={{
               backgroundColor: COLORS.primary.light,
               borderColor: COLORS.primary.medium
@@ -111,7 +111,7 @@ export default function App() {
 
         {error && (
           <div 
-            className="mb-4 p-3 rounded-md border"
+            className="mb-2 p-2 rounded border"
             style={{
               backgroundColor: COLORS.primary.light,
               borderColor: COLORS.accent
@@ -128,7 +128,7 @@ export default function App() {
 
         {loading && (
           <div 
-            className="mb-4 p-3 rounded-md border"
+            className="mb-2 p-2 rounded border"
             style={{
               backgroundColor: COLORS.primary.light,
               borderColor: COLORS.primary.medium
@@ -144,7 +144,7 @@ export default function App() {
         )}
 
         {/* Main Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-3">
           <div className="lg:col-span-3">
             <GearChart 
               data={chartData} 
@@ -152,7 +152,7 @@ export default function App() {
               onShowGearManager={() => setShowForm(true)}
             />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2">
             <CompactSummary totals={totals} />
           </div>
         </div>

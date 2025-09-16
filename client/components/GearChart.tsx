@@ -136,7 +136,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
   }, [showAllItems, allItemsData, selectedData])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* 二重円グラフ */}
       <div className="relative h-[500px] flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
@@ -251,7 +251,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                         {/* システム別重量割合 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div 
-                      className="rounded-lg p-4"
+                      className="rounded p-3"
                       style={{ backgroundColor: COLORS.primary.light }}
                     >
                       <div className="flex justify-between items-center mb-3">
@@ -323,7 +323,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
         {/* 選択システム内のアイテム重量割合 または 全アイテム表示 */}
         {(selectedCategory || showAllItems) && (
           <div 
-            className="rounded-lg p-4"
+            className="rounded p-3"
             style={{ backgroundColor: COLORS.primary.light }}
           >
             <h4 
@@ -354,7 +354,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200"
+                    className="flex items-center justify-between p-2 rounded cursor-pointer transition-all duration-200"
                     style={{
                       backgroundColor: selectedItem === item.id 
                         ? COLORS.white 
@@ -434,7 +434,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
       {/* 選択アイテムの詳細 */}
       {selectedItemData && (
         <div 
-          className="rounded-lg p-4 border"
+          className="rounded p-3 border"
           style={{
             backgroundColor: COLORS.primary.light,
             borderColor: COLORS.primary.medium

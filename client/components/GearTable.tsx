@@ -163,7 +163,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
     <div>
       {/* フィルタ・ソート */}
       <div 
-        className="p-3 border-b flex gap-3 items-center"
+        className="p-2 border-b flex gap-2 items-center"
         style={{ borderBottomColor: COLORS.primary.medium }}
       >
         <div className="flex-1">
@@ -172,7 +172,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
             placeholder="Filter by category..."
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full px-2 py-1 rounded text-xs"
+            className="w-full px-2 py-0.5 rounded text-xs"
             style={getInputStyle()}
           />
         </div>
@@ -186,7 +186,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
             </span>
             <button
               onClick={handleDelete}
-              className="px-2 py-1 rounded text-xs font-medium transition-colors"
+              className="px-2 py-0.5 rounded text-xs font-medium transition-colors"
               style={getButtonStyle('danger')}
             >
               Delete Selected
@@ -220,7 +220,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 </th>
               )}
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -230,7 +230,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -240,13 +240,13 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Category {sortField === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider"
                 style={{ color: COLORS.text.secondary }}
               >
                 Qty (Own/Need)
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -256,7 +256,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -266,7 +266,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Missing {sortField === 'shortage' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -276,7 +276,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Priority {sortField === 'priority' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
                 style={{
                   color: COLORS.text.secondary,
                   '&:hover': { backgroundColor: COLORS.primary.light }
@@ -286,7 +286,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Price {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider"
                 style={{ color: COLORS.text.secondary }}
               >
                 Actions
@@ -307,7 +307,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 style={getTableRowStyle(showCheckboxes && selectedIds.includes(item.id))}
               >
                 {showCheckboxes && (
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td className="px-2 py-1 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedIds.includes(item.id)}
@@ -320,7 +320,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     />
                   </td>
                 )}
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
                     {item.productUrl && (
                       <img
@@ -362,7 +362,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1 whitespace-nowrap">
                   <span 
                     className="inline-flex px-2 py-1 text-xs font-medium rounded-full"
                     style={getCategoryBadgeStyle(item.category?.color)}
@@ -371,7 +371,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                   </span>
                 </td>
                 <td 
-                  className="px-3 py-2 whitespace-nowrap text-xs"
+                  className="px-2 py-1 whitespace-nowrap text-xs"
                   style={{ color: COLORS.text.primary }}
                 >
                   <div className="flex items-center justify-center space-x-1">
@@ -397,7 +397,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                   </div>
                 </td>
                 <td 
-                  className="px-3 py-2 whitespace-nowrap text-xs"
+                  className="px-2 py-1 whitespace-nowrap text-xs"
                   style={{ color: COLORS.text.primary }}
                 >
                   {item.weightGrams ? `${item.totalWeight}g` : '-'}
@@ -410,7 +410,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     </div>
                   )}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1 whitespace-nowrap">
                   {item.shortage > 0 ? (
                     <span 
                       className="font-medium"
@@ -426,7 +426,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1 whitespace-nowrap">
                   <div className="flex items-center space-x-2">
                     <div 
                       className="w-2 h-2 rounded-full"
@@ -446,12 +446,12 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                   </div>
                 </td>
                 <td 
-                  className="px-3 py-2 whitespace-nowrap text-xs"
+                  className="px-2 py-1 whitespace-nowrap text-xs"
                   style={{ color: COLORS.text.primary }}
                 >
                   {formatPrice(item.priceCents)}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap text-xs font-medium relative">
+                <td className="px-2 py-1 whitespace-nowrap text-xs font-medium relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
