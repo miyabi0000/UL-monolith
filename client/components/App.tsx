@@ -2,8 +2,9 @@ import React, { Suspense } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
+import { COLORS } from '../utils/colors';
 import AppHeader from './AppHeader';
-import AppSummary from './AppSummary';
+import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
 import GearChart from './GearChart';
 
@@ -77,7 +78,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div 
+      className="min-h-screen p-4"
+      style={{ backgroundColor: COLORS.background }}
+    >
       <div className="max-w-7xl mx-auto">
         <AppHeader
           onShowForm={() => setShowForm(true)}
@@ -93,26 +97,65 @@ export default function App() {
           userName={user?.name}
         />
 
-        <AppSummary totals={totals} successMessage={successMessage} />
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div 
+            className="mb-4 p-3 rounded-md border"
+            style={{
+              backgroundColor: COLORS.primary.light,
+              borderColor: COLORS.primary.medium
+            }}
+          >
+            <p 
+              className="text-sm"
+              style={{ color: COLORS.primary.dark }}
+            >
+              ✅ {successMessage}
+            </p>
+          </div>
+        )}
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div 
+            className="mb-4 p-3 rounded-md border"
+            style={{
+              backgroundColor: COLORS.primary.light,
+              borderColor: COLORS.accent
+            }}
+          >
+            <p 
+              className="text-sm"
+              style={{ color: COLORS.accent }}
+            >
+              ❌ {error}
+            </p>
           </div>
         )}
 
         {loading && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-blue-600 text-sm">読み込み中...</p>
+          <div 
+            className="mb-4 p-3 rounded-md border"
+            style={{
+              backgroundColor: COLORS.primary.light,
+              borderColor: COLORS.primary.medium
+            }}
+          >
+            <p 
+              className="text-sm"
+              style={{ color: COLORS.primary.dark }}
+            >
+              🔄 読み込み中...
+            </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
+        {/* Main Dashboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+          <div className="lg:col-span-3">
             <GearChart data={chartData} totalWeight={totals.weight} />
-                  </div>
-          <div className="space-y-6">
-            {/* Additional charts or widgets can go here */}
+          </div>
+          <div className="space-y-4">
+            <CompactSummary totals={totals} />
           </div>
         </div>
 

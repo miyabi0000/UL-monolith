@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData } from '../utils/types'
+import { COLORS, chartColors } from '../utils/colors'
+import { getCardStyle, getButtonStyle } from '../utils/colorHelpers'
 
 // 色のバリエーションを生成するヘルパー関数
 const generateItemColor = (baseColor: string, index: number, total: number) => {
@@ -203,20 +205,40 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
             style={{ maxWidth: '140px' }}
             onClick={handleCenterClick}
           >
-            <div className="text-2xl font-bold text-gray-900 mb-1">{totalWeight}g</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">
+            <div 
+              className="text-2xl font-bold mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
+              {totalWeight}g
+            </div>
+            <div 
+              className="text-xs uppercase tracking-wide"
+              style={{ color: COLORS.text.secondary }}
+            >
               {showAllItems ? 'All Items' : 'Total'}
             </div>
             {selectedCategory && !showAllItems && (
               <div className="mt-2">
-                <span className="text-xs font-medium text-gray-700 px-2 py-1 bg-gray-100 rounded truncate block">
+                <span 
+                  className="text-xs font-medium px-2 py-1 rounded truncate block"
+                  style={{
+                    color: COLORS.text.primary,
+                    backgroundColor: COLORS.primary.light
+                  }}
+                >
                   {selectedCategory}
                 </span>
               </div>
             )}
             {selectedItemData && !showAllItems && (
               <div className="mt-1">
-                <span className="text-xs text-gray-600 truncate block" style={{ maxWidth: '120px' }}>
+                <span 
+                  className="text-xs truncate block" 
+                  style={{ 
+                    maxWidth: '120px',
+                    color: COLORS.text.secondary
+                  }}
+                >
                   {selectedItemData.name}
                 </span>
               </div>
@@ -227,17 +249,29 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
 
                         {/* システム別重量割合 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3">System Weight Distribution</h4>
+                    <div 
+                      className="rounded-lg p-4"
+                      style={{ backgroundColor: COLORS.primary.light }}
+                    >
+                      <h4 
+                        className="font-semibold mb-3"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        System Weight Distribution
+                      </h4>
                       <div className="space-y-2">
                         {sortedData.map((category) => (
                           <div
                             key={category.name}
-                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
-                              selectedCategory === category.name
-                                ? 'bg-blue-100 border border-blue-300'
-                                : 'hover:bg-gray-100'
-                            }`}
+                            className="flex items-center justify-between p-2 rounded cursor-pointer transition-colors"
+                            style={{
+                              backgroundColor: selectedCategory === category.name 
+                                ? COLORS.primary.light 
+                                : 'transparent',
+                              border: selectedCategory === category.name 
+                                ? `1px solid ${COLORS.primary.medium}` 
+                                : '1px solid transparent'
+                            }}
                             onClick={() => setSelectedCategory(
                               selectedCategory === category.name ? null : category.name
                             )}
@@ -247,11 +281,26 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
                                 className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: category.color }}
                               />
-                              <span className="text-sm font-medium">{category.name}</span>
+                              <span 
+                                className="text-sm font-medium"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {category.name}
+                              </span>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-semibold">{category.value}g</div>
-                              <div className="text-xs text-gray-500">{category.percentage}%</div>
+                              <div 
+                                className="text-sm font-semibold"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {category.value}g
+                              </div>
+                              <div 
+                                className="text-xs"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {category.percentage}%
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -260,8 +309,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
 
         {/* 選択システム内のアイテム重量割合 または 全アイテム表示 */}
         {(selectedCategory || showAllItems) && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+          <div 
+            className="rounded-lg p-4"
+            style={{ backgroundColor: COLORS.primary.light }}
+          >
+            <h4 
+              className="font-semibold mb-3 flex items-center"
+              style={{ color: COLORS.text.primary }}
+            >
               {showAllItems ? (
                 <>All Items</>
               ) : (
@@ -286,11 +341,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                      selectedItem === item.id
-                        ? 'bg-gray-200 border-2 border-gray-400 shadow-md'
-                        : 'hover:bg-gray-100 border border-gray-200'
-                    }`}
+                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200"
+                    style={{
+                      backgroundColor: selectedItem === item.id 
+                        ? COLORS.white 
+                        : 'transparent',
+                      border: selectedItem === item.id 
+                        ? `2px solid ${COLORS.primary.dark}` 
+                        : `1px solid ${COLORS.primary.medium}`,
+                      boxShadow: selectedItem === item.id ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                    }}
                     onClick={() => setSelectedItem(
                       selectedItem === item.id ? null : item.id
                     )}
@@ -301,7 +361,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
                         style={{ backgroundColor: itemColor }}
                       />
                       {showAllItems && (
-                        <div className="text-xs text-gray-500 min-w-[60px]">
+                        <div 
+                          className="text-xs min-w-[60px]"
+                          style={{ color: COLORS.text.secondary }}
+                        >
                           {(item as any).categoryName}
                         </div>
                       )}
@@ -316,17 +379,36 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate" style={{ maxWidth: '150px' }}>
+                        <div 
+                          className="text-sm font-medium truncate" 
+                          style={{ 
+                            maxWidth: '150px',
+                            color: COLORS.text.primary
+                          }}
+                        >
                           {item.name}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div 
+                          className="text-xs"
+                          style={{ color: COLORS.text.secondary }}
+                        >
                           {item.weightGrams}g × {item.requiredQuantity}
                         </div>
                       </div>
                     </div>
                     <div className="text-right ml-2">
-                      <div className="text-sm font-bold text-gray-900">{item.totalWeight}g</div>
-                      <div className="text-xs text-gray-600">{percentage}</div>
+                      <div 
+                        className="text-sm font-bold"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {item.totalWeight}g
+                      </div>
+                      <div 
+                        className="text-xs"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        {percentage}
+                      </div>
                     </div>
                   </div>
                 );
@@ -338,27 +420,44 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
 
       {/* 選択アイテムの詳細 */}
       {selectedItemData && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-semibold text-gray-900 mb-3">{selectedItemData.name}</h4>
+        <div 
+          className="rounded-lg p-4 border"
+          style={{
+            backgroundColor: COLORS.primary.light,
+            borderColor: COLORS.primary.medium
+          }}
+        >
+          <h4 
+            className="font-semibold mb-3"
+            style={{ color: COLORS.text.primary }}
+          >
+            {selectedItemData.name}
+          </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Total Weight:</span>
+              <span style={{ color: COLORS.text.secondary }}>Total Weight:</span>
               <div className="font-semibold text-lg">{selectedItemData.totalWeight}g</div>
             </div>
             <div>
-              <span className="text-gray-600">System %:</span>
-              <div className="font-semibold text-lg text-blue-600">
+              <span style={{ color: COLORS.text.secondary }}>System %:</span>
+              <div 
+                className="font-semibold text-lg"
+                style={{ color: COLORS.primary.dark }}
+              >
                 {Math.round((selectedItemData.totalWeight / (selectedData?.value || 1)) * 100)}%
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Total %:</span>
-              <div className="font-semibold text-lg text-green-600">
+              <span style={{ color: COLORS.text.secondary }}>Total %:</span>
+              <div 
+                className="font-semibold text-lg"
+                style={{ color: COLORS.success }}
+              >
                 {Math.round((selectedItemData.totalWeight / totalWeight) * 100)}%
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Unit Weight:</span>
+              <span style={{ color: COLORS.text.secondary }}>Unit Weight:</span>
               <div className="font-semibold">{selectedItemData.weightGrams}g</div>
             </div>
           </div>

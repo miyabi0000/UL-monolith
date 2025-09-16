@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../utils/types'
 import { extractFromUrl, adaptToUserCategories } from '../services/llmExtraction'
 import { sanitizeGearForm } from '../utils/helpers'
+import { COLORS } from '../utils/colors'
+import { getInputStyle, getButtonStyle, getMessageStyle } from '../utils/colorHelpers'
 
 interface GearFormProps {
   gear?: GearItemWithCalculated | null
@@ -107,9 +109,18 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div 
+        className="rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ backgroundColor: COLORS.white }}
+      >
+        <div 
+          className="p-6 border-b"
+          style={{ borderBottomColor: COLORS.primary.medium }}
+        >
+          <h2 
+            className="text-xl font-semibold"
+            style={{ color: COLORS.text.primary }}
+          >
             {gear ? 'Edit Gear' : 'Add New Gear'}
           </h2>
         </div>
@@ -117,7 +128,10 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* URL入力 & 抽出 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
               Product URL
             </label>
             <div className="flex gap-2">
@@ -125,14 +139,25 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 type="url"
                 value={form.productUrl}
                 onChange={(e) => handleChange('productUrl', e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
                 placeholder="https://example.com/product"
               />
               <button
                 type="button"
                 onClick={handleExtractFromUrl}
                 disabled={!form.productUrl || isExtracting}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-md transition-colors disabled:cursor-not-allowed"
+                style={{
+                  ...getButtonStyle('accent'),
+                  opacity: (!form.productUrl || isExtracting) ? 0.6 : 1
+                }}
               >
                 {isExtracting ? 'Extracting...' : 'Extract'}
               </button>
@@ -140,8 +165,14 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
             
             {/* 抽出結果 */}
             {extractionResult && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                <div className="text-sm text-green-800">
+              <div 
+                className="mt-2 p-3 rounded-md border"
+                style={getMessageStyle('success')}
+              >
+                <div 
+                  className="text-sm"
+                  style={{ color: COLORS.primary.dark }}
+                >
                   ✓ Extracted with {Math.round(extractionResult.confidence * 100)}% confidence
                 </div>
               </div>
@@ -151,7 +182,10 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
           {/* 基本情報 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Product Name *
               </label>
               <input
@@ -159,19 +193,36 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 required
                 value={form.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Brand
               </label>
               <input
                 type="text"
                 value={form.brand}
                 onChange={(e) => handleChange('brand', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
           </div>
@@ -179,7 +230,10 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
           {/* 数量 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Required Quantity
               </label>
               <input
@@ -187,12 +241,22 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 min="0"
                 value={form.requiredQuantity}
                 onChange={(e) => handleChange('requiredQuantity', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Owned Quantity
               </label>
               <input
@@ -200,7 +264,14 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 min="0"
                 value={form.ownedQuantity}
                 onChange={(e) => handleChange('ownedQuantity', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
           </div>
@@ -208,7 +279,10 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
           {/* 重量・価格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Weight (grams)
               </label>
               <input
@@ -216,12 +290,22 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 min="0"
                 value={form.weightGrams || ''}
                 onChange={(e) => handleChange('weightGrams', e.target.value ? parseInt(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Price (¥)
               </label>
               <input
@@ -229,14 +313,24 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                 min="0"
                 value={form.priceCents ? Math.round(form.priceCents / 100) : ''}
                 onChange={(e) => handleChange('priceCents', e.target.value ? parseInt(e.target.value) * 100 : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               />
             </div>
           </div>
 
           {/* カテゴリ選択 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
               Category
             </label>
             <select
@@ -256,13 +350,23 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
           {/* 季節・優先度 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Season
               </label>
               <select
                 value={form.season}
                 onChange={(e) => handleChange('season', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               >
                 <option value="">All seasons</option>
                 <option value="spring">Spring</option>
@@ -273,13 +377,23 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label 
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
                 Priority (1=High, 5=Low)
               </label>
               <select
                 value={form.priority}
                 onChange={(e) => handleChange('priority', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                style={{
+                  ...getInputStyle(),
+                  '&:focus': {
+                    borderColor: COLORS.primary.dark,
+                    outline: `2px solid ${COLORS.primary.light}`
+                  }
+                }}
               >
                 <option value={1}>1 - Critical</option>
                 <option value={2}>2 - High</option>
@@ -291,17 +405,22 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
           </div>
 
           {/* ボタン */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div 
+            className="flex justify-end space-x-3 pt-4 border-t"
+            style={{ borderTopColor: COLORS.primary.medium }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              className="px-4 py-2 rounded-md transition-colors"
+              style={getButtonStyle('secondary')}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 rounded-md transition-colors"
+              style={getButtonStyle('primary')}
             >
               {gear ? 'Update' : 'Add'} Gear
             </button>
