@@ -84,15 +84,9 @@ export default function App() {
     >
       <div className="max-w-7xl mx-auto">
         <AppHeader
-          onShowForm={() => setShowForm(true)}
-          onShowCategoryManager={() => setShowCategoryManager(true)}
           onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
           onToggleChat={() => setShowChat(!showChat)}
-          onToggleDropdown={() => setShowGearDropdown(!showGearDropdown)}
-          onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
-          showGearDropdown={showGearDropdown}
-          showCheckboxes={showCheckboxes}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
         />
@@ -107,10 +101,10 @@ export default function App() {
             }}
           >
             <p 
-              className="text-sm"
+              className="text-sm font-medium"
               style={{ color: COLORS.primary.dark }}
             >
-              ✅ {successMessage}
+              ✓ {successMessage}
             </p>
           </div>
         )}
@@ -124,10 +118,10 @@ export default function App() {
             }}
           >
             <p 
-              className="text-sm"
+              className="text-sm font-medium"
               style={{ color: COLORS.accent }}
             >
-              ❌ {error}
+              ! {error}
             </p>
           </div>
         )}
@@ -141,10 +135,10 @@ export default function App() {
             }}
           >
             <p 
-              className="text-sm"
+              className="text-sm font-medium"
               style={{ color: COLORS.primary.dark }}
             >
-              🔄 読み込み中...
+              ... LOADING
             </p>
           </div>
         )}
@@ -152,7 +146,11 @@ export default function App() {
         {/* Main Dashboard */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
           <div className="lg:col-span-3">
-            <GearChart data={chartData} totalWeight={totals.weight} />
+            <GearChart 
+              data={chartData} 
+              totalWeight={totals.weight} 
+              onShowGearManager={() => setShowForm(true)}
+            />
           </div>
           <div className="space-y-4">
             <CompactSummary totals={totals} />

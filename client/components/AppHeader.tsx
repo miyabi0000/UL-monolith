@@ -2,29 +2,17 @@ import React from 'react';
 import { COLORS, inlineStyles } from '../utils/colors';
 
 interface AppHeaderProps {
-  onShowForm: () => void;
-  onShowCategoryManager: () => void;
   onShowLogin: () => void;
   onLogout: () => void;
   onToggleChat: () => void;
-  onToggleDropdown: () => void;
-  onToggleCheckboxes: () => void;
-  showGearDropdown: boolean;
-  showCheckboxes: boolean;
   isAuthenticated: boolean;
   userName?: string;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
-  onShowForm,
-  onShowCategoryManager,
   onShowLogin,
   onLogout,
   onToggleChat,
-  onToggleDropdown,
-  onToggleCheckboxes,
-  showGearDropdown,
-  showCheckboxes,
   isAuthenticated,
   userName
 }) => {
@@ -32,110 +20,53 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div className="flex items-center gap-4">
         <h1 
-          className="text-3xl font-bold"
+          className="text-2xl font-bold"
           style={{ color: COLORS.primary.dark }}
         >
-          UL Gear Manager
+          UL GEAR
         </h1>
+      </div>
+      
+      {/* Chat Button - Fixed Right */}
+      <div className="fixed top-4 right-4 z-40">
         <button
           onClick={onToggleChat}
-          className="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
+          className="w-12 h-12 rounded-full text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
           style={{
-            ...inlineStyles.secondaryButton,
-            ':hover': { backgroundColor: COLORS.primary.light }
+            backgroundColor: COLORS.primary.dark,
+            color: COLORS.white,
+            border: `2px solid ${COLORS.primary.medium}`
           }}
         >
-          💬 Chat
+          AI
         </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <button
-            onClick={onToggleDropdown}
-            className="px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
-            style={inlineStyles.primaryButton}
-          >
-            ⚙️ ギア管理
-            <span className={`transform transition-transform ${showGearDropdown ? 'rotate-180' : ''}`}>▼</span>
-          </button>
-          
-          {showGearDropdown && (
-            <div 
-              className="absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50"
-              style={{
-                backgroundColor: COLORS.white,
-                border: `1px solid ${COLORS.primary.medium}`
-              }}
-            >
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    onShowForm();
-                    onToggleDropdown();
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm transition-colors hover:opacity-80"
-                  style={{
-                    color: COLORS.text.primary,
-                    ':hover': { backgroundColor: COLORS.primary.light }
-                  }}
-                >
-                  + ギアを追加
-                </button>
-                <button
-                  onClick={() => {
-                    onShowCategoryManager();
-                    onToggleDropdown();
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm transition-colors hover:opacity-80"
-                  style={{
-                    color: COLORS.text.primary,
-                    ':hover': { backgroundColor: COLORS.primary.light }
-                  }}
-                >
-                  📁 カテゴリ管理
-                </button>
-                <button
-                  onClick={() => {
-                    onToggleCheckboxes();
-                    onToggleDropdown();
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm transition-colors hover:opacity-80"
-                  style={{
-                    color: COLORS.text.primary,
-                    ':hover': { backgroundColor: COLORS.primary.light }
-                  }}
-                >
-                  {showCheckboxes ? '☑️ 選択モード終了' : '☐ 選択モード'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
             <span 
-              className="text-sm"
+              className="text-xs font-medium"
               style={{ color: COLORS.text.secondary }}
             >
-              こんにちは、{userName}さん
+              {userName}
             </span>
             <button
               onClick={onLogout}
-              className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              className="px-3 py-1 rounded text-xs font-medium transition-colors"
               style={inlineStyles.secondaryButton}
             >
-              ログアウト
+              LOGOUT
             </button>
           </div>
         ) : (
           <button
             onClick={onShowLogin}
-            className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            className="px-3 py-1 rounded text-xs font-medium transition-colors"
             style={inlineStyles.secondaryButton}
           >
-            ログイン
+            LOGIN
           </button>
         )}
       </div>

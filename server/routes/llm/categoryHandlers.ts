@@ -38,33 +38,3 @@ export const handleExtractCategory = async (req: Request, res: Response) => {
     });
   }
 };
-
-export const handleAnalyzeGearList = async (req: Request, res: Response) => {
-  try {
-    const { gearItems } = req.body;
-    
-    if (!Array.isArray(gearItems)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Gear items array is required'
-      });
-    }
-
-    console.log(`[LLM] Analyzing gear list with ${gearItems.length} items`);
-
-    const analysisResult = await llmService.analyzeGearList(gearItems);
-
-    res.json({
-      success: true,
-      data: analysisResult,
-      message: 'Gear list analysis completed'
-    });
-  } catch (error) {
-    console.error('[LLM] Gear list analysis error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to analyze gear list',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-};

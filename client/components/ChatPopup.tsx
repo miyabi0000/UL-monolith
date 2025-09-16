@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, analyzeGearList, checkAPIHealth, APIError } from '../services/llmService'
+import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, checkAPIHealth, APIError } from '../services/llmService'
 
 interface ChatMessage {
   id: string
@@ -22,7 +22,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     {
       id: '1',
       role: 'assistant',
-      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n🔧 **ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n📂 **カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n🌐 **URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\n📊 **リスト分析**\n• 軽量化アドバイス\n  例: "軽量化のアドバイス"\n\n⚡ バックエンドAPIと連携して動作します。',
+      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n🔧 **ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n📂 **カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n🌐 **URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\n⚡ バックエンドAPIと連携して動作します。',
       timestamp: new Date()
     }
   ])
@@ -47,13 +47,8 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     }
   }, [isOpen])
 
-  // プロンプト分類（分析機能を追加）
-  const classifyPrompt = (prompt: string): PromptType | 'analyze' => {
-    // 分析パターン
-    if (prompt.includes('分析') || prompt.includes('軽量化') || 
-        prompt.includes('アドバイス') || prompt.includes('最適化')) {
-      return 'analyze'
-    }
+  // プロンプト分類
+  const classifyPrompt = (prompt: string): PromptType => {
     
     // URL + 追加情報のパターン
     if (prompt.includes('http') && prompt.length > 50) {
@@ -222,25 +217,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
             }
             break
 
-          case 'analyze':
-            try {
-              if (currentGearList.length === 0) {
-                assistantResponse = `ギアリストが空です。\n\n分析するには、まずギアを追加してください。`
-              } else {
-                const analysisResult = await analyzeGearList(currentGearList)
-                assistantResponse = `ギアリスト分析結果\n\n📊 ${analysisResult.summary}\n\n💡 軽量化のアドバイス：\n${analysisResult.tips.map((tip, index) => `${index + 1}. ${tip}`).join('\n')}`
-              }
-            } catch (error) {
-              if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドでの分析処理に問題があります。\nLLMサービスに一時的な問題がある可能性があります。`
-              } else {
-                assistantResponse = `分析エラー: ${error instanceof Error ? error.message : 'リストの分析に失敗しました'}`
-              }
-            }
-            break
 
           default:
-            assistantResponse = `ギア管理のお手伝いをします！\n\n使用できる機能：\n• ブランド名 + 製品名で追加\n  例: "Arc'teryx Beta AR 追加"\n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n• 商品URLの処理\n  例: URLを貼り付け\n• ギアリスト分析\n  例: "軽量化アドバイス"`
+            assistantResponse = `ギア管理のお手伝いをします！\n\n使用できる機能：\n• ブランド名 + 製品名で追加\n  例: "Arc'teryx Beta AR 追加"\n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n• 商品URLの処理\n  例: URLを貼り付け`
             break
         }
       } catch (error) {
@@ -362,7 +341,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            例: "Arc'teryx Beta AR 追加" "シェルター カテゴリ追加" "軽量化アドバイス"
+            例: "Arc'teryx Beta AR 追加" "シェルター カテゴリ追加"
           </p>
         </div>
       </div>

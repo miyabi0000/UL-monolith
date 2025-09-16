@@ -16,25 +16,25 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
       label: '総重量',
       value: `${totals.weight}g`,
       color: COLORS.primary.dark,
-      icon: '⚖️'
+      icon: 'W'
     },
     {
       label: '総価格',
       value: `¥${Math.round(totals.price / 100).toLocaleString()}`,
       color: COLORS.primary.medium,
-      icon: '💰'
+      icon: '¥'
     },
     {
       label: 'アイテム数',
       value: totals.items.toString(),
       color: COLORS.text.primary,
-      icon: '📦'
+      icon: '#'
     },
     {
       label: '不足数',
       value: totals.missing.toString(),
       color: totals.missing > 0 ? COLORS.accent : COLORS.primary.medium,
-      icon: totals.missing > 0 ? '⚠️' : '✅'
+      icon: totals.missing > 0 ? '!' : '✓'
     }
   ];
 
@@ -53,22 +53,30 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
           borderBottomColor: COLORS.primary.light
         }}
       >
-        📊 統計サマリー
+STATS
       </h3>
       <div className="space-y-3">
         {stats.map((stat, index) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-sm">{stat.icon}</span>
               <span 
-                className="text-xs"
+                className="text-xs font-bold w-4 h-4 flex items-center justify-center rounded"
+                style={{ 
+                  backgroundColor: stat.color,
+                  color: COLORS.white 
+                }}
+              >
+                {stat.icon}
+              </span>
+              <span 
+                className="text-xs font-medium"
                 style={{ color: COLORS.text.secondary }}
               >
                 {stat.label}
               </span>
             </div>
             <div 
-              className="text-sm font-bold"
+              className="text-base font-bold"
               style={{ color: stat.color }}
             >
               {stat.value}

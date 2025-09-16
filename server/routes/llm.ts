@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { handleExtractUrl, handleExtractPrompt, handleEnhancePrompt } from './llm/extractHandlers';
-import { handleExtractCategory, handleAnalyzeGearList } from './llm/categoryHandlers';
+import { handleExtractCategory } from './llm/categoryHandlers';
 import { handleHealthCheck } from './llm/healthHandlers';
 
 const router = Router();
@@ -10,9 +10,8 @@ router.post('/extract-url', handleExtractUrl);
 router.post('/extract-prompt', handleExtractPrompt);
 router.post('/enhance-prompt', handleEnhancePrompt);
 
-// Category and analysis endpoints
+// Category endpoints
 router.post('/extract-category', handleExtractCategory);
-router.post('/analyze-gear-list', handleAnalyzeGearList);
 
 // Health endpoint
 router.get('/health', handleHealthCheck);

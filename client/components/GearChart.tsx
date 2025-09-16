@@ -44,9 +44,10 @@ const generateItemColor = (baseColor: string, index: number, total: number) => {
 interface GearChartProps {
   data: ChartData[]
   totalWeight: number
+  onShowGearManager?: () => void
 }
 
-const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) => {
+const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onShowGearManager }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [showAllItems, setShowAllItems] = useState<boolean>(false)
@@ -212,10 +213,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
               {totalWeight}g
             </div>
             <div 
-              className="text-xs uppercase tracking-wide"
+              className="text-xs uppercase tracking-wide font-bold"
               style={{ color: COLORS.text.secondary }}
             >
-              {showAllItems ? 'All Items' : 'Total'}
+              {showAllItems ? 'ALL' : 'TOTAL'}
             </div>
             {selectedCategory && !showAllItems && (
               <div className="mt-2">
@@ -253,12 +254,24 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
                       className="rounded-lg p-4"
                       style={{ backgroundColor: COLORS.primary.light }}
                     >
-                      <h4 
-                        className="font-semibold mb-3"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        System Weight Distribution
-                      </h4>
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 
+                          className="font-semibold"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          WEIGHT DISTRIBUTION
+                        </h4>
+                        <button
+                          className="text-xs font-bold px-3 py-1 rounded transition-all hover:scale-105"
+                          style={{
+                            backgroundColor: COLORS.primary.dark,
+                            color: COLORS.white
+                          }}
+                          onClick={onShowGearManager}
+                        >
+                          + ADD
+                        </button>
+                      </div>
                       <div className="space-y-2">
                         {sortedData.map((category) => (
                           <div
@@ -318,14 +331,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight }) =
               style={{ color: COLORS.text.primary }}
             >
               {showAllItems ? (
-                <>All Items</>
+                <>ALL ITEMS</>
               ) : (
                 <>
                   <div 
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: selectedData?.color || '#6B7280' }}
                   />
-                  {selectedData?.name || 'Unknown'} Items
+                  {selectedData?.name || 'UNKNOWN'}
                 </>
               )}
             </h4>

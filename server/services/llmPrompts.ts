@@ -29,9 +29,4 @@ export const PROMPTS = {
 }
 分類: Shelter,Clothing,Cooking,Safety,Other`,
 
-  ANALYZE_LIST: `以下のJSON形式でギアリスト分析を行ってください：
-{
-  "summary": "1-2文の分析概要",
-  "tips": ["改善提案1", "改善提案2", "改善提案3"]
-}`
 };

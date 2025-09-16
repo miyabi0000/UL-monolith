@@ -116,30 +116,6 @@ export async function extractCategoryFromPrompt(prompt: string): Promise<{ name:
   }
 }
 
-/**
- * Analyze gear list
- */
-export async function analyzeGearList(gearItems: any[]): Promise<{ summary: string; tips: string[] }> {
-  try {
-    const response = await callAPIWithRetry(
-      '/llm/analyze-gear-list',
-      { gearItems },
-      API_CONFIG.timeout.heavy
-    );
-    
-    if (!response.success) {
-      throw new APIError(response.message || 'Failed to analyze gear list');
-    }
-    
-    return response.data;
-  } catch (error) {
-    console.error('Analyze gear list failed:', error);
-    if (error instanceof APIError) {
-      throw error;
-    }
-    throw new APIError('Failed to analyze gear list');
-  }
-}
 
 /**
  * Check API health

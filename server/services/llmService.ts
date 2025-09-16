@@ -137,22 +137,6 @@ export class LLMService {
     }
   }
 
-  /**
-   * ギアリスト分析
-   */
-  async analyzeGearList(gearItems: any[]): Promise<{ summary: string; tips: string[] }> {
-    try {
-      const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, JSON.stringify(gearItems));
-      const result = this.parseJSON(response);
-      return {
-        summary: result.summary || 'ギアリストを分析しました',
-        tips: result.tips || ['軽量化を検討してください']
-      };
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      return this.createAnalysisFallback(gearItems);
-    }
-  }
 
   /**
    * ヘルスチェック
@@ -242,16 +226,6 @@ export class LLMService {
     return enhanced;
   }
 
-  private createAnalysisFallback(gearItems: any[]): { summary: string; tips: string[] } {
-    const totalWeight = gearItems.reduce((sum, item) => 
-      sum + ((item.weightGrams || 0) * (item.requiredQuantity || 1)), 0);
-    const itemCount = gearItems.length;
-    
-    return {
-      summary: `${itemCount}アイテム、総重量${totalWeight}g`,
-      tips: ['詳細分析はLLMサービスが利用可能になったら実行されます']
-    };
-  }
 }
 
 export const llmService = new LLMService();
