@@ -78,9 +78,16 @@ export default function App() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen py-2 flex"
-      style={{ backgroundColor: COLORS.background }}
+      style={{
+        backgroundColor: COLORS.background,
+        backgroundImage: `
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
+        `,
+        backgroundSize: '8px 8px'
+      }}
     >
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
       <div className="flex-grow max-w-4xl xl:max-w-5xl">
