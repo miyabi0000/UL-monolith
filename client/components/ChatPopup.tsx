@@ -286,9 +286,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           }}
         >
           <div>
-            <h3 className="text-lg font-bold tracking-tight">AI ギアアシスタント</h3>
+            <h3 className="text-base font-bold tracking-tight">AI ギアアシスタント</h3>
             <p
-              className="text-sm mt-1"
+              className="text-xs mt-1"
               style={{ color: 'rgba(255, 255, 255, 0.7)' }}
             >
               URLから自動抽出・スマート分析

@@ -83,9 +83,10 @@ export default function App() {
       style={{
         backgroundColor: COLORS.background,
         backgroundImage: `
-          radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.2) 1px, transparent 0)
+          linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
         `,
-        backgroundSize: '16px 16px'
+        backgroundSize: '20px 20px'
       }}
     >
       <div className="flex-1" style={{ minWidth: '48px' }}></div>

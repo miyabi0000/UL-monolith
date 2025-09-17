@@ -19,22 +19,22 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <header
-      className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 transition-all duration-300 hover:shadow-lg backdrop-blur-sm"
+      className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 transition-all duration-300 hover:shadow-lg backdrop-blur-sm"
       style={getSquareSeparatorStyle()}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <h1
-          className="text-3xl font-bold tracking-tight"
+          className="text-xl font-bold tracking-tight"
           style={{ color: COLORS.primary.dark }}
         >
           UL GEAR
         </h1>
         <div
-          className="hidden sm:block h-6 w-px"
+          className="hidden sm:block h-4 w-px"
           style={{ backgroundColor: COLORS.primary.light }}
         />
         <span
-          className="hidden sm:inline text-sm font-medium"
+          className="hidden sm:inline text-xs font-medium"
           style={{ color: COLORS.text.secondary }}
         >
           Ultra Light Gear Manager
@@ -46,7 +46,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         <div className="relative group">
           <button
             onClick={onToggleChat}
-            className="w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 hover:rotate-3 relative overflow-hidden shadow-md"
+            className="w-8 h-8 rounded-lg text-xs font-bold transition-all duration-300 hover:scale-105 hover:rotate-3 relative overflow-hidden shadow-md"
             style={getLiquidGlassStyle()}
             onMouseEnter={(e) => {
               Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
@@ -96,7 +96,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             </div>
             <button
               onClick={onLogout}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105"
               style={inlineStyles.secondaryButton}
             >
               LOGOUT
@@ -105,7 +105,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         ) : (
           <button
             onClick={onShowLogin}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
+            className="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105"
             style={inlineStyles.secondaryButton}
           >
             LOGIN

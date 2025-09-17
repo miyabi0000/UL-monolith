@@ -45,7 +45,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
       style={getSquareSeparatorStyle()}
     >
       <h3
-        className="text-sm font-bold mb-3 border-b pb-2"
+        className="text-xs font-bold mb-2 border-b pb-1"
         style={{
           color: COLORS.text.primary,
           borderBottomColor: COLORS.primary.light
@@ -53,15 +53,15 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
       >
 STATS
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {stats.map((stat, index) => (
           <div
             key={index}
             className="flex items-center justify-between group transition-all duration-200 hover:scale-105"
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <span
-                className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-lg shadow-sm transition-all duration-200 group-hover:scale-110"
+                className="text-xs font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
                 style={{
                   backgroundColor: stat.color,
                   color: COLORS.white
@@ -70,14 +70,14 @@ STATS
                 {stat.icon}
               </span>
               <span
-                className="text-sm font-medium"
+                className="text-xs font-medium"
                 style={{ color: COLORS.text.secondary }}
               >
                 {stat.label}
               </span>
             </div>
             <div
-              className="text-lg font-bold transition-all duration-200 group-hover:scale-110"
+              className="text-sm font-bold transition-all duration-200 group-hover:scale-110"
               style={{ color: stat.color }}
             >
               {stat.value}
