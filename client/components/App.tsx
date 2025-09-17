@@ -79,18 +79,21 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen py-2 flex"
+      className="min-h-screen py-2 flex transition-all duration-300 ease-in-out"
       style={{
         backgroundColor: COLORS.background,
         backgroundImage: `
-          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
+          radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.2) 1px, transparent 0)
         `,
-        backgroundSize: '8px 8px'
+        backgroundSize: '16px 16px'
       }}
     >
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
-      <div className="flex-grow max-w-4xl xl:max-w-5xl">
+      <div
+        className={`flex-grow transition-all duration-300 ease-in-out ${
+          showChat ? 'max-w-3xl xl:max-w-4xl mr-96' : 'max-w-4xl xl:max-w-5xl'
+        }`}
+      >
         <AppHeader
           onShowLogin={() => setShowLogin(true)}
           onLogout={logout}

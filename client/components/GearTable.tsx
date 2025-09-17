@@ -13,6 +13,7 @@ import {
   getLinkStyle,
   getSquareSeparatorStyle
 } from '../utils/colorHelpers'
+import TruncatedText from './TruncatedText'
 
 // Price formatting helper
 const formatPrice = (priceCents?: number) => {

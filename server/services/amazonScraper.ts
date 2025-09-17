@@ -46,11 +46,10 @@ export class AmazonScraper {
   private async fetchAmazonHTML(url: string): Promise<string> {
     const response = await axios.get(url, {
       headers: this.amazonHeaders,
-      timeout: 15000,
-      maxRedirects: 3
+      timeout: 15000
     });
     
-    return response.data;
+    return response.data as string;
   }
 
   /**
@@ -100,7 +99,7 @@ export class AmazonScraper {
       season: 'all',
       
       extractedFields,
-      source: 'amazon_scraping'
+      source: 'web_scraping'
     };
   }
 

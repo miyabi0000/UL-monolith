@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, checkAPIHealth, APIError } from '../services/llmService'
+import { COLORS } from '../utils/colors'
+import { getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers'
 
 interface ChatMessage {
   id: string
@@ -117,7 +119,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           case 'url':
             try {
               const extractedData = await extractFromUrl(currentInput)
-              assistantResponse = `URL から商品情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n✓ 信頼度: ${Math.round(extractedData.confidence * 100)}%\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `URL から商品情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -142,7 +144,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           case 'add_gear':
             try {
               const extractedData = await extractFromPrompt(currentInput)
-              assistantResponse = `ギア情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n✓ 信頼度: ${Math.round(extractedData.confidence * 100)}%\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `ギア情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -192,7 +194,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 // プロンプト情報で拡張
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
                 
-                assistantResponse = `URL + 追加情報を処理しました！\n\n✓ 商品名: ${enhancedData.name}\n✓ ブランド: ${enhancedData.brand}\n✓ 重量: ${enhancedData.weightGrams}g\n✓ 価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\n✓ カテゴリ: ${enhancedData.suggestedCategory}\n✓ 信頼度: ${Math.round(enhancedData.confidence * 100)}%\n\nこの情報でギアリストに追加しますか？`
+                assistantResponse = `URL + 追加情報を処理しました！\n\n✓ 商品名: ${enhancedData.name}\n✓ ブランド: ${enhancedData.brand}\n✓ 重量: ${enhancedData.weightGrams}g\n✓ 価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\n✓ カテゴリ: ${enhancedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
                 shouldExtractGear = true
                 mockGearData = {
                   name: enhancedData.name,
@@ -260,45 +262,91 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* オーバーレイ */}
-      <div 
-        className="flex-1 bg-black bg-opacity-25"
+      <div
+        className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-300"
         onClick={onClose}
       />
-      
+
       {/* チャットパネル */}
-      <div className="w-96 bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div
+        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-500 ease-out shadow-2xl"
+        style={{
+          ...getSquareSeparatorStyle(),
+          borderLeft: `2px solid ${COLORS.primary.medium}`,
+          borderRadius: '0',
+        }}
+      >
         {/* ヘッダー */}
-        <div className="p-4 border-b border-gray-200 bg-gray-900 text-white flex justify-between items-center">
+        <div
+          className="p-5 border-b flex justify-between items-center backdrop-blur-md"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+            color: COLORS.white
+          }}
+        >
           <div>
-            <h3 className="font-semibold">AI ギアアシスタント</h3>
-            <p className="text-xs text-gray-400">URLから自動抽出</p>
+            <h3 className="text-lg font-bold tracking-tight">🤖 AI ギアアシスタント</h3>
+            <p
+              className="text-sm mt-1"
+              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            >
+              URLから自動抽出・スマート分析
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700"
+            className="p-2 rounded-xl transition-all duration-200 hover:scale-110"
+            style={{
+              ...getLiquidGlassStyle(),
+              color: COLORS.white,
+              fontSize: '18px'
+            }}
+            onMouseEnter={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+            }}
           >
             ✕
           </button>
         </div>
 
         {/* メッセージエリア */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        <div className="flex-1 p-5 overflow-y-auto space-y-4 backdrop-blur-sm">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-900'
+                className={`max-w-[85%] p-4 rounded-2xl transition-all duration-200 hover:scale-[1.02] ${
+                  message.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'
                 }`}
+                style={{
+                  ...(message.role === 'user'
+                    ? {
+                        backgroundColor: COLORS.primary.dark,
+                        color: COLORS.white,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                      }
+                    : {
+                        ...getSquareSeparatorStyle(),
+                        color: COLORS.text.primary,
+                        border: `1px solid rgba(255, 255, 255, 0.3)`
+                      })
+                }}
               >
-                <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                <div className={`text-xs mt-1 ${
-                  message.role === 'user' ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <div className={`${message.role === 'user' ? 'text-sm' : 'text-sm'} whitespace-pre-wrap leading-relaxed`}>
+                  {message.content}
+                </div>
+                <div
+                  className={`text-xs mt-2 opacity-70`}
+                  style={{
+                    color: message.role === 'user' ? 'rgba(255, 255, 255, 0.8)' : COLORS.text.secondary
+                  }}
+                >
                   {message.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -307,10 +355,20 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-900 p-3 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
-                  <span className="text-sm">処理中...</span>
+              <div
+                className="p-4 rounded-2xl rounded-bl-md transition-all duration-200"
+                style={{
+                  ...getSquareSeparatorStyle(),
+                  color: COLORS.text.primary,
+                  border: `1px solid rgba(255, 255, 255, 0.3)`
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
+                    style={{ borderColor: COLORS.primary.medium }}
+                  ></div>
+                  <span className="text-sm font-medium">🤖 分析中...</span>
                 </div>
               </div>
             </div>
@@ -320,28 +378,50 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         </div>
 
         {/* 入力エリア */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex space-x-2">
+        <div
+          className="p-5 border-t backdrop-blur-md"
+          style={{
+            borderTopColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <div className="flex space-x-3">
             <input
               ref={inputRef}
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="商品URL または 簡単な指示を入力..."
+              placeholder="商品URL または指示を入力..."
               disabled={isLoading}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:bg-gray-100"
+              className="flex-1 px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-2 text-sm transition-all duration-200 disabled:opacity-50"
+              style={{
+                ...getSquareSeparatorStyle(),
+                borderRadius: '12px',
+                color: COLORS.text.primary,
+                fontSize: '14px',
+                '::placeholder': {
+                  color: COLORS.text.secondary
+                }
+              }}
             />
             <button
               onClick={handleSend}
               disabled={!inputMessage.trim() || isLoading}
-              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="px-5 py-3 rounded-xl text-white text-sm font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{
+                backgroundColor: COLORS.primary.dark,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+              }}
             >
-              送信
+              📤
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            例: "Arc'teryx Beta AR 追加" "シェルター カテゴリ追加"
+          <p
+            className="text-xs mt-3 leading-relaxed"
+            style={{ color: COLORS.text.secondary }}
+          >
+            💡 例: "Arc'teryx Beta AR 追加" / "シェルター カテゴリ追加" / Amazon URL
           </p>
         </div>
       </div>

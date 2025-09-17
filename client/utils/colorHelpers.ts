@@ -288,16 +288,16 @@ export const getMessageStyle = (type: 'success' | 'error' | 'info' | 'loading') 
  * 2025年のベストプラクティスに基づいた実装
  */
 export const getSquareSeparatorStyle = () => ({
-  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 高透明度
-  backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)', // より強いガラス効果
-  WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)', // Safari support
-  border: `1px solid rgba(255, 255, 255, 0.2)`, // より透明な境界線
+  backgroundColor: 'rgba(255, 255, 255, 0.08)', // 極高透明度
+  backdropFilter: 'blur(16px) saturate(180%) brightness(1.15)', // より洗練されたガラス効果
+  WebkitBackdropFilter: 'blur(16px) saturate(180%) brightness(1.15)', // Safari support
+  border: `1px solid rgba(255, 255, 255, 0.12)`, // より繊細な境界線
   borderRadius: '0px', // Square design
   boxShadow: `
-    0 8px 32px rgba(31, 38, 135, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1)
-  `, // より繊細な影とエッジ
+    0 4px 24px rgba(31, 38, 135, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08)
+  `, // より微細な影効果
   backgroundClip: 'padding-box', // クリーンエッジ
 });
 
@@ -359,3 +359,36 @@ export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'f
       return baseStyle;
   }
 };
+
+/**
+ * テキスト省略とホバー展開のスタイル
+ */
+export const getTruncatedTextStyle = (maxWidth: string = '200px') => ({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap' as const,
+  maxWidth,
+  display: 'inline-block',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  cursor: 'pointer',
+});
+
+/**
+ * ホバー時のテキスト展開スタイル
+ */
+export const getExpandedTextStyle = () => ({
+  whiteSpace: 'normal' as const,
+  maxWidth: 'none',
+  wordBreak: 'break-word' as const,
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(12px) saturate(180%) brightness(1.1)',
+  WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(1.1)',
+  padding: '8px 12px',
+  borderRadius: '6px',
+  boxShadow: '0 4px 20px rgba(31, 38, 135, 0.15)',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  position: 'absolute' as const,
+  zIndex: 1000,
+  minWidth: '200px',
+  maxWidth: '400px',
+});
