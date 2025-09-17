@@ -99,7 +99,6 @@ export class AmazonScraper {
       priority: 3,
       season: 'all',
       
-      confidence: this.calculateAmazonConfidence(extractedFields),
       extractedFields,
       source: 'amazon_scraping'
     };
@@ -263,16 +262,6 @@ export class AmazonScraper {
     return undefined;
   }
 
-  private calculateAmazonConfidence(extractedFields: string[]): number {
-    let confidence = 0.3; // ベース信頼度
-    
-    if (extractedFields.includes('name')) confidence += 0.3;
-    if (extractedFields.includes('brand')) confidence += 0.2;
-    if (extractedFields.includes('priceCents')) confidence += 0.1;
-    if (extractedFields.includes('weightGrams')) confidence += 0.1;
-    
-    return Math.min(confidence, 1.0);
-  }
 
   private async randomDelay(): Promise<void> {
     const delay = Math.random() * (this.delayRange.max - this.delayRange.min) + this.delayRange.min;
@@ -288,7 +277,6 @@ export class AmazonScraper {
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-      confidence: 0.1,
       extractedFields: [],
       source: 'fallback'
     };

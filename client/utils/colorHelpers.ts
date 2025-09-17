@@ -10,22 +10,29 @@ import { COLORS } from './colors';
  */
 export const getCardStyle = (variant: 'default' | 'selected' | 'hover' | 'square' = 'default') => {
   const baseStyle = {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.primary.medium,
-    border: `1px solid ${COLORS.primary.medium}`,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // 高透明度
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    border: `1px solid rgba(255, 255, 255, 0.3)`,
+    backdropFilter: 'blur(10px) saturate(180%) brightness(1.15)',
+    WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(1.15)',
+    boxShadow: '0 4px 16px rgba(31, 38, 135, 0.08)',
   };
 
   switch (variant) {
     case 'selected':
       return {
         ...baseStyle,
-        backgroundColor: COLORS.primary.light,
-        borderColor: COLORS.primary.dark,
+        backgroundColor: 'rgba(255, 255, 255, 0.35)',
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+        backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
+        WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
       };
     case 'hover':
       return {
         ...baseStyle,
-        backgroundColor: COLORS.primary.light,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        backdropFilter: 'blur(12px) saturate(190%) brightness(1.18)',
+        WebkitBackdropFilter: 'blur(12px) saturate(190%) brightness(1.18)',
       };
     case 'square':
       return getSquareSeparatorStyle();
@@ -40,16 +47,20 @@ export const getCardStyle = (variant: 'default' | 'selected' | 'hover' | 'square
 export const getTableRowStyle = (isSelected: boolean = false, isHover: boolean = false) => {
   if (isSelected) {
     return {
-      backgroundColor: COLORS.primary.light,
+      backgroundColor: 'rgba(255, 255, 255, 0.35)',
+      backdropFilter: 'blur(8px) saturate(180%) brightness(1.15)',
+      WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.15)',
     };
   }
   if (isHover) {
     return {
-      backgroundColor: COLORS.primary.light,
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+      backdropFilter: 'blur(6px) saturate(160%) brightness(1.1)',
+      WebkitBackdropFilter: 'blur(6px) saturate(160%) brightness(1.1)',
     };
   }
   return {
-    backgroundColor: COLORS.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   };
 };
 
@@ -155,10 +166,12 @@ export const getButtonStyle = (variant: 'primary' | 'secondary' | 'accent' | 'da
  * ドロップダウンメニューのスタイル
  */
 export const getDropdownStyle = () => ({
-  backgroundColor: COLORS.white,
-  border: `1px solid ${COLORS.primary.medium}`,
+  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  backdropFilter: 'blur(12px) saturate(180%) brightness(1.15)',
+  WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(1.15)',
+  border: `1px solid rgba(255, 255, 255, 0.3)`,
   borderRadius: '0.375rem',
-  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  boxShadow: '0 10px 25px -5px rgba(31, 38, 135, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
 });
 
 /**
@@ -275,15 +288,16 @@ export const getMessageStyle = (type: 'success' | 'error' | 'info' | 'loading') 
  * 2025年のベストプラクティスに基づいた実装
  */
 export const getSquareSeparatorStyle = () => ({
-  backgroundColor: 'rgba(255, 255, 255, 0.75)', // 透明度を最適化
-  backdropFilter: 'blur(8px) saturate(180%) brightness(1.1)', // Apple推奨値
-  WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.1)', // Safari support
-  border: `1px solid rgba(255, 255, 255, 0.3)`, // ガラス境界線
+  backgroundColor: 'rgba(255, 255, 255, 0.25)', // 高透明度
+  backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)', // より強いガラス効果
+  WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)', // Safari support
+  border: `1px solid rgba(255, 255, 255, 0.2)`, // より透明な境界線
   borderRadius: '0px', // Square design
   boxShadow: `
-    0 8px 32px rgba(31, 38, 135, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4)
-  `, // 深度とハイライト
+    0 8px 32px rgba(31, 38, 135, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1)
+  `, // より繊細な影とエッジ
   backgroundClip: 'padding-box', // クリーンエッジ
 });
 
@@ -292,13 +306,14 @@ export const getSquareSeparatorStyle = () => ({
  */
 export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'focus' = 'default') => {
   const baseStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
-    backdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
-    WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
-    border: `1px solid rgba(255, 255, 255, 0.3)`,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // より高い透明度
+    backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
+    WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
+    border: `1px solid rgba(255, 255, 255, 0.2)`,
     boxShadow: `
-      0 8px 32px rgba(31, 38, 135, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4)
+      0 8px 32px rgba(31, 38, 135, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1)
     `,
     backgroundClip: 'padding-box' as const,
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -308,24 +323,25 @@ export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'f
     case 'hover':
       return {
         ...baseStyle,
-        backgroundColor: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(12px) saturate(200%) brightness(1.15)',
-        WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.15)',
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        backdropFilter: 'blur(16px) saturate(220%) brightness(1.25)',
+        WebkitBackdropFilter: 'blur(16px) saturate(220%) brightness(1.25)',
         boxShadow: `
-          0 12px 48px rgba(31, 38, 135, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.6)
+          0 12px 48px rgba(31, 38, 135, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5),
+          0 0 0 1px rgba(255, 255, 255, 0.15)
         `,
         transform: 'translateY(-2px)',
       };
     case 'active':
       return {
         ...baseStyle,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(6px) saturate(160%) brightness(1.05)',
-        WebkitBackdropFilter: 'blur(6px) saturate(160%) brightness(1.05)',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        backdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
+        WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
         boxShadow: `
-          0 4px 16px rgba(31, 38, 135, 0.1),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3)
+          0 4px 16px rgba(31, 38, 135, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2)
         `,
         transform: 'translateY(1px)',
       };
@@ -334,8 +350,8 @@ export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'f
         ...baseStyle,
         border: `1px solid ${COLORS.primary.medium}`,
         boxShadow: `
-          0 8px 32px rgba(31, 38, 135, 0.15),
-          inset 0 1px 0 rgba(255, 255, 255, 0.4),
+          0 8px 32px rgba(31, 38, 135, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
           0 0 0 3px ${COLORS.primary.light}
         `,
       };

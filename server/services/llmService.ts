@@ -39,7 +39,6 @@ export class LLMService {
         season: 'all',
         
         // メタデータ
-        confidence: this.clampConfidence(result.confidence || 0.5),
         extractedFields,
         source: 'llm_prompt'
       };
@@ -111,7 +110,6 @@ export class LLMService {
         weightGrams: result.weightGrams || urlData.weightGrams,
         priceCents: result.priceCents || urlData.priceCents,
         suggestedCategory: result.suggestedCategory || urlData.suggestedCategory,
-        confidence: Math.max(this.clampConfidence(result.confidence), urlData.confidence || 0.5),
         extractedFields: urlData.extractedFields || [],
         source: 'enhanced'
       };
@@ -166,9 +164,6 @@ export class LLMService {
     }
   }
 
-  private clampConfidence(value: number): number {
-    return Math.min(Math.max(value || 0, 0), 1);
-  }
 
   private createFallbackResult(prompt: string): LLMExtractionResult {
     return {
@@ -178,7 +173,6 @@ export class LLMService {
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-      confidence: 0.2,
       extractedFields: ['name'],
       source: 'fallback'
     };
@@ -201,7 +195,6 @@ export class LLMService {
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-      confidence: 0.3,
       extractedFields: brand ? ['brand'] : [],
       source: 'fallback'
     };
@@ -214,14 +207,12 @@ export class LLMService {
     const weightMatch = prompt.match(/(\d+)\s*g/i);
     if (weightMatch) {
       enhanced.weightGrams = parseInt(weightMatch[1]);
-      enhanced.confidence = Math.min((enhanced.confidence || 0) + 0.2, 1.0);
     }
     
     // 価格の抽出
     const priceMatch = prompt.match(/(\d+)\s*円/i);
     if (priceMatch) {
       enhanced.priceCents = parseInt(priceMatch[1]) * 100;
-      enhanced.confidence = Math.min((enhanced.confidence || 0) + 0.2, 1.0);
     }
     
     return enhanced;

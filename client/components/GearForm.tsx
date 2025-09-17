@@ -80,7 +80,6 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
       // エラーの場合は簡単なフォールバック
       const fallbackResult: LLMExtractionResult = {
         name: 'Unknown Product',
-        confidence: 0.1
       }
       setExtractionResult(fallbackResult)
     } finally {
@@ -173,7 +172,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
                   className="text-sm"
                   style={{ color: COLORS.primary.dark }}
                 >
-                  ✓ Extracted with {Math.round(extractionResult.confidence * 100)}% confidence
+                  ✓ Extracted successfully
                 </div>
               </div>
             )}

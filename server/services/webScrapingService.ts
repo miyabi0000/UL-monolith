@@ -69,7 +69,6 @@ export class WebScrapingService {
       priceCents: structured.priceCents || fallback.priceCents,
       weightGrams: structured.weightGrams || fallback.weightGrams,
       suggestedCategory: fallback.suggestedCategory || 'Other',
-      confidence: this.calculateConfidence(structured, fallback),
       extractedFields: [],
       source: 'web_scraping'
     };
@@ -263,19 +262,6 @@ export class WebScrapingService {
     return match ? Math.round(parseFloat(match[1]) * 100) : undefined;
   }
 
-  private calculateConfidence(structured: Partial<LLMExtractionResult>, fallback: Partial<LLMExtractionResult>): number {
-    let score = 0.1;
-    
-    // 構造化データがある場合は高得点
-    if (structured.name) score += 0.4;
-    else if (fallback.name && fallback.name !== 'Unknown Product') score += 0.3;
-    
-    if (structured.brand || fallback.brand) score += 0.2;
-    if (structured.priceCents || fallback.priceCents) score += 0.2;
-    if (fallback.weightGrams) score += 0.1;
-    
-    return Math.min(score, 1.0);
-  }
 
   /**
    * メインエントリーポイント - サイト別最適化版
@@ -337,7 +323,6 @@ export class WebScrapingService {
       season: 'all',
       
       // メタデータ
-      confidence: info.confidence || 0.5,
       extractedFields,
       source: 'web_scraping'
     };
@@ -364,7 +349,6 @@ export class WebScrapingService {
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-      confidence: 0.1,
       extractedFields: brand ? ['brand'] : [],
       source: 'fallback'
     };

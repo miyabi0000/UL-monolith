@@ -21,7 +21,6 @@ export async function extractFromUrl(url: string, userCategories?: string[]): Pr
     // Fallback to mock data if API fails
     return {
       name: 'Unknown Product',
-      confidence: 0.1
     };
   }
 }
