@@ -83,7 +83,6 @@ export class LLMService {
           ownedQuantity: scrapedData.ownedQuantity || 0,
           priority: scrapedData.priority || 3,
           season: scrapedData.season || 'all',
-          confidence: Math.max(this.clampConfidence(llmResult.confidence), scrapedData.confidence || 0.3),
           extractedFields: finalExtractedFields,
           source: 'enhanced'
         };

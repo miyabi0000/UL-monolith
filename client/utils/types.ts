@@ -39,7 +39,6 @@ export interface GearItem {
   // LLM
   llmData?: {
     extracted: any;
-    confidence: number;
     extractedAt: string;
   };
   
@@ -118,7 +117,6 @@ export interface LLMExtractionResult {
   // LLM固有
   suggestedCategory?: string;
   categoryId?: string; // マッチしたカテゴリID
-  confidence: number;
   
   // 抽出メタデータ
   extractedFields: string[]; // 実際に抽出できたフィールド名

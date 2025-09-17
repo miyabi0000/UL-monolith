@@ -92,68 +92,79 @@ export default function App() {
           userName={user?.name}
         />
 
-        {/* Success/Error Messages */}
+        {/* Enhanced Status Messages */}
         {successMessage && (
-          <div 
-            className="mb-2 p-2 rounded border"
+          <div
+            className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300 animate-pulse"
             style={{
               backgroundColor: COLORS.primary.light,
+              borderLeftColor: COLORS.primary.dark,
               borderColor: COLORS.primary.medium
             }}
           >
-            <p 
-              className="text-sm font-medium"
-              style={{ color: COLORS.primary.dark }}
-            >
-              ✓ {successMessage}
-            </p>
+            <div className="flex items-center">
+              <span className="text-lg mr-2">✅</span>
+              <p
+                className="text-sm font-medium"
+                style={{ color: COLORS.primary.dark }}
+              >
+                {successMessage}
+              </p>
+            </div>
           </div>
         )}
 
         {error && (
-          <div 
-            className="mb-2 p-2 rounded border"
+          <div
+            className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300"
             style={{
-              backgroundColor: COLORS.primary.light,
+              backgroundColor: '#fef2f2',
+              borderLeftColor: COLORS.accent,
               borderColor: COLORS.accent
             }}
           >
-            <p 
-              className="text-sm font-medium"
-              style={{ color: COLORS.accent }}
-            >
-              ! {error}
-            </p>
+            <div className="flex items-center">
+              <span className="text-lg mr-2">⚠️</span>
+              <p
+                className="text-sm font-medium"
+                style={{ color: COLORS.accent }}
+              >
+                {error}
+              </p>
+            </div>
           </div>
         )}
 
         {loading && (
-          <div 
-            className="mb-2 p-2 rounded border"
+          <div
+            className="mb-4 p-4 rounded-lg border backdrop-blur-sm transition-all duration-300"
             style={{
               backgroundColor: COLORS.primary.light,
               borderColor: COLORS.primary.medium
             }}
           >
-            <p 
-              className="text-sm font-medium"
-              style={{ color: COLORS.primary.dark }}
-            >
-              ... LOADING
-            </p>
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-3"></div>
+              <p
+                className="text-sm font-medium"
+                style={{ color: COLORS.primary.dark }}
+              >
+                Loading...
+              </p>
+            </div>
           </div>
         )}
 
         {/* Main Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-3">
-          <div className="lg:col-span-3">
-            <GearChart 
-              data={chartData} 
-              totalWeight={totals.weight} 
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+          <div className="lg:col-span-4 order-2 lg:order-1">
+            <GearChart
+              data={chartData}
+              totalWeight={totals.weight}
               onShowGearManager={() => setShowForm(true)}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 order-1 lg:order-2">
             <CompactSummary totals={totals} />
           </div>
         </div>

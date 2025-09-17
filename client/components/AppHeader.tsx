@@ -18,53 +18,85 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   userName
 }) => {
   return (
-    <div 
-      className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 transition-all duration-300 hover:shadow-md"
+    <header
+      className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 transition-all duration-300 hover:shadow-lg backdrop-blur-sm"
       style={getSquareSeparatorStyle()}
     >
       <div className="flex items-center gap-4">
-        <h1 
-          className="text-2xl font-bold"
+        <h1
+          className="text-3xl font-bold tracking-tight"
           style={{ color: COLORS.primary.dark }}
         >
           UL GEAR
         </h1>
+        <div
+          className="hidden sm:block h-6 w-px"
+          style={{ backgroundColor: COLORS.primary.light }}
+        />
+        <span
+          className="hidden sm:inline text-sm font-medium"
+          style={{ color: COLORS.text.secondary }}
+        >
+          Ultra Light Gear Manager
+        </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {/* AI Button - Enhanced Liquid Glass Effect */}
-        <button
-          onClick={onToggleChat}
-          className="w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 relative overflow-hidden"
-          style={getLiquidGlassStyle()}
-          onMouseEnter={(e) => {
-            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-          }}
-          onMouseLeave={(e) => {
-            Object.assign(e.currentTarget.style, getLiquidGlassStyle());
-          }}
-          onMouseDown={(e) => {
-            Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
-          }}
-          onMouseUp={(e) => {
-            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-          }}
-        >
-          <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>AI</span>
-        </button>
+      <div className="flex flex-wrap items-center gap-4">
+        {/* AI Button - Enhanced with tooltip */}
+        <div className="relative group">
+          <button
+            onClick={onToggleChat}
+            className="w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300 hover:scale-105 hover:rotate-3 relative overflow-hidden shadow-md"
+            style={getLiquidGlassStyle()}
+            onMouseEnter={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+            }}
+            onMouseDown={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
+            }}
+            onMouseUp={(e) => {
+              Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
+            }}
+          >
+            <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>AI</span>
+          </button>
+          <div
+            className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
+            style={{
+              backgroundColor: COLORS.primary.dark,
+              color: COLORS.white
+            }}
+          >
+            AI Assistant
+          </div>
+        </div>
 
         
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
-            <span 
-              className="text-xs font-medium"
-              style={{ color: COLORS.text.secondary }}
-            >
-              {userName}
-            </span>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                style={{
+                  backgroundColor: COLORS.primary.medium,
+                  color: COLORS.white
+                }}
+              >
+                {userName?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <span
+                className="text-sm font-medium hidden sm:inline"
+                style={{ color: COLORS.text.primary }}
+              >
+                {userName}
+              </span>
+            </div>
             <button
               onClick={onLogout}
-              className="px-3 py-1 rounded text-xs font-medium transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
               style={inlineStyles.secondaryButton}
             >
               LOGOUT
@@ -73,14 +105,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
         ) : (
           <button
             onClick={onShowLogin}
-            className="px-3 py-1 rounded text-xs font-medium transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
             style={inlineStyles.secondaryButton}
           >
             LOGIN
           </button>
         )}
       </div>
-    </div>
+    </header>
   );
 };
 

@@ -68,7 +68,6 @@ export interface LLMExtractionResult {
   // LLM固有
   suggestedCategory?: string;
   categoryId?: string;
-  confidence: number;
   
   // 抽出メタデータ
   extractedFields: string[];
