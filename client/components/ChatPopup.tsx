@@ -24,7 +24,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     {
       id: '1',
       role: 'assistant',
-      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n🔧 **ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n📂 **カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n🌐 **URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\n⚡ バックエンドAPIと連携して動作します。',
+      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n**ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n**カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n**URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\nバックエンドAPIと連携して動作します。',
       timestamp: new Date()
     }
   ])
@@ -119,7 +119,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           case 'url':
             try {
               const extractedData = await extractFromUrl(currentInput)
-              assistantResponse = `URL から商品情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `URL から商品情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -144,7 +144,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           case 'add_gear':
             try {
               const extractedData = await extractFromPrompt(currentInput)
-              assistantResponse = `ギア情報を抽出しました！\n\n✓ 商品名: ${extractedData.name}\n✓ ブランド: ${extractedData.brand || '不明'}\n✓ 重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n✓ 価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\n✓ カテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `ギア情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -170,7 +170,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
             try {
               const categoryData = await extractCategoryFromPrompt(currentInput)
               if (categoryData) {
-                assistantResponse = `カテゴリを作成しました！\n\n✓ カテゴリ名: ${categoryData.englishName}\n✓ 日本語名: ${categoryData.name}\n\n新しいカテゴリが使用可能になりました。`
+                assistantResponse = `カテゴリを作成しました！\n\nカテゴリ名: ${categoryData.englishName}\n日本語名: ${categoryData.name}\n\n新しいカテゴリが使用可能になりました。`
               } else {
                 assistantResponse = `カテゴリ名を特定できませんでした。\n\n例: "シェルター カテゴリ追加" や "調理器具 追加"`
               }
@@ -194,7 +194,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 // プロンプト情報で拡張
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
                 
-                assistantResponse = `URL + 追加情報を処理しました！\n\n✓ 商品名: ${enhancedData.name}\n✓ ブランド: ${enhancedData.brand}\n✓ 重量: ${enhancedData.weightGrams}g\n✓ 価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\n✓ カテゴリ: ${enhancedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+                assistantResponse = `URL + 追加情報を処理しました！\n\n商品名: ${enhancedData.name}\nブランド: ${enhancedData.brand}\n重量: ${enhancedData.weightGrams}g\n価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nカテゴリ: ${enhancedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
                 shouldExtractGear = true
                 mockGearData = {
                   name: enhancedData.name,
@@ -286,7 +286,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           }}
         >
           <div>
-            <h3 className="text-lg font-bold tracking-tight">🤖 AI ギアアシスタント</h3>
+            <h3 className="text-lg font-bold tracking-tight">AI ギアアシスタント</h3>
             <p
               className="text-sm mt-1"
               style={{ color: 'rgba(255, 255, 255, 0.7)' }}
@@ -368,7 +368,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                     className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
                     style={{ borderColor: COLORS.primary.medium }}
                   ></div>
-                  <span className="text-sm font-medium">🤖 分析中...</span>
+                  <span className="text-sm font-medium">分析中...</span>
                 </div>
               </div>
             </div>
@@ -414,14 +414,14 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
             >
-              📤
+送信
             </button>
           </div>
           <p
             className="text-xs mt-3 leading-relaxed"
             style={{ color: COLORS.text.secondary }}
           >
-            💡 例: "Arc'teryx Beta AR 追加" / "シェルター カテゴリ追加" / Amazon URL
+例: "Arc'teryx Beta AR 追加" / "シェルター カテゴリ追加" / Amazon URL
           </p>
         </div>
       </div>

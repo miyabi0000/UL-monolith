@@ -113,7 +113,6 @@ export default function App() {
             }}
           >
             <div className="flex items-center">
-              <span className="text-lg mr-2">✅</span>
               <p
                 className="text-sm font-medium"
                 style={{ color: COLORS.primary.dark }}
@@ -134,7 +133,6 @@ export default function App() {
             }}
           >
             <div className="flex items-center">
-              <span className="text-lg mr-2">⚠️</span>
               <p
                 className="text-sm font-medium"
                 style={{ color: COLORS.accent }}

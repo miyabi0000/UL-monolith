@@ -51,7 +51,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
           borderBottomColor: COLORS.primary.light
         }}
       >
-        📊 STATS
+STATS
       </h3>
       <div className="space-y-3">
         {stats.map((stat, index) => (
