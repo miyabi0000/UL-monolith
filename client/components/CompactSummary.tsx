@@ -1,5 +1,6 @@
 import React from 'react';
 import { COLORS } from '../utils/colors';
+import { getSquareSeparatorStyle } from '../utils/colorHelpers';
 
 interface CompactSummaryProps {
   totals: {
@@ -40,11 +41,8 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
 
   return (
     <div 
-      className="rounded border p-2 space-y-2"
-      style={{ 
-        backgroundColor: COLORS.white,
-        borderColor: COLORS.primary.medium
-      }}
+      className="border p-2 space-y-2"
+      style={getSquareSeparatorStyle()}
     >
       <h3 
         className="text-xs font-semibold mb-2 border-b pb-1"

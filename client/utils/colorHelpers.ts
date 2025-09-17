@@ -8,7 +8,7 @@ import { COLORS } from './colors';
 /**
  * 背景色とボーダー色を組み合わせたカードスタイル
  */
-export const getCardStyle = (variant: 'default' | 'selected' | 'hover' = 'default') => {
+export const getCardStyle = (variant: 'default' | 'selected' | 'hover' | 'square' = 'default') => {
   const baseStyle = {
     backgroundColor: COLORS.white,
     borderColor: COLORS.primary.medium,
@@ -27,6 +27,8 @@ export const getCardStyle = (variant: 'default' | 'selected' | 'hover' = 'defaul
         ...baseStyle,
         backgroundColor: COLORS.primary.light,
       };
+    case 'square':
+      return getSquareSeparatorStyle();
     default:
       return baseStyle;
   }
@@ -90,17 +92,20 @@ export const getInputStyle = (variant: 'default' | 'focus' | 'error' = 'default'
 };
 
 /**
- * ボタンのスタイル
+ * ボタンのスタイル（Liquid Glass対応）
  */
-export const getButtonStyle = (variant: 'primary' | 'secondary' | 'accent' | 'danger' = 'primary') => {
+export const getButtonStyle = (variant: 'primary' | 'secondary' | 'accent' | 'danger' | 'glass' = 'primary') => {
   switch (variant) {
     case 'primary':
       return {
         backgroundColor: COLORS.primary.dark,
         color: COLORS.white,
         border: `1px solid ${COLORS.primary.dark}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           backgroundColor: COLORS.primary.medium,
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         },
       };
     case 'secondary':
@@ -108,17 +113,25 @@ export const getButtonStyle = (variant: 'primary' | 'secondary' | 'accent' | 'da
         backgroundColor: COLORS.white,
         color: COLORS.primary.dark,
         border: `1px solid ${COLORS.primary.medium}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           backgroundColor: COLORS.primary.light,
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
         },
       };
+    case 'glass':
+      return getLiquidGlassStyle();
     case 'accent':
       return {
         backgroundColor: COLORS.accent,
         color: COLORS.white,
         border: `1px solid ${COLORS.accent}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           backgroundColor: '#D12D1A', // より濃い赤
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(209, 45, 26, 0.3)',
         },
       };
     case 'danger':
@@ -126,8 +139,11 @@ export const getButtonStyle = (variant: 'primary' | 'secondary' | 'accent' | 'da
         backgroundColor: COLORS.accent,
         color: COLORS.white,
         border: `1px solid ${COLORS.accent}`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           backgroundColor: '#D12D1A',
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(209, 45, 26, 0.3)',
         },
       };
     default:
@@ -251,5 +267,79 @@ export const getMessageStyle = (type: 'success' | 'error' | 'info' | 'loading') 
       };
     default:
       return getMessageStyle('info');
+  }
+};
+
+/**
+ * Squareコンポーネント区切り用スタイル（Apple Liquid Glass効果）
+ * 2025年のベストプラクティスに基づいた実装
+ */
+export const getSquareSeparatorStyle = () => ({
+  backgroundColor: 'rgba(255, 255, 255, 0.75)', // 透明度を最適化
+  backdropFilter: 'blur(8px) saturate(180%) brightness(1.1)', // Apple推奨値
+  WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.1)', // Safari support
+  border: `1px solid rgba(255, 255, 255, 0.3)`, // ガラス境界線
+  borderRadius: '0px', // Square design
+  boxShadow: `
+    0 8px 32px rgba(31, 38, 135, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4)
+  `, // 深度とハイライト
+  backgroundClip: 'padding-box', // クリーンエッジ
+});
+
+/**
+ * 高度なLiquid Glass効果（インタラクティブ要素用）
+ */
+export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'focus' = 'default') => {
+  const baseStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    backdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
+    WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.1)',
+    border: `1px solid rgba(255, 255, 255, 0.3)`,
+    boxShadow: `
+      0 8px 32px rgba(31, 38, 135, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4)
+    `,
+    backgroundClip: 'padding-box' as const,
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  };
+
+  switch (variant) {
+    case 'hover':
+      return {
+        ...baseStyle,
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(12px) saturate(200%) brightness(1.15)',
+        WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.15)',
+        boxShadow: `
+          0 12px 48px rgba(31, 38, 135, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6)
+        `,
+        transform: 'translateY(-2px)',
+      };
+    case 'active':
+      return {
+        ...baseStyle,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(6px) saturate(160%) brightness(1.05)',
+        WebkitBackdropFilter: 'blur(6px) saturate(160%) brightness(1.05)',
+        boxShadow: `
+          0 4px 16px rgba(31, 38, 135, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3)
+        `,
+        transform: 'translateY(1px)',
+      };
+    case 'focus':
+      return {
+        ...baseStyle,
+        border: `1px solid ${COLORS.primary.medium}`,
+        boxShadow: `
+          0 8px 32px rgba(31, 38, 135, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4),
+          0 0 0 3px ${COLORS.primary.light}
+        `,
+      };
+    default:
+      return baseStyle;
   }
 };

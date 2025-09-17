@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData } from '../utils/types'
 import { COLORS, chartColors } from '../utils/colors'
-import { getCardStyle, getButtonStyle } from '../utils/colorHelpers'
+import { getCardStyle, getButtonStyle, getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers'
 
 // 色のバリエーションを生成するヘルパー関数
 const generateItemColor = (baseColor: string, index: number, total: number) => {
@@ -251,8 +251,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                         {/* システム別重量割合 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div 
-                      className="rounded p-3"
-                      style={{ backgroundColor: COLORS.primary.light }}
+                      className="p-3"
+                      style={getSquareSeparatorStyle()}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <h4 
@@ -262,14 +262,23 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                           WEIGHT DISTRIBUTION
                         </h4>
                         <button
-                          className="text-xs font-bold px-3 py-1 rounded transition-all hover:scale-105"
-                          style={{
-                            backgroundColor: COLORS.primary.dark,
-                            color: COLORS.white
+                          className="text-xs font-bold px-3 py-1 rounded transition-all duration-300 hover:scale-105 relative overflow-hidden"
+                          style={getLiquidGlassStyle()}
+                          onMouseEnter={(e) => {
+                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
+                          }}
+                          onMouseLeave={(e) => {
+                            Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+                          }}
+                          onMouseDown={(e) => {
+                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
+                          }}
+                          onMouseUp={(e) => {
+                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
                           }}
                           onClick={onShowGearManager}
                         >
-                          + ADD
+                          <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>+ ADD</span>
                         </button>
                       </div>
                       <div className="space-y-2">
@@ -323,8 +332,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
         {/* 選択システム内のアイテム重量割合 または 全アイテム表示 */}
         {(selectedCategory || showAllItems) && (
           <div 
-            className="rounded p-3"
-            style={{ backgroundColor: COLORS.primary.light }}
+            className="p-3"
+            style={getSquareSeparatorStyle()}
           >
             <h4 
               className="font-semibold mb-3 flex items-center"
@@ -434,11 +443,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
       {/* 選択アイテムの詳細 */}
       {selectedItemData && (
         <div 
-          className="rounded p-3 border"
-          style={{
-            backgroundColor: COLORS.primary.light,
-            borderColor: COLORS.primary.medium
-          }}
+          className="p-3 border"
+          style={getSquareSeparatorStyle()}
         >
           <h4 
             className="font-semibold mb-3"

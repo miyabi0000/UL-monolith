@@ -1,5 +1,6 @@
 import React from 'react';
 import { COLORS, inlineStyles } from '../utils/colors';
+import { getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers';
 
 interface AppHeaderProps {
   onShowLogin: () => void;
@@ -18,13 +19,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   return (
     <div 
-      className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded transition-all duration-300 hover:shadow-md"
-      style={{
-        backgroundColor: 'rgba(247, 252, 252, 0.85)', // Optimized transparency for readability
-        backdropFilter: 'blur(8px) saturate(1.1)', // Standard glass effect
-        border: `1px solid ${COLORS.primary.light}`,
-        WebkitBackdropFilter: 'blur(8px) saturate(1.1)' // Safari support
-      }}
+      className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 transition-all duration-300 hover:shadow-md"
+      style={getSquareSeparatorStyle()}
     >
       <div className="flex items-center gap-4">
         <h1 
@@ -36,17 +32,25 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* AI Button */}
+        {/* AI Button - Enhanced Liquid Glass Effect */}
         <button
           onClick={onToggleChat}
-          className="w-8 h-8 rounded-full text-xs font-bold transition-all duration-200 hover:scale-110"
-          style={{
-            backgroundColor: COLORS.primary.dark,
-            color: COLORS.white,
-            border: `1px solid ${COLORS.primary.medium}`
+          className="w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 relative overflow-hidden"
+          style={getLiquidGlassStyle()}
+          onMouseEnter={(e) => {
+            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
+          }}
+          onMouseLeave={(e) => {
+            Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+          }}
+          onMouseDown={(e) => {
+            Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
+          }}
+          onMouseUp={(e) => {
+            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
           }}
         >
-          AI
+          <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>AI</span>
         </button>
 
         

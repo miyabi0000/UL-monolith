@@ -79,10 +79,11 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen p-2"
+      className="min-h-screen py-2 flex"
       style={{ backgroundColor: COLORS.background }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="flex-1" style={{ minWidth: '48px' }}></div>
+      <div className="flex-grow max-w-4xl xl:max-w-5xl">
         <AppHeader
           onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
@@ -208,6 +209,7 @@ export default function App() {
           )}
         </Suspense>
           </div>
+      <div className="flex-1" style={{ minWidth: '48px' }}></div>
     </div>
   );
 }

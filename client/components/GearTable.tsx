@@ -10,7 +10,8 @@ import {
   getDropdownItemStyle,
   getPriorityColor,
   getCategoryBadgeStyle,
-  getLinkStyle
+  getLinkStyle,
+  getSquareSeparatorStyle
 } from '../utils/colorHelpers'
 
 // Price formatting helper
@@ -160,7 +161,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
   }, [showCheckboxes])
 
   return (
-    <div>
+    <div 
+      className="border"
+      style={getSquareSeparatorStyle()}
+    >
       {/* フィルタ・ソート */}
       <div 
         className="p-2 border-b flex gap-2 items-center"

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
+import { amazonScraper } from './amazonScraper.js';
 
 /**
  * 汎用Web Scraping Service - ベストプラクティス準拠
@@ -277,10 +278,17 @@ export class WebScrapingService {
   }
 
   /**
-   * メインエントリーポイント - ギアリスト対応版
+   * メインエントリーポイント - サイト別最適化版
    */
   async scrapeProductInfo(url: string): Promise<LLMExtractionResult> {
     try {
+      // Amazon専用処理
+      if (this.isAmazonUrl(url)) {
+        console.log(`Using Amazon-specific scraper for: ${url}`);
+        return await amazonScraper.scrapeAmazonProduct(url);
+      }
+      
+      // 汎用スクレイピング
       const html = await this.fetchHTML(url);
       const rawResult = this.extractStructuredData(html, url);
       
@@ -290,6 +298,14 @@ export class WebScrapingService {
       console.error(`Scraping failed for ${url}:`, error);
       return this.createFallbackResult(url);
     }
+  }
+
+  /**
+   * Amazon URLかどうかを判定
+   */
+  private isAmazonUrl(url: string): boolean {
+    const domain = new URL(url).hostname.toLowerCase();
+    return domain.includes('amazon.');
   }
 
   /**
