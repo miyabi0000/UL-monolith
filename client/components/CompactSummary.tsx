@@ -1,6 +1,6 @@
 import React from 'react';
-import { COLORS } from '../utils/colors';
-import { getSquareSeparatorStyle } from '../utils/colorHelpers';
+import { COLORS } from '../utils/designSystem';
+import Card from './ui/Card';
 
 interface CompactSummaryProps {
   totals: {
@@ -40,10 +40,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
   ];
 
   return (
-    <div
-      className="border p-4 space-y-3 transition-all duration-300 hover:shadow-lg"
-      style={getSquareSeparatorStyle()}
-    >
+    <Card variant="square" hover className="p-4 space-y-3">
       <h3
         className="text-xs font-bold mb-2 border-b pb-1"
         style={{
@@ -85,7 +82,7 @@ STATS
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

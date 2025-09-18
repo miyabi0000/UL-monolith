@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
-import { COLORS } from '../utils/colors';
+import { COLORS, getMessageStyle } from '../utils/designSystem';
 import AppHeader from './AppHeader';
 import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
@@ -30,7 +30,6 @@ export default function App() {
     // データ状態
     gearItems,
     categories, setCategories,
-    loading,
     error,
     
     // API操作関数
@@ -92,7 +91,7 @@ export default function App() {
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
       <div
         className={`flex-grow transition-all duration-300 ease-in-out ${
-          showChat ? 'max-w-3xl xl:max-w-4xl mr-96' : 'max-w-4xl xl:max-w-5xl'
+          showChat ? 'mr-96' : ''
         }`}
       >
         <AppHeader
@@ -107,11 +106,7 @@ export default function App() {
         {successMessage && (
           <div
             className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300 animate-pulse"
-            style={{
-              backgroundColor: COLORS.primary.light,
-              borderLeftColor: COLORS.primary.dark,
-              borderColor: COLORS.primary.medium
-            }}
+            style={getMessageStyle('success')}
           >
             <div className="flex items-center">
               <p
@@ -127,11 +122,7 @@ export default function App() {
         {error && (
           <div
             className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300"
-            style={{
-              backgroundColor: '#fef2f2',
-              borderLeftColor: COLORS.accent,
-              borderColor: COLORS.accent
-            }}
+            style={getMessageStyle('error')}
           >
             <div className="flex items-center">
               <p
@@ -144,48 +135,31 @@ export default function App() {
           </div>
         )}
 
-        {loading && (
-          <div
-            className="mb-4 p-4 rounded-lg border backdrop-blur-sm transition-all duration-300"
-            style={{
-              backgroundColor: COLORS.primary.light,
-              borderColor: COLORS.primary.medium
-            }}
-          >
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-3"></div>
-              <p
-                className="text-sm font-medium"
-                style={{ color: COLORS.primary.dark }}
-              >
-                Loading...
-              </p>
+
+        {/* Main Dashboard - Full width container */}
+        <div className="w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+            <div className="lg:col-span-4 order-2 lg:order-1">
+              <GearChart
+                data={chartData}
+                totalWeight={totals.weight}
+                onShowGearManager={() => setShowForm(true)}
+              />
+            </div>
+            <div className="space-y-2 order-1 lg:order-2">
+              <CompactSummary totals={totals} />
             </div>
           </div>
-        )}
 
-        {/* Main Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
-          <div className="lg:col-span-4 order-2 lg:order-1">
-            <GearChart
-              data={chartData}
-              totalWeight={totals.weight}
-              onShowGearManager={() => setShowForm(true)}
-            />
-          </div>
-          <div className="space-y-2 order-1 lg:order-2">
-            <CompactSummary totals={totals} />
-          </div>
-        </div>
-
-          <GearTable 
-            items={gearItems} 
+          <GearTable
+            items={gearItems}
             onEdit={handleEditGear}
             onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
             onSave={handleSaveGear}
           onUpdateItem={() => {}} // TODO: implement if needed
             showCheckboxes={showCheckboxes}
           />
+        </div>
 
         <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
         {showForm && (

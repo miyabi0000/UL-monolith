@@ -1,10 +1,10 @@
 import { LLMExtractionResult } from '../models/types.js';
 import { openaiClient } from './openaiClient.js';
-import { PROMPTS } from './llmPrompts.js';
 import { webScrapingService } from './webScrapingService.js';
+import { PROMPTS } from './llmPrompts.js';
 
 /**
- * LLM Service - シンプル版
+ * LLM Service - 最小限実装
  */
 export class LLMService {
 
@@ -12,39 +12,30 @@ export class LLMService {
    * プロンプトからギア情報を抽出
    */
   async extractGearFromPrompt(prompt: string): Promise<LLMExtractionResult> {
+    if (!prompt || prompt.trim().length < 3) {
+      return this.createFallback('入力が短すぎます');
+    }
+    
     try {
-      const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, prompt);
+      const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, prompt.trim());
       const result = this.parseJSON(response);
       
-      // 抽出されたフィールドを記録
-      const extractedFields: string[] = [];
-      if (result.name) extractedFields.push('name');
-      if (result.brand) extractedFields.push('brand');
-      if (result.weightGrams) extractedFields.push('weightGrams');
-      if (result.priceCents) extractedFields.push('priceCents');
-      if (result.suggestedCategory) extractedFields.push('suggestedCategory');
-      
       return {
-        // 抽出された情報
         name: result.name || 'Unknown Gear',
-        brand: result.brand || undefined,
-        weightGrams: result.weightGrams || undefined,
-        priceCents: result.priceCents || undefined,
+        brand: result.brand,
+        weightGrams: result.weightGrams,
+        priceCents: result.priceCents,
         suggestedCategory: result.suggestedCategory || 'Other',
-        
-        // ギアリスト用デフォルト値
         requiredQuantity: 1,
         ownedQuantity: 0,
         priority: 3,
         season: 'all',
-        
-        // メタデータ
-        extractedFields,
+        extractedFields: this.getExtractedFields(result),
         source: 'llm_prompt'
       };
     } catch (error) {
       console.error('Prompt extraction failed:', error);
-      return this.createFallbackResult(prompt);
+      return this.createFallback(prompt);
     }
   }
 
@@ -53,7 +44,13 @@ export class LLMService {
    */
   async extractGearFromUrl(url: string): Promise<LLMExtractionResult> {
     try {
-      // Webスクレイピングで基本情報取得
+      new URL(url); // URL検証
+    } catch {
+      return this.createFallback(url);
+    }
+    
+    try {
+      // スクレイピングで基本情報取得
       const scrapedData = await webScrapingService.scrapeProductInfo(url);
       
       // LLMで補強（失敗してもスクレイピング結果を返す）
@@ -62,15 +59,6 @@ export class LLMService {
         const llmResponse = await openaiClient.chatCompletion(PROMPTS.EXTRACT_URL, llmPrompt);
         const llmResult = this.parseJSON(llmResponse);
         
-        // 最終的な抽出フィールドをマージ
-        const finalExtractedFields = [...new Set([
-          ...(scrapedData.extractedFields || []),
-          ...(llmResult.name ? ['name'] : []),
-          ...(llmResult.brand ? ['brand'] : []),
-          ...(llmResult.weightGrams ? ['weightGrams'] : []),
-          ...(llmResult.priceCents ? ['priceCents'] : [])
-        ])];
-
         return {
           name: llmResult.name || scrapedData.name || 'Product from URL',
           brand: llmResult.brand || scrapedData.brand,
@@ -78,11 +66,11 @@ export class LLMService {
           weightGrams: llmResult.weightGrams || scrapedData.weightGrams,
           priceCents: llmResult.priceCents || scrapedData.priceCents,
           suggestedCategory: llmResult.suggestedCategory || scrapedData.suggestedCategory || 'Other',
-          requiredQuantity: scrapedData.requiredQuantity || 1,
-          ownedQuantity: scrapedData.ownedQuantity || 0,
-          priority: scrapedData.priority || 3,
-          season: scrapedData.season || 'all',
-          extractedFields: finalExtractedFields,
+          requiredQuantity: 1,
+          ownedQuantity: 0,
+          priority: 3,
+          season: 'all',
+          extractedFields: this.mergeExtractedFields(scrapedData, llmResult),
           source: 'enhanced'
         };
       } catch (llmError) {
@@ -91,7 +79,7 @@ export class LLMService {
       }
     } catch (error) {
       console.error('URL extraction failed:', error);
-      return this.createUrlFallback(url);
+      return this.createFallback(url);
     }
   }
 
@@ -100,22 +88,27 @@ export class LLMService {
    */
   async enhanceWithPrompt(urlData: LLMExtractionResult, prompt: string): Promise<LLMExtractionResult> {
     try {
-      const enhanceMessage = `既存データ: ${JSON.stringify(urlData)}\n追加情報: ${prompt}`;
+      const enhanceMessage = `${PROMPTS.ENHANCE_PROMPT}\n\n既存データ: ${JSON.stringify(urlData)}\n\n追加情報: ${prompt}`;
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, enhanceMessage);
       const result = this.parseJSON(response);
       
       return {
         name: result.name || urlData.name,
         brand: result.brand || urlData.brand,
+        productUrl: urlData.productUrl,
         weightGrams: result.weightGrams || urlData.weightGrams,
         priceCents: result.priceCents || urlData.priceCents,
         suggestedCategory: result.suggestedCategory || urlData.suggestedCategory,
+        requiredQuantity: 1,
+        ownedQuantity: 0,
+        priority: 3,
+        season: 'all',
         extractedFields: urlData.extractedFields || [],
         source: 'enhanced'
       };
     } catch (error) {
       console.error('Enhancement failed:', error);
-      return this.enhanceFallback(urlData, prompt);
+      return urlData; // 失敗時は元データを返す
     }
   }
 
@@ -136,38 +129,68 @@ export class LLMService {
     }
   }
 
-
   /**
-   * ヘルスチェック
+   * リスト分析
    */
-  async checkHealth(): Promise<{ isHealthy: boolean; message?: string }> {
+  async analyzeList(gearList: any[]): Promise<{ summary: string; tips: string[] }> {
     try {
-      const isHealthy = await openaiClient.healthCheck();
+      const listData = JSON.stringify(gearList.slice(0, 10)); // 最初の10件のみ
+      const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, listData);
+      const result = this.parseJSON(response);
       return {
-        isHealthy,
-        message: isHealthy ? 'LLM service operational' : 'LLM service unavailable'
+        summary: result.summary || 'リストを分析できませんでした',
+        tips: result.tips || ['特に提案はありません']
       };
     } catch (error) {
+      console.error('List analysis failed:', error);
       return {
-        isHealthy: false,
-        message: 'Health check failed'
+        summary: '分析に失敗しました',
+        tips: ['後でもう一度お試しください']
       };
     }
   }
 
-  // ヘルパーメソッド
-  private parseJSON(jsonString: string): any {
+  /**
+   * JSON解析
+   */
+  private parseJSON(response: string): any {
     try {
-      return JSON.parse(jsonString);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : {};
     } catch {
       return {};
     }
   }
 
+  /**
+   * 抽出フィールド取得
+   */
+  private getExtractedFields(result: any): string[] {
+    const fields: string[] = [];
+    if (result.name) fields.push('name');
+    if (result.brand) fields.push('brand');
+    if (result.weightGrams) fields.push('weightGrams');
+    if (result.priceCents) fields.push('priceCents');
+    if (result.suggestedCategory) fields.push('suggestedCategory');
+    return fields;
+  }
 
-  private createFallbackResult(prompt: string): LLMExtractionResult {
+  /**
+   * 抽出フィールドマージ
+   */
+  private mergeExtractedFields(scrapedData: LLMExtractionResult, llmResult: any): string[] {
+    return [...new Set([
+      ...(scrapedData.extractedFields || []),
+      ...this.getExtractedFields(llmResult)
+    ])];
+  }
+
+  /**
+   * フォールバック結果作成
+   */
+  private createFallback(input: string): LLMExtractionResult {
     return {
-      name: prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt,
+      name: input.length > 50 ? input.substring(0, 50) + '...' : input,
       suggestedCategory: 'Other',
       requiredQuantity: 1,
       ownedQuantity: 0,
@@ -177,47 +200,6 @@ export class LLMService {
       source: 'fallback'
     };
   }
-
-  private createUrlFallback(url: string): LLMExtractionResult {
-    const domain = new URL(url).hostname;
-    let brand: string | undefined;
-    
-    if (domain.includes('arcteryx')) brand = 'Arc\'teryx';
-    else if (domain.includes('patagonia')) brand = 'Patagonia';
-    else if (domain.includes('montbell')) brand = 'Montbell';
-    
-    return {
-      name: 'Product from URL',
-      brand,
-      productUrl: url,
-      suggestedCategory: 'Other',
-      requiredQuantity: 1,
-      ownedQuantity: 0,
-      priority: 3,
-      season: 'all',
-      extractedFields: brand ? ['brand'] : [],
-      source: 'fallback'
-    };
-  }
-
-  private enhanceFallback(urlData: LLMExtractionResult, prompt: string): LLMExtractionResult {
-    const enhanced = { ...urlData };
-    
-    // 重量の抽出
-    const weightMatch = prompt.match(/(\d+)\s*g/i);
-    if (weightMatch) {
-      enhanced.weightGrams = parseInt(weightMatch[1]);
-    }
-    
-    // 価格の抽出
-    const priceMatch = prompt.match(/(\d+)\s*円/i);
-    if (priceMatch) {
-      enhanced.priceCents = parseInt(priceMatch[1]) * 100;
-    }
-    
-    return enhanced;
-  }
-
 }
 
 export const llmService = new LLMService();

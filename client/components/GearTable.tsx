@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { GearItemWithCalculated } from '../utils/types'
-import { COLORS } from '../utils/colors'
 import {
+  COLORS,
   getTableRowStyle,
   getTableHeaderStyle,
   getInputStyle,
@@ -9,11 +9,11 @@ import {
   getDropdownStyle,
   getDropdownItemStyle,
   getPriorityColor,
-  getCategoryBadgeStyle,
-  getLinkStyle,
-  getSquareSeparatorStyle
-} from '../utils/colorHelpers'
+  getCategoryBadgeStyle
+} from '../utils/designSystem'
 import TruncatedText from './TruncatedText'
+import Card from './ui/Card'
+import Button from './ui/Button'
 
 // Price formatting helper
 const formatPrice = (priceCents?: number) => {
@@ -162,10 +162,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
   }, [showCheckboxes])
 
   return (
-    <div 
-      className="border"
-      style={getSquareSeparatorStyle()}
-    >
+    <Card variant="square">
       {/* フィルタ・ソート */}
       <div 
         className="p-2 border-b flex gap-2 items-center"
@@ -189,13 +186,13 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
             >
               {selectedIds.length} selected
             </span>
-            <button
+            <Button
+              variant="danger"
+              size="sm"
               onClick={handleDelete}
-              className="px-2 py-0.5 rounded text-xs font-medium transition-colors"
-              style={getButtonStyle('danger')}
             >
               Delete Selected
-            </button>
+            </Button>
           </div>
         )}
         <div 
@@ -527,7 +524,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   )
 })
 

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
+import { normalizeBrand } from '../utils/brandUtils.js';
 
 /**
  * Amazon専用スクレイピングサービス - 最適化版
@@ -125,7 +126,7 @@ export class AmazonScraper {
   }
 
   /**
-   * Amazonブランド抽出
+   * Amazonブランド抽出（改良版）
    */
   private extractAmazonBrand($: cheerio.Root): string | undefined {
     const brandSelectors = [
@@ -133,20 +134,26 @@ export class AmazonScraper {
       '#bylineInfo',
       '.po-brand .po-break-word',
       '[data-automation-id="product-brand"]',
-      '.a-link-normal[href*="/stores/"]'
+      '.a-link-normal[href*="/stores/"]',
+      '#bylineInfo_feature_div a'
     ];
     
     for (const selector of brandSelectors) {
       let brand = $(selector).first().text().trim();
       
       // "ブランド: " などのプレフィックスを除去
-      brand = brand.replace(/^(ブランド|Brand|訪問:|Visit\s+the\s+|から)/i, '').trim();
+      brand = brand
+        .replace(/^(ブランド|Brand|訪問:|Visit\s+the\s+|から|のストアを表示)/i, '')
+        .replace(/\s*のストアを表示.*$/i, '')
+        .replace(/\s*ストア.*$/i, '')
+        .trim();
       
       if (brand && brand.length > 1 && brand.length < 50 && !brand.includes('Amazon')) {
-        return brand;
+        return normalizeBrand(brand);
       }
     }
   }
+
 
   /**
    * Amazon価格抽出（複数価格タイプ対応）

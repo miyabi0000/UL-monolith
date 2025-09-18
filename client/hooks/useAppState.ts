@@ -11,7 +11,6 @@ export const useAppState = () => {
   const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   
   // APIから取得したギアアイテム（計算済み）
@@ -28,23 +27,20 @@ export const useAppState = () => {
   // ギアアイテムをAPIから取得
   const fetchGearItems = async () => {
     try {
-      setLoading(true);
       setError('');
       const items = await GearApiService.getAllGear();
-      
+
       // カテゴリ情報を付加
       const enrichedItems = items.map(item => ({
         ...item,
         category: categories.find(cat => cat.id === item.categoryId) || categories[0]
       }));
-      
+
       setGearItems(enrichedItems);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch gear items';
       setError(errorMessage);
       console.error('Error fetching gear items:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -56,7 +52,6 @@ export const useAppState = () => {
   // API操作関数
   const handleCreateGear = async (gearData: any) => {
     try {
-      setLoading(true);
       await GearApiService.createGear(gearData);
       await fetchGearItems(); // データを再取得
       setSuccessMessage('ギアが正常に追加されました');
@@ -64,14 +59,11 @@ export const useAppState = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create gear item';
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleUpdateGear = async (id: string, gearData: any) => {
     try {
-      setLoading(true);
       await GearApiService.updateGear(id, gearData);
       await fetchGearItems(); // データを再取得
       setSuccessMessage('ギアが正常に更新されました');
@@ -79,14 +71,11 @@ export const useAppState = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update gear item';
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDeleteGear = async (id: string) => {
     try {
-      setLoading(true);
       await GearApiService.deleteGear(id);
       await fetchGearItems(); // データを再取得
       setSuccessMessage('ギアが正常に削除されました');
@@ -94,8 +83,6 @@ export const useAppState = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete gear item';
       setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -113,7 +100,6 @@ export const useAppState = () => {
     // データ状態
     gearItems,
     categories, setCategories,
-    loading,
     error,
     
     // API操作関数

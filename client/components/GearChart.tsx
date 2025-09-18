@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData } from '../utils/types'
-import { COLORS, chartColors } from '../utils/colors'
-import { getCardStyle, getButtonStyle, getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers'
+import { COLORS, chartColors } from '../utils/designSystem'
+import Card from './ui/Card'
+import Button from './ui/Button'
 
 // 色のバリエーションを生成するヘルパー関数
 const generateItemColor = (baseColor: string, index: number, total: number) => {
@@ -11,16 +12,16 @@ const generateItemColor = (baseColor: string, index: number, total: number) => {
   const r = parseInt(hex.substr(0, 2), 16);
   const g = parseInt(hex.substr(2, 2), 16);
   const b = parseInt(hex.substr(4, 2), 16);
-  
+
   // RGBからHSLに変換
   const rNorm = r / 255;
   const gNorm = g / 255;
   const bNorm = b / 255;
-  
+
   const max = Math.max(rNorm, gNorm, bNorm);
   const min = Math.min(rNorm, gNorm, bNorm);
   const diff = max - min;
-  
+
   let h = 0;
   if (diff !== 0) {
     if (max === rNorm) h = ((gNorm - bNorm) / diff) % 6;
@@ -29,17 +30,18 @@ const generateItemColor = (baseColor: string, index: number, total: number) => {
   }
   h = Math.round(h * 60);
   if (h < 0) h += 360;
-  
+
   const l = (max + min) / 2;
   const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1));
-  
+
   // 時計回りに彩度を落とす
   const progress = index / total; // 0から1の進行度
   const newSaturation = Math.max(0.3, Math.min(0.9, s * (1 - progress * 0.7))); // 彩度を徐々に下げる
   const newLightness = Math.max(0.4, Math.min(0.7, l + progress * 0.2)); // 明度を徐々に上げる
-  
+
   return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`;
 };
+
 
 interface GearChartProps {
   data: ChartData[]
@@ -250,10 +252,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
 
                         {/* システム別重量割合 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div 
-                      className="p-3"
-                      style={getSquareSeparatorStyle()}
-                    >
+                    <Card variant="square" className="p-3">
                       <div className="flex justify-between items-center mb-3">
                         <h4 
                           className="font-semibold"
@@ -261,25 +260,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                         >
                           WEIGHT DISTRIBUTION
                         </h4>
-                        <button
-                          className="text-xs font-bold px-3 py-1 rounded transition-all duration-300 hover:scale-105 relative overflow-hidden"
-                          style={getLiquidGlassStyle()}
-                          onMouseEnter={(e) => {
-                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-                          }}
-                          onMouseLeave={(e) => {
-                            Object.assign(e.currentTarget.style, getLiquidGlassStyle());
-                          }}
-                          onMouseDown={(e) => {
-                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
-                          }}
-                          onMouseUp={(e) => {
-                            Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-                          }}
+                        <Button
+                          isGlass
+                          size="sm"
                           onClick={onShowGearManager}
                         >
                           <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>+ ADD</span>
-                        </button>
+                        </Button>
                       </div>
                       <div className="space-y-2">
                         {sortedData.map((category) => (
@@ -327,14 +314,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </Card>
 
         {/* 選択システム内のアイテム重量割合 または 全アイテム表示 */}
         {(selectedCategory || showAllItems) && (
-          <div 
-            className="p-3"
-            style={getSquareSeparatorStyle()}
-          >
+          <Card variant="square" className="p-3">
             <h4 
               className="font-semibold mb-3 flex items-center"
               style={{ color: COLORS.text.primary }}
@@ -436,16 +420,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                 );
               })}
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
       {/* 選択アイテムの詳細 */}
       {selectedItemData && (
-        <div 
-          className="p-3 border"
-          style={getSquareSeparatorStyle()}
-        >
+        <Card variant="square" className="p-3">
           <h4 
             className="font-semibold mb-3"
             style={{ color: COLORS.text.primary }}
@@ -480,7 +461,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
               <div className="font-semibold">{selectedItemData.weightGrams}g</div>
             </div>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )
