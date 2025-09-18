@@ -72,7 +72,8 @@ export default function App() {
   };
 
   const handleLoginSuccess = (userData: any) => {
-    login(userData);
+    
+    (userData);
     setShowLogin(false);
   };
 

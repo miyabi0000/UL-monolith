@@ -10,11 +10,11 @@ export class OpenAIClient {
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      console.warn('Warning: OPENAI_API_KEY not set - API calls will fail');
+      console.warn('[OpenAI] API key not configured - LLM features will use fallback responses');
       this.openai = null;
     } else {
       this.openai = new OpenAI({ apiKey });
-      console.log('OpenAI client initialized');
+      console.log('[OpenAI] Client initialized successfully');
     }
   }
 
@@ -23,7 +23,8 @@ export class OpenAIClient {
    */
   async chatCompletion(systemPrompt: string, userMessage: string): Promise<string> {
     if (!this.openai) {
-      throw new Error('OpenAI API key not configured');
+      console.warn('[OpenAI] API key not configured, using fallback response');
+      throw new Error('OpenAI client not available');
     }
 
     const completion = await this.openai.chat.completions.create({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
 import { GearApiService } from '../services/gearApiService';
 
@@ -24,16 +24,22 @@ export const useAppState = () => {
     { id: '5', name: 'Hygiene', path: ['Hygiene'], color: '#A66DFF', createdAt: new Date().toISOString() },
   ]);
 
-  // ギアアイテムをAPIから取得
-  const fetchGearItems = async () => {
+  // ギアアイテムをAPIから取得（useCallbackで安定化）
+  const fetchGearItems = useCallback(async () => {
     try {
       setError('');
       const items = await GearApiService.getAllGear();
 
-      // カテゴリ情報を付加
+      // カテゴリ情報を付加（useCallbackで安定化）
       const enrichedItems = items.map(item => ({
         ...item,
-        category: categories.find(cat => cat.id === item.categoryId) || categories[0]
+        category: categories.find(cat => cat.id === item.categoryId) || { 
+          id: '1', 
+          name: 'Clothing', 
+          path: ['Clothing'], 
+          color: '#FF6B6B', 
+          createdAt: new Date().toISOString() 
+        }
       }));
 
       setGearItems(enrichedItems);
@@ -42,12 +48,12 @@ export const useAppState = () => {
       setError(errorMessage);
       console.error('Error fetching gear items:', err);
     }
-  };
+  }, [categories]); // categoriesが変更された時のみ再作成
 
   // 初回ロード
   useEffect(() => {
     fetchGearItems();
-  }, []);
+  }, []); // 空の依存配列で初回のみ実行
 
   // API操作関数
   const handleCreateGear = async (gearData: any) => {

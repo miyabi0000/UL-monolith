@@ -26,19 +26,25 @@ export const handleBulkOperations = (req: Request, res: Response) => {
     const results: any[] = [];
 
     if (action === 'delete') {
-      const itemsToDelete = gearItems.filter(item => ids.includes(item.id));
-      
-      itemsToDelete.forEach(item => {
-        addHistoryEntry({
-          gearId: item.id,
-          action: 'bulk_delete',
-          changes: [{ field: 'deleted', oldValue: false, newValue: true }],
-          userId: 'user1',
-          metadata: { bulkOperationId, reason: 'Bulk delete operation' }
-        });
-      });
+      // 効率化: Set使用でO(1)のIN相当チェック
+      // SQL: DELETE FROM gear_items WHERE id IN (?, ?, ?)
+      const idsSet = new Set(ids);
+      const itemsToDelete = gearItems.filter(item => idsSet.has(item.id));
 
-      setGearItems(gearItems.filter(item => !ids.includes(item.id)));
+      // バッチで履歴エントリーを追加
+      const historyEntries = itemsToDelete.map(item => ({
+        gearId: item.id,
+        action: 'bulk_delete' as const,
+        changes: [{ field: 'deleted', oldValue: false, newValue: true }],
+        userId: 'user1',
+        metadata: { bulkOperationId, reason: 'Bulk delete operation' }
+      }));
+
+      // 一括履歴追加（実際のDBでは batch insert）
+      historyEntries.forEach(entry => addHistoryEntry(entry));
+
+      // 効率的な削除: 1回のフィルタリングで完了
+      setGearItems(gearItems.filter(item => !idsSet.has(item.id)));
       processedCount = itemsToDelete.length;
 
       res.json({
@@ -57,51 +63,63 @@ export const handleBulkOperations = (req: Request, res: Response) => {
       }
 
       const allowedFields = ['ownedQuantity', 'requiredQuantity', 'priority', 'categoryId'];
-      
-      ids.forEach(id => {
-        const itemIndex = gearItems.findIndex(item => item.id === id);
-        if (itemIndex !== -1) {
-          const oldItem = { ...gearItems[itemIndex] };
+
+      // 効率化: Set使用でO(1)のIN相当チェック + Map作成で高速参照
+      // SQL: UPDATE gear_items SET ... WHERE id IN (?, ?, ?)
+      const idsSet = new Set(ids);
+      const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+      const updatedAt = new Date().toISOString();
+      const historyEntries: any[] = [];
+
+      // 1回のループで全処理を実行
+      gearItems.forEach((item, itemIndex) => {
+        if (idsSet.has(item.id)) {
+          const oldItem = { ...item };
           const changes: any[] = [];
 
+          // データ更新
           Object.keys(data).forEach(key => {
             if (allowedFields.includes(key)) {
               const oldValue = oldItem[key];
               const newValue = data[key];
-              
+
               if (oldValue !== newValue) {
                 changes.push({
                   field: key,
                   oldValue,
                   newValue
                 });
-                
+
                 gearItems[itemIndex][key] = newValue;
               }
             }
           });
 
-          gearItems[itemIndex].updatedAt = new Date().toISOString();
+          gearItems[itemIndex].updatedAt = updatedAt;
 
           if (changes.length > 0) {
-            addHistoryEntry({
-              gearId: id,
+            historyEntries.push({
+              gearId: item.id,
               action: 'bulk_update',
               changes,
               userId: 'user1',
               metadata: { bulkOperationId, reason: 'Bulk update operation' }
             });
-            
+
             processedCount++;
           }
 
-          const category = categories.find(cat => cat.id === gearItems[itemIndex].categoryId);
+          // 効率的なカテゴリ参照
+          const category = categoryMap.get(gearItems[itemIndex].categoryId);
           results.push(calculateGearFields({
             ...gearItems[itemIndex],
             category
           }));
         }
       });
+
+      // 一括履歴追加（実際のDBでは batch insert）
+      historyEntries.forEach(entry => addHistoryEntry(entry));
 
       res.json({
         success: true,
