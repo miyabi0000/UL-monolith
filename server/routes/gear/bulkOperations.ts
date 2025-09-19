@@ -141,7 +141,7 @@ export const handleBulkOperations = (req: Request, res: Response) => {
 export const handleBulkDelete = (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
-    
+
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
@@ -150,22 +150,27 @@ export const handleBulkDelete = (req: Request, res: Response) => {
     }
 
     const bulkOperationId = Date.now().toString();
-    const itemsToDelete = gearItems.filter(item => ids.includes(item.id));
-    
-    // Add history entries for each deleted item
-    itemsToDelete.forEach(item => {
-      addHistoryEntry({
-        gearId: item.id,
-        action: 'bulk_delete',
-        changes: [{ field: 'deleted', oldValue: false, newValue: true }],
-        userId: 'user1', // TODO: Get from authentication
-        metadata: { bulkOperationId, reason: 'RESTful bulk delete operation' }
-      });
-    });
 
-    // Remove items from store
-    setGearItems(gearItems.filter(item => !ids.includes(item.id)));
-    
+    // 効率化: Set使用でO(1)のIN相当チェック
+    // SQL: DELETE FROM gear_items WHERE id IN (?, ?, ?)
+    const idsSet = new Set(ids);
+    const itemsToDelete = gearItems.filter(item => idsSet.has(item.id));
+
+    // バッチで履歴エントリーを追加
+    const historyEntries = itemsToDelete.map(item => ({
+      gearId: item.id,
+      action: 'bulk_delete' as const,
+      changes: [{ field: 'deleted', oldValue: false, newValue: true }],
+      userId: 'user1', // TODO: Get from authentication
+      metadata: { bulkOperationId, reason: 'RESTful bulk delete operation' }
+    }));
+
+    // 一括履歴追加（実際のDBでは batch insert）
+    historyEntries.forEach(entry => addHistoryEntry(entry));
+
+    // 効率的な削除: 1回のフィルタリングで完了
+    setGearItems(gearItems.filter(item => !idsSet.has(item.id)));
+
     res.json({
       success: true,
       message: `${itemsToDelete.length} gear items deleted successfully`,

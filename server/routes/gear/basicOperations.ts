@@ -76,15 +76,18 @@ export const handleGetGearById = (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const item = gearItems.find(gear => gear.id === id);
-    
+
     if (!item) {
       return res.status(404).json({
         success: false,
         message: 'Gear item not found'
       });
     }
-    
-    const category = categories.find(cat => cat.id === item.categoryId);
+
+    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
+    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+    const category = categoryMap.get(item.categoryId);
+
     const enrichedItem = calculateGearFields({
       ...item,
       category
@@ -105,8 +108,11 @@ export const handleGetGearById = (req: Request, res: Response) => {
 
 export const handleGetGearSummary = (req: Request, res: Response) => {
   try {
+    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
+    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+
     const enrichedItems = gearItems.map(item => {
-      const category = categories.find(cat => cat.id === item.categoryId);
+      const category = categoryMap.get(item.categoryId);
       return calculateGearFields({
         ...item,
         category
@@ -157,7 +163,9 @@ export const handleCreateGear = (req: Request, res: Response) => {
 
     gearItems.push(newItem);
 
-    const category = categories.find(cat => cat.id === newItem.categoryId);
+    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
+    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+    const category = categoryMap.get(newItem.categoryId);
     const enrichedItem = calculateGearFields({
       ...newItem,
       category
@@ -204,7 +212,9 @@ export const handleUpdateGear = (req: Request, res: Response) => {
       updatedAt: new Date().toISOString()
     };
 
-    const category = categories.find(cat => cat.id === gearItems[itemIndex].categoryId);
+    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
+    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+    const category = categoryMap.get(gearItems[itemIndex].categoryId);
     const enrichedItem = calculateGearFields({
       ...gearItems[itemIndex],
       category
