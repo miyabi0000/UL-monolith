@@ -15,11 +15,13 @@ type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'gen
 interface ChatPopupProps {
   isOpen: boolean
   onClose: () => void
+  gearItems?: any[]
+  categories?: any[]
   onGearExtracted?: (gearData: any) => void
   currentGearList?: any[] // ギアリスト分析用
 }
 
-const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted, currentGearList = [] }) => {
+const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], categories = [], onGearExtracted, currentGearList = [] }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -263,13 +265,13 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     <div className="fixed inset-0 z-50 flex">
       {/* オーバーレイ */}
       <div
-        className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-300"
+        className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-150"
         onClick={onClose}
       />
 
       {/* チャットパネル */}
       <div
-        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-500 ease-out shadow-2xl"
+        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out shadow-2xl"
         style={{
           ...getSquareSeparatorStyle(),
           borderLeft: `2px solid ${COLORS.primary.medium}`,

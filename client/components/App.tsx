@@ -1,12 +1,15 @@
 import React, { Suspense } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
+import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
-import { COLORS, getMessageStyle } from '../utils/designSystem';
+import { COLORS } from '../utils/designSystem';
 import AppHeader from './AppHeader';
 import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
 import GearChart from './GearChart';
+import NotificationPopup from './NotificationPopup';
+import SkeletonLoader from './ui/SkeletonLoader';
 
 // 遅延インポート（コード分割）
 const GearForm = React.lazy(() => import('./GearForm'));
@@ -25,13 +28,12 @@ export default function App() {
     showChat, setShowChat,
     showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
-    successMessage, setSuccessMessage,
-    
+
     // データ状態
     gearItems,
     categories, setCategories,
-    error,
-    
+    isLoading,
+
     // API操作関数
     handleCreateGear,
     handleUpdateGear,
@@ -39,21 +41,36 @@ export default function App() {
     refreshGearItems
   } = useAppState();
 
+  const {
+    messages,
+    removeNotification,
+    showSuccess,
+    showError,
+    showLoading
+  } = useNotifications();
+
   const chartData = calculateChartData(gearItems);
   const totals = calculateTotals(gearItems);
 
   const handleSaveGear = async (gearItem: any) => {
+    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
+
     try {
       if (editingGear) {
         await handleUpdateGear(editingGear.id, gearItem);
+        showSuccess('アイテムが正常に更新されました');
       } else {
         await handleCreateGear(gearItem);
+        showSuccess('アイテムが正常に作成されました');
       }
-      
+
       setShowForm(false);
       setEditingGear(null);
     } catch (err) {
+      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
       console.error('Error saving gear:', err);
+    } finally {
+      removeNotification(loadingId);
     }
   };
 
@@ -63,23 +80,28 @@ export default function App() {
   };
 
   const handleBulkDelete = async (selectedIds: string[]) => {
+    const loadingId = showLoading(`${selectedIds.length}個のアイテムを削除中...`);
+
     try {
       // 複数のアイテムを並列で削除
       await Promise.all(selectedIds.map(id => handleDeleteGear(id)));
+      showSuccess(`${selectedIds.length}個のアイテムが正常に削除されました`);
     } catch (err) {
+      showError('アイテムの一括削除に失敗しました');
       console.error('Error bulk deleting gear:', err);
+    } finally {
+      removeNotification(loadingId);
     }
   };
 
   const handleLoginSuccess = (userData: any) => {
-    
-    (userData);
+    showSuccess('ログインに成功しました');
     setShowLogin(false);
   };
 
   return (
     <div
-      className="min-h-screen py-2 flex transition-all duration-300 ease-in-out"
+      className="min-h-screen py-2 flex"
       style={{
         backgroundColor: COLORS.background,
         backgroundImage: `
@@ -91,9 +113,10 @@ export default function App() {
     >
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
       <div
-        className={`flex-grow transition-all duration-300 ease-in-out ${
-          showChat ? 'mr-96' : ''
-        }`}
+        className="flex-grow transition-all duration-150 ease-out"
+        style={{
+          marginRight: showChat ? '384px' : '0px', // 24rem = 384px
+        }}
       >
         <AppHeader
           onShowLogin={() => setShowLogin(true)}
@@ -103,63 +126,48 @@ export default function App() {
           userName={user?.name}
         />
 
-        {/* Enhanced Status Messages */}
-        {successMessage && (
-          <div
-            className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300 animate-pulse"
-            style={getMessageStyle('success')}
-          >
-            <div className="flex items-center">
-              <p
-                className="text-sm font-medium"
-                style={{ color: COLORS.primary.dark }}
-              >
-                {successMessage}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            className="mb-4 p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300"
-            style={getMessageStyle('error')}
-          >
-            <div className="flex items-center">
-              <p
-                className="text-sm font-medium"
-                style={{ color: COLORS.accent }}
-              >
-                {error}
-              </p>
-            </div>
-          </div>
-        )}
-
 
         {/* Main Dashboard - Full width container */}
         <div className="w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
-            <div className="lg:col-span-4 order-2 lg:order-1">
-              <GearChart
-                data={chartData}
-                totalWeight={totals.weight}
-                onShowGearManager={() => setShowForm(true)}
-              />
-            </div>
-            <div className="space-y-2 order-1 lg:order-2">
-              <CompactSummary totals={totals} />
-            </div>
-          </div>
+          {isLoading ? (
+            // ローディング中のスケルトン表示
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+                <div className="lg:col-span-4">
+                  <SkeletonLoader variant="chart" />
+                </div>
+                <div className="space-y-2">
+                  <SkeletonLoader variant="card" count={3} />
+                </div>
+              </div>
+              <SkeletonLoader variant="table" />
+            </>
+          ) : (
+            // データ読み込み完了後の実際のコンテンツ
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
+                <div className="lg:col-span-4">
+                  <GearChart
+                    data={chartData}
+                    totalWeight={totals.weight}
+                    onShowGearManager={() => setShowForm(true)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <CompactSummary totals={totals} />
+                </div>
+              </div>
 
-          <GearTable
-            items={gearItems}
-            onEdit={handleEditGear}
-            onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
-            onSave={handleSaveGear}
-          onUpdateItem={() => {}} // TODO: implement if needed
-            showCheckboxes={showCheckboxes}
-          />
+              <GearTable
+                items={gearItems}
+                onEdit={handleEditGear}
+                onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
+                onSave={handleSaveGear}
+                onUpdateItem={() => {}} // TODO: implement if needed
+                showCheckboxes={showCheckboxes}
+              />
+            </>
+          )}
         </div>
 
         <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
@@ -205,6 +213,12 @@ export default function App() {
         </Suspense>
           </div>
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
+
+      {/* 右端通知ポップアップ */}
+      <NotificationPopup
+        messages={messages}
+        onRemove={removeNotification}
+      />
     </div>
   );
 }

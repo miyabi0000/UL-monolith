@@ -10,9 +10,10 @@ export const useAppState = () => {
   const [showChat, setShowChat] = useState(false);
   const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  
+
+  // データ読み込み状態
+  const [isLoading, setIsLoading] = useState(true);
+
   // APIから取得したギアアイテム（計算済み）
   const [gearItems, setGearItems] = useState<GearItemWithCalculated[]>([]);
   
@@ -27,26 +28,30 @@ export const useAppState = () => {
   // ギアアイテムをAPIから取得（useCallbackで安定化）
   const fetchGearItems = useCallback(async () => {
     try {
-      setError('');
+      setIsLoading(true);
       const items = await GearApiService.getAllGear();
 
-      // カテゴリ情報を付加（useCallbackで安定化）
+      // N+1問題解消: 事前にカテゴリマップ作成
+      const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
+      const defaultCategory = {
+        id: '1',
+        name: 'Clothing',
+        path: ['Clothing'],
+        color: '#FF6B6B',
+        createdAt: new Date().toISOString()
+      };
+
       const enrichedItems = items.map(item => ({
         ...item,
-        category: categories.find(cat => cat.id === item.categoryId) || { 
-          id: '1', 
-          name: 'Clothing', 
-          path: ['Clothing'], 
-          color: '#FF6B6B', 
-          createdAt: new Date().toISOString() 
-        }
+        category: categoryMap.get(item.categoryId) || defaultCategory
       }));
 
       setGearItems(enrichedItems);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch gear items';
-      setError(errorMessage);
       console.error('Error fetching gear items:', err);
+      throw err; // エラーを上位に委譲
+    } finally {
+      setIsLoading(false);
     }
   }, [categories]); // categoriesが変更された時のみ再作成
 
@@ -55,41 +60,20 @@ export const useAppState = () => {
     fetchGearItems();
   }, []); // 空の依存配列で初回のみ実行
 
-  // API操作関数
+  // API操作関数（エラー・成功処理は上位コンポーネントで実装）
   const handleCreateGear = async (gearData: any) => {
-    try {
-      await GearApiService.createGear(gearData);
-      await fetchGearItems(); // データを再取得
-      setSuccessMessage('ギアが正常に追加されました');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create gear item';
-      setError(errorMessage);
-    }
+    await GearApiService.createGear(gearData);
+    await fetchGearItems(); // データを再取得
   };
 
   const handleUpdateGear = async (id: string, gearData: any) => {
-    try {
-      await GearApiService.updateGear(id, gearData);
-      await fetchGearItems(); // データを再取得
-      setSuccessMessage('ギアが正常に更新されました');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update gear item';
-      setError(errorMessage);
-    }
+    await GearApiService.updateGear(id, gearData);
+    await fetchGearItems(); // データを再取得
   };
 
   const handleDeleteGear = async (id: string) => {
-    try {
-      await GearApiService.deleteGear(id);
-      await fetchGearItems(); // データを再取得
-      setSuccessMessage('ギアが正常に削除されました');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete gear item';
-      setError(errorMessage);
-    }
+    await GearApiService.deleteGear(id);
+    await fetchGearItems(); // データを再取得
   };
 
   return {
@@ -101,13 +85,12 @@ export const useAppState = () => {
     showChat, setShowChat,
     showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
-    successMessage, setSuccessMessage,
-    
+
     // データ状態
     gearItems,
     categories, setCategories,
-    error,
-    
+    isLoading,
+
     // API操作関数
     handleCreateGear,
     handleUpdateGear,
