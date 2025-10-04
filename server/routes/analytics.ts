@@ -1,63 +1,30 @@
 import { Router } from 'express';
-import { gearItems, categories } from '../data/store';
+
+// 暫定的なin-memoryデータ（テスト用）
+let gearItems: any[] = [];
 
 const router = Router();
 
-// Get analytics summary
+// Get analytics summary - 暫定実装
 router.get('/summary', (req, res) => {
   try {
-    let totalWeight = 0;
-    let totalPrice = 0;
-    let missingItems = 0;
-    const categoryMap = new Map();
-
-    gearItems.forEach(item => {
-      const weight = (item.weightGrams || 0) * item.requiredQuantity;
-      const price = item.priceCents || 0;
-      const shortage = item.requiredQuantity - item.ownedQuantity;
-
-      totalWeight += weight;
-      totalPrice += price;
-      if (shortage > 0) missingItems++;
-
-      // Category aggregation for chart
-      const category = categories.find(cat => cat.id === item.categoryId);
-      const categoryName = category?.name || 'Other';
-      const categoryColor = category?.color || '#6B7280';
-      
-      const existing = categoryMap.get(categoryName) || { 
-        weight: 0, 
-        items: [],
-        color: categoryColor 
-      };
-      existing.weight += weight;
-      existing.items.push({
-        ...item,
-        category,
-        shortage,
-        totalWeight: weight
-      });
-      categoryMap.set(categoryName, existing);
-    });
-
-    const chartData = Array.from(categoryMap.entries()).map(([name, data]) => ({
-      name,
-      value: data.weight,
-      color: data.color,
-      items: data.items
-    }));
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userItems = gearItems.filter(item => item.userId === userId);
+    
+    const summary = {
+      totalWeight: userItems.reduce((sum, item) => sum + (item.weightGrams || 0), 0),
+      totalPrice: userItems.reduce((sum, item) => sum + (item.priceCents || 0), 0),
+      totalItems: userItems.length,
+      missingItems: userItems.filter(item => item.ownedQuantity < item.requiredQuantity).length,
+      chartData: []
+    };
 
     res.json({
       success: true,
-      data: {
-        totalWeight,
-        totalPrice,
-        missingItems,
-        totalItems: gearItems.length,
-        chartData
-      }
+      data: summary
     });
   } catch (error) {
+    console.error('Error in analytics summary:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to generate analytics',

@@ -1,69 +1,30 @@
 import { Request, Response } from 'express';
-import { gearItems, categories, setGearItems } from '../../data/store';
-import { sanitizeGearData, calculateGearFields } from '../../utils/helpers';
+import { sanitizeGearData } from '../../utils/helpers';
+
+// 暫定的なin-memoryデータ（テスト用）
+let gearItems: any[] = [];
 
 export const handleGetAllGear = (req: Request, res: Response) => {
   try {
-    // TODO: クエリパラメータ対応（フィルタリング・ソート・ページネーション）
-    const { category, priority, season, search, sort, order, page, limit, categoryIds } = req.query;
-
-    let filteredItems = [...gearItems];
-
-    // 効率化: IN相当の処理 - 複数カテゴリIDでのフィルタリング
-    if (categoryIds && typeof categoryIds === 'string') {
-      const categoryIdArray = categoryIds.split(',').map(id => id.trim());
-      // SQL: SELECT * FROM gear_items WHERE category_id IN (?, ?, ?)
-      filteredItems = filteredItems.filter(item =>
-        categoryIdArray.includes(item.categoryId || '')
-      );
-    } else if (category) {
-      // 単一カテゴリでのフィルタリング（後方互換性）
-      const categoryObj = categories.find(cat => cat.name === category);
-      if (categoryObj) {
-        filteredItems = filteredItems.filter(item => item.categoryId === categoryObj.id);
-      }
-    }
-
-    // 効率化: 複数優先度でのフィルタリング
-    if (priority && typeof priority === 'string') {
-      const priorityArray = priority.split(',').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
-      if (priorityArray.length > 0) {
-        // SQL: SELECT * FROM gear_items WHERE priority IN (?, ?, ?)
-        filteredItems = filteredItems.filter(item =>
-          priorityArray.includes(item.priority)
-        );
-      }
-    }
-
-    // 効率化: 複数シーズンでのフィルタリング
-    if (season && typeof season === 'string') {
-      const seasonArray = season.split(',').map(s => s.trim());
-      // SQL: SELECT * FROM gear_items WHERE season IN (?, ?, ?)
-      filteredItems = filteredItems.filter(item =>
-        seasonArray.includes(item.season || 'all')
-      );
-    }
-
-    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-
-    const enrichedItems = filteredItems.map(item => {
-      const categoryObj = categoryMap.get(item.categoryId);
-      return calculateGearFields({
-        ...item,
-        category: categoryObj
-      });
-    });
-
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    
+    // 暫定: in-memoryデータを返す
+    const filteredItems = gearItems.filter(item => item.userId === userId);
+    
     res.json({
       success: true,
-      data: enrichedItems,
+      data: filteredItems,
       meta: {
-        total: enrichedItems.length,
-        filtered: filteredItems.length !== gearItems.length
+        total: filteredItems.length,
+        page: 1,
+        limit: 50,
+        hasNext: false,
+        hasPrev: false,
+        filtered: false
       }
     });
   } catch (error) {
+    console.error('Error in handleGetAllGear:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch gear items',
@@ -75,7 +36,9 @@ export const handleGetAllGear = (req: Request, res: Response) => {
 export const handleGetGearById = (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const item = gearItems.find(gear => gear.id === id);
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    
+    const item = gearItems.find(gear => gear.id === id && gear.userId === userId);
 
     if (!item) {
       return res.status(404).json({
@@ -84,20 +47,12 @@ export const handleGetGearById = (req: Request, res: Response) => {
       });
     }
 
-    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-    const category = categoryMap.get(item.categoryId);
-
-    const enrichedItem = calculateGearFields({
-      ...item,
-      category
-    });
-
     res.json({
       success: true,
-      data: enrichedItem
+      data: item
     });
   } catch (error) {
+    console.error('Error in handleGetGearById:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch gear item',
@@ -108,32 +63,23 @@ export const handleGetGearById = (req: Request, res: Response) => {
 
 export const handleGetGearSummary = (req: Request, res: Response) => {
   try {
-    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-
-    const enrichedItems = gearItems.map(item => {
-      const category = categoryMap.get(item.categoryId);
-      return calculateGearFields({
-        ...item,
-        category
-      });
-    });
-
-    const summary = enrichedItems.reduce(
-      (acc, item) => ({
-        totalWeight: acc.totalWeight + (item.totalWeight || 0),
-        totalPrice: acc.totalPrice + (item.totalPrice || 0),
-        totalItems: acc.totalItems + (item.requiredQuantity || 0),
-        missingItems: acc.missingItems + (item.missingQuantity || 0)
-      }),
-      { totalWeight: 0, totalPrice: 0, totalItems: 0, missingItems: 0 }
-    );
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userItems = gearItems.filter(item => item.userId === userId);
+    
+    const summary = {
+      totalWeight: userItems.reduce((sum, item) => sum + (item.weightGrams || 0), 0),
+      totalPrice: userItems.reduce((sum, item) => sum + (item.priceCents || 0), 0),
+      totalItems: userItems.length,
+      missingItems: userItems.filter(item => item.ownedQuantity < item.requiredQuantity).length,
+      chartData: []
+    };
 
     res.json({
       success: true,
       data: summary
     });
   } catch (error) {
+    console.error('Error in handleGetGearSummary:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to calculate gear summary',
@@ -144,9 +90,10 @@ export const handleGetGearSummary = (req: Request, res: Response) => {
 
 export const handleCreateGear = (req: Request, res: Response) => {
   try {
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
     const sanitizedData = sanitizeGearData(req.body);
     
-    if (!sanitizedData.name.trim()) {
+    if (!sanitizedData.name?.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Product name is required'
@@ -155,7 +102,7 @@ export const handleCreateGear = (req: Request, res: Response) => {
 
     const newItem = {
       id: Date.now().toString(),
-      userId: 'user1', // TODO: Get from authentication
+      userId,
       ...sanitizedData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -163,20 +110,13 @@ export const handleCreateGear = (req: Request, res: Response) => {
 
     gearItems.push(newItem);
 
-    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-    const category = categoryMap.get(newItem.categoryId);
-    const enrichedItem = calculateGearFields({
-      ...newItem,
-      category
-    });
-
     res.status(201).json({
       success: true,
-      data: enrichedItem,
+      data: newItem,
       message: 'Gear item created successfully'
     });
   } catch (error) {
+    console.error('Error in handleCreateGear:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create gear item',
@@ -188,21 +128,15 @@ export const handleCreateGear = (req: Request, res: Response) => {
 export const handleUpdateGear = (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const itemIndex = gearItems.findIndex(item => item.id === id);
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const sanitizedData = sanitizeGearData(req.body);
+    
+    const itemIndex = gearItems.findIndex(item => item.id === id && item.userId === userId);
     
     if (itemIndex === -1) {
       return res.status(404).json({
         success: false,
         message: 'Gear item not found'
-      });
-    }
-
-    const sanitizedData = sanitizeGearData(req.body);
-    
-    if (!sanitizedData.name.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Product name is required'
       });
     }
 
@@ -212,20 +146,13 @@ export const handleUpdateGear = (req: Request, res: Response) => {
       updatedAt: new Date().toISOString()
     };
 
-    // 効率化: カテゴリデータを事前にMapに変換してO(1)参照
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-    const category = categoryMap.get(gearItems[itemIndex].categoryId);
-    const enrichedItem = calculateGearFields({
-      ...gearItems[itemIndex],
-      category
-    });
-
     res.json({
       success: true,
-      data: enrichedItem,
+      data: gearItems[itemIndex],
       message: 'Gear item updated successfully'
     });
   } catch (error) {
+    console.error('Error in handleUpdateGear:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update gear item',
@@ -237,8 +164,10 @@ export const handleUpdateGear = (req: Request, res: Response) => {
 export const handleDeleteGear = (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    
     const initialLength = gearItems.length;
-    setGearItems(gearItems.filter(item => item.id !== id));
+    gearItems = gearItems.filter(item => !(item.id === id && item.userId === userId));
     
     if (gearItems.length === initialLength) {
       return res.status(404).json({
@@ -252,6 +181,7 @@ export const handleDeleteGear = (req: Request, res: Response) => {
       message: 'Gear item deleted successfully'
     });
   } catch (error) {
+    console.error('Error in handleDeleteGear:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete gear item',
