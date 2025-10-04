@@ -1,5 +1,47 @@
 import { Router } from 'express';
-import { categories, setCategories } from '../data/store.js';
+
+// 暫定的なin-memoryカテゴリデータ
+let categories = [
+  { 
+    id: '550e8400-e29b-41d4-a716-446655440001', 
+    name: 'Clothing', 
+    path: ['Clothing'], 
+    color: '#FF6B6B', 
+    createdAt: new Date().toISOString()
+  },
+  { 
+    id: '550e8400-e29b-41d4-a716-446655440002', 
+    name: 'Sleep', 
+    path: ['Sleep'], 
+    color: '#4ECDC4', 
+    createdAt: new Date().toISOString()
+  },
+  { 
+    id: '550e8400-e29b-41d4-a716-446655440003', 
+    name: 'Pack', 
+    path: ['Pack'], 
+    color: '#FFE66D', 
+    createdAt: new Date().toISOString()
+  },
+  { 
+    id: '550e8400-e29b-41d4-a716-446655440004', 
+    name: 'Electronics', 
+    path: ['Electronics'], 
+    color: '#4D96FF', 
+    createdAt: new Date().toISOString()
+  },
+  { 
+    id: '550e8400-e29b-41d4-a716-446655440005', 
+    name: 'Hygiene', 
+    path: ['Hygiene'], 
+    color: '#A66DFF', 
+    createdAt: new Date().toISOString()
+  }
+];
+
+const setCategories = (newCategories: any[]) => {
+  categories = newCategories;
+};
 
 const router = Router();
 
