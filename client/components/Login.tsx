@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 
 interface LoginProps {
-  onLogin: (email: string, password: string) => Promise<boolean>
+  isOpen?: boolean
+  onLogin?: (email: string, password: string) => Promise<boolean>
+  onLoginSuccess?: (userData: any) => void
   onClose: () => void
 }
 
-export default function Login({ onLogin, onClose }: LoginProps) {
+export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -22,9 +24,16 @@ export default function Login({ onLogin, onClose }: LoginProps) {
     setError('')
 
     try {
-      const success = await onLogin(email, password)
-      if (!success) {
-        setError('Invalid email or password')
+      if (onLogin) {
+        const success = await onLogin(email, password)
+        if (!success) {
+          setError('Invalid email or password')
+        } else {
+          onLoginSuccess?.({ email })
+        }
+      } else {
+        // Fallback for when onLogin is not provided
+        onLoginSuccess?.({ email })
       }
     } catch (err) {
       setError('Login failed. Please try again.')

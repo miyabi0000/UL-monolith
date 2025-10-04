@@ -6,13 +6,15 @@ import { COLORS } from '../utils/colors'
 import { getInputStyle, getButtonStyle, getMessageStyle } from '../utils/colorHelpers'
 
 interface GearFormProps {
+  isOpen?: boolean
   gear?: GearItemWithCalculated | null
+  editingGear?: GearItemWithCalculated | null
   categories?: Category[]
   onClose: () => void
   onSave: (gear: GearItemForm) => void
 }
 
-const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onSave }) => {
+const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [], onClose, onSave }) => {
   const [form, setForm] = useState<GearItemForm>({
     name: '',
     brand: '',
@@ -31,21 +33,22 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
 
   // 編集モードの場合、初期値を設定
   useEffect(() => {
-    if (gear) {
+    const gearToEdit = editingGear || gear;
+    if (gearToEdit) {
       setForm({
-        name: gear.name,
-        brand: gear.brand || '',
-        productUrl: gear.productUrl || '',
-        categoryId: gear.categoryId || '',
-        requiredQuantity: gear.requiredQuantity,
-        ownedQuantity: gear.ownedQuantity,
-        weightGrams: gear.weightGrams,
-        priceCents: gear.priceCents,
-        season: gear.season || '',
-        priority: gear.priority
+        name: gearToEdit.name,
+        brand: gearToEdit.brand || '',
+        productUrl: gearToEdit.productUrl || '',
+        categoryId: gearToEdit.categoryId || '',
+        requiredQuantity: gearToEdit.requiredQuantity,
+        ownedQuantity: gearToEdit.ownedQuantity,
+        weightGrams: gearToEdit.weightGrams,
+        priceCents: gearToEdit.priceCents,
+        season: gearToEdit.season || '',
+        priority: gearToEdit.priority
       })
     }
-  }, [gear])
+  }, [gear, editingGear])
 
   // URL抽出（改善版）
   const handleExtractFromUrl = async () => {
@@ -120,7 +123,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
             className="text-xl font-semibold"
             style={{ color: COLORS.text.primary }}
           >
-            {gear ? 'Edit Gear' : 'Add New Gear'}
+            {(editingGear || gear) ? 'Edit Gear' : 'Add New Gear'}
           </h2>
         </div>
 
@@ -421,7 +424,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, categories = [], onClose, onS
               className="px-4 py-2 rounded-md transition-colors"
               style={getButtonStyle('primary')}
             >
-              {gear ? 'Update' : 'Add'} Gear
+              {(editingGear || gear) ? 'Update' : 'Add'} Gear
             </button>
           </div>
         </form>

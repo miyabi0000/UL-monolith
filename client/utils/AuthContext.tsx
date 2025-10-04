@@ -38,6 +38,7 @@ export const getPasswordRequirements = (): string[] => {
 interface User {
   id: string
   email: string
+  name?: string
   createdAt: string
 }
 
@@ -87,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const demoUser: User = {
         id: 'demo-user-1',
         email: 'demo@example.com',
+        name: 'Demo User',
         createdAt: new Date().toISOString()
       }
       setUser(demoUser)

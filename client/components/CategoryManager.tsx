@@ -2,15 +2,18 @@ import React, { useState } from 'react'
 import { Category } from '../utils/types'
 
 interface CategoryManagerProps {
+  isOpen?: boolean
   categories: Category[]
-  onAddCategory: (category: Omit<Category, 'id' | 'createdAt'>) => void
-  onEditCategory: (category: Category) => void
-  onDeleteCategory: (id: string) => void
+  onCategoriesUpdate?: React.Dispatch<React.SetStateAction<Category[]>>
+  onAddCategory?: (category: Omit<Category, 'id' | 'createdAt'>) => void
+  onEditCategory?: (category: Category) => void
+  onDeleteCategory?: (id: string) => void
   onClose: () => void
 }
 
 const CategoryManager: React.FC<CategoryManagerProps> = ({
   categories,
+  onCategoriesUpdate,
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
@@ -28,7 +31,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     e.preventDefault()
     
     if (editingCategory) {
-      onEditCategory({
+      onEditCategory?.({
         ...editingCategory,
         name: formData.name,
         color: formData.color,
@@ -38,7 +41,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
           : [formData.name]
       })
     } else {
-      onAddCategory({
+      onAddCategory?.({
         userId: 'user1',
         name: formData.name,
         color: formData.color,
@@ -220,7 +223,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       Edit
                     </button>
                     <button
-                      onClick={() => onDeleteCategory(category.id)}
+                      onClick={() => onDeleteCategory?.(category.id)}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >
                       Delete
