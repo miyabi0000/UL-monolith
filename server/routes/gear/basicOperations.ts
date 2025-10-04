@@ -1,26 +1,41 @@
 import { Request, Response } from 'express';
 import { sanitizeGearData } from '../../utils/helpers';
+import { db } from '../../database/connection';
 
-// 暫定的なin-memoryデータ（テスト用）
-let gearItems: any[] = [];
-
-export const handleGetAllGear = (req: Request, res: Response) => {
+export const handleGetAllGear = async (req: Request, res: Response) => {
   try {
     const userId = req.headers['x-user-id'] as string || 'anonymous';
     
-    // 暫定: in-memoryデータを返す
-    const filteredItems = gearItems.filter(item => item.userId === userId);
+    // クエリパラメータからフィルタ・ページネーション・ソートを取得
+    const filters = {
+      categoryIds: req.query.categoryIds ? String(req.query.categoryIds).split(',') : undefined,
+      priorities: req.query.priorities ? String(req.query.priorities).split(',').map(Number) : undefined,
+      seasons: req.query.seasons ? String(req.query.seasons).split(',') : undefined,
+      search: req.query.search ? String(req.query.search) : undefined
+    };
+
+    const pagination = {
+      page: parseInt(String(req.query.page || '1')),
+      limit: parseInt(String(req.query.limit || '50'))
+    };
+
+    const sort = req.query.sortField ? {
+      field: String(req.query.sortField) as any,
+      order: (String(req.query.sortOrder || 'ASC').toUpperCase()) as 'ASC' | 'DESC'
+    } : undefined;
+
+    const { items, total } = await db.getGearWithCategories(userId, filters, pagination, sort);
     
     res.json({
       success: true,
-      data: filteredItems,
+      data: items,
       meta: {
-        total: filteredItems.length,
-        page: 1,
-        limit: 50,
-        hasNext: false,
-        hasPrev: false,
-        filtered: false
+        total,
+        page: pagination.page,
+        limit: pagination.limit,
+        hasNext: pagination.page * pagination.limit < total,
+        hasPrev: pagination.page > 1,
+        filtered: Object.values(filters).some(v => v !== undefined)
       }
     });
   } catch (error) {
@@ -33,12 +48,12 @@ export const handleGetAllGear = (req: Request, res: Response) => {
   }
 };
 
-export const handleGetGearById = (req: Request, res: Response) => {
+export const handleGetGearById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.headers['x-user-id'] as string || 'anonymous';
     
-    const item = gearItems.find(gear => gear.id === id && gear.userId === userId);
+    const item = await db.getGearById(id, userId);
 
     if (!item) {
       return res.status(404).json({
@@ -61,18 +76,10 @@ export const handleGetGearById = (req: Request, res: Response) => {
   }
 };
 
-export const handleGetGearSummary = (req: Request, res: Response) => {
+export const handleGetGearSummary = async (req: Request, res: Response) => {
   try {
     const userId = req.headers['x-user-id'] as string || 'anonymous';
-    const userItems = gearItems.filter(item => item.userId === userId);
-    
-    const summary = {
-      totalWeight: userItems.reduce((sum, item) => sum + (item.weightGrams || 0), 0),
-      totalPrice: userItems.reduce((sum, item) => sum + (item.priceCents || 0), 0),
-      totalItems: userItems.length,
-      missingItems: userItems.filter(item => item.ownedQuantity < item.requiredQuantity).length,
-      chartData: []
-    };
+    const summary = await db.getAnalyticsSummary(userId);
 
     res.json({
       success: true,
@@ -88,7 +95,7 @@ export const handleGetGearSummary = (req: Request, res: Response) => {
   }
 };
 
-export const handleCreateGear = (req: Request, res: Response) => {
+export const handleCreateGear = async (req: Request, res: Response) => {
   try {
     const userId = req.headers['x-user-id'] as string || 'anonymous';
     const sanitizedData = sanitizeGearData(req.body);
@@ -100,15 +107,8 @@ export const handleCreateGear = (req: Request, res: Response) => {
       });
     }
 
-    const newItem = {
-      id: Date.now().toString(),
-      userId,
-      ...sanitizedData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    gearItems.push(newItem);
+    const newItemId = await db.createGearItem(userId, sanitizedData);
+    const newItem = await db.getGearById(newItemId, userId);
 
     res.status(201).json({
       success: true,
@@ -125,30 +125,26 @@ export const handleCreateGear = (req: Request, res: Response) => {
   }
 };
 
-export const handleUpdateGear = (req: Request, res: Response) => {
+export const handleUpdateGear = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.headers['x-user-id'] as string || 'anonymous';
     const sanitizedData = sanitizeGearData(req.body);
     
-    const itemIndex = gearItems.findIndex(item => item.id === id && item.userId === userId);
+    const updated = await db.updateGearItem(id, userId, sanitizedData);
     
-    if (itemIndex === -1) {
+    if (!updated) {
       return res.status(404).json({
         success: false,
-        message: 'Gear item not found'
+        message: 'Gear item not found or no changes made'
       });
     }
 
-    gearItems[itemIndex] = {
-      ...gearItems[itemIndex],
-      ...sanitizedData,
-      updatedAt: new Date().toISOString()
-    };
+    const updatedItem = await db.getGearById(id, userId);
 
     res.json({
       success: true,
-      data: gearItems[itemIndex],
+      data: updatedItem,
       message: 'Gear item updated successfully'
     });
   } catch (error) {
@@ -161,15 +157,14 @@ export const handleUpdateGear = (req: Request, res: Response) => {
   }
 };
 
-export const handleDeleteGear = (req: Request, res: Response) => {
+export const handleDeleteGear = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.headers['x-user-id'] as string || 'anonymous';
     
-    const initialLength = gearItems.length;
-    gearItems = gearItems.filter(item => !(item.id === id && item.userId === userId));
+    const deletedCount = await db.deleteGearItems([id], userId);
     
-    if (gearItems.length === initialLength) {
+    if (deletedCount === 0) {
       return res.status(404).json({
         success: false,
         message: 'Gear item not found'

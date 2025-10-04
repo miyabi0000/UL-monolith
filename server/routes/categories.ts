@@ -1,62 +1,22 @@
 import { Router } from 'express';
-
-// 暫定的なin-memoryカテゴリデータ
-let categories = [
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440001', 
-    name: 'Clothing', 
-    path: ['Clothing'], 
-    color: '#FF6B6B', 
-    createdAt: new Date().toISOString()
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440002', 
-    name: 'Sleep', 
-    path: ['Sleep'], 
-    color: '#4ECDC4', 
-    createdAt: new Date().toISOString()
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440003', 
-    name: 'Pack', 
-    path: ['Pack'], 
-    color: '#FFE66D', 
-    createdAt: new Date().toISOString()
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440004', 
-    name: 'Electronics', 
-    path: ['Electronics'], 
-    color: '#4D96FF', 
-    createdAt: new Date().toISOString()
-  },
-  { 
-    id: '550e8400-e29b-41d4-a716-446655440005', 
-    name: 'Hygiene', 
-    path: ['Hygiene'], 
-    color: '#A66DFF', 
-    createdAt: new Date().toISOString()
-  }
-];
-
-const setCategories = (newCategories: any[]) => {
-  categories = newCategories;
-};
+import { db } from '../database/connection';
 
 const router = Router();
 
 /**
  * GET /api/v1/categories - 全カテゴリ取得
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
-    
+    const userId = req.headers['x-user-id'] as string;
+    const categories = await db.getCategories(userId);
+
     res.json({
       success: true,
-      data: sortedCategories
+      data: categories
     });
   } catch (error) {
+    console.error('Error fetching categories:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch categories',
@@ -66,33 +26,28 @@ router.get('/', (req, res) => {
 });
 
 /**
- * GET /api/v1/categories/:id - 特定カテゴリ取得
+ * GET /api/v1/categories/:id - 単一カテゴリ取得
  */
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    if (!id?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category ID is required'
-      });
-    }
-    
-    const category = categories.find(cat => cat.id === id);
-    
+    const userId = req.headers['x-user-id'] as string;
+    const categories = await db.getCategories(userId);
+    const category = categories.find(c => c.id === id);
+
     if (!category) {
       return res.status(404).json({
         success: false,
         message: 'Category not found'
       });
     }
-    
+
     res.json({
       success: true,
       data: category
     });
   } catch (error) {
+    console.error('Error fetching category:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch category',
@@ -102,174 +57,13 @@ router.get('/:id', (req, res) => {
 });
 
 /**
- * POST /api/v1/categories - カテゴリ作成
+ * NOTE: カテゴリのCUD操作は現在未実装
+ * デフォルトカテゴリのみ使用可能（init.sqlで定義）
+ * 
+ * 今後の実装予定:
+ * - POST /api/v1/categories - カテゴリ作成
+ * - PUT /api/v1/categories/:id - カテゴリ更新
+ * - DELETE /api/v1/categories/:id - カテゴリ削除
  */
-router.post('/', (req, res) => {
-  try {
-    const { name, color, parentId } = req.body;
-    
-    // バリデーション
-    if (!name?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is required'
-      });
-    }
-    
-    if (name.trim().length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is too long (max 100 characters)'
-      });
-    }
-    
-    // 重複チェック
-    const existingCategory = categories.find(cat => 
-      cat.name.toLowerCase() === name.trim().toLowerCase()
-    );
-    
-    if (existingCategory) {
-      return res.status(409).json({
-        success: false,
-        message: 'Category with this name already exists'
-      });
-    }
-    
-    const newCategory = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      path: [name.trim()],
-      color: color || '#6B7280',
-      parentId: parentId || undefined,
-      createdAt: new Date().toISOString()
-    };
-    
-    categories.push(newCategory);
-    
-    res.status(201).json({
-      success: true,
-      data: newCategory,
-      message: 'Category created successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
-/**
- * PUT /api/v1/categories/:id - カテゴリ更新
- */
-router.put('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, color, parentId } = req.body;
-    
-    // IDバリデーション
-    if (!id?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category ID is required'
-      });
-    }
-    
-    // 名前バリデーション
-    if (!name?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is required'
-      });
-    }
-    
-    if (name.trim().length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is too long (max 100 characters)'
-      });
-    }
-    
-    const categoryIndex = categories.findIndex(cat => cat.id === id);
-    
-    if (categoryIndex === -1) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
-    }
-    
-    // 名前の重複チェック（自分以外）
-    const existingCategory = categories.find(cat => 
-      cat.id !== id && cat.name.toLowerCase() === name.trim().toLowerCase()
-    );
-    
-    if (existingCategory) {
-      return res.status(409).json({
-        success: false,
-        message: 'Category with this name already exists'
-      });
-    }
-    
-    categories[categoryIndex] = {
-      ...categories[categoryIndex],
-      name: name.trim(),
-      path: [name.trim()],
-      color: color || categories[categoryIndex].color,
-      parentId: parentId || undefined,
-      updatedAt: new Date().toISOString()
-    };
-    
-    res.json({
-      success: true,
-      data: categories[categoryIndex],
-      message: 'Category updated successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
-/**
- * DELETE /api/v1/categories/:id - カテゴリ削除
- */
-router.delete('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    if (!id?.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category ID is required'
-      });
-    }
-    
-    const initialLength = categories.length;
-    setCategories(categories.filter(cat => cat.id !== id));
-    
-    if (categories.length === initialLength) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Category deleted successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 export default router;

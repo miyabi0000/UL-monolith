@@ -19,7 +19,7 @@
 ```bash
 # データベース設定（Dockerの設定と一致させる）
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=5433
 DB_NAME=gear_manager
 DB_USER=postgres
 DB_PASSWORD=password
@@ -72,7 +72,7 @@ npm run dev         # クライアント: http://localhost:3001
 
 ```
 Host: localhost
-Port: 5432
+Port: 5433
 Database: gear_manager
 User: postgres
 Password: password
