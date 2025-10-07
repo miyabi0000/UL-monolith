@@ -378,7 +378,6 @@ export const getTruncatedTextStyle = (maxWidth: string = '200px') => ({
  */
 export const getExpandedTextStyle = () => ({
   whiteSpace: 'normal' as const,
-  maxWidth: 'none',
   wordBreak: 'break-word' as const,
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(12px) saturate(180%) brightness(1.1)',
