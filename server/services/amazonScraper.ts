@@ -58,47 +58,52 @@ export class AmazonScraper {
    */
   private extractAmazonData($: cheerio.Root, url: string): LLMExtractionResult {
     const extractedFields: string[] = [];
-    
+
     // 製品名抽出（Amazon特有のセレクタ）
     const name = this.extractAmazonTitle($);
     if (name) extractedFields.push('name');
-    
+
     // ブランド抽出
     const brand = this.extractAmazonBrand($);
     if (brand) extractedFields.push('brand');
-    
+
     // 価格抽出（複数価格パターン対応）
     const priceCents = this.extractAmazonPrice($);
     if (priceCents) extractedFields.push('priceCents');
-    
+
+    // 画像URL抽出
+    const imageUrl = this.extractAmazonImage($);
+    if (imageUrl) extractedFields.push('imageUrl');
+
     // 重量・寸法抽出（商品詳細から）
     const specs = this.extractAmazonSpecs($);
     if (specs.weightGrams) extractedFields.push('weightGrams');
-    
+
     // カテゴリ推測（パンくずリスト活用）
     const suggestedCategory = this.extractAmazonCategory($);
     if (suggestedCategory !== 'Other') extractedFields.push('suggestedCategory');
-    
+
     // 評価・レビュー数
     const ratings = this.extractAmazonRatings($);
-    
+
     return {
       name: name || 'Amazon Product',
       brand,
       productUrl: url,
+      imageUrl,
       weightGrams: specs.weightGrams,
       priceCents,
       suggestedCategory,
-      
+
       // Amazon特有の情報
       ...ratings,
-      
+
       // ギアリスト用デフォルト
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-      
+
       extractedFields,
       source: 'web_scraping'
     };
@@ -156,6 +161,35 @@ export class AmazonScraper {
 
 
   /**
+   * Amazon画像URL抽出
+   */
+  private extractAmazonImage($: cheerio.Root): string | undefined {
+    const imageSelectors = [
+      '#landingImage',
+      '#imgBlkFront',
+      '[data-old-hires]',
+      '.a-dynamic-image',
+      '#main-image',
+      '#ebooksImgBlkFront'
+    ];
+
+    for (const selector of imageSelectors) {
+      const element = $(selector).first();
+      // data-old-hires属性（高解像度画像）を優先
+      const hires = element.attr('data-old-hires');
+      if (hires && hires.startsWith('http')) {
+        return hires;
+      }
+      // 通常のsrc属性
+      const src = element.attr('src');
+      if (src && src.startsWith('http')) {
+        return src;
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Amazon価格抽出（複数価格タイプ対応）
    */
   private extractAmazonPrice($: cheerio.Root): number | undefined {
@@ -166,7 +200,7 @@ export class AmazonScraper {
       '.a-price-current',
       '#apex_desktop .a-price .a-offscreen'
     ];
-    
+
     for (const selector of priceSelectors) {
       const priceText = $(selector).first().text().trim();
       const price = this.parseAmazonPrice(priceText);

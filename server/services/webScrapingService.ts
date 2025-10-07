@@ -47,25 +47,29 @@ export class WebScrapingService {
    */
   private extractBasicInfo(html: string, url: string): LLMExtractionResult {
     const $ = cheerio.load(html);
-    
+
     // 製品名
     const name = this.extractName($);
-    
+
     // ブランド
-    const brand = getBrandFromDomain(url) || 
-                  this.extractBrandFromHTML($) || 
+    const brand = getBrandFromDomain(url) ||
+                  this.extractBrandFromHTML($) ||
                   (name ? extractBrandFromText(name) : undefined);
-    
+
     // 価格
     const priceCents = this.extractPrice($);
-    
+
+    // 画像URL
+    const imageUrl = this.extractImage($, url);
+
     // カテゴリ
     const suggestedCategory = this.guessCategory(name || '', $);
-    
+
     return {
       name: name || 'Unknown Product',
       brand: brand ? normalizeBrand(brand) : undefined,
       productUrl: url,
+      imageUrl,
       priceCents,
       suggestedCategory,
       requiredQuantity: 1,
@@ -75,7 +79,8 @@ export class WebScrapingService {
       extractedFields: [
         ...(name ? ['name'] : []),
         ...(brand ? ['brand'] : []),
-        ...(priceCents ? ['priceCents'] : [])
+        ...(priceCents ? ['priceCents'] : []),
+        ...(imageUrl ? ['imageUrl'] : [])
       ],
       source: 'web_scraping'
     };
@@ -114,7 +119,7 @@ export class WebScrapingService {
    */
   private extractPrice($: cheerio.Root): number | undefined {
     const selectors = ['.price', '.product-price', '[itemprop="price"]'];
-    
+
     for (const selector of selectors) {
       const priceText = $(selector).first().text().trim();
       const match = priceText.match(/[\d,]+/);
@@ -122,6 +127,39 @@ export class WebScrapingService {
         return parseInt(match[0].replace(/,/g, '')) * 100; // セント変換
       }
     }
+  }
+
+  /**
+   * 画像URL抽出
+   */
+  private extractImage($: cheerio.Root, baseUrl: string): string | undefined {
+    const selectors = [
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]',
+      '.product-image img',
+      '.main-image img',
+      '[itemprop="image"]',
+      'img[alt*="product"]',
+      'img[alt*="商品"]'
+    ];
+
+    for (const selector of selectors) {
+      const element = $(selector).first();
+      const src = element.attr('content') || element.attr('src');
+
+      if (src && src.startsWith('http')) {
+        return src;
+      } else if (src && src.startsWith('/')) {
+        // 相対パスを絶対パスに変換
+        try {
+          const url = new URL(baseUrl);
+          return `${url.protocol}//${url.host}${src}`;
+        } catch {
+          return undefined;
+        }
+      }
+    }
+    return undefined;
   }
 
   /**

@@ -325,9 +325,9 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 )}
                 <td className="px-2 py-1 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
-                    {item.productUrl && (
+                    {item.imageUrl && (
                       <img
-                        src={item.productUrl}
+                        src={item.imageUrl}
                         alt={item.name}
                         className="w-10 h-10 object-cover rounded-md"
                         onError={(e) => {
@@ -336,14 +336,14 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                       />
                     )}
                     <div className="text-left">
-                      <div 
+                      <div
                         className="text-sm font-medium"
                         style={{ color: COLORS.text.primary }}
                       >
                         {item.productUrl ? (
-                          <a 
-                            href={item.productUrl} 
-                            target="_blank" 
+                          <a
+                            href={item.productUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="hover:underline transition-colors"
                             style={getLinkStyle()}

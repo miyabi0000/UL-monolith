@@ -44,6 +44,7 @@ export interface LLMExtractionResult {
   season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   productUrl?: string;
   imageUrl?: string; // 商品画像URL
+  suggestedCategory?: string; // LLMが推測したカテゴリ名
   extractedFields?: string[];
   source?: string;
 }

@@ -21,28 +21,29 @@ export interface GearItem {
   id: string;
   userId: string;
   categoryId?: string;
-  
+
   // 基本情報
   name: string;
   brand?: string;
   productUrl?: string;
-  
+  imageUrl?: string; // 商品画像URL
+
   // 数量・重量
   requiredQuantity: number;
   ownedQuantity: number;
   weightGrams?: number;
-  
+
   // 価格・メタ
   priceCents?: number;
   season?: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   priority: number; // 1-5
-  
+
   // LLM
   llmData?: {
     extracted: any;
     extractedAt: string;
   };
-  
+
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +91,7 @@ export interface GearItemForm {
   name: string;
   brand?: string;
   productUrl?: string;
+  imageUrl?: string; // 商品画像URL
   categoryId?: string;
   requiredQuantity: number;
   ownedQuantity: number;
@@ -104,21 +106,22 @@ export interface LLMExtractionResult {
   name?: string;
   brand?: string;
   productUrl?: string;
-  
+  imageUrl?: string; // 商品画像URL
+
   // 数量・重量
   requiredQuantity?: number;
   ownedQuantity?: number;
   weightGrams?: number;
-  
+
   // 価格・メタ
   priceCents?: number;
   season?: string;
   priority?: number;
-  
+
   // LLM固有
   suggestedCategory?: string;
   categoryId?: string; // マッチしたカテゴリID
-  
+
   // 抽出メタデータ
   extractedFields: string[]; // 実際に抽出できたフィールド名
   source: 'web_scraping' | 'llm_prompt' | 'enhanced' | 'fallback';
