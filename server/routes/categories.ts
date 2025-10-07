@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../database/connection';
+import { getAllCategories, getCategoryById } from '../data/store';
 
 const router = Router();
 
@@ -8,8 +8,7 @@ const router = Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
-    const categories = await db.getCategories(userId);
+    const categories = getAllCategories();
 
     res.json({
       success: true,
@@ -31,9 +30,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.headers['x-user-id'] as string;
-    const categories = await db.getCategories(userId);
-    const category = categories.find(c => c.id === id);
+    const category = getCategoryById(id);
 
     if (!category) {
       return res.status(404).json({
