@@ -15,6 +15,7 @@ export interface GearItem {
   priority: number;
   season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   productUrl?: string;
+  imageUrl?: string; // 商品画像URL
   createdAt: Date;
   updatedAt: Date;
   llmData?: {
@@ -42,6 +43,7 @@ export interface LLMExtractionResult {
   priority: number;
   season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   productUrl?: string;
+  imageUrl?: string; // 商品画像URL
   extractedFields?: string[];
   source?: string;
 }
@@ -57,6 +59,7 @@ export interface GearItemForm {
   priority: number;
   season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
   productUrl?: string;
+  imageUrl?: string; // 商品画像URL
 }
 
 export interface ApiResponse<T> {

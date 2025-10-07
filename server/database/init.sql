@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS gear_items (
     name VARCHAR(200) NOT NULL,
     brand VARCHAR(100),
     product_url TEXT,
+    image_url TEXT, -- 商品画像URL
     
     -- 数量・重量
     required_quantity INTEGER DEFAULT 1 CHECK (required_quantity >= 0),

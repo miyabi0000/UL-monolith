@@ -11,6 +11,7 @@ import {
   getPriorityColor,
   getCategoryBadgeStyle
 } from '../utils/designSystem'
+import { getLinkStyle } from '../utils/colorHelpers'
 import TruncatedText from './TruncatedText'
 import Card from './ui/Card'
 import Button from './ui/Button'
