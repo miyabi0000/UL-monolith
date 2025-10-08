@@ -40,25 +40,17 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
   ];
 
   return (
-    <Card variant="square" hover className="p-4 space-y-3">
-      <h3
-        className="text-xs font-bold mb-2 border-b pb-1"
-        style={{
-          color: COLORS.text.primary,
-          borderBottomColor: COLORS.primary.light
-        }}
-      >
-STATS
-      </h3>
-      <div className="space-y-2">
+    <Card variant="square" hover className="p-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="flex items-center justify-between group transition-all duration-200 hover:scale-105"
+            className="flex flex-col items-center justify-center group transition-all duration-200 hover:scale-105 p-3 rounded-lg"
+            style={{ backgroundColor: `${stat.color}10` }}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mb-1">
               <span
-                className="text-xs font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
+                className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
                 style={{
                   backgroundColor: stat.color,
                   color: COLORS.white
@@ -74,7 +66,7 @@ STATS
               </span>
             </div>
             <div
-              className="text-sm font-bold transition-all duration-200 group-hover:scale-110"
+              className="text-lg font-bold transition-all duration-200 group-hover:scale-110"
               style={{ color: stat.color }}
             >
               {stat.value}

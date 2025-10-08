@@ -132,32 +132,30 @@ export default function App() {
           {isLoading ? (
             // ローディング中のスケルトン表示
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
-                <div className="lg:col-span-4">
-                  <SkeletonLoader variant="chart" />
-                </div>
-                <div className="space-y-2">
-                  <SkeletonLoader variant="card" count={3} />
-                </div>
+              <SkeletonLoader variant="card" count={3} />
+              <div className="mt-3">
+                <SkeletonLoader variant="chart" />
               </div>
               <SkeletonLoader variant="table" />
             </>
           ) : (
             // データ読み込み完了後の実際のコンテンツ
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
-                <div className="lg:col-span-4">
-                  <GearChart
-                    data={chartData}
-                    totalWeight={totals.weight}
-                    onShowGearManager={() => setShowForm(true)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <CompactSummary totals={totals} />
-                </div>
+              {/* STATSを横一列で表示 */}
+              <div className="mb-3">
+                <CompactSummary totals={totals} />
               </div>
 
+              {/* チャート */}
+              <div className="mb-3">
+                <GearChart
+                  data={chartData}
+                  totalWeight={totals.weight}
+                  onShowGearManager={() => setShowForm(true)}
+                />
+              </div>
+
+              {/* ギアテーブル */}
               <GearTable
                 items={gearItems}
                 onEdit={handleEditGear}
