@@ -4,6 +4,7 @@ export const sanitizeGearData = (data: any) => {
     name: data.name?.trim() || '',
     brand: data.brand?.trim() || undefined,
     productUrl: data.productUrl?.trim() || undefined,
+    imageUrl: data.imageUrl?.trim() || undefined,
     categoryId: data.categoryId?.trim() || undefined,
     requiredQuantity: Math.max(1, Math.min(10, parseInt(data.requiredQuantity) || 1)),
     ownedQuantity: Math.max(0, Math.min(10, parseInt(data.ownedQuantity) || 0)),

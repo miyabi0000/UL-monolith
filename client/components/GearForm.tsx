@@ -31,6 +31,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<LLMExtractionResult | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // 編集モードの場合、初期値を設定
   useEffect(() => {
@@ -49,6 +51,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         season: gearToEdit.season || '',
         priority: gearToEdit.priority
       })
+      setImagePreview(gearToEdit.imageUrl || null)
     }
   }, [gear, editingGear])
 
@@ -68,7 +71,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
       const adaptedResult = adaptToUserCategories(extractedData, userCategoryNames)
       
       setExtractionResult(adaptedResult)
-      
+
       // フォームに自動入力
       setForm(prev => ({
         ...prev,
@@ -80,6 +83,11 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         // カテゴリIDも設定
         categoryId: categories.find(cat => cat.name === adaptedResult.suggestedCategory)?.id || prev.categoryId
       }))
+
+      // 画像プレビューも更新
+      if (adaptedResult.imageUrl) {
+        setImagePreview(adaptedResult.imageUrl)
+      }
       
     } catch (error) {
       console.error('Extraction failed:', error)
@@ -112,6 +120,50 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  // 画像ドラッグ&ドロップハンドラー
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+
+    const file = e.dataTransfer.files[0]
+    if (file && file.type.startsWith('image/')) {
+      handleImageFile(file)
+    }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      handleImageFile(file)
+    }
+  }
+
+  const handleImageFile = (file: File) => {
+    // Base64に変換してプレビュー表示
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      setImagePreview(base64String)
+      handleChange('imageUrl', base64String)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setImagePreview(null)
+    handleChange('imageUrl', '')
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div 
@@ -131,6 +183,65 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* 画像アップロード（ドラッグ&ドロップ） */}
+          <div>
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
+              Product Image
+            </label>
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+              }`}
+            >
+              {imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="max-h-40 mx-auto rounded-md"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    style={{ width: '24px', height: '24px' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <p
+                    className="text-sm mb-2"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    Drag & drop an image here, or click to select
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="inline-block px-4 py-2 rounded-md cursor-pointer transition-colors"
+                    style={getButtonStyle('secondary')}
+                  >
+                    Choose Image
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* URL入力 & 抽出 */}
           <div>
             <label 

@@ -211,6 +211,21 @@ export default function App() {
             />
           )}
         </Suspense>
+
+        {/* フッター */}
+        <footer
+          className="py-4 text-center border-t mt-8"
+          style={{
+            backgroundColor: COLORS.white,
+            borderTopColor: COLORS.primary.medium,
+            color: COLORS.text.secondary
+          }}
+        >
+          <div className="text-sm">
+            <p>UL Gear Manager © 2024</p>
+            <p className="text-xs mt-1">Ultralight Hiking Gear Management System</p>
+          </div>
+        </footer>
           </div>
       <div className="flex-1" style={{ minWidth: '48px' }}></div>
 

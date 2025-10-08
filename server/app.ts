@@ -10,6 +10,7 @@ import categoryRoutes from './routes/categories';
 import analyticsRoutes from './routes/analytics';
 import llmRoutes from './routes/llm';
 import authRoutes from './routes/auth';
+import imageProxyRoutes from './routes/imageProxy';
 
 // Load environment variables
 config();
@@ -40,6 +41,7 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/llm', llmRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/image', imageProxyRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

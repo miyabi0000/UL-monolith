@@ -323,21 +323,25 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     />
                   </td>
                 )}
-                <td className="px-2 py-1 whitespace-nowrap">
-                  <div className="flex items-center space-x-3">
+                <td className="px-2 py-1">
+                  <div className="flex items-center space-x-3 min-h-[60px]">
                     {item.imageUrl && (
                       <img
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-10 h-10 object-cover rounded-md"
+                        className="w-12 h-12 object-cover rounded-md flex-shrink-0"
                         onError={(e) => {
+                          console.error(`Failed to load image for ${item.name}:`, item.imageUrl);
                           e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => {
+                          console.log(`Image loaded for ${item.name}`);
                         }}
                       />
                     )}
-                    <div className="text-left">
+                    <div className="text-left flex-1 min-w-0">
                       <div
-                        className="text-sm font-medium"
+                        className="text-sm font-medium break-words"
                         style={{ color: COLORS.text.primary }}
                       >
                         {item.productUrl ? (
@@ -355,8 +359,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                         )}
                       </div>
                       {item.brand && (
-                        <div 
-                          className="text-sm"
+                        <div
+                          className="text-xs break-words"
                           style={{ color: COLORS.text.secondary }}
                         >
                           {item.brand}
