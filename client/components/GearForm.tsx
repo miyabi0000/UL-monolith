@@ -4,6 +4,7 @@ import { extractFromUrl, adaptToUserCategories } from '../services/llmExtraction
 import { sanitizeGearForm } from '../utils/helpers'
 import { COLORS } from '../utils/colors'
 import { getInputStyle, getButtonStyle, getMessageStyle } from '../utils/colorHelpers'
+import { useImageUpload } from '../hooks/useImageUpload'
 
 interface GearFormProps {
   isOpen?: boolean
@@ -31,8 +32,18 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<LLMExtractionResult | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  // 画像アップロード機能
+  const {
+    isDragging,
+    imagePreview,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleImageSelect: handleImageFileSelect,
+    setPreview,
+    removeImage: removeImagePreview
+  } = useImageUpload()
 
   // 編集モードの場合、初期値を設定
   useEffect(() => {
@@ -51,7 +62,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         season: gearToEdit.season || '',
         priority: gearToEdit.priority
       })
-      setImagePreview(gearToEdit.imageUrl || null)
+      setPreview(gearToEdit.imageUrl || null)
     }
   }, [gear, editingGear])
 
@@ -86,7 +97,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
 
       // 画像プレビューも更新
       if (adaptedResult.imageUrl) {
-        setImagePreview(adaptedResult.imageUrl)
+        setPreview(adaptedResult.imageUrl)
       }
       
     } catch (error) {
@@ -120,47 +131,13 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  // 画像ドラッグ&ドロップハンドラー
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
+  // 画像選択時のコールバック
+  const onImageSelect = (base64: string) => {
+    handleChange('imageUrl', base64)
   }
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
-      handleImageFile(file)
-    }
-  }
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      handleImageFile(file)
-    }
-  }
-
-  const handleImageFile = (file: File) => {
-    // Base64に変換してプレビュー表示
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = reader.result as string
-      setImagePreview(base64String)
-      handleChange('imageUrl', base64String)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const removeImage = () => {
-    setImagePreview(null)
+  // 画像削除時のコールバック
+  const onImageRemove = () => {
     handleChange('imageUrl', '')
   }
 
@@ -194,7 +171,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onDrop={(e) => handleDrop(e, onImageSelect)}
               className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                 isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
               }`}
@@ -208,7 +185,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                   />
                   <button
                     type="button"
-                    onClick={removeImage}
+                    onClick={() => removeImagePreview(onImageRemove)}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                     style={{ width: '24px', height: '24px' }}
                   >
@@ -226,7 +203,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageSelect}
+                    onChange={(e) => handleImageFileSelect(e, onImageSelect)}
                     className="hidden"
                     id="image-upload"
                   />
