@@ -23,11 +23,12 @@ export function extractJsonLd($: cheerio.Root): any | null {
  * カテゴリ判定用パターン（優先度順）
  */
 export const CATEGORY_PATTERNS = {
-  'Backpack': /バッグ|リュック|backpack|bag|鞄|ザック/i,
-  'Shelter': /ビビィ|bivy|bivvy|シェルター|テント|tent|shelter|tarp|タープ/i,
-  'Clothing': /服|ウェア|ファッション|clothing|apparel|jacket|shirt|ジャケット|パンツ|pants/i,
-  'Cooking': /キッチン|調理|クッキング|kitchen|cooking|stove|ストーブ|クッカー|cooker/i,
-  'Safety': /安全|セーフティ|safety|first.?aid|emergency|救急|ライト|light/i
+  'Backpack': /backpack|pack|rucksack|daypack|リュック|バッグ|ザック|鞄/i,
+  'Shelter': /tent|shelter|bivy|bivvy|tarp|pyramid|mid\s+\d|テント|シェルター|ビビィ|タープ/i,
+  'Clothing': /jacket|shirt|pants|clothing|apparel|wear|ジャケット|シャツ|パンツ|ウェア|服/i,
+  'Cooking': /stove|cooker|pot|kitchen|cooking|ストーブ|クッカー|キッチン|調理/i,
+  'Safety': /light|headlamp|first.?aid|emergency|safety|ライト|ヘッドランプ|救急|安全/i,
+  'Sleep': /sleeping\s+bag|quilt|pad|mattress|pillow|寝袋|キルト|マット|枕/i
 } as const;
 
 /**
@@ -50,8 +51,11 @@ export function guessCategory(text: string): string {
  */
 const WEIGHT_PATTERNS = [
   /重量[:\s\/]*(?:ポール[無込み・]*[\/\s])?(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i,
-  /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|pounds|oz|ounce)/i,
-  /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i
+  /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,
+  /weighs\s+(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,  // "weighs 1lb"
+  /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i,
+  /(\d+(?:\.\d+)?)\s*(lbs?|pounds?)(?!\d)/i,  // "1lb", "1 lb"
+  /(\d+(?:\.\d+)?)\s*(oz|ounce)(?!\d)/i
 ];
 
 /**
