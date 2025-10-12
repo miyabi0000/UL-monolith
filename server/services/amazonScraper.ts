@@ -2,6 +2,12 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { normalizeBrand } from '../utils/brandUtils.js';
+import { 
+  extractJsonLd, 
+  extractWeight, 
+  cleanBrandText, 
+  guessCategory
+} from '../utils/scrapingHelpers.js';
 
 /**
  * Amazon専用スクレイピングサービス - 最適化版
@@ -28,9 +34,6 @@ export class AmazonScraper {
    */
   async scrapeAmazonProduct(url: string): Promise<LLMExtractionResult> {
     try {
-      // リクエスト前の遅延（レート制限対策）
-      await this.randomDelay();
-      
       const html = await this.fetchAmazonHTML(url);
       const $ = cheerio.load(html);
       
@@ -54,32 +57,35 @@ export class AmazonScraper {
   }
 
   /**
-   * Amazon特化データ抽出
+   * Amazon特化データ抽出（最適化版）
    */
   private extractAmazonData($: cheerio.Root, url: string): LLMExtractionResult {
     const extractedFields: string[] = [];
+    
+    // JSON-LDを1回だけ取得（キャッシュ）
+    const jsonLd = extractJsonLd($);
 
-    // 製品名抽出（Amazon特有のセレクタ）
-    const name = this.extractAmazonTitle($);
+    // 製品名抽出（JSON-LD優先）
+    const name = this.extractAmazonTitle($, jsonLd);
     if (name) extractedFields.push('name');
 
     // ブランド抽出
     const brand = this.extractAmazonBrand($);
     if (brand) extractedFields.push('brand');
 
-    // 価格抽出（複数価格パターン対応）
+    // 価格抽出
     const priceCents = this.extractAmazonPrice($);
     if (priceCents) extractedFields.push('priceCents');
 
-    // 画像URL抽出
-    const imageUrl = this.extractAmazonImage($);
+    // 画像URL抽出（JSON-LD優先）
+    const imageUrl = this.extractAmazonImage($, jsonLd);
     if (imageUrl) extractedFields.push('imageUrl');
 
-    // 重量・寸法抽出（商品詳細から）
+    // 重量抽出
     const specs = this.extractAmazonSpecs($);
     if (specs.weightGrams) extractedFields.push('weightGrams');
 
-    // カテゴリ推測（パンくずリスト活用）
+    // カテゴリ推測（軽量版）
     const suggestedCategory = this.extractAmazonCategory($);
     if (suggestedCategory !== 'Other') extractedFields.push('suggestedCategory');
 
@@ -94,33 +100,27 @@ export class AmazonScraper {
       weightGrams: specs.weightGrams,
       priceCents,
       suggestedCategory,
-
-      // Amazon特有の情報
       ...ratings,
-
-      // ギアリスト用デフォルト
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
       season: 'all',
-
       extractedFields,
       source: 'web_scraping'
     };
   }
 
   /**
-   * Amazon製品名抽出（複数パターン対応）
+   * Amazon製品名抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonTitle($: cheerio.Root): string | undefined {
-    const titleSelectors = [
-      '#productTitle',
-      '.product-title',
-      '[data-automation-id="product-title"]',
-      'h1.a-size-large',
-      'h1#title',
-      '.pdp-product-name'
-    ];
+  private extractAmazonTitle($: cheerio.Root, jsonLd: any): string | undefined {
+    // 1. JSON-LD構造化データから取得（最優先）
+    if (jsonLd?.name && typeof jsonLd.name === 'string' && jsonLd.name.length > 5) {
+      return this.cleanAmazonTitle(jsonLd.name);
+    }
+
+    // 2. HTML要素から抽出（主要セレクタのみ）
+    const titleSelectors = ['#productTitle', 'h1[class*="product"]', 'span#productTitle'];
     
     for (const selector of titleSelectors) {
       const title = $(selector).first().text().trim();
@@ -128,6 +128,8 @@ export class AmazonScraper {
         return this.cleanAmazonTitle(title);
       }
     }
+    
+    return undefined;
   }
 
   /**
@@ -144,14 +146,8 @@ export class AmazonScraper {
     ];
     
     for (const selector of brandSelectors) {
-      let brand = $(selector).first().text().trim();
-      
-      // "ブランド: " などのプレフィックスを除去
-      brand = brand
-        .replace(/^(ブランド|Brand|訪問:|Visit\s+the\s+|から|のストアを表示)/i, '')
-        .replace(/\s*のストアを表示.*$/i, '')
-        .replace(/\s*ストア.*$/i, '')
-        .trim();
+      const rawBrand = $(selector).first().text().trim();
+      const brand = cleanBrandText(rawBrand);
       
       if (brand && brand.length > 1 && brand.length < 50 && !brand.includes('Amazon')) {
         return normalizeBrand(brand);
@@ -161,31 +157,50 @@ export class AmazonScraper {
 
 
   /**
-   * Amazon画像URL抽出
+   * Amazon画像URL抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonImage($: cheerio.Root): string | undefined {
-    const imageSelectors = [
-      '#landingImage',
-      '#imgBlkFront',
-      '[data-old-hires]',
-      '.a-dynamic-image',
-      '#main-image',
-      '#ebooksImgBlkFront'
-    ];
+  private extractAmazonImage($: cheerio.Root, jsonLd: any): string | undefined {
+    // 1. JSON-LD構造化データから取得（最優先）
+    if (jsonLd?.image) {
+      const imageUrl = Array.isArray(jsonLd.image) ? jsonLd.image[0] : jsonLd.image;
+      if (typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
+        return imageUrl;
+      }
+    }
+
+    // 2. 画像要素から抽出（主要セレクタのみ）
+    const imageSelectors = ['#landingImage', '[data-old-hires]', '.a-dynamic-image'];
 
     for (const selector of imageSelectors) {
       const element = $(selector).first();
+      
       // data-old-hires属性（高解像度画像）を優先
       const hires = element.attr('data-old-hires');
       if (hires && hires.startsWith('http')) {
         return hires;
       }
+      
+      // data-a-dynamic-image属性（JSON形式の画像リスト）
+      const dynamicImage = element.attr('data-a-dynamic-image');
+      if (dynamicImage) {
+        try {
+          const imageObj = JSON.parse(dynamicImage);
+          const imageUrls = Object.keys(imageObj);
+          if (imageUrls.length > 0 && imageUrls[0].startsWith('http')) {
+            return imageUrls[0];
+          }
+        } catch (e) {
+          // JSONパース失敗
+        }
+      }
+      
       // 通常のsrc属性
       const src = element.attr('src');
       if (src && src.startsWith('http')) {
         return src;
       }
     }
+    
     return undefined;
   }
 
@@ -209,58 +224,38 @@ export class AmazonScraper {
   }
 
   /**
-   * Amazon仕様抽出（重量・寸法）
+   * Amazon仕様抽出（重量・寸法）- 複数セクションから抽出
    */
   private extractAmazonSpecs($: cheerio.Root): { weightGrams?: number } {
-    const specs: { weightGrams?: number } = {};
+    // Amazon商品ページの各セクションから重量情報を検索
+    const sections = [
+      { name: 'productDescription', selector: '#productDescription, .product-description, #aplus' },
+      { name: 'featureBullets', selector: '#feature-bullets li, #feature-bullets-btf li' },
+      { name: 'prodDetails', selector: '#prodDetails, #detailBullets_feature_div' },
+      { name: 'techSpecs', selector: '#productDetails_techSpec_section_1, #productDetails_detailBullets_sections1, .pdTab' }
+    ];
     
-    // 商品詳細テーブルから重量を抽出
-    $('#feature-bullets li, .a-unordered-list li, .pdTab .a-row').each((_, element) => {
-      const text = $(element).text().toLowerCase();
+    for (const { selector } of sections) {
+      const text = $(selector).text();
+      const weight = extractWeight(text);
       
-      // 重量パターン
-      const weightMatch = text.match(/重量[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i) ||
-                         text.match(/weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|pounds)/i);
-      
-      if (weightMatch && !specs.weightGrams) {
-        const value = parseFloat(weightMatch[1]);
-        const unit = weightMatch[2].toLowerCase();
-        
-        if (unit.includes('k')) {
-          specs.weightGrams = Math.round(value * 1000);
-        } else if (unit.includes('lb')) {
-          specs.weightGrams = Math.round(value * 453.592); // lbs to grams
-        } else {
-          specs.weightGrams = Math.round(value);
-        }
-      }
-    });
-    
-    return specs;
-  }
-
-  /**
-   * Amazonカテゴリ抽出（パンくずリスト活用）
-   */
-  private extractAmazonCategory($: cheerio.Root): string {
-    // パンくずリストから判定
-    const breadcrumbs = $('#wayfinding-breadcrumbs_feature_div, .a-breadcrumb').text().toLowerCase();
-    
-    const categoryMap = {
-      'Backpack': /バッグ|リュック|backpack|bag|鞄/,
-      'Clothing': /服|ウェア|ファッション|clothing|apparel|jacket|shirt/,
-      'Cooking': /キッチン|調理|クッキング|kitchen|cooking|stove/,
-      'Safety': /安全|セーフティ|safety|first.?aid|emergency/,
-      'Shelter': /テント|シェルター|tent|shelter|tarp/
-    };
-    
-    for (const [category, pattern] of Object.entries(categoryMap)) {
-      if (pattern.test(breadcrumbs)) {
-        return category;
+      if (weight) {
+        return { weightGrams: weight };
       }
     }
     
-    return 'Other';
+    return {};
+  }
+
+  /**
+   * Amazonカテゴリ抽出（軽量版）
+   */
+  private extractAmazonCategory($: cheerio.Root): string {
+    // タイトルとパンくずリストのみ（高速化）
+    const title = $('#productTitle').text();
+    const breadcrumbs = $('#wayfinding-breadcrumbs_feature_div, .a-breadcrumb').text();
+    
+    return guessCategory(title + ' ' + breadcrumbs);
   }
 
   /**
@@ -303,10 +298,6 @@ export class AmazonScraper {
   }
 
 
-  private async randomDelay(): Promise<void> {
-    const delay = Math.random() * (this.delayRange.max - this.delayRange.min) + this.delayRange.min;
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
 
   private createAmazonFallback(url: string): LLMExtractionResult {
     return {

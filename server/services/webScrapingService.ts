@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { amazonScraper } from './amazonScraper.js';
 import { normalizeBrand, extractBrandFromText, getBrandFromDomain } from '../utils/brandUtils.js';
+import { guessCategory } from '../utils/scrapingHelpers.js';
 
 /**
  * 汎用Web Scraping Service - 最小限実装
@@ -63,7 +64,7 @@ export class WebScrapingService {
     const imageUrl = this.extractImage($, url);
 
     // カテゴリ
-    const suggestedCategory = this.guessCategory(name || '', $);
+    const suggestedCategory = this.guessCategoryFromPage(name || '', $);
 
     return {
       name: name || 'Unknown Product',
@@ -165,16 +166,9 @@ export class WebScrapingService {
   /**
    * カテゴリ推測
    */
-  private guessCategory(name: string, $: cheerio.Root): string {
-    const text = (name + ' ' + $('body').text()).toLowerCase();
-    
-    if (/テント|tent|タープ|tarp/.test(text)) return 'Shelter';
-    if (/ジャケット|jacket|パンツ|pants/.test(text)) return 'Clothing';
-    if (/ストーブ|stove|クッカー|cooker/.test(text)) return 'Cooking';
-    if (/ライト|light|救急|first.?aid/.test(text)) return 'Safety';
-    if (/リュック|backpack|バックパック|ザック/.test(text)) return 'Backpack';
-    
-    return 'Other';
+  private guessCategoryFromPage(name: string, $: cheerio.Root): string {
+    const text = name + ' ' + $('body').text();
+    return guessCategory(text);
   }
 
   /**

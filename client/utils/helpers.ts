@@ -10,6 +10,7 @@ export function sanitizeGearForm(form: GearItemForm): GearItemForm {
     name: form.name.trim(),
     brand: form.brand?.trim() || undefined,
     productUrl: form.productUrl?.trim() || undefined,
+    imageUrl: form.imageUrl?.trim() || undefined,
     categoryId: form.categoryId?.trim() || undefined,
     requiredQuantity: Math.max(1, Math.min(10, form.requiredQuantity)),
     ownedQuantity: Math.max(0, Math.min(10, form.ownedQuantity)),

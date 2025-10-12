@@ -14,43 +14,45 @@ interface CompactSummaryProps {
 const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
   const stats = [
     {
-      label: '総重量',
+      label: 'Total Weight',
       value: `${totals.weight}g`,
       color: COLORS.primary.dark,
       icon: 'W'
     },
     {
-      label: '総価格',
+      label: 'Total Cost',
       value: `¥${Math.round(totals.price / 100).toLocaleString()}`,
       color: COLORS.primary.medium,
       icon: '¥'
     },
     {
-      label: 'アイテム数',
+      label: 'Items',
       value: totals.items.toString(),
       color: COLORS.text.primary,
       icon: '#'
-    },
-    {
-      label: '不足数',
-      value: totals.missing.toString(),
-      color: totals.missing > 0 ? COLORS.accent : COLORS.primary.medium,
-      icon: totals.missing > 0 ? '!' : '✓'
     }
   ];
 
   return (
-    <Card variant="square" hover className="p-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <Card variant="square" hover className="p-2">
+      <div className="mb-2">
+        <h3
+          className="text-xs font-semibold"
+          style={{ color: COLORS.text.primary }}
+        >
+          Pack Summary
+        </h3>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="flex flex-col items-center justify-center group transition-all duration-200 hover:scale-105 p-3 rounded-lg"
+            className="flex flex-col items-center justify-center group transition-all duration-200 hover:scale-105 p-2 rounded-lg"
             style={{ backgroundColor: `${stat.color}10` }}
           >
-            <div className="flex items-center space-x-2 mb-1">
+            <div className="flex items-center space-x-1 mb-0.5">
               <span
-                className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
+                className="text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
                 style={{
                   backgroundColor: stat.color,
                   color: COLORS.white
@@ -59,14 +61,14 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
                 {stat.icon}
               </span>
               <span
-                className="text-xs font-medium"
+                className="text-[10px] font-medium"
                 style={{ color: COLORS.text.secondary }}
               >
                 {stat.label}
               </span>
             </div>
             <div
-              className="text-lg font-bold transition-all duration-200 group-hover:scale-110"
+              className="text-sm font-bold transition-all duration-200 group-hover:scale-110"
               style={{ color: stat.color }}
             >
               {stat.value}

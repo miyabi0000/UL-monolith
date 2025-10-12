@@ -156,14 +156,16 @@ export default function App() {
               </div>
 
               {/* ギアテーブル */}
-              <GearTable
-                items={gearItems}
-                onEdit={handleEditGear}
-                onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
-                onSave={handleSaveGear}
-                onUpdateItem={() => {}} // TODO: implement if needed
-                showCheckboxes={showCheckboxes}
-              />
+              <div className="mb-16">
+                <GearTable
+                  items={gearItems}
+                  onEdit={handleEditGear}
+                  onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
+                  onSave={handleSaveGear}
+                  onUpdateItem={() => {}} // TODO: implement if needed
+                  showCheckboxes={showCheckboxes}
+                />
+              </div>
             </>
           )}
         </div>

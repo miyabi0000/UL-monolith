@@ -13,10 +13,19 @@ import {
 export const handleGetAllGear = async (req: Request, res: Response) => {
   try {
     const items = getAllGearItems();
-    
+
+    // 計算フィールドを追加
+    const itemsWithCalculations = items.map(item => ({
+      ...item,
+      shortage: item.requiredQuantity - item.ownedQuantity,
+      totalWeight: (item.weightGrams || 0) * item.requiredQuantity,
+      totalPrice: (item.priceCents || 0) * item.requiredQuantity,
+      missingQuantity: Math.max(0, item.requiredQuantity - item.ownedQuantity)
+    }));
+
     res.json({
       success: true,
-      data: items,
+      data: itemsWithCalculations,
       meta: {
         total: items.length,
         page: 1,
@@ -39,7 +48,7 @@ export const handleGetAllGear = async (req: Request, res: Response) => {
 export const handleGetGearById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const item = getGearItemById(id);
 
     if (!item) {
@@ -49,9 +58,18 @@ export const handleGetGearById = async (req: Request, res: Response) => {
       });
     }
 
+    // 計算フィールドを追加
+    const itemWithCalculations = {
+      ...item,
+      shortage: item.requiredQuantity - item.ownedQuantity,
+      totalWeight: (item.weightGrams || 0) * item.requiredQuantity,
+      totalPrice: (item.priceCents || 0) * item.requiredQuantity,
+      missingQuantity: Math.max(0, item.requiredQuantity - item.ownedQuantity)
+    };
+
     res.json({
       success: true,
-      data: item
+      data: itemWithCalculations
     });
   } catch (error) {
     console.error('Error in handleGetGearById:', error);

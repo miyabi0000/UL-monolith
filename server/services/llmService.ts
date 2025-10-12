@@ -40,7 +40,7 @@ export class LLMService {
   }
 
   /**
-   * URLからギア情報を抽出
+   * URLからギア情報を抽出（スクレイピングのみ、LLM補強なし）
    */
   async extractGearFromUrl(url: string): Promise<LLMExtractionResult> {
     try {
@@ -50,33 +50,8 @@ export class LLMService {
     }
     
     try {
-      // スクレイピングで基本情報取得
-      const scrapedData = await webScrapingService.scrapeProductInfo(url);
-      
-      // LLMで補強（失敗してもスクレイピング結果を返す）
-      try {
-        const llmPrompt = `以下の情報を検証・補完してください：\n${JSON.stringify(scrapedData)}`;
-        const llmResponse = await openaiClient.chatCompletion(PROMPTS.EXTRACT_URL, llmPrompt);
-        const llmResult = this.parseJSON(llmResponse);
-        
-        return {
-          name: llmResult.name || scrapedData.name || 'Product from URL',
-          brand: llmResult.brand || scrapedData.brand,
-          productUrl: url,
-          weightGrams: llmResult.weightGrams || scrapedData.weightGrams,
-          priceCents: llmResult.priceCents || scrapedData.priceCents,
-          suggestedCategory: llmResult.suggestedCategory || scrapedData.suggestedCategory || 'Other',
-          requiredQuantity: 1,
-          ownedQuantity: 0,
-          priority: 3,
-          season: 'all',
-          extractedFields: this.mergeExtractedFields(scrapedData, llmResult),
-          source: 'enhanced'
-        };
-      } catch (llmError) {
-        console.warn('LLM enhancement failed, using scraping results');
-        return scrapedData;
-      }
+      // スクレイピングのみで情報取得（高速化）
+      return await webScrapingService.scrapeProductInfo(url);
     } catch (error) {
       console.error('URL extraction failed:', error);
       return this.createFallback(url);
@@ -96,6 +71,7 @@ export class LLMService {
         name: result.name || urlData.name,
         brand: result.brand || urlData.brand,
         productUrl: urlData.productUrl,
+        imageUrl: urlData.imageUrl, // 元データの画像URLを保持
         weightGrams: result.weightGrams || urlData.weightGrams,
         priceCents: result.priceCents || urlData.priceCents,
         suggestedCategory: result.suggestedCategory || urlData.suggestedCategory,
