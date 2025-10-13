@@ -3,6 +3,56 @@
  * Consolidates colors, styles, and utilities into a single source of truth
  */
 
+// 白銀比（Silver Ratio）定数
+export const SILVER_RATIO = 1.414;
+export const BASE_UNIT = 8; // ベースユニット（px）
+
+// 白銀比スケール（スペーシング用）
+export const SPACING_SCALE = {
+  xs: 4,    // 0.5 unit
+  sm: 6,    // 0.75 unit
+  base: 8,  // 1 unit
+  md: 12,   // 1.5 unit
+  lg: 16,   // 2 unit
+  xl: 23,   // 2.875 unit (16 × 1.414)
+  '2xl': 32,  // 4 unit
+  '3xl': 46,  // 5.75 unit (32 × 1.414)
+  '4xl': 64,  // 8 unit
+} as const;
+
+// タイポグラフィスケール（白銀比ベース）
+export const FONT_SCALE = {
+  xs: 12,   // ベース
+  sm: 17,   // 12 × 1.414
+  base: 24, // 17 × 1.414
+  lg: 34,   // 24 × 1.414
+  xl: 48,   // 34 × 1.414
+  '2xl': 68, // 48 × 1.414
+} as const;
+
+// 行間（フォントサイズ × 白銀比）
+export const LINE_HEIGHT_SCALE = {
+  xs: 17,   // 12 × 1.414
+  sm: 24,   // 17 × 1.414
+  base: 34, // 24 × 1.414
+  lg: 48,   // 34 × 1.414
+  xl: 68,   // 48 × 1.414
+  '2xl': 96, // 68 × 1.414
+} as const;
+
+// 角丸スケール（白銀比ベース）
+export const RADIUS_SCALE = {
+  none: 0,
+  xs: 2,     // 極小
+  sm: 4,     // 小
+  base: 6,   // 基本
+  md: 8,     // 中（6 × 1.414 ≈ 8）
+  lg: 12,    // 大（8 × 1.414 ≈ 12）
+  xl: 16,    // 特大（12 × 1.414 ≈ 17）
+  '2xl': 24, // 超特大（16 × 1.414 ≈ 23）
+  full: 9999, // 完全な円
+} as const;
+
 // Base color palette
 export const COLORS = {
   // Primary Colors

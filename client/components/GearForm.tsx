@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../utils/types'
 import { extractFromUrl, adaptToUserCategories } from '../services/llmExtraction'
 import { sanitizeGearForm } from '../utils/helpers'
-import { COLORS } from '../utils/colors'
-import { getInputStyle, getButtonStyle, getMessageStyle } from '../utils/colorHelpers'
+import { COLORS, getInputStyle, getButtonStyle, getMessageStyle } from '../utils/designSystem'
 import { useImageUpload } from '../hooks/useImageUpload'
 
 interface GearFormProps {

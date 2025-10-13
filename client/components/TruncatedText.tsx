@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { getTruncatedTextStyle, getExpandedTextStyle } from '../utils/colorHelpers';
-import { COLORS } from '../utils/colors';
+import { COLORS, getTruncatedTextStyle, getExpandedTextStyle } from '../utils/designSystem';
 
 interface TruncatedTextProps {
   text: string;

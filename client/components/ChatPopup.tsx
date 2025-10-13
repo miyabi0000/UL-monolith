@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, checkAPIHealth, APIError } from '../services/llmService'
-import { COLORS } from '../utils/colors'
-import { getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers'
+import { COLORS, getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/designSystem'
 
 interface ChatMessage {
   id: string

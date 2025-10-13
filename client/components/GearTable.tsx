@@ -1,18 +1,19 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { GearItemWithCalculated } from '../utils/types'
 import {
   COLORS,
+  SPACING_SCALE,
+  FONT_SCALE,
+  RADIUS_SCALE,
   getTableRowStyle,
   getTableHeaderStyle,
   getInputStyle,
-  getButtonStyle,
   getDropdownStyle,
   getDropdownItemStyle,
   getPriorityColor,
-  getCategoryBadgeStyle
+  getCategoryBadgeStyle,
+  getLinkStyle
 } from '../utils/designSystem'
-import { getLinkStyle } from '../utils/colorHelpers'
-import TruncatedText from './TruncatedText'
 import Card from './ui/Card'
 import Button from './ui/Button'
 
@@ -39,18 +40,18 @@ interface GearTableProps {
   onSave: (gear: GearItemWithCalculated) => void
   onUpdateItem: (id: string, field: string, value: any) => void
   showCheckboxes: boolean
+  onShowForm: () => void
 }
 
 type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price'
 type SortDirection = 'asc' | 'desc'
 
-const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelete, onSave, onUpdateItem, showCheckboxes }) => {
+const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelete, onSave, onUpdateItem, showCheckboxes, onShowForm }) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [filterCategory, setFilterCategory] = useState<string>('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null)
 
   // ソート・フィルタ処理
   const processedItems = useMemo(() => {
@@ -141,20 +142,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
   const isAllSelected = processedItems.length > 0 && selectedIds.length === processedItems.length
   const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < processedItems.length
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      setOpenDropdown(null)
-    }
-    
-    if (openDropdown) {
-      document.addEventListener('click', handleClickOutside)
-    }
-    
-    return () => {
-      document.removeEventListener('click', handleClickOutside)
-    }
-  }, [openDropdown])
 
   // Clear selected items when checkboxes are hidden
   useEffect(() => {
@@ -165,10 +152,47 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
 
   return (
     <Card variant="square">
+      {/* ヘッダー */}
+      <div
+        className="border-b flex justify-between items-center"
+        style={{
+          borderBottomColor: COLORS.primary.medium,
+          padding: `${SPACING_SCALE.base}px`
+        }}
+      >
+        <h3
+          className="font-semibold"
+          style={{
+            color: COLORS.text.primary,
+            fontSize: `${FONT_SCALE.sm}px`
+          }}
+        >
+          GEAR LIST
+        </h3>
+        <button
+          onClick={onShowForm}
+          className="font-semibold transition-colors"
+          style={{
+            backgroundColor: COLORS.primary.light,
+            color: COLORS.primary.dark,
+            border: `1px solid ${COLORS.primary.medium}`,
+            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.md}px`,
+            fontSize: `${FONT_SCALE.xs}px`,
+            borderRadius: `${RADIUS_SCALE.base}px`
+          }}
+        >
+          + ADD
+        </button>
+      </div>
+
       {/* フィルタ・ソート */}
-      <div 
-        className="p-2 border-b flex gap-2 items-center"
-        style={{ borderBottomColor: COLORS.primary.medium }}
+      <div
+        className="border-b flex items-center"
+        style={{
+          borderBottomColor: COLORS.primary.medium,
+          padding: `${SPACING_SCALE.base}px`,
+          gap: `${SPACING_SCALE.base}px`
+        }}
       >
         <div className="flex-1">
           <input
@@ -230,21 +254,15 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Image
               </th>
               <th
-                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('name')}
               >
                 Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('category')}
               >
                 Category {sortField === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -256,41 +274,29 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 Qty (Own/Need)
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('weight')}
               >
                 Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('shortage')}
               >
                 Missing {sortField === 'shortage' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('priority')}
               >
                 Priority {sortField === 'priority' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors"
-                style={{
-                  color: COLORS.text.secondary,
-                  '&:hover': { backgroundColor: COLORS.primary.light }
-                }}
+                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
+                style={{ color: COLORS.text.secondary }}
                 onClick={() => handleSort('price')}
               >
                 Price {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -330,25 +336,28 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     />
                   </td>
                 )}
-                <td className="px-2 py-1 text-center">
+                <td className="px-2 py-1 text-center" style={{ height: '64px' }}>
                   {item.imageUrl ? (
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center h-[56px]">
                       <img
                         src={item.imageUrl}
                         alt={item.name}
-                        className="max-w-[80px] max-h-[80px] w-auto h-auto object-contain rounded"
+                        className="max-w-[80px] max-h-[56px] w-auto h-auto object-contain"
+                        style={{ borderRadius: `${RADIUS_SCALE.base}px` }}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
                       />
                     </div>
                   ) : (
-                    <span
-                      className="text-xs"
-                      style={{ color: COLORS.text.muted }}
-                    >
-                      -
-                    </span>
+                    <div className="flex items-center justify-center h-[56px]">
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.muted }}
+                      >
+                        -
+                      </span>
+                    </div>
                   )}
                 </td>
                 <td className="px-2 py-1">
@@ -470,95 +479,82 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 >
                   {formatPrice(item.priceCents)}
                 </td>
-                <td className="px-2 py-1 whitespace-nowrap text-xs font-medium text-center">
-                  <div className="relative inline-block">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const button = e.currentTarget
-                        const rect = button.getBoundingClientRect()
+                <td className="px-2 py-1 whitespace-nowrap text-xs font-medium text-center relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenDropdown(openDropdown === item.id ? null : item.id)
+                    }}
+                    className="p-0.5 rounded-full transition-colors text-xs hover:bg-gray-100"
+                    style={{ color: COLORS.text.muted }}
+                  >
+                    ⋮
+                  </button>
 
-                        // ドロップダウンの位置を計算
-                        const dropdownHeight = 120
-                        const spaceBelow = window.innerHeight - rect.bottom
-
-                        if (spaceBelow < dropdownHeight) {
-                          // 上に表示
-                          setDropdownPos({
-                            top: rect.top - dropdownHeight,
-                            right: window.innerWidth - rect.right
-                          })
-                        } else {
-                          // 下に表示
-                          setDropdownPos({
-                            top: rect.bottom + 4,
-                            right: window.innerWidth - rect.right
-                          })
-                        }
-
-                        setOpenDropdown(openDropdown === item.id ? null : item.id)
-                      }}
-                      className="p-0.5 rounded-full transition-colors text-xs hover:bg-gray-100"
-                      style={{
-                        color: COLORS.text.muted
-                      }}
-                    >
-                      ⋮
-                    </button>
-
-                    {openDropdown === item.id && dropdownPos && (
+                  {openDropdown === item.id && (
+                    <>
                       <div
-                        className="fixed rounded shadow-lg min-w-[80px] py-0.5"
+                        className="fixed inset-0"
+                        style={{ zIndex: 9998 }}
+                        onClick={() => setOpenDropdown(null)}
+                      />
+                      <div
+                        className="absolute right-0 mt-1 shadow-lg min-w-[100px]"
                         style={{
                           ...getDropdownStyle(),
                           zIndex: 9999,
-                          top: `${dropdownPos.top}px`,
-                          right: `${dropdownPos.right}px`
+                          borderRadius: `${RADIUS_SCALE.md}px`,
+                          padding: `${SPACING_SCALE.xs}px 0`
                         }}
                       >
-                      <button
-                        onClick={() => {
-                          onEdit(item)
-                          setOpenDropdown(null)
-                        }}
-                        className="w-full text-left px-2 py-1 text-xs transition-colors block"
-                        style={getDropdownItemStyle()}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          onSave(item)
-                          setOpenDropdown(null)
-                        }}
-                        className="w-full text-left px-2 py-1 text-xs transition-colors block"
-                        style={{
-                          color: COLORS.primary.dark,
-                          '&:hover': { backgroundColor: COLORS.primary.light }
-                        }}
-                      >
-                        Save
-                      </button>
-                      <hr 
-                        className="my-0.25"
-                        style={{ borderColor: COLORS.primary.light }}
-                      />
-                      <button
-                        onClick={() => {
-                          onDelete([item.id])
-                          setOpenDropdown(null)
-                        }}
-                        className="w-full text-left px-2 py-1 text-xs transition-colors block"
-                        style={{
-                          color: COLORS.accent,
-                          '&:hover': { backgroundColor: '#FEF2F2' }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => {
+                            onEdit(item)
+                            setOpenDropdown(null)
+                          }}
+                          className="w-full text-left text-xs transition-colors block"
+                          style={{
+                            ...getDropdownItemStyle(),
+                            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.base}px`
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            onSave(item)
+                            setOpenDropdown(null)
+                          }}
+                          className="w-full text-left text-xs transition-colors block"
+                          style={{
+                            ...getDropdownItemStyle(),
+                            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.base}px`
+                          }}
+                        >
+                          Save
+                        </button>
+                        <hr
+                          style={{
+                            borderColor: COLORS.primary.light,
+                            margin: `${SPACING_SCALE.xs}px 0`
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            onDelete([item.id])
+                            setOpenDropdown(null)
+                          }}
+                          className="w-full text-left text-xs transition-colors block hover:bg-red-50"
+                          style={{
+                            color: COLORS.accent,
+                            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.base}px`
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
                   )}
-                  </div>
                 </td>
               </tr>
             ))}
