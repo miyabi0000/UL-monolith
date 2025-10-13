@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
 import { GearApiService } from '../services/gearApiService';
+import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
   const [showForm, setShowForm] = useState(false);
@@ -17,50 +18,44 @@ export const useAppState = () => {
   // APIから取得したギアアイテム（計算済み）
   const [gearItems, setGearItems] = useState<GearItemWithCalculated[]>([]);
   
-  const [categories, setCategories] = useState<Category[]>([
-    { id: '1', name: 'Clothing', path: ['Clothing'], color: '#FF6B6B', createdAt: new Date().toISOString() },
-    { id: '2', name: 'Sleep', path: ['Sleep'], color: '#4ECDC4', createdAt: new Date().toISOString() },
-    { id: '3', name: 'Pack', path: ['Pack'], color: '#FFE66D', createdAt: new Date().toISOString() },
-    { id: '4', name: 'Electronics', path: ['Electronics'], color: '#4D96FF', createdAt: new Date().toISOString() },
-    { id: '5', name: 'Hygiene', path: ['Hygiene'], color: '#A66DFF', createdAt: new Date().toISOString() },
-  ]);
+  // カテゴリをAPIから取得
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // ギアアイテムをAPIから取得（useCallbackで安定化）
   const fetchGearItems = useCallback(async () => {
     try {
       setIsLoading(true);
       const items = await GearApiService.getAllGear();
-
-      // N+1問題解消: 事前にカテゴリマップ作成
-      const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-      const defaultCategory = {
-        id: '1',
-        name: 'Clothing',
-        path: ['Clothing'],
-        color: '#FF6B6B',
-        createdAt: new Date().toISOString()
-      };
-
-      const enrichedItems = items.map(item => ({
-        ...item,
-        category: categoryMap.get(item.categoryId) || defaultCategory
-      }));
-
-      setGearItems(enrichedItems);
+      setGearItems(items as GearItemWithCalculated[]);
     } catch (err) {
       console.error('Error fetching gear items:', err);
       throw err; // エラーを上位に委譲
     } finally {
       setIsLoading(false);
     }
-  }, [categories]); // categoriesが変更された時のみ再作成
+  }, []); // categoriesへの依存を削除
+
+  // カテゴリを取得
+  const fetchCategories = useCallback(async () => {
+    try {
+      const cats = await CategoryApiService.getAllCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      throw err;
+    }
+  }, []);
 
   // 初回ロード
   useEffect(() => {
-    fetchGearItems();
-  }, []); // 空の依存配列で初回のみ実行
+    const loadInitialData = async () => {
+      await fetchCategories();
+      await fetchGearItems();
+    };
+    loadInitialData();
+  }, [fetchCategories, fetchGearItems]); // 依存配列を修正
 
-  // API操作関数（エラー・成功処理は上位コンポーネントで実装）
+  // ギアAPI操作関数
   const handleCreateGear = async (gearData: any) => {
     await GearApiService.createGear(gearData);
     await fetchGearItems(); // データを再取得
@@ -74,6 +69,22 @@ export const useAppState = () => {
   const handleDeleteGear = async (id: string) => {
     await GearApiService.deleteGear(id);
     await fetchGearItems(); // データを再取得
+  };
+
+  // カテゴリAPI操作関数
+  const handleCreateCategory = async (name: string, color: string) => {
+    await CategoryApiService.createCategory(name, color);
+    await fetchCategories(); // データを再取得
+  };
+
+  const handleUpdateCategory = async (id: string, name: string, color: string) => {
+    await CategoryApiService.updateCategory(id, name, color);
+    await fetchCategories(); // データを再取得
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    await CategoryApiService.deleteCategory(id);
+    await fetchCategories(); // データを再取得
   };
 
   return {
@@ -91,10 +102,16 @@ export const useAppState = () => {
     categories, setCategories,
     isLoading,
 
-    // API操作関数
+    // ギアAPI操作関数
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    refreshGearItems: fetchGearItems
+    refreshGearItems: fetchGearItems,
+
+    // カテゴリAPI操作関数
+    handleCreateCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    refreshCategories: fetchCategories
   };
 };

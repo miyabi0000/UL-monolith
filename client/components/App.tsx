@@ -3,7 +3,7 @@ import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
-import { COLORS } from '../utils/designSystem';
+import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import AppHeader from './AppHeader';
 import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
@@ -38,7 +38,12 @@ export default function App() {
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    refreshGearItems
+    refreshGearItems,
+
+    // カテゴリAPI操作関数
+    handleCreateCategory,
+    handleUpdateCategory,
+    handleDeleteCategory
   } = useAppState();
 
   const {
@@ -122,6 +127,7 @@ export default function App() {
           onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
           onToggleChat={() => setShowChat(!showChat)}
+          onShowCategoryManager={() => setShowCategoryManager(true)}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
         />
@@ -142,21 +148,20 @@ export default function App() {
             // データ読み込み完了後の実際のコンテンツ
             <>
               {/* STATSを横一列で表示 */}
-              <div className="mb-3">
+              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
                 <CompactSummary totals={totals} />
               </div>
 
               {/* チャート */}
-              <div className="mb-3">
+              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
                 <GearChart
                   data={chartData}
                   totalWeight={totals.weight}
-                  onShowGearManager={() => setShowForm(true)}
                 />
               </div>
 
               {/* ギアテーブル */}
-              <div className="mb-16">
+              <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
                 <GearTable
                   items={gearItems}
                   onEdit={handleEditGear}
@@ -164,6 +169,7 @@ export default function App() {
                   onSave={handleSaveGear}
                   onUpdateItem={() => {}} // TODO: implement if needed
                   showCheckboxes={showCheckboxes}
+                  onShowForm={() => setShowForm(true)}
                 />
               </div>
             </>
@@ -186,10 +192,11 @@ export default function App() {
 
         {showCategoryManager && (
             <CategoryManager
-              isOpen={showCategoryManager}
               onClose={() => setShowCategoryManager(false)}
               categories={categories}
-              onCategoriesUpdate={setCategories}
+              onAddCategory={handleCreateCategory}
+              onEditCategory={handleUpdateCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
         )}
 

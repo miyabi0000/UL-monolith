@@ -146,6 +146,32 @@ export function addCategory(category: Omit<Category, 'id' | 'createdAt' | 'updat
   return newCategory;
 }
 
+export function updateCategory(id: string, updates: Partial<Omit<Category, 'id' | 'createdAt'>>): Category | null {
+  const index = categories.findIndex(cat => cat.id === id);
+  if (index === -1) return null;
+  
+  categories[index] = {
+    ...categories[index],
+    ...updates,
+    updatedAt: new Date()
+  };
+  return categories[index];
+}
+
+export function deleteCategory(id: string): boolean {
+  const index = categories.findIndex(cat => cat.id === id);
+  if (index === -1) return false;
+  
+  // カテゴリを使用しているギアアイテムがあるか確認
+  const hasItems = gearItems.some(item => item.category === id);
+  if (hasItems) {
+    throw new Error('Cannot delete category with associated items');
+  }
+  
+  categories.splice(index, 1);
+  return true;
+}
+
 // 統計情報
 export function getGearStats() {
   const totalItems = gearItems.length;

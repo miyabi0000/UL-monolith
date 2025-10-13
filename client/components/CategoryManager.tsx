@@ -2,18 +2,15 @@ import React, { useState } from 'react'
 import { Category } from '../utils/types'
 
 interface CategoryManagerProps {
-  isOpen?: boolean
   categories: Category[]
-  onCategoriesUpdate?: React.Dispatch<React.SetStateAction<Category[]>>
-  onAddCategory?: (category: Omit<Category, 'id' | 'createdAt'>) => void
-  onEditCategory?: (category: Category) => void
-  onDeleteCategory?: (id: string) => void
+  onAddCategory?: (name: string, color: string) => Promise<void>
+  onEditCategory?: (id: string, name: string, color: string) => Promise<void>
+  onDeleteCategory?: (id: string) => Promise<void>
   onClose: () => void
 }
 
 const CategoryManager: React.FC<CategoryManagerProps> = ({
   categories,
-  onCategoriesUpdate,
   onAddCategory,
   onEditCategory,
   onDeleteCategory,
@@ -23,54 +20,65 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    color: '#4ECDC4',
-    parentId: ''
+    color: '#3B82F6'
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
     
-    if (editingCategory) {
-      onEditCategory?.({
-        ...editingCategory,
-        name: formData.name,
-        color: formData.color,
-        parentId: formData.parentId || undefined,
-        path: formData.parentId 
-          ? [...(categories.find(c => c.id === formData.parentId)?.path || []), formData.name]
-          : [formData.name]
-      })
-    } else {
-      onAddCategory?.({
-        userId: 'user1',
-        name: formData.name,
-        color: formData.color,
-        parentId: formData.parentId || undefined,
-        path: formData.parentId 
-          ? [...(categories.find(c => c.id === formData.parentId)?.path || []), formData.name]
-          : [formData.name]
-      })
-    }
+    try {
+      if (editingCategory) {
+        await onEditCategory?.(editingCategory.id, formData.name, formData.color)
+      } else {
+        await onAddCategory?.(formData.name, formData.color)
+      }
 
-    setFormData({ name: '', color: '#4ECDC4', parentId: '' })
-    setIsAddingNew(false)
-    setEditingCategory(null)
+      setFormData({ name: '', color: '#3B82F6' })
+      setIsAddingNew(false)
+      setEditingCategory(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save category')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      color: category.color,
-      parentId: category.parentId || ''
+      color: category.color
     })
     setIsAddingNew(true)
+    setError(null)
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: '#4ECDC4', parentId: '' })
+    setFormData({ name: '', color: '#3B82F6' })
     setIsAddingNew(false)
     setEditingCategory(null)
+    setError(null)
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete category "${name}"?`)) return
+    
+    // 連続クリック防止
+    if (isSubmitting) return
+    
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await onDeleteCategory?.(id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete category')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const predefinedColors = [
@@ -92,6 +100,13 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         </div>
 
         <div className="p-6">
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Add/Edit Form */}
           {isAddingNew && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -107,27 +122,12 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Hiking Poles, Hydration"
+                    maxLength={50}
                     required
+                    disabled={isSubmitting}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parent Category (Optional)
-                  </label>
-                  <select
-                    value={formData.parentId}
-                    onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="">No Parent</option>
-                    {categories.filter(c => c.id !== editingCategory?.id).map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.path.join(' > ')}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div>
@@ -138,14 +138,18 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                     <input
                       type="color"
                       value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="w-12 h-8 border border-gray-300 rounded"
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
+                      className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                      disabled={isSubmitting}
                     />
                     <input
                       type="text"
                       value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
                       className="px-3 py-1 border border-gray-300 rounded-md text-sm font-mono"
+                      pattern="^#[0-9A-F]{6}$"
+                      placeholder="#3B82F6"
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -154,8 +158,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         key={color}
                         type="button"
                         onClick={() => setFormData({ ...formData, color })}
-                        className="w-6 h-6 rounded border-2 border-gray-300 hover:scale-110 transition-transform"
+                        className="w-6 h-6 rounded border-2 border-gray-300 hover:scale-110 transition-transform disabled:opacity-50"
                         style={{ backgroundColor: color }}
+                        disabled={isSubmitting}
+                        title={color}
                       />
                     ))}
                   </div>
@@ -164,14 +170,16 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                 <div className="flex space-x-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
                   >
-                    {editingCategory ? 'Update' : 'Add'} Category
+                    {isSubmitting ? 'Saving...' : editingCategory ? 'Update' : 'Add'} Category
                   </button>
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400"
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 disabled:opacity-50"
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </button>
@@ -194,43 +202,47 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
           {/* Categories List */}
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Existing Categories</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Existing Categories ({categories.length})
+            </h3>
             {categories.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No categories yet. Add your first one!</p>
             ) : (
-              categories.map(category => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {category.path.join(' > ')}
+              <div className="grid gap-2">
+                {categories.map(category => (
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className="w-5 h-5 rounded-full shadow-sm"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {category.name}
+                        </div>
+                        <div className="text-xs text-gray-500 font-mono">{category.color}</div>
                       </div>
-                      <div className="text-sm text-gray-500">{category.color}</div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(category)}
+                        className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(category.id, category.name)}
+                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(category)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDeleteCategory?.(category.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>

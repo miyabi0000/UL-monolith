@@ -7,6 +7,7 @@ interface AppHeaderProps {
   onShowLogin: () => void;
   onLogout: () => void;
   onToggleChat: () => void;
+  onShowCategoryManager?: () => void;
   isAuthenticated: boolean;
   userName?: string;
 }
@@ -15,6 +16,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onShowLogin,
   onLogout,
   onToggleChat,
+  onShowCategoryManager,
   isAuthenticated,
   userName
 }) => {
@@ -40,6 +42,28 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
+        {/* Categories Button */}
+        {onShowCategoryManager && (
+          <div className="relative group">
+            <Button
+              isGlass
+              onClick={onShowCategoryManager}
+              className="w-8 h-8 rounded-lg text-xs font-bold hover:scale-105 relative overflow-hidden shadow-md"
+            >
+              <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>☰</span>
+            </Button>
+            <div
+              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
+              style={{
+                backgroundColor: COLORS.primary.dark,
+                color: COLORS.white
+              }}
+            >
+              Manage Categories
+            </div>
+          </div>
+        )}
+
         {/* AI Button - Enhanced with tooltip */}
         <div className="relative group">
           <Button
