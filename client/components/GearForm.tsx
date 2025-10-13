@@ -433,7 +433,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
               <option value="">Select Category</option>
               {categories.map(category => (
                 <option key={category.id} value={category.id}>
-                  {category.path.join(' > ')}
+                  {category.name}
                 </option>
               ))}
             </select>

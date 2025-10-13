@@ -400,3 +400,14 @@ export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'f
       return getGlassStyle('medium');
   }
 };
+
+// Link style
+export const getLinkStyle = () => ({
+  color: COLORS.primary.dark,
+  textDecoration: 'underline',
+  transition: 'color 0.2s ease',
+  cursor: 'pointer',
+  '&:hover': {
+    color: COLORS.primary.medium,
+  },
+});
