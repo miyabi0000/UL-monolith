@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { GearItemWithCalculated } from '../utils/types'
+import { GearItemWithCalculated, Category } from '../utils/types'
 import {
   COLORS,
   SPACING_SCALE,
@@ -35,6 +35,7 @@ const formatPrice = (priceCents?: number) => {
 
 interface GearTableProps {
   items: GearItemWithCalculated[]
+  categories: Category[]
   onEdit: (gear: GearItemWithCalculated) => void
   onDelete: (ids: string[]) => void
   onSave: (gear: GearItemWithCalculated) => void
@@ -46,28 +47,19 @@ interface GearTableProps {
 type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price'
 type SortDirection = 'asc' | 'desc'
 
-const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelete, onSave, onUpdateItem, showCheckboxes, onShowForm }) => {
+const GearTable: React.FC<GearTableProps> = React.memo(({ items, categories, onEdit, onDelete, onSave, onUpdateItem, showCheckboxes, onShowForm }) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [filterCategory, setFilterCategory] = useState<string>('')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
-  // ソート・フィルタ処理
+  // ソート処理
   const processedItems = useMemo(() => {
     // 安全性チェック: itemsが配列でない場合は空配列を使用
     const safeItems = Array.isArray(items) ? items : [];
-    let filtered = safeItems;
-    
-    // カテゴリフィルタ
-    if (filterCategory) {
-      filtered = safeItems.filter(item => 
-        item.category?.name.toLowerCase().includes(filterCategory.toLowerCase())
-      )
-    }
 
     // ソート
-    return [...filtered].sort((a, b) => {
+    return [...safeItems].sort((a, b) => {
       let aVal: any, bVal: any
       
       switch (sortField) {
@@ -103,7 +95,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
-  }, [items, sortField, sortDirection, filterCategory])
+  }, [items, sortField, sortDirection])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -169,44 +161,42 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
         >
           GEAR LIST
         </h3>
-        <button
-          onClick={onShowForm}
-          className="font-semibold transition-colors"
-          style={{
-            backgroundColor: COLORS.primary.light,
-            color: COLORS.primary.dark,
-            border: `1px solid ${COLORS.primary.medium}`,
-            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.md}px`,
-            fontSize: `${FONT_SCALE.xs}px`,
-            borderRadius: `${RADIUS_SCALE.base}px`
-          }}
-        >
-          + ADD
-        </button>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs"
+            style={{ color: COLORS.text.secondary }}
+          >
+            {processedItems.length} items
+          </span>
+          <button
+            onClick={onShowForm}
+            className="font-semibold transition-colors"
+            style={{
+              backgroundColor: COLORS.primary.light,
+              color: COLORS.primary.dark,
+              border: `1px solid ${COLORS.primary.medium}`,
+              padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.md}px`,
+              fontSize: `${FONT_SCALE.xs}px`,
+              borderRadius: `${RADIUS_SCALE.base}px`
+            }}
+          >
+            + ADD
+          </button>
+        </div>
       </div>
 
-      {/* フィルタ・ソート */}
-      <div
-        className="border-b flex items-center"
-        style={{
-          borderBottomColor: COLORS.primary.medium,
-          padding: `${SPACING_SCALE.base}px`,
-          gap: `${SPACING_SCALE.base}px`
-        }}
-      >
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Filter by category..."
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full px-2 py-0.5 rounded text-xs"
-            style={getInputStyle()}
-          />
-        </div>
-        {showCheckboxes && selectedIds.length > 0 && (
+      {/* 削除ボタンエリア */}
+      {showCheckboxes && selectedIds.length > 0 && (
+        <div
+          className="border-b flex items-center justify-end"
+          style={{
+            borderBottomColor: COLORS.primary.medium,
+            padding: `${SPACING_SCALE.base}px`,
+            gap: `${SPACING_SCALE.base}px`
+          }}
+        >
           <div className="flex items-center gap-2">
-            <span 
+            <span
               className="text-xs"
               style={{ color: COLORS.text.secondary }}
             >
@@ -220,14 +210,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
               Delete Selected
             </Button>
           </div>
-        )}
-        <div 
-          className="text-xs"
-          style={{ color: COLORS.text.secondary }}
-        >
-          {processedItems.length} items
         </div>
-      </div>
+      )}
 
       {/* テーブル */}
       <div>
@@ -271,7 +255,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider"
                 style={{ color: COLORS.text.secondary }}
               >
-                Qty (Own/Need)
+                Own/Need
               </th>
               <th
                 className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
@@ -279,13 +263,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 onClick={() => handleSort('weight')}
               >
                 Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
-                onClick={() => handleSort('shortage')}
-              >
-                Missing {sortField === 'shortage' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
                 className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
@@ -392,7 +369,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center">
                   <span
-                    className="inline-flex px-2 py-1 text-xs font-medium rounded-full"
+                    className="text-xs px-2 py-1 rounded-full font-medium inline-block"
                     style={getCategoryBadgeStyle(item.category?.color)}
                   >
                     {item.category?.name || 'Other'}
@@ -436,22 +413,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, onEdit, onDelet
                     >
                       ({item.weightGrams}g × {item.requiredQuantity})
                     </div>
-                  )}
-                </td>
-                <td className="px-2 py-1 whitespace-nowrap text-center">
-                  {item.shortage > 0 ? (
-                    <span
-                      className="font-medium"
-                      style={{ color: COLORS.accent }}
-                    >
-                      {item.shortage}
-                    </span>
-                  ) : (
-                    <span
-                      style={{ color: COLORS.success }}
-                    >
-                      ✓
-                    </span>
                   )}
                 </td>
                 <td className="px-2 py-1 whitespace-nowrap text-center">

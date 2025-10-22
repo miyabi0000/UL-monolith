@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
 import { GearApiService } from '../services/gearApiService';
 import { CategoryApiService } from '../services/categoryApiService';
@@ -15,25 +15,33 @@ export const useAppState = () => {
   // データ読み込み状態
   const [isLoading, setIsLoading] = useState(true);
 
-  // APIから取得したギアアイテム（計算済み）
-  const [gearItems, setGearItems] = useState<GearItemWithCalculated[]>([]);
+  // APIから取得した生のギアアイテム
+  const [rawGearItems, setRawGearItems] = useState<any[]>([]);
   
   // カテゴリをAPIから取得
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // カテゴリ情報を結合したギアアイテム（useMemoで計算）
+  const gearItems = useMemo(() => {
+    return rawGearItems.map(item => ({
+      ...item,
+      category: categories.find(cat => cat.id === item.categoryId)
+    })) as GearItemWithCalculated[];
+  }, [rawGearItems, categories]);
 
   // ギアアイテムをAPIから取得（useCallbackで安定化）
   const fetchGearItems = useCallback(async () => {
     try {
       setIsLoading(true);
       const items = await GearApiService.getAllGear();
-      setGearItems(items as GearItemWithCalculated[]);
+      setRawGearItems(items); // rawGearItemsに保存
     } catch (err) {
       console.error('Error fetching gear items:', err);
       throw err; // エラーを上位に委譲
     } finally {
       setIsLoading(false);
     }
-  }, []); // categoriesへの依存を削除
+  }, []);
 
   // カテゴリを取得
   const fetchCategories = useCallback(async () => {
@@ -53,7 +61,7 @@ export const useAppState = () => {
       await fetchGearItems();
     };
     loadInitialData();
-  }, [fetchCategories, fetchGearItems]); // 依存配列を修正
+  }, [fetchCategories, fetchGearItems]);
 
   // ギアAPI操作関数
   const handleCreateGear = async (gearData: any) => {

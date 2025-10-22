@@ -14,21 +14,22 @@ export const getCategoryColor = (systemName: string): string => {
 export const calculateChartData = (gearItems: GearItemWithCalculated[]): ChartData[] => {
   const categoryTotals = gearItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Other';
+    const categoryColor = item.category?.color || '#6B7280';
     if (!acc[categoryName]) {
-      acc[categoryName] = { weight: 0, price: 0, count: 0, items: [] };
+      acc[categoryName] = { weight: 0, price: 0, count: 0, items: [], color: categoryColor };
     }
     acc[categoryName].weight += item.totalWeight;
     acc[categoryName].price += item.totalPrice;
     acc[categoryName].count += item.requiredQuantity;
     acc[categoryName].items.push(item);
     return acc;
-  }, {} as Record<string, { weight: number; price: number; count: number; items: GearItemWithCalculated[] }>);
+  }, {} as Record<string, { weight: number; price: number; count: number; items: GearItemWithCalculated[]; color: string }>);
 
   return Object.entries(categoryTotals).map(([name, data]) => ({
     name,
-    value: data.weight, // ChartDataのvalueプロパティを追加
-    color: getCategoryColor(name),
-    items: data.items || [] // itemsプロパティを追加（空配列をフォールバック）
+    value: data.weight,
+    color: data.color, // カテゴリから取得した実際の色を使用
+    items: data.items || []
   }));
 };
 

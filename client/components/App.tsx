@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
@@ -54,8 +54,9 @@ export default function App() {
     showLoading
   } = useNotifications();
 
-  const chartData = calculateChartData(gearItems);
-  const totals = calculateTotals(gearItems);
+  // チャートデータと合計を useMemo でメモ化（無駄な再計算を防止）
+  const chartData = useMemo(() => calculateChartData(gearItems), [gearItems]);
+  const totals = useMemo(() => calculateTotals(gearItems), [gearItems]);
 
   const handleSaveGear = async (gearItem: any) => {
     const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
@@ -82,6 +83,17 @@ export default function App() {
   const handleEditGear = (gear: any) => {
     setEditingGear(gear);
     setShowForm(true);
+  };
+
+  const handleUpdateItem = async (id: string, field: string, value: any) => {
+    try {
+      const updates = { [field]: value };
+      await handleUpdateGear(id, updates);
+      await refreshGearItems();
+    } catch (err) {
+      showError('アイテムの更新に失敗しました');
+      console.error('Error updating item:', err);
+    }
   };
 
   const handleBulkDelete = async (selectedIds: string[]) => {
@@ -164,10 +176,11 @@ export default function App() {
               <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
                 <GearTable
                   items={gearItems}
+                  categories={categories}
                   onEdit={handleEditGear}
                   onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
                   onSave={handleSaveGear}
-                  onUpdateItem={() => {}} // TODO: implement if needed
+                  onUpdateItem={handleUpdateItem}
                   showCheckboxes={showCheckboxes}
                   onShowForm={() => setShowForm(true)}
                 />

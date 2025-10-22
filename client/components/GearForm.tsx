@@ -141,8 +141,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div 
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+      <div
         className="rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         style={{ backgroundColor: COLORS.white }}
       >
@@ -419,7 +419,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
 
           {/* カテゴリ選択 */}
           <div>
-            <label 
+            <label
               className="block text-sm font-medium mb-1"
               style={{ color: COLORS.text.primary }}
             >
@@ -428,7 +428,14 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
             <select
               value={form.categoryId}
               onChange={(e) => handleChange('categoryId', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+              style={{
+                ...getInputStyle(),
+                '&:focus': {
+                  borderColor: COLORS.primary.dark,
+                  outline: `2px solid ${COLORS.primary.light}`
+                }
+              }}
             >
               <option value="">Select Category</option>
               {categories.map(category => (

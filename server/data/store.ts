@@ -163,7 +163,7 @@ export function deleteCategory(id: string): boolean {
   if (index === -1) return false;
   
   // カテゴリを使用しているギアアイテムがあるか確認
-  const hasItems = gearItems.some(item => item.category === id);
+  const hasItems = gearItems.some(item => item.categoryId === id);
   if (hasItems) {
     throw new Error('Cannot delete category with associated items');
   }

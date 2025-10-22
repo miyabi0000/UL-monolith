@@ -253,21 +253,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({ data, totalWeight, onS
                         {/* システム別重量割合 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card variant="square" className="p-3">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 
-                          className="font-semibold"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          WEIGHT DISTRIBUTION
-                        </h4>
-                        <Button
-                          isGlass
-                          size="sm"
-                          onClick={onShowGearManager}
-                        >
-                          <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>+ ADD</span>
-                        </Button>
-                      </div>
+                      <h4
+                        className="font-semibold mb-3"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        WEIGHT DISTRIBUTION
+                      </h4>
                       <div className="space-y-2">
                         {sortedData.map((category) => (
                           <div
