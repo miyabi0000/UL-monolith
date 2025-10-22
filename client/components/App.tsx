@@ -1,9 +1,10 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
+import { ChartViewMode } from '../utils/types';
 import AppHeader from './AppHeader';
 import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
@@ -53,6 +54,12 @@ export default function App() {
     showError,
     showLoading
   } = useNotifications();
+
+  // ビューモード状態（Weight/Cost切り替え）
+  const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
+  
+  // 選択中のカテゴリ（グラフフィルタ用）
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // チャートデータと合計を useMemo でメモ化（無駄な再計算を防止）
   const chartData = useMemo(() => calculateChartData(gearItems), [gearItems]);
@@ -161,7 +168,11 @@ export default function App() {
             <>
               {/* STATSを横一列で表示 */}
               <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
-                <CompactSummary totals={totals} />
+                <CompactSummary 
+                  totals={totals}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                />
               </div>
 
               {/* チャート */}
@@ -169,6 +180,10 @@ export default function App() {
                 <GearChart
                   data={chartData}
                   totalWeight={totals.weight}
+                  totalCost={totals.price}
+                  viewMode={viewMode}
+                  selectedCategories={selectedCategories}
+                  onCategorySelect={setSelectedCategories}
                 />
               </div>
 
@@ -177,6 +192,7 @@ export default function App() {
                 <GearTable
                   items={gearItems}
                   categories={categories}
+                  filteredByCategory={selectedCategories}
                   onEdit={handleEditGear}
                   onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
                   onSave={handleSaveGear}

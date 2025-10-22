@@ -36,6 +36,7 @@ const formatPrice = (priceCents?: number) => {
 interface GearTableProps {
   items: GearItemWithCalculated[]
   categories: Category[]
+  filteredByCategory?: string[]
   onEdit: (gear: GearItemWithCalculated) => void
   onDelete: (ids: string[]) => void
   onSave: (gear: GearItemWithCalculated) => void
@@ -47,7 +48,17 @@ interface GearTableProps {
 type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price'
 type SortDirection = 'asc' | 'desc'
 
-const GearTable: React.FC<GearTableProps> = React.memo(({ items, categories, onEdit, onDelete, onSave, onUpdateItem, showCheckboxes, onShowForm }) => {
+const GearTable: React.FC<GearTableProps> = React.memo(({ 
+  items, 
+  categories, 
+  filteredByCategory = [],
+  onEdit, 
+  onDelete, 
+  onSave, 
+  onUpdateItem, 
+  showCheckboxes, 
+  onShowForm 
+}) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -57,9 +68,16 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, categories, onE
   const processedItems = useMemo(() => {
     // 安全性チェック: itemsが配列でない場合は空配列を使用
     const safeItems = Array.isArray(items) ? items : [];
+    
+    // カテゴリフィルタリング
+    const filteredItems = filteredByCategory.length > 0
+      ? safeItems.filter(item => 
+          item.category && filteredByCategory.includes(item.category.name)
+        )
+      : safeItems;
 
     // ソート
-    return [...safeItems].sort((a, b) => {
+    return [...filteredItems].sort((a, b) => {
       let aVal: any, bVal: any
       
       switch (sortField) {
@@ -95,7 +113,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, categories, onE
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
       return 0
     })
-  }, [items, sortField, sortDirection])
+  }, [items, filteredByCategory, sortField, sortDirection])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -524,7 +542,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({ items, categories, onE
       </div>
     </Card>
   )
-})
+}) as React.FC<GearTableProps>
 
 export default GearTable
 

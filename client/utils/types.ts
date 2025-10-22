@@ -68,10 +68,15 @@ export interface GearList {
 // チャート用データ
 export interface ChartData {
   name: string;
-  value: number;
+  value: number; // 現在表示中の値（weight or cost or itemCount）
+  weight: number; // 重量
+  cost: number; // コスト（priceCents）
+  itemCount: number; // アイテム数
   color: string;
   items: GearItemWithCalculated[];
 }
+
+export type ChartViewMode = 'weight' | 'cost';
 
 // API レスポンス
 export interface ApiResponse<T> {

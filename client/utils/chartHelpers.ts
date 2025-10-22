@@ -27,8 +27,11 @@ export const calculateChartData = (gearItems: GearItemWithCalculated[]): ChartDa
 
   return Object.entries(categoryTotals).map(([name, data]) => ({
     name,
-    value: data.weight,
-    color: data.color, // カテゴリから取得した実際の色を使用
+    value: data.weight, // デフォルトは重量
+    weight: data.weight,
+    cost: data.price,
+    itemCount: data.count,
+    color: data.color,
     items: data.items || []
   }));
 };
