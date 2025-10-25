@@ -16,6 +16,8 @@ import {
 } from '../utils/designSystem'
 import Card from './ui/Card'
 import Button from './ui/Button'
+import BulkActionMenu from './BulkActionMenu'
+import BulkActionBar from './BulkActionBar'
 
 // Price formatting helper
 const formatPrice = (priceCents?: number) => {
@@ -42,7 +44,9 @@ interface GearTableProps {
   onSave: (gear: GearItemWithCalculated) => void
   onUpdateItem: (id: string, field: string, value: any) => void
   showCheckboxes: boolean
+  onToggleCheckboxes?: () => void
   onShowForm: () => void
+  onRefresh?: () => void
 }
 
 type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price'
@@ -56,8 +60,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   onDelete, 
   onSave, 
   onUpdateItem, 
-  showCheckboxes, 
-  onShowForm 
+  showCheckboxes,
+  onToggleCheckboxes,
+  onShowForm,
+  onRefresh
 }) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -200,11 +206,32 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
           >
             + ADD
           </button>
+          {onToggleCheckboxes && (
+            <BulkActionMenu
+              showCheckboxes={showCheckboxes}
+              onToggleCheckboxes={onToggleCheckboxes}
+              onRefresh={onRefresh}
+            />
+          )}
         </div>
       </div>
 
-      {/* 削除ボタンエリア */}
-      {showCheckboxes && selectedIds.length > 0 && (
+      {/* 一括操作バー */}
+      {showCheckboxes && (
+        <div style={{ padding: `${SPACING_SCALE.base}px` }}>
+          <BulkActionBar
+            selectedCount={selectedIds.length}
+            totalCount={processedItems.length}
+            allSelected={selectedIds.length === processedItems.length && processedItems.length > 0}
+            onSelectAll={handleSelectAll}
+            onClearSelection={() => setSelectedIds([])}
+            onBulkDelete={handleBulkDelete}
+          />
+        </div>
+      )}
+
+      {/* 旧削除ボタンエリア（削除） */}
+      {false && showCheckboxes && selectedIds.length > 0 && (
         <div
           className="border-b flex items-center justify-end"
           style={{

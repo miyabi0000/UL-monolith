@@ -3,6 +3,8 @@ import { GearItemWithCalculated, Category } from '../utils/types';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import GearCard from './GearCard';
 import Button from './ui/Button';
+import BulkActionMenu from './BulkActionMenu';
+import BulkActionBar from './BulkActionBar';
 
 interface GearViewProps {
   items: GearItemWithCalculated[];
@@ -11,7 +13,9 @@ interface GearViewProps {
   onEdit: (gear: GearItemWithCalculated) => void;
   onDelete: (ids: string[]) => void;
   showCheckboxes: boolean;
+  onToggleCheckboxes: () => void;
   onShowForm: () => void;
+  onRefresh?: () => void;
 }
 
 type SortField = 'name' | 'weight' | 'price' | 'priority';
@@ -24,7 +28,9 @@ const GearView: React.FC<GearViewProps> = ({
   onEdit,
   onDelete,
   showCheckboxes,
-  onShowForm
+  onToggleCheckboxes,
+  onShowForm,
+  onRefresh
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -164,20 +170,32 @@ const GearView: React.FC<GearViewProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-2">
-          {showCheckboxes && selectedIds.length > 0 && (
-            <Button variant="danger" onClick={handleBulkDelete}>
-              選択削除 ({selectedIds.length})
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
           <Button variant="primary" onClick={onShowForm}>
             + Add Gear
           </Button>
+          <BulkActionMenu
+            showCheckboxes={showCheckboxes}
+            onToggleCheckboxes={onToggleCheckboxes}
+            onRefresh={onRefresh}
+          />
         </div>
       </div>
 
-      {/* チェックボックス一括選択 */}
+      {/* 一括操作バー */}
       {showCheckboxes && (
+        <BulkActionBar
+          selectedCount={selectedIds.length}
+          totalCount={processedItems.length}
+          allSelected={selectedIds.length === processedItems.length && processedItems.length > 0}
+          onSelectAll={handleSelectAll}
+          onClearSelection={() => setSelectedIds([])}
+          onBulkDelete={handleBulkDelete}
+        />
+      )}
+
+      {/* 旧チェックボックス一括選択（削除） */}
+      {false && showCheckboxes && (
         <div className="mb-4">
           <label className="flex items-center gap-2 text-sm" style={{ color: COLORS.text.secondary }}>
             <input

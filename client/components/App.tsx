@@ -211,7 +211,9 @@ export default function App() {
                     onSave={handleSaveGear}
                     onUpdateItem={handleUpdateItem}
                     showCheckboxes={showCheckboxes}
+                    onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
+                    onRefresh={refreshGearItems}
                   />
                 ) : (
                   <GearView
@@ -221,7 +223,9 @@ export default function App() {
                     onEdit={handleEditGear}
                     onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
                     showCheckboxes={showCheckboxes}
+                    onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
+                    onRefresh={refreshGearItems}
                   />
                 )}
               </div>

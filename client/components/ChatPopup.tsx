@@ -17,10 +17,10 @@ interface ChatPopupProps {
   gearItems?: any[]
   categories?: any[]
   onGearExtracted?: (gearData: any) => void
-  currentGearList?: any[] // ギアリスト分析用
+  currentGearList?: any[] // For gear list analysis
 }
 
-const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], categories = [], onGearExtracted, currentGearList = [] }) => {
+const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -34,7 +34,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // メッセージエリアを下にスクロール
+  // Scroll message area to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -43,47 +43,47 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     scrollToBottom()
   }, [messages])
 
-  // チャットを開いた時にインプットにフォーカス
+  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [isOpen])
 
-  // Multiple URLを検出
+  // Extract multiple URLs from text
   const extractMultipleUrls = (text: string): string[] => {
     const urlRegex = /https?:\/\/[^\s]+/g
     const urls = text.match(urlRegex) || []
-    // 重複を除去
+    // Remove duplicates
     return [...new Set(urls)]
   }
 
-  // プロンプト分類
+  // Classify user prompt
   const classifyPrompt = (prompt: string): PromptType => {
     const urls = extractMultipleUrls(prompt)
+    const lowerPrompt = prompt.toLowerCase()
 
-    // Multiple URLのパターン
+    // Multiple URLs pattern
     if (urls.length > 1) {
       return 'multiple_urls'
     }
 
-    // URL + 情報のパターン
+    // URL + additional info pattern
     if (urls.length === 1 && prompt.length > urls[0].length + 10) {
       return 'url_with_prompt'
     }
 
-    // 純粋な単一URLパターン
+    // Pure single URL pattern
     if (urls.length === 1 && /^https?:\/\/.+$/.test(prompt.trim())) {
       return 'url'
     }
 
-    // カテゴリパターン
-    if (prompt.includes('カテゴリ') ||
-        (prompt.includes('') && !containsBrand(prompt))) {
+    // Category pattern (English or Japanese)
+    if (lowerPrompt.includes('category') || lowerPrompt.includes('カテゴリ')) {
       return 'add_category'
     }
 
-    // ギアパターン（ブランド名が含まれる）
+    // Gear pattern (contains brand name)
     if (containsBrand(prompt)) {
       return 'add_gear'
     }
@@ -91,7 +91,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     return 'general'
   }
 
-  // ブランド名が含まれているかチェック
+  // Check if brand name is included
   const containsBrand = (prompt: string): boolean => {
     const brandPatterns = [
       'Arc\'teryx', 'Patagonia', 'Montbell', 'REI', 'Osprey', 'Deuter', 'Gregory',
@@ -122,13 +122,12 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     setInputMessage('')
     setIsLoading(true)
 
-    setTimeout(async () => {
+    try {
       let assistantResponse: string
       let shouldExtractGear = false
       let mockGearData: any = null
 
-      try {
-        const promptType = classifyPrompt(currentInput)
+      const promptType = classifyPrompt(currentInput)
 
         switch (promptType) {
           case 'url':
@@ -187,7 +186,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               if (categoryData) {
                 assistantResponse = `Category created!\n\nCategory: ${categoryData.englishName}\nJapanese: ${categoryData.name}\n\nNew category is now available.`
               } else {
-                assistantResponse = `Could not identify category name.\n\nExample: "Shelter category" や "Cooking gear"`
+                assistantResponse = `Could not identify category name.\n\nExample: "Shelter category" or "Cooking gear"`
               }
             } catch (error) {
               if (error instanceof APIError) {
@@ -200,13 +199,13 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
 
           case 'url_with_prompt':
             try {
-              // URLを抽出
+              // Extract URL
               const urlMatch = currentInput.match(/(https?:\/\/[^\s]+)/)
               if (urlMatch) {
                 const url = urlMatch[1]
-                // URL基本情報を取得
+                // Get basic URL info
                 const urlData = await extractFromUrl(url)
-                // プロンプト情報で拡張
+                // Enhance with prompt info
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
 
                 assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${enhancedData.weightGrams}g\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
@@ -237,14 +236,14 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
           case 'multiple_urls':
             try {
               const urls = extractMultipleUrls(currentInput)
-              assistantResponse = `${urls.length}URLs detected. Starting parallel processing...\n\n`
+              assistantResponse = `${urls.length} URLs detected. Starting parallel processing...\n\n`
 
-              // 並列処理で全URLを処理
+              // Process all URLs in parallel
               const results = await Promise.allSettled(
                 urls.map(url => extractFromUrl(url))
               )
 
-              // 成功・失敗を分類
+              // Classify success/failure
               const successResults: any[] = []
               const failedUrls: string[] = []
 
@@ -259,9 +258,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                 }
               })
 
-              // レスポンス作成
+              // Create response
               if (successResults.length > 0) {
-                assistantResponse += `✅ Success: ${successResults.length}items\n\n`
+                assistantResponse += `✅ Success: ${successResults.length} items\n\n`
                 successResults.forEach((item, idx) => {
                   assistantResponse += `**${idx + 1}. ${item.data.name}**\n`
                   assistantResponse += `  Brand: ${item.data.brand || 'Unknown'}\n`
@@ -270,7 +269,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                   assistantResponse += `  Category: ${item.data.suggestedCategory}\n\n`
                 })
 
-                // 複数ギアを一括登録
+                // Bulk register multiple gears
                 shouldExtractGear = true
                 mockGearData = successResults.map(item => ({
                   name: item.data.name,
@@ -286,13 +285,13 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               }
 
               if (failedUrls.length > 0) {
-                assistantResponse += `\n❌ Failed: ${failedUrls.length}items\n`
+                assistantResponse += `\n❌ Failed: ${failedUrls.length} items\n`
                 failedUrls.forEach((url, idx) => {
                   assistantResponse += `  ${idx + 1}. ${url.substring(0, 50)}...\n`
                 })
               }
 
-              assistantResponse += `\n${successResults.length}gear items added to your list.`
+              assistantResponse += `\n${successResults.length} gear items added to your list.`
             } catch (error) {
               if (error instanceof APIError) {
                 assistantResponse = `Batch processing error: ${error.message}\n\nThere's a communication issue with the backend.`
