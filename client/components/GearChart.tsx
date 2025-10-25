@@ -486,23 +486,17 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* 中央表示 */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div
-              className="text-center cursor-pointer rounded-full p-4 pointer-events-auto"
+              className="text-center cursor-pointer pointer-events-auto flex flex-col items-center justify-center"
               style={{ 
-                maxWidth: centerMaxWidth,
+                width: innerRadiusConfig.inner * 2,
+                height: innerRadiusConfig.inner * 2,
+                borderRadius: '50%',
                 transition: 'all 0.3s ease',
-                backgroundColor: centerPulse ? 'rgba(64, 64, 64, 0.1)' : 'transparent',
-                transform: centerPulse ? 'scale(1.1)' : 'scale(1)',
+                backgroundColor: centerPulse ? 'rgba(64, 64, 64, 0.05)' : 'transparent',
+                transform: centerPulse ? 'scale(1.05)' : 'scale(1)',
                 boxShadow: centerPulse ? '0 0 20px rgba(64, 64, 64, 0.3)' : 'none'
               }}
               onClick={handleCenterClick}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(249, 250, 251, 0.8)'
-              }}
-              onMouseLeave={(e) => {
-                if (!centerPulse) {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                }
-              }}
             >
               <div 
                 className="font-bold mb-1" 
