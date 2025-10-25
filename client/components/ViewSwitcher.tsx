@@ -21,7 +21,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
         }}
         aria-label="カードビュー"
       >
-        🎴 Card
+        Card
       </button>
       <button
         onClick={() => onViewChange('table')}
@@ -33,7 +33,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
         }}
         aria-label="テーブルビュー"
       >
-        📋 Table
+        Table
       </button>
     </div>
   );

@@ -9,7 +9,7 @@ interface ChatMessage {
   timestamp: Date
 }
 
-type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'general'
+type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'multiple_urls' | 'general'
 
 interface ChatPopupProps {
   isOpen: boolean
@@ -25,7 +25,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     {
       id: '1',
       role: 'assistant',
-      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n**ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n**カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n**URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\nバックエンドAPIと連携して動作します。',
+      content: 'Hello! Welcome to the AI-powered Gear Management System. Available features:\n\n**Gear Registration**\n• Brand + Product name\n  Example: "Arc\'teryx Beta AR"\n\n**Category Management**  \n• Add new categories\n  Example: "Shelter category"\n\n**URL Analysis**\n• Single URL extraction\n• Batch processing for multiple URLs ✨NEW\n• URL + additional info\n  Example: "URL + actual weight 230g"\n\nYou can paste multiple URLs at once for batch registration!',
       timestamp: new Date()
     }
   ])
@@ -50,30 +50,44 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     }
   }, [isOpen])
 
+  // Multiple URLを検出
+  const extractMultipleUrls = (text: string): string[] => {
+    const urlRegex = /https?:\/\/[^\s]+/g
+    const urls = text.match(urlRegex) || []
+    // 重複を除去
+    return [...new Set(urls)]
+  }
+
   // プロンプト分類
   const classifyPrompt = (prompt: string): PromptType => {
-    
-    // URL + 追加情報のパターン
-    if (prompt.includes('http') && prompt.length > 50) {
+    const urls = extractMultipleUrls(prompt)
+
+    // Multiple URLのパターン
+    if (urls.length > 1) {
+      return 'multiple_urls'
+    }
+
+    // URL + 情報のパターン
+    if (urls.length === 1 && prompt.length > urls[0].length + 10) {
       return 'url_with_prompt'
     }
-    
-    // 純粋なURLパターン
-    if (/^https?:\/\/.+$/.test(prompt.trim())) {
+
+    // 純粋な単一URLパターン
+    if (urls.length === 1 && /^https?:\/\/.+$/.test(prompt.trim())) {
       return 'url'
     }
-    
-    // カテゴリ追加パターン
-    if (prompt.includes('カテゴリ') || 
-        (prompt.includes('追加') && !containsBrand(prompt))) {
+
+    // カテゴリパターン
+    if (prompt.includes('カテゴリ') ||
+        (prompt.includes('') && !containsBrand(prompt))) {
       return 'add_category'
     }
-    
-    // ギア追加パターン（ブランド名が含まれる）
+
+    // ギアパターン（ブランド名が含まれる）
     if (containsBrand(prompt)) {
       return 'add_gear'
     }
-    
+
     return 'general'
   }
 
@@ -120,7 +134,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
           case 'url':
             try {
               const extractedData = await extractFromUrl(currentInput)
-              assistantResponse = `URL から商品情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `Successfully extracted product info from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -135,9 +149,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `URL解析エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。`
+                assistantResponse = `URL parsing error: ${error.message}\n\nThere might be a communication issue with the backend.`
               } else {
-                assistantResponse = `URL解析エラー: ${error instanceof Error ? error.message : 'URL からの情報抽出に失敗しました'}\n\n有効なURL を入力してください。`
+                assistantResponse = `URL parsing error: ${error instanceof Error ? error.message : 'Failed to extract info from URL'}\n\nPlease provide a valid URL.`
               }
             }
             break
@@ -145,7 +159,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
           case 'add_gear':
             try {
               const extractedData = await extractFromPrompt(currentInput)
-              assistantResponse = `ギア情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -160,9 +174,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。\n\n${error.status ? `ステータス: ${error.status}` : ''}`
+                assistantResponse = `API error: ${error.message}\n\nThere might be a communication issue with the backend.\n\n${error.status ? `Status: ${error.status}` : ''}`
               } else {
-                assistantResponse = `エラー: ${error instanceof Error ? error.message : 'ギア情報の抽出に失敗しました'}\n\n正しい形式で入力してください。\n例: "Arc'teryx Beta AR 追加"`
+                assistantResponse = `Error: ${error instanceof Error ? error.message : 'Failed to extract gear info'}\n\nPlease use correct format.\nExample: "Arc'teryx Beta AR"`
               }
             }
             break
@@ -171,15 +185,15 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
             try {
               const categoryData = await extractCategoryFromPrompt(currentInput)
               if (categoryData) {
-                assistantResponse = `カテゴリを作成しました！\n\nカテゴリ名: ${categoryData.englishName}\n日本語名: ${categoryData.name}\n\n新しいカテゴリが使用可能になりました。`
+                assistantResponse = `Category created!\n\nCategory: ${categoryData.englishName}\nJapanese: ${categoryData.name}\n\nNew category is now available.`
               } else {
-                assistantResponse = `カテゴリ名を特定できませんでした。\n\n例: "シェルター カテゴリ追加" や "調理器具 追加"`
+                assistantResponse = `Could not identify category name.\n\nExample: "Shelter category" や "Cooking gear"`
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。`
+                assistantResponse = `API error: ${error.message}\n\nThere might be a communication issue with the backend.`
               } else {
-                assistantResponse = `カテゴリ処理エラー: ${error instanceof Error ? error.message : 'カテゴリの作成に失敗しました'}`
+                assistantResponse = `Category processing error: ${error instanceof Error ? error.message : 'Failed to create category'}`
               }
             }
             break
@@ -194,8 +208,8 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                 const urlData = await extractFromUrl(url)
                 // プロンプト情報で拡張
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
-                
-                assistantResponse = `URL + 追加情報を処理しました！\n\n商品名: ${enhancedData.name}\nブランド: ${enhancedData.brand}\n重量: ${enhancedData.weightGrams}g\n価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nカテゴリ: ${enhancedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+
+                assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${enhancedData.weightGrams}g\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
                 shouldExtractGear = true
                 mockGearData = {
                   name: enhancedData.name,
@@ -209,27 +223,95 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                   priority: 3
                 }
               } else {
-                assistantResponse = `URLが見つかりませんでした。\n\n例: "https://example.com/product + 実測230g"`
+                assistantResponse = `URL not found.\n\nExample: "https://example.com/product + actual weight230g"`
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドでのURL処理に問題があります。\nサイトがアクセスできないか、スクレイピングがブロックされている可能性があります。`
+                assistantResponse = `API error: ${error.message}\n\nThere is an issue processing the URL in the backend.\nThe site may be inaccessible or scraping may be blocked.`
               } else {
-                assistantResponse = `URL処理エラー: ${error instanceof Error ? error.message : 'URLの処理に失敗しました'}`
+                assistantResponse = `URL processing error: ${error instanceof Error ? error.message : 'Failed to process URL'}`
+              }
+            }
+            break
+
+          case 'multiple_urls':
+            try {
+              const urls = extractMultipleUrls(currentInput)
+              assistantResponse = `${urls.length}URLs detected. Starting parallel processing...\n\n`
+
+              // 並列処理で全URLを処理
+              const results = await Promise.allSettled(
+                urls.map(url => extractFromUrl(url))
+              )
+
+              // 成功・失敗を分類
+              const successResults: any[] = []
+              const failedUrls: string[] = []
+
+              results.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                  successResults.push({
+                    url: urls[index],
+                    data: result.value
+                  })
+                } else {
+                  failedUrls.push(urls[index])
+                }
+              })
+
+              // レスポンス作成
+              if (successResults.length > 0) {
+                assistantResponse += `✅ Success: ${successResults.length}items\n\n`
+                successResults.forEach((item, idx) => {
+                  assistantResponse += `**${idx + 1}. ${item.data.name}**\n`
+                  assistantResponse += `  Brand: ${item.data.brand || 'Unknown'}\n`
+                  assistantResponse += `  Weight: ${item.data.weightGrams ? `${item.data.weightGrams}g` : 'Estimating...'}\n`
+                  assistantResponse += `  Price: ${item.data.priceCents ? `¥${Math.round(item.data.priceCents / 100).toLocaleString()}` : 'Estimating...'}\n`
+                  assistantResponse += `  Category: ${item.data.suggestedCategory}\n\n`
+                })
+
+                // 複数ギアを一括登録
+                shouldExtractGear = true
+                mockGearData = successResults.map(item => ({
+                  name: item.data.name,
+                  brand: item.data.brand,
+                  productUrl: item.url,
+                  requiredQuantity: 1,
+                  ownedQuantity: 0,
+                  weightGrams: item.data.weightGrams,
+                  priceCents: item.data.priceCents,
+                  season: '',
+                  priority: 3
+                }))
+              }
+
+              if (failedUrls.length > 0) {
+                assistantResponse += `\n❌ Failed: ${failedUrls.length}items\n`
+                failedUrls.forEach((url, idx) => {
+                  assistantResponse += `  ${idx + 1}. ${url.substring(0, 50)}...\n`
+                })
+              }
+
+              assistantResponse += `\n${successResults.length}gear items added to your list.`
+            } catch (error) {
+              if (error instanceof APIError) {
+                assistantResponse = `Batch processing error: ${error.message}\n\nThere's a communication issue with the backend.`
+              } else {
+                assistantResponse = `Multiple URL processing error: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`
               }
             }
             break
 
 
           default:
-            assistantResponse = `ギア管理のお手伝いをします！\n\n使用できる機能：\n• ブランド名 + 製品名で追加\n  例: "Arc'teryx Beta AR 追加"\n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n• 商品URLの処理\n  例: URLを貼り付け`
+            assistantResponse = `Let me help you manage your gear!\n\nAvailable features:\n• Brand + Product name\n  Example: "Arc'teryx Beta AR"\n• Add categories\n  Example: "Shelter category"\n• Process product URLs\n  Example: Paste URLs`
             break
         }
       } catch (error) {
         if (error instanceof APIError) {
-          assistantResponse = `システムエラー: ${error.message}\n\nバックエンドAPIとの通信に問題が発生しました。\nしばらく時間をおいてから再度お試しください。\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
+          assistantResponse = `System error: ${error.message}\n\nThere was a communication issue with the backend API.\nPlease try again after a short while.\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
         } else {
-          assistantResponse = `処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}\n\n問題が継続する場合は、システム管理者にお問い合わせください。`
+          assistantResponse = `An error occurred during processing: ${error instanceof Error ? error.message : 'unknown error'}\n\nIf the problem persists, please contact the system administrator.`
         }
       }
 
@@ -242,9 +324,14 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
 
       setMessages(prev => [...prev, assistantMessage])
 
-      // ギアデータの追加
+      // ギアデータの
       if (shouldExtractGear && mockGearData && onGearExtracted) {
-        onGearExtracted(mockGearData)
+        // 配列の場合は複数ギア、オブジェクトの場合は単一ギア
+        if (Array.isArray(mockGearData)) {
+          mockGearData.forEach(gear => onGearExtracted(gear))
+        } else {
+          onGearExtracted(mockGearData)
+        }
       }
 
       setIsLoading(false)
@@ -369,7 +456,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                     className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
                     style={{ borderColor: COLORS.primary.medium }}
                   ></div>
-                  <span className="text-sm font-medium">分析中...</span>
+                  <span className="text-sm font-medium">Analyzing...</span>
                 </div>
               </div>
             </div>
@@ -393,7 +480,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="商品URL または指示を入力..."
+              placeholder="Enter product URL or instructions..."
               disabled={isLoading}
               className="flex-1 px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-2 text-sm transition-all duration-200 disabled:opacity-50"
               style={{
@@ -415,14 +502,14 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
             >
-送信
+Send
             </button>
           </div>
           <p
             className="text-xs mt-3 leading-relaxed"
             style={{ color: COLORS.text.secondary }}
           >
-例: "Arc'teryx Beta AR 追加" / "シェルター カテゴリ追加" / Amazon URL
+Example: "Arc'teryx Beta AR" / "Shelter category" / Product URLs
           </p>
         </div>
       </div>

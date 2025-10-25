@@ -115,7 +115,7 @@ const GearCard: React.FC<GearCardProps> = ({
             }}
             title={`${item.shortage}個不足`}
           >
-            ⚠️
+            !
           </span>
         </div>
       )}
@@ -180,7 +180,7 @@ const GearCard: React.FC<GearCardProps> = ({
               e.currentTarget.style.backgroundColor = COLORS.primary.dark;
             }}
           >
-            📝 編集
+            編集
           </button>
           
           {item.productUrl && (
@@ -198,7 +198,7 @@ const GearCard: React.FC<GearCardProps> = ({
                 e.currentTarget.style.backgroundColor = COLORS.primary.medium;
               }}
             >
-              🔗 URL
+              URL
             </button>
           )}
           
@@ -216,7 +216,7 @@ const GearCard: React.FC<GearCardProps> = ({
               e.currentTarget.style.backgroundColor = COLORS.danger;
             }}
           >
-            🗑️
+            削除
           </button>
         </div>
       </div>
