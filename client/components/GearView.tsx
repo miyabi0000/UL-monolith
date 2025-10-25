@@ -21,7 +21,7 @@ interface GearViewProps {
 type SortField = 'name' | 'weight' | 'price' | 'priority';
 type SortDirection = 'asc' | 'desc';
 
-const GearView: React.FC<GearViewProps> = ({
+const GearView: React.FC<GearViewProps> = React.memo(({
   items,
   categories,
   filteredByCategory = [],
@@ -249,7 +249,8 @@ const GearView: React.FC<GearViewProps> = ({
       )}
     </div>
   );
-};
+});
+
+GearView.displayName = 'GearView';
 
 export default GearView;
-

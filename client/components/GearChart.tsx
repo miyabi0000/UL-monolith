@@ -1,28 +1,52 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData, ChartViewMode } from '../utils/types'
-import { COLORS } from '../utils/designSystem'
+import { COLORS, getPriorityColor } from '../utils/designSystem'
 import Card from './ui/Card'
 
 // ==================== 定数 ====================
 const CHART_CONFIG = {
-  height: 500,
+  height: {
+    mobile: 350,
+    tablet: 450,
+    desktop: 500
+  },
   outerRadius: {
-    outer: 200,
-    inner: 140
+    mobile: { outer: 120, inner: 85 },
+    tablet: { outer: 160, inner: 115 },
+    desktop: { outer: 200, inner: 140 }
   },
   innerRadius: {
-    outer: 140,
-    inner: 90
+    mobile: { outer: 85, inner: 55 },
+    tablet: { outer: 115, inner: 75 },
+    desktop: { outer: 140, inner: 90 }
   },
-  centerMaxWidth: 160
+  centerMaxWidth: {
+    mobile: 100,
+    tablet: 130,
+    desktop: 160
+  }
 } as const
 
 const DEFAULT_COLOR = '#6B7280'
-const SELECTED_STROKE_COLOR = '#374151'
+const SELECTED_COLOR = '#404040' // Gray color for selection (gray.700)
 const SELECTED_STROKE_WIDTH = 3
 
 // ==================== ヘルパー関数 ====================
+// 色を濃くする関数
+const darkenColor = (color: string, amount: number = 0.3): string => {
+  const hex = color.replace('#', '')
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+  
+  const newR = Math.max(0, Math.floor(r * (1 - amount)))
+  const newG = Math.max(0, Math.floor(g * (1 - amount)))
+  const newB = Math.max(0, Math.floor(b * (1 - amount)))
+  
+  return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
+}
+
 const generateItemColor = (baseColor: string, index: number, total: number): string => {
   const hex = baseColor.replace('#', '')
   const r = parseInt(hex.substr(0, 2), 16)
@@ -68,6 +92,109 @@ const getItemValue = (item: any, mode: ChartViewMode): number => {
 }
 
 // ==================== サブコンポーネント ====================
+// カスタムツールチップ
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: any[]
+  viewMode: ChartViewMode
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode }) => {
+  if (!active || !payload?.[0]) return null
+  
+  const data = payload[0].payload
+  const isItem = 'brand' in data || 'id' in data
+  
+  return (
+    <div 
+      className="rounded-lg shadow-xl p-3 max-w-xs"
+      style={{ 
+        backgroundColor: COLORS.white,
+        border: `1px solid ${COLORS.gray[200]}`,
+        backdropFilter: 'blur(8px)'
+      }}
+    >
+      {/* ヘッダー */}
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1">
+          <p className="font-bold text-sm mb-0.5" style={{ color: COLORS.text.primary }}>
+            {data.name}
+          </p>
+          {isItem && data.brand && (
+            <p className="text-xs" style={{ color: COLORS.text.secondary }}>
+              {data.brand}
+            </p>
+          )}
+        </div>
+        <div 
+          className="w-3 h-3 rounded-full ml-2 flex-shrink-0"
+          style={{ backgroundColor: data.color || SELECTED_COLOR }}
+        />
+      </div>
+      
+      {/* メイン情報 */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+            {viewMode === 'cost' ? '価格' : '重量'}:
+          </span>
+          <span className="font-bold text-sm" style={{ color: data.color || SELECTED_COLOR }}>
+            {formatValue(data.value, viewMode)}
+          </span>
+        </div>
+        
+        {/* パーセンテージ */}
+        {data.percentage !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+              全体比:
+            </span>
+            <span className="font-semibold text-xs" style={{ color: COLORS.text.primary }}>
+              {data.percentage}%
+            </span>
+          </div>
+        )}
+        
+        {/* システムパーセンテージ（アイテムの場合） */}
+        {isItem && data.systemPercentage !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+              カテゴリ内:
+            </span>
+            <span className="font-semibold text-xs" style={{ color: COLORS.text.primary }}>
+              {data.systemPercentage}%
+            </span>
+          </div>
+        )}
+      </div>
+      
+      {/* 追加情報（アイテムの場合） */}
+      {isItem && (data.owned !== undefined || data.priority !== undefined) && (
+        <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${COLORS.gray[200]}` }}>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {data.owned !== undefined && data.needed !== undefined && (
+              <div>
+                <span style={{ color: COLORS.text.secondary }}>所有/必要: </span>
+                <span className="font-medium" style={{ color: COLORS.text.primary }}>
+                  {data.owned}/{data.needed}
+                </span>
+              </div>
+            )}
+            {data.priority !== undefined && (
+              <div>
+                <span style={{ color: COLORS.text.secondary }}>優先度: </span>
+                <span className="font-medium" style={{ color: getPriorityColor(data.priority) }}>
+                  {data.priority}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface SummaryButtonProps {
   mode: ChartViewMode
   currentMode: ChartViewMode
@@ -93,8 +220,7 @@ const SummaryButton: React.FC<SummaryButtonProps> = ({
     <div
       className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-2 rounded-lg hover:scale-105"
       style={{
-        backgroundColor: isSelected ? `${color}30` : `${color}10`,
-        border: isSelected ? `2px solid ${color}` : '2px solid transparent'
+        backgroundColor: isSelected ? COLORS.gray[100] : 'transparent'
       }}
       onClick={onClick}
     >
@@ -128,31 +254,35 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
   isSelected,
   viewMode,
   onClick
-}) => (
-  <div
-    className="flex items-center justify-between p-2 rounded cursor-pointer transition-colors"
-    style={{
-      backgroundColor: isSelected ? COLORS.gray[100] : 'transparent',
-      border: isSelected ? `1px solid ${COLORS.gray[700]}` : '1px solid transparent'
-    }}
-    onClick={onClick}
-  >
-    <div className="flex items-center space-x-2">
-      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-      <span className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
-        {category.name}
-      </span>
-    </div>
-    <div className="text-right">
-      <div className="text-sm font-semibold" style={{ color: COLORS.text.primary }}>
-        {formatValue(category.value, viewMode)}
+}) => {
+  const darkenedColor = darkenColor(category.color, 0.3)
+  return (
+    <div
+      className="flex items-center justify-between p-2 rounded cursor-pointer transition-all duration-200"
+      style={{
+        backgroundColor: isSelected ? `${category.color}15` : 'transparent',
+        borderLeft: isSelected ? `4px solid ${darkenedColor}` : '4px solid transparent',
+        paddingLeft: isSelected ? '6px' : '8px'
+      }}
+      onClick={onClick}
+    >
+      <div className="flex items-center space-x-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+        <span className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+          {category.name}
+        </span>
       </div>
-      <div className="text-xs" style={{ color: COLORS.text.secondary }}>
-        {category.percentage}%
+      <div className="text-right">
+        <div className="text-sm font-semibold" style={{ color: COLORS.text.primary }}>
+          {formatValue(category.value, viewMode)}
+        </div>
+        <div className="text-xs" style={{ color: COLORS.text.secondary }}>
+          {category.percentage}%
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 // ==================== メインコンポーネント ====================
 interface GearChartProps {
@@ -175,6 +305,32 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onViewModeChange
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  const [centerPulse, setCenterPulse] = useState(false)
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
+
+  // レスポンシブ対応
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth
+      if (width < 768) {
+        setScreenSize('mobile')
+      } else if (width < 1024) {
+        setScreenSize('tablet')
+      } else {
+        setScreenSize('desktop')
+      }
+    }
+    
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // チャート設定を画面サイズに応じて取得
+  const chartHeight = CHART_CONFIG.height[screenSize]
+  const outerRadiusConfig = CHART_CONFIG.outerRadius[screenSize]
+  const innerRadiusConfig = CHART_CONFIG.innerRadius[screenSize]
+  const centerMaxWidth = CHART_CONFIG.centerMaxWidth[screenSize]
 
   // ==================== データ処理 ====================
   const displayData = useMemo(() => {
@@ -235,14 +391,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const handleCenterClick = () => {
     onCategorySelect([])
     setSelectedItem(null)
+    
+    // パルスアニメーション
+    setCenterPulse(true)
+    setTimeout(() => setCenterPulse(false), 600)
   }
 
   // ==================== レンダリング ====================
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-4">
       {/* グラフエリア */}
-      <Card variant="square" className="p-3">
-        <div className="relative flex items-center justify-center" style={{ height: CHART_CONFIG.height }}>
+      <Card variant="default" className="p-3">
+        <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* 外側円 - アイテム */}
@@ -252,8 +412,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   dataKey="value"
                   cx="50%"
                   cy="50%"
-                  outerRadius={CHART_CONFIG.outerRadius.outer}
-                  innerRadius={CHART_CONFIG.outerRadius.inner}
+                  outerRadius={outerRadiusConfig.outer}
+                  innerRadius={outerRadiusConfig.inner}
                   onClick={(entry) => handleItemClick(entry.id)}
                   className="cursor-pointer"
                 >
@@ -263,13 +423,20 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       index,
                       selectedData?.sortedItems?.length || 1
                     )
+                    const isSelected = selectedItem === item.id
+                    const darkenedColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.3)
                     return (
                       <Cell
                         key={`item-${index}`}
                         fill={fillColor}
-                        opacity={selectedItem === item.id ? 1 : 0.8}
-                        stroke="none"
-                        strokeWidth={0}
+                        opacity={isSelected ? 1 : 0.85}
+                        stroke={isSelected ? darkenedColor : COLORS.white}
+                        strokeWidth={isSelected ? 4 : 1}
+                        style={{
+                          filter: isSelected ? `drop-shadow(0 0 8px ${darkenedColor}99)` : 'none',
+                          transition: 'all 0.2s ease',
+                          outline: 'none'
+                        }}
                       />
                     )
                   })}
@@ -282,24 +449,36 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 dataKey="value"
                 cx="50%"
                 cy="50%"
-                outerRadius={CHART_CONFIG.innerRadius.outer}
-                innerRadius={CHART_CONFIG.innerRadius.inner}
+                outerRadius={innerRadiusConfig.outer}
+                innerRadius={innerRadiusConfig.inner}
                 onClick={(entry) => handleCategoryClick(entry.name)}
                 className="cursor-pointer"
               >
-                {sortedData.map((entry, index) => (
-                  <Cell
-                    key={`category-${index}`}
-                    fill={entry.color}
-                    stroke={selectedCategory === entry.name ? SELECTED_STROKE_COLOR : 'none'}
-                    strokeWidth={selectedCategory === entry.name ? SELECTED_STROKE_WIDTH : 0}
-                  />
-                ))}
+                {sortedData.map((entry, index) => {
+                  const isCategorySelected = selectedCategory === entry.name
+                  const darkenedColor = darkenColor(entry.color, 0.3)
+                  return (
+                    <Cell
+                      key={`category-${index}`}
+                      fill={entry.color}
+                      stroke={isCategorySelected ? darkenedColor : COLORS.white}
+                      strokeWidth={isCategorySelected ? 4 : 1}
+                      style={{
+                        filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedColor}99)` : 'none',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                    />
+                  )
+                })}
               </Pie>
 
-              <Tooltip
-                formatter={(value: number) => [formatValue(value, viewMode), viewMode === 'cost' ? 'Cost' : 'Weight']}
-                labelFormatter={(label) => String(label)}
+              <Tooltip 
+                content={<CustomTooltip viewMode={viewMode} />}
+                cursor={false}
+                wrapperStyle={{ outline: 'none', zIndex: 1000 }}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={30}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -307,14 +486,40 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* 中央表示 */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div
-              className="text-center cursor-pointer hover:bg-gray-50 rounded-full p-4 transition-colors pointer-events-auto"
-              style={{ maxWidth: CHART_CONFIG.centerMaxWidth }}
+              className="text-center cursor-pointer rounded-full p-4 pointer-events-auto"
+              style={{ 
+                maxWidth: centerMaxWidth,
+                transition: 'all 0.3s ease',
+                backgroundColor: centerPulse ? 'rgba(64, 64, 64, 0.1)' : 'transparent',
+                transform: centerPulse ? 'scale(1.1)' : 'scale(1)',
+                boxShadow: centerPulse ? '0 0 20px rgba(64, 64, 64, 0.3)' : 'none'
+              }}
               onClick={handleCenterClick}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(249, 250, 251, 0.8)'
+              }}
+              onMouseLeave={(e) => {
+                if (!centerPulse) {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                }
+              }}
             >
-              <div className="text-2xl font-bold mb-1" style={{ color: COLORS.text.primary }}>
+              <div 
+                className="font-bold mb-1" 
+                style={{ 
+                  color: COLORS.text.primary,
+                  fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
+                }}
+              >
                 {formatValue(totalValue, viewMode)}
               </div>
-              <div className="text-xs uppercase tracking-wide font-bold" style={{ color: COLORS.text.secondary }}>
+              <div 
+                className="uppercase tracking-wide font-bold" 
+                style={{ 
+                  color: COLORS.text.secondary,
+                  fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem'
+                }}
+              >
                 TOTAL
               </div>
               {selectedCategory && (
@@ -333,7 +538,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </Card>
 
       {/* サイドパネル */}
-      <Card variant="square" className="p-3">
+      <Card variant="default" className="p-3">
         {/* Pack Summary */}
         <div className="mb-4 pb-3 border-b" style={{ borderColor: COLORS.gray[200] }}>
           <h4 className="text-xs font-semibold mb-2" style={{ color: COLORS.text.primary }}>
@@ -345,7 +550,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               currentMode={viewMode}
               label="Total Weight"
               icon="W"
-              color={COLORS.gray[700]}
+              color={SELECTED_COLOR}
               value={`${totalWeight}g`}
               onClick={() => onViewModeChange('weight')}
             />
@@ -354,7 +559,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               currentMode={viewMode}
               label="Total Cost"
               icon="¥"
-              color={COLORS.gray[700]}
+              color={SELECTED_COLOR}
               value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
               onClick={() => onViewModeChange('cost')}
             />

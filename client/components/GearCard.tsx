@@ -224,5 +224,5 @@ const GearCard: React.FC<GearCardProps> = ({
   );
 };
 
-export default GearCard;
+export default React.memo(GearCard);
 

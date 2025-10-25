@@ -20,7 +20,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    color: '#3B82F6'
+    color: '#404040'
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         await onAddCategory?.(formData.name, formData.color)
       }
 
-      setFormData({ name: '', color: '#3B82F6' })
+      setFormData({ name: '', color: '#404040' })
       setIsAddingNew(false)
       setEditingCategory(null)
     } catch (err) {
@@ -58,7 +58,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: '#3B82F6' })
+    setFormData({ name: '', color: '#404040' })
     setIsAddingNew(false)
     setEditingCategory(null)
     setError(null)
@@ -148,7 +148,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
                       className="px-3 py-1 border border-gray-300 rounded-md text-sm font-mono"
                       pattern="^#[0-9A-F]{6}$"
-                      placeholder="#3B82F6"
+                      placeholder="#404040"
                       disabled={isSubmitting}
                     />
                   </div>
