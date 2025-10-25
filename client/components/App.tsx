@@ -6,7 +6,6 @@ import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import { ChartViewMode } from '../utils/types';
 import AppHeader from './AppHeader';
-import CompactSummary from './CompactSummary';
 import GearTable from './GearTable';
 import GearChart from './GearChart';
 import NotificationPopup from './NotificationPopup';
@@ -166,15 +165,6 @@ export default function App() {
           ) : (
             // データ読み込み完了後の実際のコンテンツ
             <>
-              {/* STATSを横一列で表示 */}
-              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
-                <CompactSummary 
-                  totals={totals}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                />
-              </div>
-
               {/* チャート */}
               <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
                 <GearChart
@@ -184,6 +174,7 @@ export default function App() {
                   viewMode={viewMode}
                   selectedCategories={selectedCategories}
                   onCategorySelect={setSelectedCategories}
+                  onViewModeChange={setViewMode}
                 />
               </div>
 
