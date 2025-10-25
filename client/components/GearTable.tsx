@@ -46,7 +46,6 @@ interface GearTableProps {
   showCheckboxes: boolean
   onToggleCheckboxes?: () => void
   onShowForm: () => void
-  onRefresh?: () => void
 }
 
 type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price'
@@ -62,8 +61,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   onUpdateItem, 
   showCheckboxes,
   onToggleCheckboxes,
-  onShowForm,
-  onRefresh
+  onShowForm
 }) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -206,11 +204,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             + ADD
           </button>
           {onToggleCheckboxes && (
-            <BulkActionMenu
-              showCheckboxes={showCheckboxes}
-              onToggleCheckboxes={onToggleCheckboxes}
-              onRefresh={onRefresh}
-            />
+          <BulkActionMenu
+            showCheckboxes={showCheckboxes}
+            onToggleCheckboxes={onToggleCheckboxes}
+          />
           )}
         </div>
       </div>

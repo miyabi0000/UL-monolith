@@ -15,7 +15,6 @@ interface GearViewProps {
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   onShowForm: () => void;
-  onRefresh?: () => void;
 }
 
 type SortField = 'name' | 'weight' | 'price' | 'priority';
@@ -29,8 +28,7 @@ const GearView: React.FC<GearViewProps> = React.memo(({
   onDelete,
   showCheckboxes,
   onToggleCheckboxes,
-  onShowForm,
-  onRefresh
+  onShowForm
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -177,7 +175,6 @@ const GearView: React.FC<GearViewProps> = React.memo(({
           <BulkActionMenu
             showCheckboxes={showCheckboxes}
             onToggleCheckboxes={onToggleCheckboxes}
-            onRefresh={onRefresh}
           />
         </div>
       </div>
@@ -192,21 +189,6 @@ const GearView: React.FC<GearViewProps> = React.memo(({
           onClearSelection={() => setSelectedIds([])}
           onBulkDelete={handleBulkDelete}
         />
-      )}
-
-      {/* 旧チェックボックス一括選択（削除） */}
-      {false && showCheckboxes && (
-        <div className="mb-4">
-          <label className="flex items-center gap-2 text-sm" style={{ color: COLORS.text.secondary }}>
-            <input
-              type="checkbox"
-              checked={selectedIds.length === processedItems.length && processedItems.length > 0}
-              onChange={handleSelectAll}
-              style={{ accentColor: COLORS.gray[700] }}
-            />
-            すべて選択
-          </label>
-        </div>
       )}
 
       {/* カードグリッド */}

@@ -40,7 +40,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
             className="text-sm font-medium"
             style={{ color: COLORS.text.primary }}
           >
-            すべて選択
+            Select All
           </span>
         </label>
 
@@ -49,10 +49,10 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
           style={{ color: COLORS.gray[700] }}
         >
           {selectedCount > 0 ? (
-            <span>{selectedCount}個選択中</span>
+            <span>{selectedCount} selected</span>
           ) : (
             <span style={{ color: COLORS.text.secondary }}>
-              アイテムを選択してください
+              Select items
             </span>
           )}
         </div>
@@ -60,31 +60,36 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
 
       {/* 右側: アクションボタン */}
       <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
-          <>
-            <button
-              onClick={onBulkDelete}
-              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
-              style={{
-                backgroundColor: COLORS.danger,
-                color: COLORS.white
-              }}
-            >
-              削除 ({selectedCount})
-            </button>
-            <button
-              onClick={onClearSelection}
-              className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
-              style={{
-                backgroundColor: COLORS.white,
-                color: COLORS.text.primary,
-                border: `1px solid ${COLORS.gray[700]}`
-              }}
-            >
-              キャンセル
-            </button>
-          </>
-        )}
+        <button
+          onClick={onBulkDelete}
+          disabled={selectedCount === 0}
+          className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+          style={{
+            backgroundColor: selectedCount > 0 ? COLORS.danger : COLORS.gray[300],
+            color: COLORS.white,
+            cursor: selectedCount > 0 ? 'pointer' : 'not-allowed',
+            opacity: selectedCount > 0 ? 1 : 0.6
+          }}
+        >
+          Delete {selectedCount > 0 && `(${selectedCount})`}
+        </button>
+        <button
+          onClick={onClearSelection}
+          className="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+          style={{
+            backgroundColor: COLORS.white,
+            color: COLORS.text.primary,
+            border: `1px solid ${COLORS.gray[200]}`
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = COLORS.gray[50];
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = COLORS.white;
+          }}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
