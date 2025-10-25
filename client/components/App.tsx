@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
@@ -6,7 +6,9 @@ import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import { ChartViewMode } from '../utils/types';
 import AppHeader from './AppHeader';
+import ViewSwitcher from './ViewSwitcher';
 import GearTable from './GearTable';
+import GearView from './GearView';
 import GearChart from './GearChart';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
@@ -57,8 +59,19 @@ export default function App() {
   // ビューモード状態（Weight/Cost切り替え）
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
   
+  // ギア表示モード（table/card切り替え）
+  const [gearViewMode, setGearViewMode] = useState<'table' | 'card'>(() => {
+    const saved = localStorage.getItem('gearViewMode');
+    return (saved === 'table' || saved === 'card') ? saved : 'table';
+  });
+  
   // 選択中のカテゴリ（グラフフィルタ用）
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // gearViewModeの変更をlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem('gearViewMode', gearViewMode);
+  }, [gearViewMode]);
 
   // チャートデータと合計を useMemo でメモ化（無駄な再計算を防止）
   const chartData = useMemo(() => calculateChartData(gearItems), [gearItems]);
@@ -178,19 +191,39 @@ export default function App() {
                 />
               </div>
 
-              {/* ギアテーブル */}
-              <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
-                <GearTable
-                  items={gearItems}
-                  categories={categories}
-                  filteredByCategory={selectedCategories}
-                  onEdit={handleEditGear}
-                  onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
-                  onSave={handleSaveGear}
-                  onUpdateItem={handleUpdateItem}
-                  showCheckboxes={showCheckboxes}
-                  onShowForm={() => setShowForm(true)}
+              {/* ビュー切替 */}
+              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
+                <ViewSwitcher
+                  currentView={gearViewMode}
+                  onViewChange={setGearViewMode}
                 />
+              </div>
+
+              {/* ギアテーブル or カードビュー */}
+              <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
+                {gearViewMode === 'table' ? (
+                  <GearTable
+                    items={gearItems}
+                    categories={categories}
+                    filteredByCategory={selectedCategories}
+                    onEdit={handleEditGear}
+                    onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
+                    onSave={handleSaveGear}
+                    onUpdateItem={handleUpdateItem}
+                    showCheckboxes={showCheckboxes}
+                    onShowForm={() => setShowForm(true)}
+                  />
+                ) : (
+                  <GearView
+                    items={gearItems}
+                    categories={categories}
+                    filteredByCategory={selectedCategories}
+                    onEdit={handleEditGear}
+                    onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
+                    showCheckboxes={showCheckboxes}
+                    onShowForm={() => setShowForm(true)}
+                  />
+                )}
               </div>
             </>
           )}
