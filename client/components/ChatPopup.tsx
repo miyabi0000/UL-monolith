@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, checkAPIHealth, APIError } from '../services/llmService'
-import { COLORS, getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/designSystem'
+import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
+import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
 
 interface ChatMessage {
   id: string
@@ -14,10 +14,7 @@ type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'mul
 interface ChatPopupProps {
   isOpen: boolean
   onClose: () => void
-  gearItems?: any[]
-  categories?: any[]
   onGearExtracted?: (gearData: any) => void
-  currentGearList?: any[] // For gear list analysis
 }
 
 const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted }) => {
@@ -123,13 +120,13 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
     setIsLoading(true)
 
     try {
-      let assistantResponse: string
+      let assistantResponse: string = ''
       let shouldExtractGear = false
       let mockGearData: any = null
 
       const promptType = classifyPrompt(currentInput)
 
-        switch (promptType) {
+      switch (promptType) {
           case 'url':
             try {
               const extractedData = await extractFromUrl(currentInput)
@@ -243,16 +240,29 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
                 urls.map(url => extractFromUrl(url))
               )
 
-              // Classify success/failure
+              // Classify success/failure based on data quality
               const successResults: any[] = []
               const failedUrls: string[] = []
 
               results.forEach((result, index) => {
                 if (result.status === 'fulfilled') {
-                  successResults.push({
-                    url: urls[index],
-                    data: result.value
-                  })
+                  const data = result.value
+
+                  // Check if the result is actually valid (not a fallback)
+                  const isFallback = data.source === 'fallback' ||
+                                    data.confidence !== undefined && data.confidence < 0.5 ||
+                                    !data.name ||
+                                    data.name.includes('Failed to Extract') ||
+                                    data.name.includes('Product from')
+
+                  if (!isFallback) {
+                    successResults.push({
+                      url: urls[index],
+                      data: result.value
+                    })
+                  } else {
+                    failedUrls.push(urls[index])
+                  }
                 } else {
                   failedUrls.push(urls[index])
                 }
@@ -275,6 +285,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
                   name: item.data.name,
                   brand: item.data.brand,
                   productUrl: item.url,
+                  imageUrl: item.data.imageUrl,
                   requiredQuantity: 1,
                   ownedQuantity: 0,
                   weightGrams: item.data.weightGrams,
@@ -305,12 +316,15 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
           default:
             assistantResponse = `Let me help you manage your gear!\n\nAvailable features:\n• Brand + Product name\n  Example: "Arc'teryx Beta AR"\n• Add categories\n  Example: "Shelter category"\n• Process product URLs\n  Example: Paste URLs`
             break
-        }
-      } catch (error) {
-        if (error instanceof APIError) {
-          assistantResponse = `System error: ${error.message}\n\nThere was a communication issue with the backend API.\nPlease try again after a short while.\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
+      }
+
+      // Add gear data if extracted
+      if (shouldExtractGear && mockGearData && onGearExtracted) {
+        // Array: multiple gears, Object: single gear
+        if (Array.isArray(mockGearData)) {
+          mockGearData.forEach(gear => onGearExtracted(gear))
         } else {
-          assistantResponse = `An error occurred during processing: ${error instanceof Error ? error.message : 'unknown error'}\n\nIf the problem persists, please contact the system administrator.`
+          onGearExtracted(mockGearData)
         }
       }
 
@@ -322,19 +336,25 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
       }
 
       setMessages(prev => [...prev, assistantMessage])
-
-      // ギアデータの
-      if (shouldExtractGear && mockGearData && onGearExtracted) {
-        // 配列の場合は複数ギア、オブジェクトの場合は単一ギア
-        if (Array.isArray(mockGearData)) {
-          mockGearData.forEach(gear => onGearExtracted(gear))
-        } else {
-          onGearExtracted(mockGearData)
-        }
+    } catch (error) {
+      let assistantResponse: string
+      if (error instanceof APIError) {
+        assistantResponse = `System error: ${error.message}\n\nThere was a communication issue with the backend API.\nPlease try again after a short while.\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
+      } else {
+        assistantResponse = `An error occurred during processing: ${error instanceof Error ? error.message : 'unknown error'}\n\nIf the problem persists, please contact the system administrator.`
       }
 
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: assistantResponse,
+        timestamp: new Date()
+      }
+
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -348,59 +368,49 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      {/* オーバーレイ */}
+      {/* Overlay */}
       <div
         className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-150"
         onClick={onClose}
       />
 
-      {/* チャットパネル */}
+      {/* Chat Panel */}
       <div
-        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out shadow-2xl"
+        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out"
         style={{
-          ...getSquareSeparatorStyle(),
-          borderLeft: `2px solid ${COLORS.primary.medium}`,
-          borderRadius: '0',
+          backgroundColor: COLORS.white,
+          boxShadow: `-4px 0 6px -1px rgba(0, 0, 0, 0.1)`,
         }}
       >
-        {/* ヘッダー */}
+        {/* Header */}
         <div
-          className="p-5 border-b flex justify-between items-center backdrop-blur-md"
+          className="flex justify-between items-center"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-            color: COLORS.white
+            padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+            borderBottom: `1px solid ${COLORS.gray[200]}`,
           }}
         >
           <div>
-            <h3 className="text-base font-bold tracking-tight">AI ギアアシスタント</h3>
+            <h3 className="font-semibold" style={{ fontSize: `${FONT_SCALE.base}px`, color: COLORS.text.primary }}>AI Gear Assistant</h3>
             <p
-              className="text-xs mt-1"
-              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+              style={{ fontSize: `${FONT_SCALE.sm}px`, color: COLORS.text.secondary, marginTop: '4px' }}
             >
-              URLから自動抽出・スマート分析
+              Auto-extract & Smart Analysis
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl transition-all duration-200 hover:scale-110"
+            className="p-2 rounded-md transition-opacity hover:opacity-70"
             style={{
-              ...getLiquidGlassStyle(),
-              color: COLORS.white,
-              fontSize: '18px'
-            }}
-            onMouseEnter={(e) => {
-              Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+              color: COLORS.text.secondary,
+              fontSize: `${FONT_SCALE.lg}px`,
             }}
           >
             ✕
           </button>
         </div>
 
-        {/* メッセージエリア */}
+        {/* Message Area */}
         <div className="flex-1 p-5 overflow-y-auto space-y-4 backdrop-blur-sm">
           {messages.map((message) => (
             <div
@@ -414,18 +424,18 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
                 style={{
                   ...(message.role === 'user'
                     ? {
-                        backgroundColor: COLORS.primary.dark,
+                        backgroundColor: COLORS.gray[700],
                         color: COLORS.white,
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                        boxShadow: SHADOW
                       }
                     : {
-                        ...getSquareSeparatorStyle(),
+                        backgroundColor: COLORS.white,
                         color: COLORS.text.primary,
-                        border: `1px solid rgba(255, 255, 255, 0.3)`
+                        boxShadow: SHADOW
                       })
                 }}
               >
-                <div className={`${message.role === 'user' ? 'text-sm' : 'text-sm'} whitespace-pre-wrap leading-relaxed`}>
+                <div className="text-sm whitespace-pre-wrap leading-relaxed">
                   {message.content}
                 </div>
                 <div
@@ -445,15 +455,15 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
               <div
                 className="p-4 rounded-2xl rounded-bl-md transition-all duration-200"
                 style={{
-                  ...getSquareSeparatorStyle(),
+                  backgroundColor: COLORS.white,
                   color: COLORS.text.primary,
-                  border: `1px solid rgba(255, 255, 255, 0.3)`
+                  boxShadow: SHADOW
                 }}
               >
                 <div className="flex items-center space-x-3">
                   <div
                     className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
-                    style={{ borderColor: COLORS.primary.medium }}
+                    style={{ borderColor: COLORS.gray[700] }}
                   ></div>
                   <span className="text-sm font-medium">Analyzing...</span>
                 </div>
@@ -464,12 +474,12 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* 入力エリア */}
+        {/* Input Area */}
         <div
-          className="p-5 border-t backdrop-blur-md"
           style={{
-            borderTopColor: 'rgba(255, 255, 255, 0.2)',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+            padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+            borderTop: `1px solid ${COLORS.gray[200]}`,
+            backgroundColor: COLORS.gray[50]
           }}
         >
           <div className="flex space-x-3">
@@ -481,34 +491,32 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
               onKeyPress={handleKeyPress}
               placeholder="Enter product URL or instructions..."
               disabled={isLoading}
-              className="flex-1 px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-2 text-sm transition-all duration-200 disabled:opacity-50"
+              className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50"
               style={{
-                ...getSquareSeparatorStyle(),
-                borderRadius: '12px',
+                backgroundColor: COLORS.white,
+                boxShadow: SHADOW,
                 color: COLORS.text.primary,
-                fontSize: '14px',
-                '::placeholder': {
-                  color: COLORS.text.secondary
-                }
+                fontSize: `${FONT_SCALE.sm}px`,
               }}
             />
             <button
               onClick={handleSend}
               disabled={!inputMessage.trim() || isLoading}
-              className="px-5 py-3 rounded-xl text-white text-sm font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="px-5 py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: COLORS.primary.dark,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                backgroundColor: COLORS.gray[700],
+                boxShadow: SHADOW,
+                fontSize: `${FONT_SCALE.sm}px`,
               }}
             >
-Send
+              Send
             </button>
           </div>
           <p
-            className="text-xs mt-3 leading-relaxed"
-            style={{ color: COLORS.text.secondary }}
+            className="mt-3 leading-relaxed"
+            style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
           >
-Example: "Arc'teryx Beta AR" / "Shelter category" / Product URLs
+            Example: "Arc'teryx Beta AR" / "Shelter category" / Product URLs
           </p>
         </div>
       </div>

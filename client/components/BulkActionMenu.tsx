@@ -49,7 +49,7 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-md transition-colors"
         style={{
-          backgroundColor: isOpen ? COLORS.primary.light : 'transparent',
+          backgroundColor: isOpen ? COLORS.gray[100] : 'transparent',
           color: COLORS.text.primary
         }}
         onMouseEnter={(e) => {
@@ -82,7 +82,7 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
           className="absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50"
           style={{
             backgroundColor: COLORS.white,
-            border: `1px solid ${COLORS.primary.light}`
+            border: `1px solid ${COLORS.gray[100]}`
           }}
         >
           <div className="py-1">
@@ -92,7 +92,7 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
               className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors"
               style={{ color: COLORS.text.primary }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.primary.light;
+                e.currentTarget.style.backgroundColor = COLORS.gray[100];
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
@@ -109,7 +109,7 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
               className="my-1"
               style={{
                 height: '1px',
-                backgroundColor: COLORS.primary.light
+                backgroundColor: COLORS.gray[100]
               }}
             />
 
@@ -120,7 +120,7 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
                 className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors"
                 style={{ color: COLORS.text.primary }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = COLORS.primary.light;
+                  e.currentTarget.style.backgroundColor = COLORS.gray[100];
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';

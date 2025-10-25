@@ -22,8 +22,8 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
     <div
       className="flex items-center justify-between px-4 py-3 rounded-md mb-4"
       style={{
-        backgroundColor: `${COLORS.primary.light}40`,
-        border: `1px solid ${COLORS.primary.light}`
+        backgroundColor: `${COLORS.gray[100]}40`,
+        border: `1px solid ${COLORS.gray[100]}`
       }}
     >
       {/* 左側: 選択情報 */}
@@ -34,7 +34,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
             checked={allSelected}
             onChange={onSelectAll}
             className="w-4 h-4 cursor-pointer"
-            style={{ accentColor: COLORS.primary.dark }}
+            style={{ accentColor: COLORS.gray[700] }}
           />
           <span
             className="text-sm font-medium"
@@ -46,7 +46,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
 
         <div
           className="text-sm font-semibold"
-          style={{ color: COLORS.primary.dark }}
+          style={{ color: COLORS.gray[700] }}
         >
           {selectedCount > 0 ? (
             <span>{selectedCount}個選択中</span>
@@ -78,7 +78,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
               style={{
                 backgroundColor: COLORS.white,
                 color: COLORS.text.primary,
-                border: `1px solid ${COLORS.primary.medium}`
+                border: `1px solid ${COLORS.gray[700]}`
               }}
             >
               キャンセル

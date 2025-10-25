@@ -132,8 +132,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
   <div
     className="flex items-center justify-between p-2 rounded cursor-pointer transition-colors"
     style={{
-      backgroundColor: isSelected ? COLORS.primary.light : 'transparent',
-      border: isSelected ? `1px solid ${COLORS.primary.medium}` : '1px solid transparent'
+      backgroundColor: isSelected ? COLORS.gray[100] : 'transparent',
+      border: isSelected ? `1px solid ${COLORS.gray[700]}` : '1px solid transparent'
     }}
     onClick={onClick}
   >
@@ -321,7 +321,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <div className="mt-2">
                   <span
                     className="text-xs font-medium px-2 py-1 rounded truncate block"
-                    style={{ color: COLORS.text.primary, backgroundColor: COLORS.primary.light }}
+                    style={{ color: COLORS.text.primary, backgroundColor: COLORS.gray[100] }}
                   >
                     {selectedCategory}
                   </span>
@@ -335,7 +335,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* サイドパネル */}
       <Card variant="square" className="p-3">
         {/* Pack Summary */}
-        <div className="mb-4 pb-3 border-b" style={{ borderColor: COLORS.primary.light }}>
+        <div className="mb-4 pb-3 border-b" style={{ borderColor: COLORS.gray[200] }}>
           <h4 className="text-xs font-semibold mb-2" style={{ color: COLORS.text.primary }}>
             PACK SUMMARY
           </h4>
@@ -345,7 +345,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               currentMode={viewMode}
               label="Total Weight"
               icon="W"
-              color={COLORS.primary.dark}
+              color={COLORS.gray[700]}
               value={`${totalWeight}g`}
               onClick={() => onViewModeChange('weight')}
             />
@@ -354,7 +354,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               currentMode={viewMode}
               label="Total Cost"
               icon="¥"
-              color={COLORS.primary.medium}
+              color={COLORS.gray[700]}
               value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
               onClick={() => onViewModeChange('cost')}
             />

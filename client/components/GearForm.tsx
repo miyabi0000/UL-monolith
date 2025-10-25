@@ -148,7 +148,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
       >
         <div 
           className="p-6 border-b"
-          style={{ borderBottomColor: COLORS.primary.medium }}
+          style={{ borderBottomColor: COLORS.gray[700] }}
         >
           <h2 
             className="text-xl font-semibold"
@@ -235,8 +235,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
                 placeholder="https://example.com/product"
@@ -263,7 +263,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
               >
                 <div 
                   className="text-sm"
-                  style={{ color: COLORS.primary.dark }}
+                  style={{ color: COLORS.gray[700] }}
                 >
                   ✓ Extracted successfully
                 </div>
@@ -289,8 +289,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -311,8 +311,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -337,8 +337,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -360,8 +360,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -386,8 +386,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -409,8 +409,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               />
@@ -432,8 +432,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
               style={{
                 ...getInputStyle(),
                 '&:focus': {
-                  borderColor: COLORS.primary.dark,
-                  outline: `2px solid ${COLORS.primary.light}`
+                  borderColor: COLORS.gray[700],
+                  outline: `2px solid ${COLORS.gray[100]}`
                 }
               }}
             >
@@ -462,8 +462,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               >
@@ -489,8 +489,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 style={{
                   ...getInputStyle(),
                   '&:focus': {
-                    borderColor: COLORS.primary.dark,
-                    outline: `2px solid ${COLORS.primary.light}`
+                    borderColor: COLORS.gray[700],
+                    outline: `2px solid ${COLORS.gray[100]}`
                   }
                 }}
               >
@@ -506,7 +506,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
           {/* ボタン */}
           <div 
             className="flex justify-end space-x-3 pt-4 border-t"
-            style={{ borderTopColor: COLORS.primary.medium }}
+            style={{ borderTopColor: COLORS.gray[700] }}
           >
             <button
               type="button"

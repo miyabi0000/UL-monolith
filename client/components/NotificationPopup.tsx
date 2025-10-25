@@ -69,13 +69,13 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
                 {message.type === 'loading' && (
                   <div
                     className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-                    style={{ borderColor: COLORS.primary.dark }}
+                    style={{ borderColor: COLORS.gray[700] }}
                   />
                 )}
                 <p
                   className="text-sm font-medium flex-1"
                   style={{
-                    color: message.type === 'error' ? COLORS.accent : COLORS.primary.dark
+                    color: message.type === 'error' ? COLORS.accent : COLORS.gray[700]
                   }}
                 >
                   {message.message}
@@ -87,7 +87,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
                   onClick={() => handleRemove(message.id)}
                   className="ml-3 text-current opacity-60 hover:opacity-100 transition-opacity"
                   style={{
-                    color: message.type === 'error' ? COLORS.accent : COLORS.primary.dark
+                    color: message.type === 'error' ? COLORS.accent : COLORS.gray[700]
                   }}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

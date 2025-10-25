@@ -84,7 +84,7 @@ const GearCard: React.FC<GearCardProps> = ({
             checked={isSelected}
             onChange={() => onSelect?.(item.id)}
             className="w-5 h-5 cursor-pointer"
-            style={{ accentColor: COLORS.primary.dark }}
+            style={{ accentColor: COLORS.gray[700] }}
           />
         </div>
       )}
@@ -166,7 +166,7 @@ const GearCard: React.FC<GearCardProps> = ({
           <button
             className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors"
             style={{
-              backgroundColor: COLORS.primary.dark,
+              backgroundColor: COLORS.gray[700],
               color: COLORS.white
             }}
             onClick={(e) => {
@@ -174,10 +174,10 @@ const GearCard: React.FC<GearCardProps> = ({
               onEdit(item);
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.primary.darker;
+              e.currentTarget.style.backgroundColor = COLORS.gray[800];
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.primary.dark;
+              e.currentTarget.style.backgroundColor = COLORS.gray[700];
             }}
           >
             編集
@@ -187,15 +187,15 @@ const GearCard: React.FC<GearCardProps> = ({
             <button
               className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors"
               style={{
-                backgroundColor: COLORS.primary.medium,
+                backgroundColor: COLORS.gray[700],
                 color: COLORS.white
               }}
               onClick={handleOpenUrl}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.primary.dark;
+                e.currentTarget.style.backgroundColor = COLORS.gray[800];
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.primary.medium;
+                e.currentTarget.style.backgroundColor = COLORS.gray[700];
               }}
             >
               URL

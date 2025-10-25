@@ -16,7 +16,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
         className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
         style={{
           backgroundColor: currentView === 'card' ? COLORS.white : 'transparent',
-          color: currentView === 'card' ? COLORS.primary.dark : COLORS.text.secondary,
+          color: currentView === 'card' ? COLORS.gray[700] : COLORS.text.secondary,
           boxShadow: currentView === 'card' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
         }}
         aria-label="カードビュー"
@@ -28,7 +28,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
         className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
         style={{
           backgroundColor: currentView === 'table' ? COLORS.white : 'transparent',
-          color: currentView === 'table' ? COLORS.primary.dark : COLORS.text.secondary,
+          color: currentView === 'table' ? COLORS.gray[700] : COLORS.text.secondary,
           boxShadow: currentView === 'table' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
         }}
         aria-label="テーブルビュー"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS, getGlassStyle } from '../../utils/designSystem';
+import { COLORS, SHADOW } from '../../utils/designSystem';
 
 interface SkeletonLoaderProps {
   className?: string;
@@ -13,12 +13,12 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   count = 1
 }) => {
   const baseStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    backgroundImage: 'linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 75%)',
+    backgroundColor: COLORS.gray[100],
+    backgroundImage: `linear-gradient(90deg, ${COLORS.gray[100]} 25%, ${COLORS.gray[200]} 50%, ${COLORS.gray[100]} 75%)`,
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
-    borderRadius: '0.375rem',
-    ...getGlassStyle('light'),
+    borderRadius: '0.5rem',
+    boxShadow: SHADOW,
   };
 
   const getVariantStyle = () => {
@@ -70,7 +70,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
               width: '120px',
               height: '120px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              backgroundColor: COLORS.gray[200],
               marginBottom: '1rem',
             }}
           />
@@ -78,7 +78,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
             style={{
               width: '80px',
               height: '0.75rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              backgroundColor: COLORS.gray[200],
               borderRadius: '0.375rem',
             }}
           />
@@ -97,7 +97,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
                   key={i}
                   style={{
                     height: '1rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    backgroundColor: COLORS.gray[200],
                     borderRadius: '0.25rem',
                   }}
                 />
@@ -111,7 +111,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
                     key={colIndex}
                     style={{
                       height: '0.875rem',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      backgroundColor: COLORS.gray[100],
                       borderRadius: '0.25rem',
                     }}
                   />

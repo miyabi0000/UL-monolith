@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCardStyle, CardVariant } from '../../utils/designSystem';
+import { getCardStyle, CardVariant, RADIUS_SCALE } from '../../utils/designSystem';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
@@ -17,16 +17,21 @@ const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const baseClasses = `
-    transition-all
-    duration-300
-    ${hover ? 'hover:shadow-lg' : ''}
+    transition-shadow
     ${className}
   `.trim();
+
+  const cardStyle = variant === 'hover' && hover
+    ? getCardStyle('hover')
+    : getCardStyle(variant);
 
   return (
     <Component
       className={baseClasses}
-      style={getCardStyle(variant)}
+      style={{
+        ...cardStyle,
+        borderRadius: `${RADIUS_SCALE.md}px`,
+      }}
       {...props}
     >
       {children}

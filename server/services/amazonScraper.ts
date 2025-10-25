@@ -36,10 +36,18 @@ export class AmazonScraper {
     try {
       const html = await this.fetchAmazonHTML(url);
       const $ = cheerio.load(html);
-      
-      return this.extractAmazonData($, url);
+
+      const result = this.extractAmazonData($, url);
+
+      // Validate we extracted at least some useful data
+      if (result.extractedFields.length === 0) {
+        console.warn(`[Amazon] No data extracted from ${url}, using fallback`);
+        return this.createAmazonFallback(url);
+      }
+
+      return result;
     } catch (error) {
-      console.error(`Amazon scraping failed for ${url}:`, error);
+      console.error(`[Amazon] Scraping failed for ${url}:`, error);
       return this.createAmazonFallback(url);
     }
   }
@@ -299,9 +307,19 @@ export class AmazonScraper {
 
 
 
+  /**
+   * Amazonフォールバック（URL保持）
+   */
   private createAmazonFallback(url: string): LLMExtractionResult {
+    // Extract ASIN from URL if possible
+    let productName = 'Amazon Product';
+    const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i);
+    if (asinMatch) {
+      productName = `Amazon Product (${asinMatch[1]})`;
+    }
+
     return {
-      name: 'Amazon Product (Failed to Extract)',
+      name: productName,
       productUrl: url,
       suggestedCategory: 'Other',
       requiredQuantity: 1,
@@ -309,7 +327,8 @@ export class AmazonScraper {
       priority: 3,
       season: 'all',
       extractedFields: [],
-      source: 'fallback'
+      source: 'fallback',
+      confidence: 0.2
     };
   }
 }

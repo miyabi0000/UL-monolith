@@ -1,7 +1,5 @@
 import React from 'react';
-import { COLORS } from '../utils/designSystem';
-import Button from './ui/Button';
-import Card from './ui/Card';
+import { COLORS, FONT_SCALE, SPACING_SCALE, SHADOW } from '../utils/designSystem';
 
 interface AppHeaderProps {
   onShowLogin: () => void;
@@ -21,100 +19,75 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   userName
 }) => {
   return (
-    <Card variant="square" hover className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 backdrop-blur-sm" as="header">
-      <div className="flex items-center gap-3">
+    <header
+      style={{
+        backgroundColor: COLORS.white,
+        boxShadow: SHADOW,
+      }}
+    >
+      <div
+        className="max-w-7xl mx-auto flex items-center justify-between"
+        style={{
+          padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+        }}
+      >
         <h1
-          className="text-xl font-bold tracking-tight"
-          style={{ color: COLORS.primary.dark }}
+          className="font-semibold"
+          style={{
+            color: COLORS.text.primary,
+            fontSize: `${FONT_SCALE.lg}px`,
+          }}
         >
           UL GEAR
         </h1>
-        <div
-          className="hidden sm:block h-4 w-px"
-          style={{ backgroundColor: COLORS.primary.light }}
-        />
-        <span
-          className="hidden sm:inline text-xs font-medium"
-          style={{ color: COLORS.text.secondary }}
-        >
-          Ultra Light Gear Manager
-        </span>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        {/* Categories Button */}
-        {onShowCategoryManager && (
-          <div className="relative group">
-            <Button
-              isGlass
+        <div className="flex items-center" style={{ gap: `${SPACING_SCALE.lg}px` }}>
+          {onShowCategoryManager && (
+            <button
               onClick={onShowCategoryManager}
-              className="w-8 h-8 rounded-lg text-xs font-bold hover:scale-105 relative overflow-hidden shadow-md"
+              className="text-sm hover:opacity-70 transition-opacity"
+              style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
             >
-              <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>☰</span>
-            </Button>
-            <div
-              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
-              style={{
-                backgroundColor: COLORS.primary.dark,
-                color: COLORS.white
-              }}
-            >
-              Manage Categories
-            </div>
-          </div>
-        )}
+              Categories
+            </button>
+          )}
 
-        {/* AI Button - Enhanced with tooltip */}
-        <div className="relative group">
-          <Button
-            isGlass
+          <button
             onClick={onToggleChat}
-            className="w-8 h-8 rounded-lg text-xs font-bold hover:rotate-3 relative overflow-hidden shadow-md"
+            className="text-sm hover:opacity-70 transition-opacity"
+            style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
           >
-            <span style={{ color: COLORS.primary.dark, fontWeight: 'bold' }}>AI</span>
-          </Button>
-          <div
-            className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
-            style={{
-              backgroundColor: COLORS.primary.dark,
-              color: COLORS.white
-            }}
-          >
-            AI Assistant
-          </div>
-        </div>
+            AI
+          </button>
 
-        
-        {isAuthenticated ? (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                style={{
-                  backgroundColor: COLORS.primary.medium,
-                  color: COLORS.white
-                }}
-              >
-                {userName?.charAt(0).toUpperCase() || 'U'}
-              </div>
+          {isAuthenticated ? (
+            <>
               <span
-                className="text-sm font-medium hidden sm:inline"
-                style={{ color: COLORS.text.primary }}
+                className="text-sm"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
               >
                 {userName}
               </span>
-            </div>
-            <Button variant="secondary" onClick={onLogout}>
-              LOGOUT
-            </Button>
-          </div>
-        ) : (
-          <Button variant="secondary" onClick={onShowLogin}>
-            LOGIN
-          </Button>
-        )}
+              <button
+                onClick={onLogout}
+                className="text-sm hover:opacity-70 transition-opacity"
+                style={{ color: COLORS.gray[700], fontSize: `${FONT_SCALE.base}px` }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onShowLogin}
+              className="text-sm hover:opacity-70 transition-opacity"
+              style={{ color: COLORS.gray[700], fontSize: `${FONT_SCALE.base}px` }}
+            >
+              Login
+            </button>
+          )}
+        </div>
       </div>
-    </Card>
+    </header>
   );
 };
 

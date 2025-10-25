@@ -137,34 +137,28 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen py-2 flex"
+      className="min-h-screen"
       style={{
         backgroundColor: COLORS.background,
-        backgroundImage: `
-          linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
-        `,
-        backgroundSize: '20px 20px'
       }}
     >
-      <div className="flex-1" style={{ minWidth: '48px' }}></div>
-      <div
-        className="flex-grow transition-all duration-150 ease-out"
+      <AppHeader
+        onShowLogin={() => setShowLogin(true)}
+        onLogout={logout}
+        onToggleChat={() => setShowChat(!showChat)}
+        onShowCategoryManager={() => setShowCategoryManager(true)}
+        isAuthenticated={isAuthenticated}
+        userName={user?.name}
+      />
+
+      {/* Main Dashboard - Centered container */}
+      <main
+        className="max-w-6xl mx-auto transition-all duration-150 ease-out"
         style={{
-          marginRight: showChat ? '384px' : '0px', // 24rem = 384px
+          padding: `${SPACING_SCALE.lg}px`,
+          paddingRight: showChat ? `${SPACING_SCALE.lg + 384}px` : `${SPACING_SCALE.lg}px`, // Chat offset
         }}
       >
-        <AppHeader
-          onShowLogin={() => setShowLogin(true)}
-          onLogout={logout}
-          onToggleChat={() => setShowChat(!showChat)}
-          onShowCategoryManager={() => setShowCategoryManager(true)}
-          isAuthenticated={isAuthenticated}
-          userName={user?.name}
-        />
-
-
-        {/* Main Dashboard - Full width container */}
         <div className="w-full">
           {isLoading ? (
             // ローディング中のスケルトン表示
@@ -232,66 +226,50 @@ export default function App() {
             </>
           )}
         </div>
+      </main>
 
-        <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
+      <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
         {showForm && (
-            <GearForm
-              isOpen={showForm}
-              onClose={() => {
-                setShowForm(false);
-                setEditingGear(null);
-              }}
-              onSave={handleSaveGear}
+          <GearForm
+            isOpen={showForm}
+            onClose={() => {
+              setShowForm(false);
+              setEditingGear(null);
+            }}
+            onSave={handleSaveGear}
             categories={categories}
-              editingGear={editingGear}
-            />
-          )}
+            editingGear={editingGear}
+          />
+        )}
 
         {showCategoryManager && (
-            <CategoryManager
-              onClose={() => setShowCategoryManager(false)}
-              categories={categories}
-              onAddCategory={handleCreateCategory}
-              onEditCategory={handleUpdateCategory}
-              onDeleteCategory={handleDeleteCategory}
-            />
+          <CategoryManager
+            onClose={() => setShowCategoryManager(false)}
+            categories={categories}
+            onAddCategory={handleCreateCategory}
+            onEditCategory={handleUpdateCategory}
+            onDeleteCategory={handleDeleteCategory}
+          />
         )}
 
         {showLogin && (
-            <Login
-              isOpen={showLogin}
-              onClose={() => setShowLogin(false)}
-              onLoginSuccess={handleLoginSuccess}
-            />
-          )}
+          <Login
+            isOpen={showLogin}
+            onClose={() => setShowLogin(false)}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        )}
 
-          {showChat && (
+        {showChat && (
           <ChatPopup
             isOpen={showChat}
             onClose={() => setShowChat(false)}
-              gearItems={gearItems}
-              categories={categories}
-              onGearExtracted={handleSaveGear}
-            />
-          )}
-        </Suspense>
-
-        {/* フッター */}
-        <footer
-          className="py-4 text-center border-t mt-8"
-          style={{
-            backgroundColor: COLORS.white,
-            borderTopColor: COLORS.primary.medium,
-            color: COLORS.text.secondary
-          }}
-        >
-          <div className="text-sm">
-            <p>UL Gear Manager © 2024</p>
-            <p className="text-xs mt-1">Ultralight Hiking Gear Management System</p>
-          </div>
-        </footer>
-          </div>
-      <div className="flex-1" style={{ minWidth: '48px' }}></div>
+            gearItems={gearItems}
+            categories={categories}
+            onGearExtracted={handleSaveGear}
+          />
+        )}
+      </Suspense>
 
       {/* 右端通知ポップアップ */}
       <NotificationPopup

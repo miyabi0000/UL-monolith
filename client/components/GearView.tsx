@@ -138,9 +138,9 @@ const GearView: React.FC<GearViewProps> = ({
               onClick={() => handleSort('name')}
               className="px-3 py-1 text-xs rounded transition-colors"
               style={{
-                backgroundColor: sortField === 'name' ? COLORS.primary.light : COLORS.background,
-                color: sortField === 'name' ? COLORS.primary.dark : COLORS.text.secondary,
-                border: `1px solid ${COLORS.primary.light}`
+                backgroundColor: sortField === 'name' ? COLORS.gray[100] : COLORS.background,
+                color: sortField === 'name' ? COLORS.gray[700] : COLORS.text.secondary,
+                border: `1px solid ${COLORS.gray[100]}`
               }}
             >
               名前 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -149,9 +149,9 @@ const GearView: React.FC<GearViewProps> = ({
               onClick={() => handleSort('weight')}
               className="px-3 py-1 text-xs rounded transition-colors"
               style={{
-                backgroundColor: sortField === 'weight' ? COLORS.primary.light : COLORS.background,
-                color: sortField === 'weight' ? COLORS.primary.dark : COLORS.text.secondary,
-                border: `1px solid ${COLORS.primary.light}`
+                backgroundColor: sortField === 'weight' ? COLORS.gray[100] : COLORS.background,
+                color: sortField === 'weight' ? COLORS.gray[700] : COLORS.text.secondary,
+                border: `1px solid ${COLORS.gray[100]}`
               }}
             >
               重量 {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -160,9 +160,9 @@ const GearView: React.FC<GearViewProps> = ({
               onClick={() => handleSort('price')}
               className="px-3 py-1 text-xs rounded transition-colors"
               style={{
-                backgroundColor: sortField === 'price' ? COLORS.primary.light : COLORS.background,
-                color: sortField === 'price' ? COLORS.primary.dark : COLORS.text.secondary,
-                border: `1px solid ${COLORS.primary.light}`
+                backgroundColor: sortField === 'price' ? COLORS.gray[100] : COLORS.background,
+                color: sortField === 'price' ? COLORS.gray[700] : COLORS.text.secondary,
+                border: `1px solid ${COLORS.gray[100]}`
               }}
             >
               価格 {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -202,7 +202,7 @@ const GearView: React.FC<GearViewProps> = ({
               type="checkbox"
               checked={selectedIds.length === processedItems.length && processedItems.length > 0}
               onChange={handleSelectAll}
-              style={{ accentColor: COLORS.primary.dark }}
+              style={{ accentColor: COLORS.gray[700] }}
             />
             すべて選択
           </label>

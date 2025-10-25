@@ -34,7 +34,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
         style={{
           ...style,
           ...getTruncatedTextStyle(maxWidth),
-          ...(isHovered ? { color: COLORS.primary.dark } : {})
+          ...(isHovered ? { color: COLORS.gray[700] } : {})
         }}
         onMouseEnter={() => {
           setIsHovered(true);

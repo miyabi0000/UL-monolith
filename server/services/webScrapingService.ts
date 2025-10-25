@@ -22,10 +22,18 @@ export class WebScrapingService {
       if (url.includes('amazon.')) {
         return await amazonScraper.scrapeAmazonProduct(url);
       }
-      
+
       // 汎用スクレイピング
       const html = await this.fetchHTML(url);
-      return this.extractBasicInfo(html, url);
+      const result = this.extractBasicInfo(html, url);
+
+      // If extraction found at least an image, keep it even if other fields failed
+      if (result.imageUrl || result.extractedFields.length > 0) {
+        return result;
+      }
+
+      // Complete failure - return fallback with URL
+      return this.createFallback(url);
     } catch (error) {
       console.error(`Scraping failed for ${url}:`, error);
       return this.createFallback(url);
@@ -363,11 +371,21 @@ export class WebScrapingService {
   }
 
   /**
-   * フォールバック
+   * フォールバック（URL保持）
    */
   private createFallback(url: string): LLMExtractionResult {
+    // Try to extract domain name for better UX
+    let domainName = 'Unknown Product';
+    try {
+      const urlObj = new URL(url);
+      domainName = urlObj.hostname.replace('www.', '').split('.')[0];
+      domainName = domainName.charAt(0).toUpperCase() + domainName.slice(1) + ' Product';
+    } catch {
+      // Keep default if URL parsing fails
+    }
+
     return {
-      name: 'Failed to Extract',
+      name: domainName,
       productUrl: url,
       suggestedCategory: 'Other',
       requiredQuantity: 1,
@@ -375,7 +393,8 @@ export class WebScrapingService {
       priority: 3,
       season: 'all',
       extractedFields: [],
-      source: 'fallback'
+      source: 'fallback',
+      confidence: 0.2
     };
   }
 }

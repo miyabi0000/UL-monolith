@@ -148,7 +148,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
     }
   }
 
-  const handleDelete = () => {
+  const handleBulkDelete = () => {
     if (selectedIds.length > 0) {
       onDelete(selectedIds)
       setSelectedIds([])
@@ -167,41 +167,40 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   }, [showCheckboxes])
 
   return (
-    <Card variant="square">
+    <Card variant="default">
       {/* ヘッダー */}
       <div
-        className="border-b flex justify-between items-center"
+        className="flex justify-between items-center"
         style={{
-          borderBottomColor: COLORS.primary.medium,
-          padding: `${SPACING_SCALE.base}px`
+          padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+          borderBottom: `1px solid ${COLORS.gray[200]}`,
         }}
       >
         <h3
           className="font-semibold"
           style={{
             color: COLORS.text.primary,
-            fontSize: `${FONT_SCALE.sm}px`
+            fontSize: `${FONT_SCALE.base}px`
           }}
         >
           GEAR LIST
         </h3>
         <div className="flex items-center gap-2">
           <span
-            className="text-xs"
-            style={{ color: COLORS.text.secondary }}
+            style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
           >
             {processedItems.length} items
           </span>
           <button
             onClick={onShowForm}
-            className="font-semibold transition-colors"
+            className="font-semibold transition-opacity hover:opacity-80"
             style={{
-              backgroundColor: COLORS.primary.light,
-              color: COLORS.primary.dark,
-              border: `1px solid ${COLORS.primary.medium}`,
+              backgroundColor: COLORS.gray[700],
+              color: COLORS.white,
               padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.md}px`,
-              fontSize: `${FONT_SCALE.xs}px`,
-              borderRadius: `${RADIUS_SCALE.base}px`
+              fontSize: `${FONT_SCALE.sm}px`,
+              borderRadius: `${RADIUS_SCALE.base}px`,
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             }}
           >
             + ADD
@@ -235,7 +234,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
         <div
           className="border-b flex items-center justify-end"
           style={{
-            borderBottomColor: COLORS.primary.medium,
+            borderBottomColor: COLORS.gray[200],
             padding: `${SPACING_SCALE.base}px`,
             gap: `${SPACING_SCALE.base}px`
           }}
@@ -259,7 +258,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
       )}
 
       {/* テーブル */}
-      <div>
+      <div className="overflow-x-auto">
         <table className="w-full">
           <thead style={getTableHeaderStyle()}>
             <tr>
@@ -277,65 +276,65 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
                 </th>
               )}
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
               >
                 Image
               </th>
               <th
-                className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-left font-medium cursor-pointer hover:opacity-70"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
                 onClick={() => handleSort('name')}
               >
                 Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium cursor-pointer hover:opacity-70"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
                 onClick={() => handleSort('category')}
               >
                 Category {sortField === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
               >
                 Own/Need
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium cursor-pointer hover:opacity-70"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
                 onClick={() => handleSort('weight')}
               >
                 Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium cursor-pointer hover:opacity-70"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
                 onClick={() => handleSort('priority')}
               >
                 Priority {sortField === 'priority' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider cursor-pointer transition-colors hover:bg-gray-50"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium cursor-pointer hover:opacity-70"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
                 onClick={() => handleSort('price')}
               >
                 Price {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
-                className="px-2 py-1 text-center text-xs font-medium uppercase tracking-wider"
-                style={{ color: COLORS.text.secondary }}
+                className="px-4 py-3 text-center font-medium"
+                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
               >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody 
+          <tbody
             className="divide-y"
             style={{
               backgroundColor: COLORS.white,
-              borderColor: COLORS.primary.medium
+              borderColor: COLORS.gray[200],
             }}
           >
             {processedItems.map((item) => (
@@ -352,8 +351,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
                       onChange={(e) => handleSelectItem(item.id, e.target.checked)}
                       className="rounded w-3 h-3"
                       style={{
-                        borderColor: COLORS.primary.medium,
-                        color: COLORS.primary.dark
+                        borderColor: COLORS.gray[700],
+                        color: COLORS.gray[700]
                       }}
                     />
                   </td>
@@ -541,7 +540,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
                         </button>
                         <hr
                           style={{
-                            borderColor: COLORS.primary.light,
+                            borderColor: COLORS.gray[200],
                             margin: `${SPACING_SCALE.xs}px 0`
                           }}
                         />

@@ -20,14 +20,11 @@ export const SPACING_SCALE = {
   '4xl': 64,  // 8 unit
 } as const;
 
-// タイポグラフィスケール（白銀比ベース）
+// Minimal Typography (3 sizes only)
 export const FONT_SCALE = {
-  xs: 12,   // ベース
-  sm: 17,   // 12 × 1.414
-  base: 24, // 17 × 1.414
-  lg: 34,   // 24 × 1.414
-  xl: 48,   // 34 × 1.414
-  '2xl': 68, // 48 × 1.414
+  sm: 12,   // Small text (captions, labels)
+  base: 14, // Base text (body, inputs)
+  lg: 18,   // Large text (headings)
 } as const;
 
 // 行間（フォントサイズ × 白銀比）
@@ -53,217 +50,156 @@ export const RADIUS_SCALE = {
   full: 9999, // 完全な円
 } as const;
 
-// Base color palette
+// Minimal color palette - White base with monochrome
 export const COLORS = {
-  // Primary Colors
-  primary: {
-    light: '#F7FCFC',    // 最も薄い青白
-    medium: '#A0D1D6',   // 中間の青緑
-    dark: '#274345',     // 濃い青緑（メインカラー）
+  // Base Colors (Monochrome)
+  white: '#FFFFFF',
+  gray: {
+    50: '#FAFAFA',
+    100: '#F5F5F5',
+    200: '#E5E5E5',
+    300: '#D4D4D4',
+    400: '#A3A3A3',
+    500: '#737373',
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#171717',
   },
 
-  // Base Colors
-  white: '#FFFFFF',      // 純白
-  accent: '#F23A24',     // アクセント赤
+  // Accent for interactive elements only
+  accent: {
+    primary: '#404040',   // Gray for links and primary actions (gray.700)
+    red: '#EF4444',       // For errors and delete actions
+  },
 
-  // Semantic Colors (派生色)
-  background: '#F7FCFC',
+  // Semantic Colors (Minimal)
+  background: '#FAFAFA',
   surface: '#FFFFFF',
-  border: '#A0D1D6',
   text: {
-    primary: '#274345',
-    secondary: '#274345',
-    muted: '#A0D1D6',
+    primary: '#171717',
+    secondary: '#525252',
+    muted: '#A3A3A3',
   },
 
   // State Colors
-  success: '#A0D1D6',
-  warning: '#F23A24',
-  error: '#F23A24',
-  info: '#A0D1D6',
+  error: '#EF4444',
 } as const;
 
-// Glass effect system
-export const glassEffects = {
-  light: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    backdropFilter: 'blur(16px) saturate(180%) brightness(1.15)',
-    WebkitBackdropFilter: 'blur(16px) saturate(180%) brightness(1.15)',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    boxShadow: `
-      0 4px 24px rgba(31, 38, 135, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.08)
-    `,
-    backgroundClip: 'padding-box' as const,
-  },
-  medium: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
-    WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    boxShadow: `
-      0 8px 32px rgba(31, 38, 135, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      0 0 0 1px rgba(255, 255, 255, 0.1)
-    `,
-    backgroundClip: 'padding-box' as const,
-  },
-  heavy: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    backdropFilter: 'blur(16px) saturate(220%) brightness(1.25)',
-    WebkitBackdropFilter: 'blur(16px) saturate(220%) brightness(1.25)',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    boxShadow: `
-      0 12px 48px rgba(31, 38, 135, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 0 0 1px rgba(255, 255, 255, 0.15)
-    `,
-    backgroundClip: 'padding-box' as const,
-  },
-};
+// Unified shadow system (single shadow variant)
+export const SHADOW = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)' as const;
 
-// Button variants
+// Button variants (minimal, no borders)
 export const buttonVariants = {
   primary: {
-    backgroundColor: COLORS.primary.dark,
+    backgroundColor: COLORS.gray[700],
     color: COLORS.white,
-    border: `1px solid ${COLORS.primary.dark}`,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: SHADOW,
+    transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: COLORS.primary.medium,
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      backgroundColor: COLORS.gray[800],
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
     },
   },
   secondary: {
     backgroundColor: COLORS.white,
-    color: COLORS.primary.dark,
-    border: `1px solid ${COLORS.primary.medium}`,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    color: COLORS.text.primary,
+    boxShadow: SHADOW,
+    transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: COLORS.primary.light,
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      backgroundColor: COLORS.gray[50],
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
     },
   },
-  glass: glassEffects.medium,
   danger: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: COLORS.accent.red,
     color: COLORS.white,
-    border: `1px solid ${COLORS.accent}`,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: SHADOW,
+    transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: '#D12D1A',
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(209, 45, 26, 0.3)',
+      backgroundColor: '#DC2626',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
     },
   },
 };
 
-// Input variants
+// Input variants (no borders, shadow only)
 export const inputVariants = {
   default: {
     backgroundColor: COLORS.white,
-    borderColor: COLORS.primary.medium,
     color: COLORS.text.primary,
-    border: `1px solid ${COLORS.primary.medium}`,
+    boxShadow: SHADOW,
   },
   focus: {
-    borderColor: COLORS.primary.dark,
-    outline: `2px solid ${COLORS.primary.light}`,
+    boxShadow: '0 0 0 3px rgba(0, 0, 0, 0.05)',
   },
   error: {
-    borderColor: COLORS.accent,
+    boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.1)',
     backgroundColor: '#FEF2F2',
   },
 };
 
-// Card variants
+// Card variants (no borders, shadow only)
 export const cardVariants = {
   default: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    border: `1px solid rgba(255, 255, 255, 0.3)`,
-    backdropFilter: 'blur(10px) saturate(180%) brightness(1.15)',
-    WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(1.15)',
-    boxShadow: '0 4px 16px rgba(31, 38, 135, 0.08)',
-  },
-  selected: {
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    backdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
-    WebkitBackdropFilter: 'blur(12px) saturate(200%) brightness(1.2)',
+    backgroundColor: COLORS.white,
+    boxShadow: SHADOW,
   },
   hover: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    backdropFilter: 'blur(12px) saturate(190%) brightness(1.18)',
-    WebkitBackdropFilter: 'blur(12px) saturate(190%) brightness(1.18)',
+    backgroundColor: COLORS.white,
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
   },
-  square: glassEffects.light,
 };
 
-// Table variants
+// Table variants (minimal)
 export const tableVariants = {
   header: {
-    backgroundColor: COLORS.primary.light,
+    backgroundColor: COLORS.gray[50],
     color: COLORS.text.secondary,
-    borderBottomColor: COLORS.primary.medium,
   },
   row: {
     default: {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: COLORS.white,
     },
     selected: {
-      backgroundColor: 'rgba(255, 255, 255, 0.35)',
-      backdropFilter: 'blur(8px) saturate(180%) brightness(1.15)',
-      WebkitBackdropFilter: 'blur(8px) saturate(180%) brightness(1.15)',
+      backgroundColor: COLORS.gray[50],
     },
     hover: {
-      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-      backdropFilter: 'blur(6px) saturate(160%) brightness(1.1)',
-      WebkitBackdropFilter: 'blur(6px) saturate(160%) brightness(1.1)',
+      backgroundColor: COLORS.gray[50],
     },
   },
 };
 
-// Message variants
+// Message variants (no borders, shadow only)
 export const messageVariants = {
   success: {
-    backgroundColor: COLORS.primary.light,
-    borderColor: COLORS.primary.medium,
-    color: COLORS.primary.dark,
-    border: `1px solid ${COLORS.primary.medium}`,
+    backgroundColor: COLORS.white,
+    color: COLORS.text.primary,
+    boxShadow: SHADOW,
   },
   error: {
     backgroundColor: '#FEF2F2',
-    borderColor: COLORS.accent,
-    color: COLORS.accent,
-    border: `1px solid ${COLORS.accent}`,
+    color: COLORS.error,
+    boxShadow: SHADOW,
   },
   info: {
-    backgroundColor: COLORS.primary.light,
-    borderColor: COLORS.primary.medium,
-    color: COLORS.primary.dark,
-    border: `1px solid ${COLORS.primary.medium}`,
+    backgroundColor: COLORS.white,
+    color: COLORS.text.primary,
+    boxShadow: SHADOW,
   },
   loading: {
-    backgroundColor: COLORS.primary.light,
-    borderColor: COLORS.primary.medium,
-    color: COLORS.primary.dark,
-    border: `1px solid ${COLORS.primary.medium}`,
+    backgroundColor: COLORS.white,
+    color: COLORS.text.primary,
+    boxShadow: SHADOW,
   },
 };
 
-// Dropdown variants
+// Dropdown variants (minimal)
 export const dropdownVariants = {
   container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    backdropFilter: 'blur(12px) saturate(180%) brightness(1.15)',
-    WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(1.15)',
-    border: `1px solid rgba(255, 255, 255, 0.3)`,
+    backgroundColor: COLORS.white,
+    boxShadow: SHADOW,
     borderRadius: '0.375rem',
-    boxShadow: '0 10px 25px -5px rgba(31, 38, 135, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   },
   item: {
     default: {
@@ -271,24 +207,23 @@ export const dropdownVariants = {
       backgroundColor: 'transparent',
     },
     hover: {
-      backgroundColor: COLORS.primary.light,
+      backgroundColor: COLORS.gray[50],
     },
   },
 };
 
 // Utility functions
 export const getPriorityColor = (priority: number) => {
-  if (priority <= 2) return COLORS.accent; // 高優先度: 赤
-  if (priority <= 3) return '#F59E0B'; // 中優先度: 黄色
-  return COLORS.primary.medium; // 低優先度: 青緑
+  if (priority <= 2) return COLORS.accent.red; // High priority: Red
+  if (priority <= 3) return '#F59E0B'; // Medium priority: Yellow
+  return COLORS.gray[400]; // Low priority: Gray
 };
 
 export const getCategoryBadgeStyle = (categoryColor?: string) => {
-  const baseColor = categoryColor || COLORS.primary.medium;
+  const baseColor = categoryColor || COLORS.gray[400];
   return {
     backgroundColor: `${baseColor}20`, // 20% opacity
     color: baseColor,
-    border: `1px solid ${baseColor}40`, // 40% opacity border
   };
 };
 
@@ -305,13 +240,10 @@ export const getTruncatedTextStyle = (maxWidth: string = '200px') => ({
 export const getExpandedTextStyle = () => ({
   whiteSpace: 'normal' as const,
   wordBreak: 'break-word' as const,
-  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(12px) saturate(180%) brightness(1.1)',
-  WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(1.1)',
+  backgroundColor: COLORS.white,
   padding: '8px 12px',
   borderRadius: '6px',
-  boxShadow: '0 4px 20px rgba(31, 38, 135, 0.15)',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
+  boxShadow: SHADOW,
   position: 'absolute' as const,
   zIndex: 1000,
   minWidth: '200px',
@@ -355,23 +287,21 @@ export const generateItemColor = (baseColor: string, index: number, total: numbe
   return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`;
 };
 
-// Chart.js用カラーパレット
+// Chart.js color palette (grayscale)
 export const chartColors = {
-  primary: COLORS.primary.dark,
-  secondary: COLORS.primary.medium,
-  accent: COLORS.accent,
-  background: COLORS.primary.light,
+  primary: COLORS.gray[700],
+  secondary: COLORS.gray[500],
+  accent: COLORS.gray[400],
+  background: COLORS.gray[50],
   text: COLORS.text.primary,
 };
 
 // Type-safe style getters
-export type GlassVariant = keyof typeof glassEffects;
 export type ButtonVariant = keyof typeof buttonVariants;
 export type InputVariant = keyof typeof inputVariants;
 export type CardVariant = keyof typeof cardVariants;
 export type MessageVariant = keyof typeof messageVariants;
 
-export const getGlassStyle = (variant: GlassVariant = 'medium') => glassEffects[variant];
 export const getButtonStyle = (variant: ButtonVariant = 'primary') => buttonVariants[variant];
 export const getInputStyle = (variant: InputVariant = 'default') => inputVariants[variant];
 export const getCardStyle = (variant: CardVariant = 'default') => cardVariants[variant];
@@ -386,28 +316,32 @@ export const getDropdownStyle = () => dropdownVariants.container;
 export const getDropdownItemStyle = (hover = false) =>
   hover ? dropdownVariants.item.hover : dropdownVariants.item.default;
 
-// Legacy compatibility exports
-export const getSquareSeparatorStyle = () => getCardStyle('square');
-export const getLiquidGlassStyle = (variant: 'default' | 'hover' | 'active' | 'focus' = 'default') => {
-  switch (variant) {
-    case 'hover':
-      return { ...getGlassStyle('heavy'), transform: 'translateY(-2px)' };
-    case 'active':
-      return { ...getGlassStyle('light'), transform: 'translateY(1px)' };
-    case 'focus':
-      return { ...getGlassStyle('medium'), border: `1px solid ${COLORS.primary.medium}` };
-    default:
-      return getGlassStyle('medium');
-  }
-};
-
 // Link style
 export const getLinkStyle = () => ({
-  color: COLORS.primary.dark,
+  color: COLORS.gray[700],
   textDecoration: 'underline',
   transition: 'color 0.2s ease',
   cursor: 'pointer',
   '&:hover': {
-    color: COLORS.primary.medium,
+    color: COLORS.gray[900],
   },
 });
+
+// Glass morphism style
+export const getGlassStyle = (intensity: 'light' | 'medium' | 'heavy' = 'medium') => {
+  const styles = {
+    light: {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(4px)',
+    },
+    medium: {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backdropFilter: 'blur(8px)',
+    },
+    heavy: {
+      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+      backdropFilter: 'blur(12px)',
+    },
+  };
+  return styles[intensity];
+};

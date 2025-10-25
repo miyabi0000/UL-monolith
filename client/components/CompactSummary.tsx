@@ -19,14 +19,14 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
     {
       label: 'Total Weight',
       value: `${totals.weight}g`,
-      color: COLORS.primary.dark,
+      color: COLORS.gray[700],
       icon: 'W',
       mode: 'weight' as ChartViewMode
     },
     {
       label: 'Total Cost',
       value: `¥${Math.round(totals.price / 100).toLocaleString()}`,
-      color: COLORS.primary.medium,
+      color: COLORS.gray[700],
       icon: '¥',
       mode: 'cost' as ChartViewMode
     },
