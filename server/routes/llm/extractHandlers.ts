@@ -100,7 +100,18 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
 
     const extractionResult = await llmService.extractGearFromPrompt(prompt);
 
-    console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} (confidence: ${extractionResult.confidence})`);
+    // 統一カテゴリマッチングを使用
+    if (userCategories && Array.isArray(userCategories) && userCategories.length > 0) {
+      extractionResult.suggestedCategory = CategoryMatcher.matchCategory(
+        {
+          productName: extractionResult.name,
+          llmSuggestion: extractionResult.suggestedCategory,
+        },
+        userCategories
+      );
+    }
+
+    console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory} (confidence: ${extractionResult.confidence})`);
 
     res.json({
       success: true,

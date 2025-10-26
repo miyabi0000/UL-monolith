@@ -15,9 +15,10 @@ interface ChatPopupProps {
   isOpen: boolean
   onClose: () => void
   onGearExtracted?: (gearData: any) => void
+  categories?: any[]
 }
 
-const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted }) => {
+const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted, categories = [] }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -129,13 +130,15 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
       switch (promptType) {
           case 'url':
             try {
-              const extractedData = await extractFromUrl(currentInput)
+              const extractedData = await extractFromUrl(currentInput, categories)
+              const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
               assistantResponse = `Successfully extracted product info from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
                 brand: extractedData.brand,
                 productUrl: currentInput,
+                categoryId: matchedCategory?.id,
                 requiredQuantity: 1,
                 ownedQuantity: 0,
                 weightGrams: extractedData.weightGrams,
@@ -154,13 +157,15 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
 
           case 'add_gear':
             try {
-              const extractedData = await extractFromPrompt(currentInput)
+              const extractedData = await extractFromPrompt(currentInput, categories)
+              const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
               assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
                 brand: extractedData.brand,
                 productUrl: '',
+                categoryId: matchedCategory?.id,
                 requiredQuantity: 1,
                 ownedQuantity: 0,
                 weightGrams: extractedData.weightGrams,
@@ -201,9 +206,10 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
               if (urlMatch) {
                 const url = urlMatch[1]
                 // Get basic URL info
-                const urlData = await extractFromUrl(url)
+                const urlData = await extractFromUrl(url, categories)
                 // Enhance with prompt info
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
+                const matchedCategory = categories.find(cat => cat.name === enhancedData.suggestedCategory)
 
                 assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${enhancedData.weightGrams}g\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
                 shouldExtractGear = true
@@ -211,6 +217,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
                   name: enhancedData.name,
                   brand: enhancedData.brand,
                   productUrl: url,
+                  categoryId: matchedCategory?.id,
                   requiredQuantity: 1,
                   ownedQuantity: 0,
                   weightGrams: enhancedData.weightGrams,
@@ -237,7 +244,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
 
               // Process all URLs in parallel
               const results = await Promise.allSettled(
-                urls.map(url => extractFromUrl(url))
+                urls.map(url => extractFromUrl(url, categories))
               )
 
               // Classify success/failure based on data quality
@@ -281,18 +288,22 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted 
 
                 // Bulk register multiple gears
                 shouldExtractGear = true
-                mockGearData = successResults.map(item => ({
-                  name: item.data.name,
-                  brand: item.data.brand,
-                  productUrl: item.url,
-                  imageUrl: item.data.imageUrl,
-                  requiredQuantity: 1,
-                  ownedQuantity: 0,
-                  weightGrams: item.data.weightGrams,
-                  priceCents: item.data.priceCents,
-                  season: '',
-                  priority: 3
-                }))
+                mockGearData = successResults.map(item => {
+                  const matchedCategory = categories.find(cat => cat.name === item.data.suggestedCategory)
+                  return {
+                    name: item.data.name,
+                    brand: item.data.brand,
+                    productUrl: item.url,
+                    imageUrl: item.data.imageUrl,
+                    categoryId: matchedCategory?.id,
+                    requiredQuantity: 1,
+                    ownedQuantity: 0,
+                    weightGrams: item.data.weightGrams,
+                    priceCents: item.data.priceCents,
+                    season: '',
+                    priority: 3
+                  }
+                })
               }
 
               if (failedUrls.length > 0) {

@@ -21,7 +21,7 @@ export const SPACING_SCALE = {
 } as const;
 
 // Font Family
-export const FONT_FAMILY = '"IBM Plex Mono", monospace' as const;
+export const FONT_FAMILY = 'Inter, sans-serif' as const;
 
 // Minimal Typography (3 sizes only)
 export const FONT_SCALE = {
