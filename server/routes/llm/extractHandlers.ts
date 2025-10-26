@@ -33,13 +33,14 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
     
     // 統一カテゴリマッチングを使用
     if (userCategories && Array.isArray(userCategories) && userCategories.length > 0) {
+      const categoryNames = userCategories.map((cat: any) => cat.name || cat);
       extractionResult.suggestedCategory = CategoryMatcher.matchCategory(
         {
           productName: extractionResult.name,
           url: url,
           llmSuggestion: extractionResult.suggestedCategory,
         },
-        userCategories
+        categoryNames
       );
     }
 
@@ -102,12 +103,13 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
 
     // 統一カテゴリマッチングを使用
     if (userCategories && Array.isArray(userCategories) && userCategories.length > 0) {
+      const categoryNames = userCategories.map((cat: any) => cat.name || cat);
       extractionResult.suggestedCategory = CategoryMatcher.matchCategory(
         {
           productName: extractionResult.name,
           llmSuggestion: extractionResult.suggestedCategory,
         },
-        userCategories
+        categoryNames
       );
     }
 
