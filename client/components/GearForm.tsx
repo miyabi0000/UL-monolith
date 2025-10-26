@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../utils/types'
-import { extractFromUrl, adaptToUserCategories } from '../services/llmExtraction'
+import { extractFromUrl } from '../services/llmExtraction'
 import { sanitizeGearForm } from '../utils/helpers'
 import { COLORS, getInputStyle, getButtonStyle, getMessageStyle } from '../utils/designSystem'
 import { useImageUpload } from '../hooks/useImageUpload'
@@ -73,30 +73,29 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
     setExtractionResult(null)
     
     try {
-      // 実際のLLM抽出サービスを使用
-      const extractedData = await extractFromUrl(form.productUrl)
-      
-      // ユーザーカテゴリに合わせて調整
+      // ユーザーカテゴリ名を取得
       const userCategoryNames = categories.map(cat => cat.name)
-      const adaptedResult = adaptToUserCategories(extractedData, userCategoryNames)
       
-      setExtractionResult(adaptedResult)
+      // サーバー側で既にカテゴリマッチング済み
+      const extractedData = await extractFromUrl(form.productUrl, userCategoryNames)
+      
+      setExtractionResult(extractedData)
 
       // フォームに自動入力
       setForm(prev => ({
         ...prev,
-        name: adaptedResult.name || prev.name,
-        brand: adaptedResult.brand || prev.brand,
-        imageUrl: adaptedResult.imageUrl || prev.imageUrl,
-        weightGrams: adaptedResult.weightGrams || prev.weightGrams,
-        priceCents: adaptedResult.priceCents || prev.priceCents,
+        name: extractedData.name || prev.name,
+        brand: extractedData.brand || prev.brand,
+        imageUrl: extractedData.imageUrl || prev.imageUrl,
+        weightGrams: extractedData.weightGrams || prev.weightGrams,
+        priceCents: extractedData.priceCents || prev.priceCents,
         // カテゴリIDも設定
-        categoryId: categories.find(cat => cat.name === adaptedResult.suggestedCategory)?.id || prev.categoryId
+        categoryId: categories.find(cat => cat.name === extractedData.suggestedCategory)?.id || prev.categoryId
       }))
 
       // 画像プレビューも更新
-      if (adaptedResult.imageUrl) {
-        setPreview(adaptedResult.imageUrl)
+      if (extractedData.imageUrl) {
+        setPreview(extractedData.imageUrl)
       }
       
     } catch (error) {

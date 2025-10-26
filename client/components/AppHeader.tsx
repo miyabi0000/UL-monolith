@@ -18,76 +18,145 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   isAuthenticated,
   userName
 }) => {
+  // 小判型ボタンのスタイル（ベース）
+  const pillButtonStyle: React.CSSProperties = {
+    backgroundColor: COLORS.white,
+    color: COLORS.text.secondary,
+    borderRadius: '999px', // 完全な小判型
+    boxShadow: SHADOW,
+    transition: 'all 150ms ease-out',
+    border: 'none',
+    cursor: 'pointer',
+  };
+
   return (
     <header
       style={{
-        backgroundColor: COLORS.white,
-        boxShadow: SHADOW,
+        backgroundColor: COLORS.background,
       }}
     >
+      {/* Wrapper with same structure as main */}
       <div
-        className="max-w-7xl mx-auto flex items-center justify-between"
+        className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-[16px]"
         style={{
-          padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+          paddingTop: `${SPACING_SCALE.md}px`,
+          paddingBottom: `${SPACING_SCALE.md}px`,
         }}
       >
-        <h1
-          className="font-semibold"
+        {/* アイランド型コンテナ */}
+        <div
+          className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-[23px]"
           style={{
-            color: COLORS.text.primary,
-            fontSize: `${FONT_SCALE.lg}px`,
+            backgroundColor: COLORS.white,
+            boxShadow: SHADOW,
+            borderRadius: '999px', // 完全な小判型
+            padding: `${SPACING_SCALE.sm}px ${SPACING_SCALE.md}px`,
           }}
         >
-          UL GEAR
+        {/* ロゴ */}
+        <h1
+          className="font-normal lowercase text-xs sm:text-sm md:text-base"
+          style={{
+            color: COLORS.text.primary,
+            letterSpacing: '0.02em',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          minimal gear manager
         </h1>
 
-        <div className="flex items-center" style={{ gap: `${SPACING_SCALE.lg}px` }}>
+        {/* ボタングループ */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-[12px]">
           {onShowCategoryManager && (
             <button
+              className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 md:px-[12px] md:py-[4px]"
               onClick={onShowCategoryManager}
-              className="text-sm hover:opacity-70 transition-opacity"
-              style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
+              style={pillButtonStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.gray[50];
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.white;
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              Categories
+              categories
             </button>
           )}
 
           <button
+            className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 md:px-[12px] md:py-[4px]"
             onClick={onToggleChat}
-            className="text-sm hover:opacity-70 transition-opacity"
-            style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
+            style={pillButtonStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.gray[50];
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.white;
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
-            AI
+            ai
           </button>
 
           {isAuthenticated ? (
             <>
               <span
-                className="text-sm"
-                style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.base}px` }}
+                className="hidden sm:inline text-xs lowercase"
+                style={{
+                  color: COLORS.text.muted,
+                  paddingLeft: `${SPACING_SCALE.xs}px`,
+                }}
               >
                 {userName}
               </span>
               <button
+                className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 md:px-[12px] md:py-[4px]"
                 onClick={onLogout}
-                className="text-sm hover:opacity-70 transition-opacity"
-                style={{ color: COLORS.gray[700], fontSize: `${FONT_SCALE.base}px` }}
+                style={{
+                  ...pillButtonStyle,
+                  backgroundColor: COLORS.gray[700],
+                  color: COLORS.white,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.gray[800];
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.gray[700];
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
-                Logout
+                logout
               </button>
             </>
           ) : (
             <button
+              className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1 md:px-[12px] md:py-[4px]"
               onClick={onShowLogin}
-              className="text-sm hover:opacity-70 transition-opacity"
-              style={{ color: COLORS.gray[700], fontSize: `${FONT_SCALE.base}px` }}
+              style={{
+                ...pillButtonStyle,
+                backgroundColor: COLORS.gray[700],
+                color: COLORS.white,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.gray[800];
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.gray[700];
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              Login
+              login
             </button>
           )}
         </div>
       </div>
-    </header>
+    </div>
+  </header>
   );
 };
 

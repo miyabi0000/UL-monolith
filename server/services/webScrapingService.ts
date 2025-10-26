@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { amazonScraper } from './amazonScraper.js';
 import { normalizeBrand, extractBrandFromText, getBrandFromDomain } from '../utils/brandUtils.js';
-import { guessCategory } from '../utils/scrapingHelpers.js';
+import { CategoryMatcher } from './categoryMatcher.js';
 
 /**
  * 汎用Web Scraping Service - 最小限実装
@@ -357,7 +357,10 @@ export class WebScrapingService {
     const description = $('.product-description').first().text().substring(0, 500);
     
     const combinedText = [name, title, breadcrumbs, category, description].join(' ');
-    return guessCategory(combinedText);
+    return CategoryMatcher.matchCategory(
+      { scrapedText: combinedText },
+      ['Backpack', 'Shelter', 'Clothing', 'Cooking', 'Water', 'Sleep', 'Electronics', 'Safety', 'Hygiene']
+    );
   }
 
   /**

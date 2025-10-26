@@ -20,6 +20,9 @@ export const SPACING_SCALE = {
   '4xl': 64,  // 8 unit
 } as const;
 
+// Font Family
+export const FONT_FAMILY = '"IBM Plex Mono", monospace' as const;
+
 // Minimal Typography (3 sizes only)
 export const FONT_SCALE = {
   sm: 12,   // Small text (captions, labels)

@@ -5,9 +5,9 @@ import { normalizeBrand } from '../utils/brandUtils.js';
 import { 
   extractJsonLd, 
   extractWeight, 
-  cleanBrandText, 
-  guessCategory
+  cleanBrandText
 } from '../utils/scrapingHelpers.js';
+import { CategoryMatcher } from './categoryMatcher.js';
 
 /**
  * Amazon専用スクレイピングサービス - 最適化版
@@ -263,7 +263,10 @@ export class AmazonScraper {
     const title = $('#productTitle').text();
     const breadcrumbs = $('#wayfinding-breadcrumbs_feature_div, .a-breadcrumb').text();
     
-    return guessCategory(title + ' ' + breadcrumbs);
+    return CategoryMatcher.matchCategory(
+      { scrapedText: title + ' ' + breadcrumbs },
+      ['Backpack', 'Shelter', 'Clothing', 'Cooking', 'Water', 'Sleep', 'Electronics', 'Safety', 'Hygiene']
+    );
   }
 
   /**

@@ -153,10 +153,11 @@ export default function App() {
 
       {/* Main Dashboard - Centered container */}
       <main
-        className="max-w-6xl mx-auto transition-all duration-150 ease-out"
+        className="max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]"
         style={{
-          padding: `${SPACING_SCALE.lg}px`,
-          paddingRight: showChat ? `${SPACING_SCALE.lg + 384}px` : `${SPACING_SCALE.lg}px`, // Chat offset
+          paddingTop: `${SPACING_SCALE.lg}px`,
+          paddingBottom: `${SPACING_SCALE.lg}px`,
+          paddingRight: showChat ? '400px' : undefined, // Chat offset
         }}
       >
         <div className="w-full">

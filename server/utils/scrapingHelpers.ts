@@ -19,32 +19,8 @@ export function extractJsonLd($: cheerio.Root): any | null {
   return null;
 }
 
-/**
- * カテゴリ判定用パターン（優先度順）
- */
-export const CATEGORY_PATTERNS = {
-  'Backpack': /backpack|pack|rucksack|daypack|リュック|バッグ|ザック|鞄/i,
-  'Shelter': /tent|shelter|bivy|bivvy|tarp|pyramid|mid\s+\d|テント|シェルター|ビビィ|タープ/i,
-  'Clothing': /jacket|shirt|pants|clothing|apparel|wear|ジャケット|シャツ|パンツ|ウェア|服/i,
-  'Cooking': /stove|cooker|pot|kitchen|cooking|ストーブ|クッカー|キッチン|調理/i,
-  'Safety': /light|headlamp|first.?aid|emergency|safety|ライト|ヘッドランプ|救急|安全/i,
-  'Sleep': /sleeping\s+bag|quilt|pad|mattress|pillow|寝袋|キルト|マット|枕/i
-} as const;
-
-/**
- * テキストからカテゴリを推測
- */
-export function guessCategory(text: string): string {
-  const lowerText = text.toLowerCase();
-  
-  for (const [category, pattern] of Object.entries(CATEGORY_PATTERNS)) {
-    if (pattern.test(lowerText)) {
-      return category;
-    }
-  }
-  
-  return 'Other';
-}
+// Removed: CATEGORY_PATTERNS and guessCategory()
+// Category matching is now handled by CategoryMatcher in server/services/categoryMatcher.ts
 
 /**
  * 重量抽出パターン（日本語・英語対応）
