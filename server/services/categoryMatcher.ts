@@ -97,8 +97,17 @@ export class CategoryMatcher {
       if (matched) return matched;
     }
 
-    // デフォルト: 最初のカテゴリ
-    return userCategories[0];
+    // デフォルト: "Other" カテゴリを探す
+    const otherCategory = userCategories.find(cat => 
+      cat.toLowerCase() === 'other' || cat.toLowerCase() === 'その他'
+    );
+    
+    if (otherCategory) {
+      return otherCategory;
+    }
+
+    // "Other" カテゴリが存在しない場合は、"Other" という文字列を返す
+    return 'Other';
   }
 
   /**
@@ -222,7 +231,16 @@ export class CategoryMatcher {
       if (matched) return { category: matched, method: 'scraped-keyword', confidence: 0.7 };
     }
 
-    return { category: userCategories[0], method: 'default', confidence: 0.5 };
+    // デフォルト: "Other" カテゴリを探す
+    const otherCategory = userCategories.find(cat => 
+      cat.toLowerCase() === 'other' || cat.toLowerCase() === 'その他'
+    );
+    
+    return { 
+      category: otherCategory || 'Other', 
+      method: 'default', 
+      confidence: 0.3 
+    };
   }
 }
 
