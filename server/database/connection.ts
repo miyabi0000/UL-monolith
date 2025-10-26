@@ -415,6 +415,248 @@ class DatabaseConnection {
   }
 
   /**
+   * カテゴリを作成
+   */
+  async createCategory(name: string, color: string, userId?: string): Promise<Category> {
+    const query = `
+      INSERT INTO categories (user_id, name, parent_id, path, color)
+      VALUES ($1, $2, $3, ARRAY[$2], $4)
+      RETURNING id, user_id, name, parent_id, path, color, created_at
+    `;
+
+    try {
+      const result = await this.pool.query(query, [userId || null, name, null, color]);
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        parentId: row.parent_id,
+        path: row.path,
+        color: row.color,
+        createdAt: row.created_at
+      };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to create category');
+    }
+  }
+
+  /**
+   * カテゴリを更新
+   */
+  async updateCategory(id: string, updates: { name?: string; color?: string }): Promise<Category | null> {
+    const setClauses: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.name !== undefined) {
+      setClauses.push(`name = $${paramIndex}`);
+      setClauses.push(`path = ARRAY[$${paramIndex}]`);
+      values.push(updates.name);
+      paramIndex++;
+    }
+
+    if (updates.color !== undefined) {
+      setClauses.push(`color = $${paramIndex}`);
+      values.push(updates.color);
+      paramIndex++;
+    }
+
+    if (setClauses.length === 0) {
+      return null;
+    }
+
+    values.push(id);
+    const query = `
+      UPDATE categories
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, user_id, name, parent_id, path, color, created_at
+    `;
+
+    try {
+      const result = await this.pool.query(query, values);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        parentId: row.parent_id,
+        path: row.path,
+        color: row.color,
+        createdAt: row.created_at
+      };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to update category');
+    }
+  }
+
+  /**
+   * カテゴリを削除
+   */
+  async deleteCategory(id: string): Promise<boolean> {
+    const query = `DELETE FROM categories WHERE id = $1`;
+
+    try {
+      const result = await this.pool.query(query, [id]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to delete category');
+    }
+  }
+
+  /**
+   * ギアアイテムを作成
+   */
+  async createGearItem(gear: any, userId: string): Promise<GearItem> {
+    const query = `
+      INSERT INTO gear_items (
+        user_id, category_id, name, brand, product_url, image_url,
+        required_quantity, owned_quantity, weight_grams, price_cents,
+        season, priority
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, user_id, category_id, name, brand, product_url, image_url,
+                required_quantity, owned_quantity, weight_grams, price_cents,
+                season, priority, created_at, updated_at
+    `;
+
+    try {
+      const result = await this.pool.query(query, [
+        userId,
+        gear.categoryId || null,
+        gear.name,
+        gear.brand || null,
+        gear.productUrl || null,
+        gear.imageUrl || null,
+        gear.requiredQuantity || 1,
+        gear.ownedQuantity || 0,
+        gear.weightGrams || null,
+        gear.priceCents || null,
+        gear.season || 'all',
+        gear.priority || 3
+      ]);
+
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        categoryId: row.category_id,
+        name: row.name,
+        brand: row.brand,
+        productUrl: row.product_url,
+        imageUrl: row.image_url,
+        requiredQuantity: row.required_quantity,
+        ownedQuantity: row.owned_quantity,
+        weightGrams: row.weight_grams,
+        priceCents: row.price_cents,
+        season: row.season,
+        priority: row.priority,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to create gear item');
+    }
+  }
+
+  /**
+   * ギアアイテムを更新
+   */
+  async updateGearItem(id: string, updates: any, userId: string): Promise<GearItem | null> {
+    const setClauses: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    const fieldMapping: Record<string, string> = {
+      categoryId: 'category_id',
+      name: 'name',
+      brand: 'brand',
+      productUrl: 'product_url',
+      imageUrl: 'image_url',
+      requiredQuantity: 'required_quantity',
+      ownedQuantity: 'owned_quantity',
+      weightGrams: 'weight_grams',
+      priceCents: 'price_cents',
+      season: 'season',
+      priority: 'priority'
+    };
+
+    for (const [key, dbField] of Object.entries(fieldMapping)) {
+      if (updates[key] !== undefined) {
+        setClauses.push(`${dbField} = $${paramIndex}`);
+        values.push(updates[key]);
+        paramIndex++;
+      }
+    }
+
+    if (setClauses.length === 0) {
+      return null;
+    }
+
+    values.push(id, userId);
+    const query = `
+      UPDATE gear_items
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
+      RETURNING id, user_id, category_id, name, brand, product_url, image_url,
+                required_quantity, owned_quantity, weight_grams, price_cents,
+                season, priority, created_at, updated_at
+    `;
+
+    try {
+      const result = await this.pool.query(query, values);
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        categoryId: row.category_id,
+        name: row.name,
+        brand: row.brand,
+        productUrl: row.product_url,
+        imageUrl: row.image_url,
+        requiredQuantity: row.required_quantity,
+        ownedQuantity: row.owned_quantity,
+        weightGrams: row.weight_grams,
+        priceCents: row.price_cents,
+        season: row.season,
+        priority: row.priority,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to update gear item');
+    }
+  }
+
+  /**
+   * ギアアイテムを削除
+   */
+  async deleteGearItem(id: string, userId: string): Promise<boolean> {
+    const query = `DELETE FROM gear_items WHERE id = $1 AND user_id = $2`;
+
+    try {
+      const result = await this.pool.query(query, [id, userId]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to delete gear item');
+    }
+  }
+
+  /**
    * camelCase を snake_case に変換
    */
   private camelToSnake(str: string): string {

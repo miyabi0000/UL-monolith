@@ -1,35 +1,21 @@
 import { Request, Response } from 'express';
 import { sanitizeGearData } from '../../utils/helpers';
-import { 
-  getAllGearItems, 
-  getGearItemById, 
-  addGearItem, 
-  updateGearItem, 
-  deleteGearItem,
-  getAllCategories,
-  getGearStats
-} from '../../data/store';
+import { db } from '../../database/connection';
+
+// デモユーザーID（認証実装までの仮ID）
+const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
 
 export const handleGetAllGear = async (req: Request, res: Response) => {
   try {
-    const items = getAllGearItems();
-
-    // 計算フィールドを追加
-    const itemsWithCalculations = items.map(item => ({
-      ...item,
-      shortage: item.requiredQuantity - item.ownedQuantity,
-      totalWeight: (item.weightGrams || 0) * item.requiredQuantity,
-      totalPrice: (item.priceCents || 0) * item.requiredQuantity,
-      missingQuantity: Math.max(0, item.requiredQuantity - item.ownedQuantity)
-    }));
+    const result = await db.getGearWithCategories(DEMO_USER_ID);
 
     res.json({
       success: true,
-      data: itemsWithCalculations,
+      data: result.items,
       meta: {
-        total: items.length,
+        total: result.total,
         page: 1,
-        limit: items.length,
+        limit: result.items.length,
         hasNext: false,
         hasPrev: false,
         filtered: false
@@ -49,7 +35,7 @@ export const handleGetGearById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const item = getGearItemById(id);
+    const item = await db.getGearById(id, DEMO_USER_ID);
 
     if (!item) {
       return res.status(404).json({
@@ -58,18 +44,9 @@ export const handleGetGearById = async (req: Request, res: Response) => {
       });
     }
 
-    // 計算フィールドを追加
-    const itemWithCalculations = {
-      ...item,
-      shortage: item.requiredQuantity - item.ownedQuantity,
-      totalWeight: (item.weightGrams || 0) * item.requiredQuantity,
-      totalPrice: (item.priceCents || 0) * item.requiredQuantity,
-      missingQuantity: Math.max(0, item.requiredQuantity - item.ownedQuantity)
-    };
-
     res.json({
       success: true,
-      data: itemWithCalculations
+      data: item
     });
   } catch (error) {
     console.error('Error in handleGetGearById:', error);
@@ -83,11 +60,16 @@ export const handleGetGearById = async (req: Request, res: Response) => {
 
 export const handleGetGearSummary = async (req: Request, res: Response) => {
   try {
-    const summary = getGearStats();
+    const summary = await db.getAnalyticsSummary(DEMO_USER_ID);
 
     res.json({
       success: true,
-      data: summary
+      data: {
+        totalWeight: summary.totalWeight,
+        totalPrice: summary.totalPrice,
+        totalItems: summary.totalItems,
+        missingItems: summary.missingItems
+      }
     });
   } catch (error) {
     console.error('Error in handleGetGearSummary:', error);
@@ -110,7 +92,7 @@ export const handleCreateGear = async (req: Request, res: Response) => {
       });
     }
 
-    const newItem = addGearItem(sanitizedData);
+    const newItem = await db.createGearItem(sanitizedData, DEMO_USER_ID);
 
     res.status(201).json({
       success: true,
@@ -132,7 +114,7 @@ export const handleUpdateGear = async (req: Request, res: Response) => {
     const { id } = req.params;
     const sanitizedData = sanitizeGearData(req.body);
     
-    const updatedItem = updateGearItem(id, sanitizedData);
+    const updatedItem = await db.updateGearItem(id, sanitizedData, DEMO_USER_ID);
     
     if (!updatedItem) {
       return res.status(404).json({
@@ -160,7 +142,7 @@ export const handleDeleteGear = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
-    const deleted = deleteGearItem(id);
+    const deleted = await db.deleteGearItem(id, DEMO_USER_ID);
     
     if (!deleted) {
       return res.status(404).json({

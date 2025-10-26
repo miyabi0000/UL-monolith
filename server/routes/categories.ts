@@ -1,11 +1,5 @@
 import { Router } from 'express';
-import { 
-  getAllCategories, 
-  getCategoryById, 
-  addCategory, 
-  updateCategory, 
-  deleteCategory 
-} from '../data/store';
+import { db } from '../database/connection';
 import { 
   validateCategoryInput, 
   normalizeCategoryName, 
@@ -14,12 +8,15 @@ import {
 
 const router = Router();
 
+// デモユーザーID（認証実装までの仮ID）
+const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
+
 /**
  * GET /api/v1/categories - 全カテゴリ取得
  */
 router.get('/', async (req, res) => {
   try {
-    const categories = getAllCategories();
+    const categories = await db.getCategories(DEMO_USER_ID);
 
     res.json({
       success: true,
@@ -41,7 +38,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const category = getCategoryById(id);
+    const categories = await db.getCategories(DEMO_USER_ID);
+    const category = categories.find(c => c.id === id);
 
     if (!category) {
       return res.status(404).json({
@@ -83,7 +81,7 @@ router.post('/', async (req, res) => {
     const normalizedName = normalizeCategoryName(name);
 
     // 重複チェック
-    const existingCategories = getAllCategories();
+    const existingCategories = await db.getCategories(DEMO_USER_ID);
     if (existingCategories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
       return res.status(409).json({
         success: false,
@@ -91,10 +89,11 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const newCategory = addCategory({
-      name: normalizedName,
-      color: color || DEFAULT_CATEGORY_COLOR
-    });
+    const newCategory = await db.createCategory(
+      normalizedName,
+      color || DEFAULT_CATEGORY_COLOR,
+      DEMO_USER_ID
+    );
 
     res.status(201).json({
       success: true,
@@ -120,11 +119,21 @@ router.put('/:id', async (req, res) => {
     const { name, color } = req.body;
 
     // 存在確認
-    const category = getCategoryById(id);
+    const categories = await db.getCategories(DEMO_USER_ID);
+    const category = categories.find(c => c.id === id);
+    
     if (!category) {
       return res.status(404).json({
         success: false,
         message: 'Category not found'
+      });
+    }
+
+    // "Other" カテゴリーの名前変更を保護
+    if ((category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') && name !== undefined) {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot rename the "Other" category. This is a system-protected category.'
       });
     }
 
@@ -145,8 +154,7 @@ router.put('/:id', async (req, res) => {
     // 重複チェック（自分以外）
     if (name !== undefined) {
       const normalizedName = normalizeCategoryName(name);
-      const existingCategories = getAllCategories();
-      if (existingCategories.some(cat => 
+      if (categories.some(cat => 
         cat.id !== id && cat.name.toLowerCase() === normalizedName.toLowerCase()
       )) {
         return res.status(409).json({
@@ -161,7 +169,7 @@ router.put('/:id', async (req, res) => {
     if (name !== undefined) updates.name = normalizeCategoryName(name);
     if (color !== undefined) updates.color = color;
 
-    const updatedCategory = updateCategory(id, updates);
+    const updatedCategory = await db.updateCategory(id, updates);
 
     res.json({
       success: true,
@@ -186,7 +194,9 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
     // 存在確認
-    const category = getCategoryById(id);
+    const categories = await db.getCategories(DEMO_USER_ID);
+    const category = categories.find(c => c.id === id);
+    
     if (!category) {
       return res.status(404).json({
         success: false,
@@ -194,7 +204,15 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    const deleted = deleteCategory(id);
+    // "Other" カテゴリーの削除を保護
+    if (category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot delete the "Other" category. This is a system-protected category.'
+      });
+    }
+
+    const deleted = await db.deleteCategory(id);
 
     if (!deleted) {
       return res.status(500).json({
