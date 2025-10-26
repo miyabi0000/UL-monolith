@@ -424,16 +424,17 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       selectedData?.sortedItems?.length || 1
                     )
                     const isSelected = selectedItem === item.id
-                    const darkenedColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.3)
+                    const darkenedFillColor = darkenColor(fillColor, 0.35)
+                    const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.3)
                     return (
                       <Cell
                         key={`item-${index}`}
-                        fill={fillColor}
+                        fill={isSelected ? darkenedFillColor : fillColor}
                         opacity={isSelected ? 1 : 0.85}
-                        stroke={isSelected ? darkenedColor : COLORS.white}
-                        strokeWidth={isSelected ? 4 : 1}
+                        stroke={isSelected ? darkenedStrokeColor : COLORS.white}
+                        strokeWidth={isSelected ? 2 : 1}
                         style={{
-                          filter: isSelected ? `drop-shadow(0 0 8px ${darkenedColor}99)` : 'none',
+                          filter: isSelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
                           transition: 'all 0.2s ease',
                           outline: 'none'
                         }}
@@ -456,15 +457,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               >
                 {sortedData.map((entry, index) => {
                   const isCategorySelected = selectedCategory === entry.name
-                  const darkenedColor = darkenColor(entry.color, 0.3)
+                  const darkenedFillColor = darkenColor(entry.color, 0.35)
+                  const darkenedStrokeColor = darkenColor(entry.color, 0.3)
                   return (
                     <Cell
                       key={`category-${index}`}
-                      fill={entry.color}
-                      stroke={isCategorySelected ? darkenedColor : COLORS.white}
-                      strokeWidth={isCategorySelected ? 4 : 1}
+                      fill={isCategorySelected ? darkenedFillColor : entry.color}
+                      stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
+                      strokeWidth={isCategorySelected ? 2 : 1}
                       style={{
-                        filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedColor}99)` : 'none',
+                        filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
                         transition: 'all 0.2s ease',
                         outline: 'none'
                       }}
