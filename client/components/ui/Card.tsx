@@ -1,37 +1,28 @@
 import React from 'react';
-import { getCardStyle, CardVariant, RADIUS_SCALE } from '../../utils/designSystem';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: CardVariant;
   hover?: boolean;
   children: React.ReactNode;
   as?: keyof JSX.IntrinsicElements;
 }
 
 const Card: React.FC<CardProps> = ({
-  variant = 'default',
   hover = false,
   children,
   className = '',
   as: Component = 'div',
   ...props
 }) => {
-  const baseClasses = `
+  const classes = `
+    card
     transition-shadow
+    ${hover ? 'hover:shadow-md dark:hover:shadow-dark-md' : ''}
     ${className}
-  `.trim();
-
-  const cardStyle = variant === 'hover' && hover
-    ? getCardStyle('hover')
-    : getCardStyle(variant);
+  `.trim().replace(/\s+/g, ' ');
 
   return (
     <Component
-      className={baseClasses}
-      style={{
-        ...cardStyle,
-        borderRadius: `${RADIUS_SCALE.md}px`,
-      }}
+      className={classes}
       {...props}
     >
       {children}
