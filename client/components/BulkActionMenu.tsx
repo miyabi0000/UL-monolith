@@ -13,21 +13,11 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
   return (
     <button
       onClick={onToggleCheckboxes}
-      className="p-2 rounded-md transition-colors"
-      style={{
-        backgroundColor: showCheckboxes ? COLORS.gray[100] : 'transparent',
-        color: COLORS.text.primary
-      }}
-      onMouseEnter={(e) => {
-        if (!showCheckboxes) {
-          e.currentTarget.style.backgroundColor = COLORS.background;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!showCheckboxes) {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }
-      }}
+      className={`p-2 rounded-md transition-colors text-gray-900 dark:text-gray-100 ${
+        showCheckboxes
+          ? 'bg-gray-100 dark:bg-gray-800'
+          : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+      }`}
       aria-label="一括編集"
       title="一括編集"
     >

@@ -1,5 +1,4 @@
 import React from 'react';
-import { COLORS, SHADOW } from '../../utils/designSystem';
 
 interface SkeletonLoaderProps {
   className?: string;
@@ -12,109 +11,31 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   variant = 'text',
   count = 1
 }) => {
-  const baseStyle = {
-    backgroundColor: COLORS.gray[100],
-    backgroundImage: `linear-gradient(90deg, ${COLORS.gray[100]} 25%, ${COLORS.gray[200]} 50%, ${COLORS.gray[100]} 75%)`,
-    backgroundSize: '200% 100%',
-    animation: 'shimmer 1.5s infinite',
-    borderRadius: '0.5rem',
-    boxShadow: SHADOW,
-  };
-
-  const getVariantStyle = () => {
-    switch (variant) {
-      case 'chart':
-        return {
-          ...baseStyle,
-          height: '300px',
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column' as const,
-        };
-      case 'table':
-        return {
-          ...baseStyle,
-          height: '400px',
-          width: '100%',
-        };
-      case 'card':
-        return {
-          ...baseStyle,
-          height: '80px',
-          width: '100%',
-        };
-      case 'circle':
-        return {
-          ...baseStyle,
-          height: '40px',
-          width: '40px',
-          borderRadius: '50%',
-        };
-      default: // text
-        return {
-          ...baseStyle,
-          height: '1rem',
-          width: '100%',
-        };
-    }
-  };
-
   const renderSkeletonContent = () => {
     if (variant === 'chart') {
       return (
-        <div style={getVariantStyle()}>
-          <div
-            style={{
-              width: '120px',
-              height: '120px',
-              borderRadius: '50%',
-              backgroundColor: COLORS.gray[200],
-              marginBottom: '1rem',
-            }}
-          />
-          <div
-            style={{
-              width: '80px',
-              height: '0.75rem',
-              backgroundColor: COLORS.gray[200],
-              borderRadius: '0.375rem',
-            }}
-          />
+        <div className="h-[300px] w-full flex items-center justify-center flex-col animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg shadow-sm">
+          <div className="w-[120px] h-[120px] rounded-full bg-gray-300 dark:bg-gray-600 mb-4" />
+          <div className="w-[80px] h-3 bg-gray-300 dark:bg-gray-600 rounded-md" />
         </div>
       );
     }
 
     if (variant === 'table') {
       return (
-        <div style={getVariantStyle()}>
+        <div className="h-[400px] w-full animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg shadow-sm">
           <div className="space-y-3 w-full p-4">
             {/* テーブルヘッダー */}
             <div className="grid grid-cols-6 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    height: '1rem',
-                    backgroundColor: COLORS.gray[200],
-                    borderRadius: '0.25rem',
-                  }}
-                />
+                <div key={i} className="h-4 bg-gray-300 dark:bg-gray-600 rounded" />
               ))}
             </div>
             {/* テーブル行 */}
             {Array.from({ length: 8 }).map((_, rowIndex) => (
               <div key={rowIndex} className="grid grid-cols-6 gap-4">
                 {Array.from({ length: 6 }).map((_, colIndex) => (
-                  <div
-                    key={colIndex}
-                    style={{
-                      height: '0.875rem',
-                      backgroundColor: COLORS.gray[100],
-                      borderRadius: '0.25rem',
-                    }}
-                  />
+                  <div key={colIndex} className="h-3.5 bg-gray-300 dark:bg-gray-600 rounded" />
                 ))}
               </div>
             ))}
@@ -123,22 +44,25 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       );
     }
 
+    if (variant === 'card') {
+      return Array.from({ length: count }).map((_, index) => (
+        <div key={index} className={`h-20 w-full animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg shadow-sm ${className}`} />
+      ));
+    }
+
+    if (variant === 'circle') {
+      return Array.from({ length: count }).map((_, index) => (
+        <div key={index} className={`h-10 w-10 animate-pulse bg-gray-200 dark:bg-gray-700 rounded-full shadow-sm ${className}`} />
+      ));
+    }
+
+    // text variant
     return Array.from({ length: count }).map((_, index) => (
-      <div key={index} style={getVariantStyle()} className={className} />
+      <div key={index} className={`h-4 w-full animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg shadow-sm ${className}`} />
     ));
   };
 
-  return (
-    <>
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
-      {renderSkeletonContent()}
-    </>
-  );
+  return <>{renderSkeletonContent()}</>;
 };
 
 export default SkeletonLoader;
