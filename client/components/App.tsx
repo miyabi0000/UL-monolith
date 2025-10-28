@@ -136,12 +136,7 @@ export default function App() {
   };
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        backgroundColor: COLORS.background,
-      }}
-    >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <AppHeader
         onShowLogin={() => setShowLogin(true)}
         onLogout={logout}
@@ -208,7 +203,6 @@ export default function App() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
-                    onRefresh={refreshGearItems}
                   />
                 ) : (
                   <GearView
@@ -220,7 +214,6 @@ export default function App() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
-                    onRefresh={refreshGearItems}
                   />
                 )}
               </div>
@@ -265,7 +258,6 @@ export default function App() {
           <ChatPopup
             isOpen={showChat}
             onClose={() => setShowChat(false)}
-            gearItems={gearItems}
             categories={categories}
             onGearExtracted={handleSaveGear}
           />
