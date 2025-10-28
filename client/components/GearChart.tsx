@@ -107,21 +107,19 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
   
   return (
     <div 
-      className="rounded-lg shadow-xl p-3 max-w-xs"
+      className="rounded-lg shadow-xl p-3 max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
       style={{ 
-        backgroundColor: COLORS.white,
-        border: `1px solid ${COLORS.gray[200]}`,
         backdropFilter: 'blur(8px)'
       }}
     >
       {/* ヘッダー */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <p className="font-bold text-sm mb-0.5" style={{ color: COLORS.text.primary }}>
+          <p className="font-bold text-sm mb-0.5 text-gray-900 dark:text-gray-100">
             {data.name}
           </p>
           {isItem && data.brand && (
-            <p className="text-xs" style={{ color: COLORS.text.secondary }}>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {data.brand}
             </p>
           )}
@@ -135,7 +133,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
       {/* メイン情報 */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {viewMode === 'cost' ? '価格' : '重量'}:
           </span>
           <span className="font-bold text-sm" style={{ color: data.color || SELECTED_COLOR }}>
@@ -146,10 +144,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
         {/* パーセンテージ */}
         {data.percentage !== undefined && (
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               全体比:
             </span>
-            <span className="font-semibold text-xs" style={{ color: COLORS.text.primary }}>
+            <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
               {data.percentage}%
             </span>
           </div>
@@ -158,10 +156,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
         {/* システムパーセンテージ（アイテムの場合） */}
         {isItem && data.systemPercentage !== undefined && (
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               カテゴリ内:
             </span>
-            <span className="font-semibold text-xs" style={{ color: COLORS.text.primary }}>
+            <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
               {data.systemPercentage}%
             </span>
           </div>
@@ -170,19 +168,19 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
       
       {/* 追加情報（アイテムの場合） */}
       {isItem && (data.owned !== undefined || data.priority !== undefined) && (
-        <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${COLORS.gray[200]}` }}>
+        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-2 gap-2 text-xs">
             {data.owned !== undefined && data.needed !== undefined && (
               <div>
-                <span style={{ color: COLORS.text.secondary }}>所有/必要: </span>
-                <span className="font-medium" style={{ color: COLORS.text.primary }}>
+                <span className="text-gray-500 dark:text-gray-400">所有/必要: </span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">
                   {data.owned}/{data.needed}
                 </span>
               </div>
             )}
             {data.priority !== undefined && (
               <div>
-                <span style={{ color: COLORS.text.secondary }}>優先度: </span>
+                <span className="text-gray-500 dark:text-gray-400">優先度: </span>
                 <span className="font-medium" style={{ color: getPriorityColor(data.priority) }}>
                   {data.priority}
                 </span>
@@ -218,10 +216,9 @@ const SummaryButton: React.FC<SummaryButtonProps> = ({
 
   return (
     <div
-      className="flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-2 rounded-lg hover:scale-105"
-      style={{
-        backgroundColor: isSelected ? COLORS.gray[100] : 'transparent'
-      }}
+      className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-2 rounded-lg hover:scale-105 ${
+        isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''
+      }`}
       onClick={onClick}
     >
       <div className="flex items-center space-x-1 mb-0.5">
@@ -231,7 +228,7 @@ const SummaryButton: React.FC<SummaryButtonProps> = ({
         >
           {icon}
         </span>
-        <span className="text-[10px] font-medium" style={{ color: COLORS.text.secondary }}>
+        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
           {label}
         </span>
       </div>
@@ -268,15 +265,15 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
     >
       <div className="flex items-center space-x-2">
         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-        <span className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
           {category.name}
         </span>
       </div>
       <div className="text-right">
-        <div className="text-sm font-semibold" style={{ color: COLORS.text.primary }}>
+        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
           {formatValue(category.value, viewMode)}
         </div>
-        <div className="text-xs" style={{ color: COLORS.text.secondary }}>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           {category.percentage}%
         </div>
       </div>
@@ -401,7 +398,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-4">
       {/* グラフエリア */}
-      <Card variant="default" className="p-3">
+      <Card className="p-3">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -501,18 +498,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               onClick={handleCenterClick}
             >
               <div 
-                className="font-bold mb-1" 
+                className="font-bold mb-1 text-gray-900 dark:text-gray-100" 
                 style={{ 
-                  color: COLORS.text.primary,
                   fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
                 }}
               >
                 {formatValue(totalValue, viewMode)}
               </div>
               <div 
-                className="uppercase tracking-wide font-bold" 
+                className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400" 
                 style={{ 
-                  color: COLORS.text.secondary,
                   fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem'
                 }}
               >
@@ -521,8 +516,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               {selectedCategory && (
                 <div className="mt-2">
                   <span
-                    className="text-xs font-medium px-2 py-1 rounded truncate block"
-                    style={{ color: COLORS.text.primary, backgroundColor: COLORS.gray[100] }}
+                    className="text-xs font-medium px-2 py-1 rounded truncate block bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     {selectedCategory}
                   </span>
@@ -534,10 +528,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </Card>
 
       {/* サイドパネル */}
-      <Card variant="default" className="p-3">
+      <Card className="p-3">
         {/* Pack Summary */}
-        <div className="mb-4 pb-3 border-b" style={{ borderColor: COLORS.gray[200] }}>
-          <h4 className="text-xs font-semibold mb-2" style={{ color: COLORS.text.primary }}>
+        <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <h4 className="text-xs font-semibold mb-2 text-gray-900 dark:text-gray-100">
             PACK SUMMARY
           </h4>
           <div className="grid grid-cols-1 gap-2">
@@ -563,7 +557,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
 
         {/* Distribution */}
-        <h4 className="font-semibold mb-3 text-xs" style={{ color: COLORS.text.primary }}>
+        <h4 className="font-semibold mb-3 text-xs text-gray-900 dark:text-gray-100">
           DISTRIBUTION
         </h4>
         <div className="space-y-2">

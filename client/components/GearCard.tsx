@@ -58,10 +58,9 @@ const GearCard: React.FC<GearCardProps> = ({
 
   return (
     <div
-      className="relative group cursor-pointer overflow-hidden"
+      className="relative group cursor-pointer overflow-hidden bg-white dark:bg-gray-800"
       style={{
         borderRadius: `${RADIUS_SCALE.md}px`,
-        backgroundColor: COLORS.white,
         boxShadow: isHovered 
           ? '0 10px 25px rgba(0,0,0,0.15)' 
           : '0 1px 3px rgba(0,0,0,0.1)',

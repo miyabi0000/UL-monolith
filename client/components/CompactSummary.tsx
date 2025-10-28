@@ -1,5 +1,4 @@
 import React from 'react';
-import { COLORS } from '../utils/designSystem';
 import { ChartViewMode } from '../utils/types';
 import Card from './ui/Card';
 
@@ -19,33 +18,27 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
     {
       label: 'Total Weight',
       value: `${totals.weight}g`,
-      color: COLORS.gray[700],
       icon: 'W',
       mode: 'weight' as ChartViewMode
     },
     {
       label: 'Total Cost',
       value: `¥${Math.round(totals.price / 100).toLocaleString()}`,
-      color: COLORS.gray[700],
       icon: '¥',
       mode: 'cost' as ChartViewMode
     },
     {
       label: 'Items',
       value: totals.items.toString(),
-      color: COLORS.text.primary,
       icon: '#',
       mode: null
     }
   ];
 
   return (
-    <Card variant="square" hover className="p-2">
+    <Card hover className="p-2">
       <div className="mb-2">
-        <h3
-          className="text-xs font-semibold"
-          style={{ color: COLORS.text.primary }}
-        >
+        <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
           Pack Summary
         </h3>
       </div>
@@ -57,13 +50,13 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
           return (
             <div
               key={index}
-              className={`flex flex-col items-center justify-center group transition-all duration-200 p-2 rounded-lg ${
+              className={`flex flex-col items-center justify-center group transition-all duration-200 p-2 rounded-lg border-2 ${
                 isClickable ? 'cursor-pointer hover:scale-105' : ''
+              } ${
+                isSelected 
+                  ? 'bg-gray-200 dark:bg-gray-700 border-gray-600 dark:border-gray-400' 
+                  : 'bg-gray-50 dark:bg-gray-800 border-transparent'
               }`}
-              style={{
-                backgroundColor: isSelected ? `${stat.color}30` : `${stat.color}10`,
-                border: isSelected ? `2px solid ${stat.color}` : '2px solid transparent'
-              }}
               onClick={() => {
                 if (stat.mode && onViewModeChange) {
                   onViewModeChange(stat.mode);
@@ -72,28 +65,20 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
             >
               <div className="flex items-center space-x-1 mb-0.5">
                 <span
-                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 ${
+                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 dark:bg-gray-500 ${
                     isClickable ? 'group-hover:scale-110' : ''
                   }`}
-                  style={{
-                    backgroundColor: stat.color,
-                    color: COLORS.white
-                  }}
                 >
                   {stat.icon}
                 </span>
-                <span
-                  className="text-[10px] font-medium"
-                  style={{ color: COLORS.text.secondary }}
-                >
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
                   {stat.label}
                 </span>
               </div>
               <div
-                className={`text-sm font-bold transition-all duration-200 ${
+                className={`text-sm font-bold transition-all duration-200 text-gray-700 dark:text-gray-200 ${
                   isClickable ? 'group-hover:scale-110' : ''
                 }`}
-                style={{ color: stat.color }}
               >
                 {stat.value}
               </div>

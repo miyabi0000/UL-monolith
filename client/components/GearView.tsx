@@ -123,10 +123,7 @@ const GearView: React.FC<GearViewProps> = React.memo(({
         style={{ paddingBottom: `${SPACING_SCALE.md}px` }}
       >
         <div className="flex items-center gap-4">
-          <h2
-            className="text-xl font-bold"
-            style={{ color: COLORS.text.primary }}
-          >
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Gear Items ({processedItems.length})
           </h2>
 
@@ -134,34 +131,31 @@ const GearView: React.FC<GearViewProps> = React.memo(({
           <div className="flex gap-2">
             <button
               onClick={() => handleSort('name')}
-              className="px-3 py-1 text-xs rounded transition-colors"
-              style={{
-                backgroundColor: sortField === 'name' ? COLORS.gray[100] : COLORS.background,
-                color: sortField === 'name' ? COLORS.gray[700] : COLORS.text.secondary,
-                border: `1px solid ${COLORS.gray[100]}`
-              }}
+              className={`px-3 py-1 text-xs rounded transition-colors border ${
+                sortField === 'name'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+              }`}
             >
               名前 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
             </button>
             <button
               onClick={() => handleSort('weight')}
-              className="px-3 py-1 text-xs rounded transition-colors"
-              style={{
-                backgroundColor: sortField === 'weight' ? COLORS.gray[100] : COLORS.background,
-                color: sortField === 'weight' ? COLORS.gray[700] : COLORS.text.secondary,
-                border: `1px solid ${COLORS.gray[100]}`
-              }}
+              className={`px-3 py-1 text-xs rounded transition-colors border ${
+                sortField === 'weight'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+              }`}
             >
               重量 {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
             </button>
             <button
               onClick={() => handleSort('price')}
-              className="px-3 py-1 text-xs rounded transition-colors"
-              style={{
-                backgroundColor: sortField === 'price' ? COLORS.gray[100] : COLORS.background,
-                color: sortField === 'price' ? COLORS.gray[700] : COLORS.text.secondary,
-                border: `1px solid ${COLORS.gray[100]}`
-              }}
+              className={`px-3 py-1 text-xs rounded transition-colors border ${
+                sortField === 'price'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+              }`}
             >
               価格 {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
             </button>
@@ -193,10 +187,7 @@ const GearView: React.FC<GearViewProps> = React.memo(({
 
       {/* カードグリッド */}
       {processedItems.length === 0 ? (
-        <div
-          className="text-center py-12"
-          style={{ color: COLORS.text.secondary }}
-        >
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <p className="text-lg mb-2">ギアアイテムがありません</p>
           <p className="text-sm">「+ Add Gear」ボタンから追加してください</p>
         </div>
