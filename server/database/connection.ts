@@ -42,7 +42,7 @@ class DatabaseConnection {
   ): Promise<{ items: GearItemWithCalculated[]; total: number }> {
     let query = `
       SELECT 
-        g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url,
+        g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
         g.season, g.priority, g.llm_data, g.created_at, g.updated_at,
         c.id as cat_id, c.name as cat_name, c.path as cat_path, 
@@ -118,6 +118,7 @@ class DatabaseConnection {
         name: row.name,
         brand: row.brand,
         productUrl: row.product_url,
+        imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
@@ -157,7 +158,7 @@ class DatabaseConnection {
   async getGearById(id: string, userId: string): Promise<GearItemWithCalculated | null> {
     const query = `
       SELECT 
-        g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url,
+        g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
         g.season, g.priority, g.llm_data, g.created_at, g.updated_at,
         c.id as cat_id, c.name as cat_name, c.path as cat_path, 
@@ -187,6 +188,7 @@ class DatabaseConnection {
         name: row.name,
         brand: row.brand,
         productUrl: row.product_url,
+        imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
