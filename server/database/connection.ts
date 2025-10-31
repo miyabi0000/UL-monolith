@@ -41,11 +41,11 @@ class DatabaseConnection {
     }
   ): Promise<{ items: GearItemWithCalculated[]; total: number }> {
     let query = `
-      SELECT 
+      SELECT
         g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
-        g.season, g.priority, g.llm_data, g.created_at, g.updated_at,
-        c.id as cat_id, c.name as cat_name, c.path as cat_path, 
+        g.seasons, g.priority, g.llm_data, g.created_at, g.updated_at,
+        c.id as cat_id, c.name as cat_name, c.path as cat_path,
         c.color as cat_color, c.created_at as cat_created_at,
         -- 計算フィールド
         (g.required_quantity - g.owned_quantity) as shortage,
@@ -74,7 +74,7 @@ class DatabaseConnection {
     }
 
     if (filters?.seasons?.length) {
-      query += ` AND g.season = ANY($${paramIndex})`;
+      query += ` AND g.seasons && $${paramIndex}`; // Array overlap operator
       params.push(filters.seasons);
       paramIndex++;
     }
@@ -123,7 +123,7 @@ class DatabaseConnection {
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
         priceCents: row.price_cents,
-        season: row.season,
+        seasons: row.seasons,
         priority: row.priority,
         llmData: row.llm_data,
         createdAt: row.created_at,
@@ -157,11 +157,11 @@ class DatabaseConnection {
    */
   async getGearById(id: string, userId: string): Promise<GearItemWithCalculated | null> {
     const query = `
-      SELECT 
+      SELECT
         g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
-        g.season, g.priority, g.llm_data, g.created_at, g.updated_at,
-        c.id as cat_id, c.name as cat_name, c.path as cat_path, 
+        g.seasons, g.priority, g.llm_data, g.created_at, g.updated_at,
+        c.id as cat_id, c.name as cat_name, c.path as cat_path,
         c.color as cat_color, c.created_at as cat_created_at,
         -- 計算フィールド
         (g.required_quantity - g.owned_quantity) as shortage,
@@ -193,7 +193,7 @@ class DatabaseConnection {
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
         priceCents: row.price_cents,
-        season: row.season,
+        seasons: row.seasons,
         priority: row.priority,
         llmData: row.llm_data,
         createdAt: row.created_at,
@@ -445,12 +445,12 @@ class DatabaseConnection {
       INSERT INTO gear_items (
         user_id, category_id, name, brand, product_url, image_url,
         required_quantity, owned_quantity, weight_grams, price_cents,
-        season, priority
+        seasons, priority
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id, user_id, category_id, name, brand, product_url, image_url,
                 required_quantity, owned_quantity, weight_grams, price_cents,
-                season, priority, created_at, updated_at
+                seasons, priority, created_at, updated_at
     `;
 
     try {
@@ -465,7 +465,7 @@ class DatabaseConnection {
         gear.ownedQuantity || 0,
         gear.weightGrams || null,
         gear.priceCents || null,
-        gear.season || 'all',
+        gear.seasons || null,
         gear.priority || 3
       ]);
 
@@ -482,7 +482,7 @@ class DatabaseConnection {
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
         priceCents: row.price_cents,
-        season: row.season,
+        seasons: row.seasons,
         priority: row.priority,
         createdAt: row.created_at,
         updatedAt: row.updated_at
@@ -511,7 +511,7 @@ class DatabaseConnection {
       ownedQuantity: 'owned_quantity',
       weightGrams: 'weight_grams',
       priceCents: 'price_cents',
-      season: 'season',
+      seasons: 'seasons',
       priority: 'priority'
     };
 
@@ -534,7 +534,7 @@ class DatabaseConnection {
       WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
       RETURNING id, user_id, category_id, name, brand, product_url, image_url,
                 required_quantity, owned_quantity, weight_grams, price_cents,
-                season, priority, created_at, updated_at
+                seasons, priority, created_at, updated_at
     `;
 
     try {
@@ -556,7 +556,7 @@ class DatabaseConnection {
         ownedQuantity: row.owned_quantity,
         weightGrams: row.weight_grams,
         priceCents: row.price_cents,
-        season: row.season,
+        seasons: row.seasons,
         priority: row.priority,
         createdAt: row.created_at,
         updatedAt: row.updated_at

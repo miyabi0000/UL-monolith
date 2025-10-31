@@ -60,6 +60,19 @@ export const sanitizeUrl = (input: string): string => {
 }
 
 /**
+ * Seasons配列のサニタイゼーション
+ */
+export const sanitizeSeasons = (seasons: any): string[] | undefined => {
+  if (!seasons) return undefined
+  if (!Array.isArray(seasons)) return undefined
+
+  const validSeasons = ['spring', 'summer', 'fall', 'winter']
+  return seasons
+    .filter(s => typeof s === 'string' && validSeasons.includes(s.toLowerCase()))
+    .map(s => s.toLowerCase())
+}
+
+/**
  * ギアフォーム用の統合サニタイゼーション
  */
 export const sanitizeGearForm = (data: any) => {
@@ -71,7 +84,7 @@ export const sanitizeGearForm = (data: any) => {
     ownedQuantity: sanitizeNumber(data.ownedQuantity, 0, 100) || 0,
     weightGrams: data.weightGrams ? sanitizeNumber(data.weightGrams, 0, 10000) : undefined,
     priceCents: data.priceCents ? sanitizeNumber(data.priceCents, 0, 10000000) : undefined,
-    season: escapeHtml(sanitizeString(data.season || '')),
+    seasons: sanitizeSeasons(data.seasons),
     priority: sanitizeNumber(data.priority, 1, 5) || 3
   }
 }
