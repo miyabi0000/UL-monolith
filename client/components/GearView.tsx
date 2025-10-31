@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import GearCard from './GearCard';
-import Button from './ui/Button';
-import BulkActionMenu from './BulkActionMenu';
+import Card from './ui/Card';
+import GearListHeader from './GearListHeader';
 import BulkActionBar from './BulkActionBar';
+
+type ViewMode = 'table' | 'card';
 
 interface GearViewProps {
   items: GearItemWithCalculated[];
@@ -15,6 +17,8 @@ interface GearViewProps {
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   onShowForm: () => void;
+  currentView: ViewMode;
+  onViewChange: (view: ViewMode) => void;
 }
 
 type SortField = 'name' | 'weight' | 'price' | 'priority';
@@ -28,7 +32,9 @@ const GearView: React.FC<GearViewProps> = React.memo(({
   onDelete,
   showCheckboxes,
   onToggleCheckboxes,
-  onShowForm
+  onShowForm,
+  currentView,
+  onViewChange
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -117,61 +123,52 @@ const GearView: React.FC<GearViewProps> = React.memo(({
 
   return (
     <div>
-      {/* ヘッダー */}
-      <div
-        className="flex justify-between items-center mb-4"
-        style={{ paddingBottom: `${SPACING_SCALE.md}px` }}
-      >
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Gear Items ({processedItems.length})
-          </h2>
+      {/* 共通ヘッダー */}
+      <Card variant="default">
+        <GearListHeader
+          itemCount={processedItems.length}
+          currentView={currentView}
+          onViewChange={onViewChange}
+          showCheckboxes={showCheckboxes}
+          onToggleCheckboxes={onToggleCheckboxes}
+          onShowForm={onShowForm}
+        />
 
-          {/* ソートボタン */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleSort('name')}
-              className={`px-3 py-1 text-xs rounded transition-colors border ${
-                sortField === 'name'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-              }`}
-            >
-              名前 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
-            </button>
-            <button
-              onClick={() => handleSort('weight')}
-              className={`px-3 py-1 text-xs rounded transition-colors border ${
-                sortField === 'weight'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-              }`}
-            >
-              重量 {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
-            </button>
-            <button
-              onClick={() => handleSort('price')}
-              className={`px-3 py-1 text-xs rounded transition-colors border ${
-                sortField === 'price'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-              }`}
-            >
-              価格 {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
-            </button>
-          </div>
+        {/* ソートボタン */}
+        <div className="flex items-center gap-2 px-3 pb-3 pt-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400">並び替え:</span>
+          <button
+            onClick={() => handleSort('name')}
+            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              sortField === 'name'
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+            }`}
+          >
+            名前 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+          </button>
+          <button
+            onClick={() => handleSort('weight')}
+            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              sortField === 'weight'
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+            }`}
+          >
+            重量 {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
+          </button>
+          <button
+            onClick={() => handleSort('price')}
+            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              sortField === 'price'
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+            }`}
+          >
+            価格 {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
+          </button>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="primary" onClick={onShowForm}>
-            + Add Gear
-          </Button>
-          <BulkActionMenu
-            showCheckboxes={showCheckboxes}
-            onToggleCheckboxes={onToggleCheckboxes}
-          />
-        </div>
-      </div>
+      </Card>
 
       {/* 一括操作バー */}
       {showCheckboxes && (
@@ -186,40 +183,28 @@ const GearView: React.FC<GearViewProps> = React.memo(({
       )}
 
       {/* カードグリッド */}
-      {processedItems.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <p className="text-lg mb-2">ギアアイテムがありません</p>
-          <p className="text-sm">「+ Add Gear」ボタンから追加してください</p>
-        </div>
-      ) : (
-        <div
-          className="grid gap-4"
-          style={{
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            '@media (min-width: 640px)': {
-              gridTemplateColumns: 'repeat(2, 1fr)'
-            },
-            '@media (min-width: 1024px)': {
-              gridTemplateColumns: 'repeat(3, 1fr)'
-            },
-            '@media (min-width: 1280px)': {
-              gridTemplateColumns: 'repeat(4, 1fr)'
-            }
-          }}
-        >
-          {processedItems.map(item => (
-            <GearCard
-              key={item.id}
-              item={item}
-              onEdit={onEdit}
-              onDelete={handleDeleteSingle}
-              isSelected={selectedIds.includes(item.id)}
-              onSelect={handleSelect}
-              showCheckbox={showCheckboxes}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-3">
+        {processedItems.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <p className="text-lg mb-2">ギアアイテムがありません</p>
+            <p className="text-sm">「+ Add Gear」ボタンから追加してください</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {processedItems.map(item => (
+              <GearCard
+                key={item.id}
+                item={item}
+                onEdit={onEdit}
+                onDelete={handleDeleteSingle}
+                isSelected={selectedIds.includes(item.id)}
+                onSelect={handleSelect}
+                showCheckbox={showCheckboxes}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 });

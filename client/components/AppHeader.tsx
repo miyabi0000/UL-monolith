@@ -43,28 +43,28 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-4 py-4">
         {/* アイランド型コンテナ */}
         <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6 bg-white dark:bg-gray-800 shadow-sm rounded-full px-3 py-2 sm:px-4 sm:py-2 transition-colors duration-200">
-          {/* ロゴ */}
+        {/* ロゴ */}
           <h1 className="font-normal lowercase text-xs sm:text-sm md:text-base text-gray-900 dark:text-gray-100 tracking-wide whitespace-nowrap">
-            minimal gear manager
-          </h1>
+          minimal gear manager
+        </h1>
 
-          {/* ボタングループ */}
+        {/* ボタングループ */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {onShowCategoryManager && (
-              <button
-                className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
-                onClick={onShowCategoryManager}
-              >
-                categories
-              </button>
-            )}
-
+          {onShowCategoryManager && (
             <button
-              className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
-              onClick={onToggleChat}
+                className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
+              onClick={onShowCategoryManager}
             >
-              ai
+              categories
             </button>
+          )}
+
+          <button
+              className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
+            onClick={onToggleChat}
+          >
+            ai
+          </button>
 
             {/* ダークモード切り替えボタン */}
             <button
@@ -86,30 +86,30 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               )}
             </button>
 
-            {isAuthenticated ? (
-              <>
+          {isAuthenticated ? (
+            <>
                 <span className="hidden sm:inline text-xs lowercase text-gray-400 dark:text-gray-500 pl-1">
-                  {userName}
-                </span>
-                <button
-                  className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 hover:-translate-y-0.5 transition-all duration-150"
-                  onClick={onLogout}
-                >
-                  logout
-                </button>
-              </>
-            ) : (
+                {userName}
+              </span>
               <button
-                className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 hover:-translate-y-0.5 transition-all duration-150"
-                onClick={onShowLogin}
+                  className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 hover:-translate-y-0.5 transition-all duration-150"
+                onClick={onLogout}
               >
-                login
+                logout
               </button>
-            )}
-          </div>
+            </>
+          ) : (
+            <button
+                className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 hover:-translate-y-0.5 transition-all duration-150"
+              onClick={onShowLogin}
+            >
+              login
+            </button>
+          )}
         </div>
       </div>
-    </header>
+    </div>
+  </header>
   );
 };
 

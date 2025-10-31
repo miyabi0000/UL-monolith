@@ -9,6 +9,7 @@ interface ActionMenuProps {
   onEdit: (item: GearItemWithCalculated) => void
   onSave: (item: GearItemWithCalculated) => void
   onDelete: (ids: string[]) => void
+  onDuplicate?: (item: GearItemWithCalculated) => void
 }
 
 const ActionMenu: React.FC<ActionMenuProps> = ({
@@ -18,7 +19,8 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
   onClose,
   onEdit,
   onSave,
-  onDelete
+  onDelete,
+  onDuplicate
 }) => {
   return (
     <div className="relative">
@@ -48,15 +50,17 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
             >
               Edit
             </button>
-            <button
-              onClick={() => {
-                onSave(item)
-                onClose()
-              }}
-              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-            >
-              Save
-            </button>
+            {onDuplicate && (
+              <button
+                onClick={() => {
+                  onDuplicate(item)
+                  onClose()
+                }}
+                className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                Duplicate
+              </button>
+            )}
             <hr className="border-gray-200 dark:border-gray-700 my-1" />
             <button
               onClick={() => {

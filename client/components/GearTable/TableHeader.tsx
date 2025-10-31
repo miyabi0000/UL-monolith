@@ -33,7 +33,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     <thead className="bg-gray-50 dark:bg-gray-900">
       <tr>
         {showCheckboxes && (
-          <th className="px-4 py-3 text-center">
+          <th className="px-3 py-2 text-center">
             <input
               type="checkbox"
               checked={isAllSelected}
@@ -45,44 +45,44 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             />
           </th>
         )}
-        <th className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400">
+        <th className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400">
           Image
         </th>
         <th
-          className="px-4 py-3 text-left font-medium text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
+          className="px-3 py-2 text-left font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
           onClick={() => onSort('name')}
         >
           Name{renderSortIcon('name')}
         </th>
         <th
-          className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
+          className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
           onClick={() => onSort('category')}
         >
           Category{renderSortIcon('category')}
         </th>
-        <th className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400">
+        <th className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400">
           Own/Need
         </th>
         <th
-          className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
+          className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
           onClick={() => onSort('weight')}
         >
           Weight{renderSortIcon('weight')}
         </th>
         <th
-          className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
+          className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
           onClick={() => onSort('priority')}
         >
           Priority{renderSortIcon('priority')}
         </th>
         <th
-          className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
+          className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:opacity-70"
           onClick={() => onSort('price')}
         >
           Price{renderSortIcon('price')}
         </th>
-        <th className="px-4 py-3 text-center font-medium text-sm text-gray-500 dark:text-gray-400">
-          Actions
+        <th className="px-3 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400">
+          Season
         </th>
       </tr>
     </thead>

@@ -7,24 +7,24 @@ import Card from './ui/Card'
 // ==================== 定数 ====================
 const CHART_CONFIG = {
   height: {
-    mobile: 500,  // ラベル分を追加
+    mobile: 500,
     tablet: 600,
-    desktop: 700
+    desktop: 650
   },
   outerRadius: {
-    mobile: { outer: 120, inner: 85 },
-    tablet: { outer: 160, inner: 115 },
-    desktop: { outer: 200, inner: 140 }
+    mobile: { outer: 130, inner: 95 },
+    tablet: { outer: 180, inner: 130 },
+    desktop: { outer: 220, inner: 160 }
   },
   innerRadius: {
-    mobile: { outer: 85, inner: 55 },
-    tablet: { outer: 115, inner: 75 },
-    desktop: { outer: 140, inner: 90 }
+    mobile: { outer: 95, inner: 60 },
+    tablet: { outer: 130, inner: 85 },
+    desktop: { outer: 160, inner: 105 }
   },
   centerMaxWidth: {
-    mobile: 100,
-    tablet: 130,
-    desktop: 160
+    mobile: 110,
+    tablet: 150,
+    desktop: 190
   }
 } as const
 
@@ -228,52 +228,6 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
   )
 }
 
-interface SummaryButtonProps {
-  mode: ChartViewMode
-  currentMode: ChartViewMode
-  label: string
-  icon: string
-  color: string
-  value: string
-  onClick: () => void
-}
-
-const SummaryButton: React.FC<SummaryButtonProps> = ({
-  mode,
-  currentMode,
-  label,
-  icon,
-  color,
-  value,
-  onClick
-}) => {
-  const isSelected = currentMode === mode
-
-  return (
-    <div
-      className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-1.5 rounded-lg hover:scale-105 ${
-        isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''
-      }`}
-      onClick={onClick}
-    >
-      <div className="flex items-center space-x-1 mb-0.5">
-        <span
-          className="text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded shadow-sm"
-          style={{ backgroundColor: color, color: COLORS.white }}
-        >
-          {icon}
-        </span>
-        <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400">
-          {label}
-        </span>
-      </div>
-      <div className="text-xs font-bold" style={{ color }}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
 interface CategoryItemProps {
   category: any
   isSelected: boolean
@@ -437,14 +391,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   }
 
   const handleCenterClick = () => {
-    // カテゴリが選択されている場合は選択解除
-    if (selectedCategory) {
-      onCategorySelect([])
-      setSelectedItem(null)
-    } else {
-      // カテゴリが選択されていない場合は表示モードを切り替え
-      onViewModeChange(viewMode === 'weight' ? 'cost' : 'weight')
-    }
+    // 常にWeight/Cost切り替え（カテゴリ選択状態に関係なく）
+    onViewModeChange(viewMode === 'weight' ? 'cost' : 'weight')
 
     // パルスアニメーション
     setCenterPulse(true)
@@ -529,11 +477,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       fill={isCategorySelected ? darkenedFillColor : entry.color}
                       stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
                       strokeWidth={isCategorySelected ? 2 : 1}
-                      opacity={hasSelection ? 0.4 : 1}
+                      opacity={hasSelection && !isCategorySelected ? 0.4 : 1}
+                      className={hasSelection && !isCategorySelected ? 'hover:opacity-60' : ''}
                       style={{
                         filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
                         transition: 'all 0.2s ease',
-                        outline: 'none'
+                        outline: 'none',
+                        cursor: 'pointer'
                       }}
                     />
                   )
@@ -554,7 +504,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div
               className="text-center cursor-pointer pointer-events-auto flex flex-col items-center justify-center"
-              style={{ 
+              style={{
                 width: innerRadiusConfig.inner * 2,
                 height: innerRadiusConfig.inner * 2,
                 borderRadius: '50%',
@@ -565,56 +515,117 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               }}
               onClick={handleCenterClick}
             >
-              {selectedCategory && selectedData ? (
-                // カテゴリ選択時: カテゴリの情報を表示
-                <>
-                  <div
-                    className="font-bold mb-1 text-gray-900 dark:text-gray-100"
-                    style={{
-                      fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
-                    }}
-                  >
-                    {formatValue(selectedData.value, viewMode)}
-                  </div>
-                  <div
-                    className="uppercase tracking-wide font-bold mb-2"
-                    style={{
-                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem',
-                      color: selectedData.color
-                    }}
-                  >
-                    {selectedCategory}
-                  </div>
-                  <div
-                    className="text-xs text-gray-500 dark:text-gray-400"
-                    style={{
-                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.7rem'
-                    }}
-                  >
-                    {selectedData.percentage}% of total
-                  </div>
-                </>
-              ) : (
-                // 未選択時: 全体の情報を表示
-                <>
-                  <div
-                    className="font-bold mb-1 text-gray-900 dark:text-gray-100"
-                    style={{
-                      fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
-                    }}
-                  >
-                    {formatValue(totalValue, viewMode)}
-                  </div>
-                  <div
-                    className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    style={{
-                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem'
-                    }}
-                  >
-                    {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
-                  </div>
-                </>
-              )}
+              {(() => {
+                // レベル3: ギアアイテム選択時
+                if (selectedItem && selectedData) {
+                  const itemData = outerPieData.find(item => item.id === selectedItem)
+                  if (itemData) {
+                    return (
+                      <>
+                        <div
+                          className="font-bold mb-1 text-gray-900 dark:text-gray-100"
+                          style={{
+                            fontSize: screenSize === 'mobile' ? '1rem' : '1.2rem'
+                          }}
+                        >
+                          {formatValue(itemData.value, viewMode)}
+                        </div>
+                        <div
+                          className="font-semibold mb-0.5 px-2 text-center overflow-hidden"
+                          style={{
+                            fontSize: screenSize === 'mobile' ? '0.65rem' : '0.75rem',
+                            color: itemData.color,
+                            maxWidth: centerMaxWidth - 20,
+                            lineHeight: '1.2',
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'ellipsis'
+                          }}
+                          title={itemData.name}
+                        >
+                          {itemData.name}
+                        </div>
+                        {itemData.brand && (
+                          <div
+                            className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-2 text-center overflow-hidden"
+                            style={{
+                              fontSize: screenSize === 'mobile' ? '0.5rem' : '0.6rem',
+                              maxWidth: centerMaxWidth - 20,
+                              whiteSpace: 'nowrap',
+                              textOverflow: 'ellipsis'
+                            }}
+                            title={itemData.brand}
+                          >
+                            {itemData.brand}
+                          </div>
+                        )}
+                        <div
+                          className="text-xs text-gray-500 dark:text-gray-400"
+                          style={{
+                            fontSize: screenSize === 'mobile' ? '0.55rem' : '0.6rem'
+                          }}
+                        >
+                          {itemData.percentage}% of total
+                        </div>
+                      </>
+                    )
+                  }
+                }
+
+                // レベル2: カテゴリ選択時
+                if (selectedCategory && selectedData) {
+                  return (
+                    <>
+                      <div
+                        className="font-bold mb-1 text-gray-900 dark:text-gray-100"
+                        style={{
+                          fontSize: screenSize === 'mobile' ? '1.1rem' : '1.3rem'
+                        }}
+                      >
+                        {formatValue(selectedData.value, viewMode)}
+                      </div>
+                      <div
+                        className="uppercase tracking-wide font-bold mb-2"
+                        style={{
+                          fontSize: screenSize === 'mobile' ? '0.6rem' : '0.7rem',
+                          color: selectedData.color
+                        }}
+                      >
+                        {selectedCategory}
+                      </div>
+                      <div
+                        className="text-xs text-gray-500 dark:text-gray-400"
+                        style={{
+                          fontSize: screenSize === 'mobile' ? '0.55rem' : '0.65rem'
+                        }}
+                      >
+                        {selectedData.percentage}% of total
+                      </div>
+                    </>
+                  )
+                }
+
+                // レベル1: 未選択時
+                return (
+                  <>
+                    <div
+                      className="font-bold mb-1 text-gray-900 dark:text-gray-100"
+                      style={{
+                        fontSize: screenSize === 'mobile' ? '1.1rem' : '1.3rem'
+                      }}
+                    >
+                      {formatValue(totalValue, viewMode)}
+                    </div>
+                    <div
+                      className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      style={{
+                        fontSize: screenSize === 'mobile' ? '0.6rem' : '0.7rem'
+                      }}
+                    >
+                      {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           </div>
         </div>

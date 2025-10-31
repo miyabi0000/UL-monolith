@@ -25,11 +25,14 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
         width="20"
         height="20"
         viewBox="0 0 20 20"
-        fill="currentColor"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        <circle cx="10" cy="4" r="1.5" />
-        <circle cx="10" cy="10" r="1.5" />
-        <circle cx="10" cy="16" r="1.5" />
+        <path d="M12 3l5 5-9 9H3v-5l9-9z" />
+        <path d="M12 3l2 2" />
       </svg>
     </button>
   );

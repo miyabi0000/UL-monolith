@@ -8,6 +8,7 @@ interface BulkActionBarProps {
   onSelectAll: () => void;
   onClearSelection: () => void;
   onBulkDelete: () => void;
+  onBulkUpdate?: () => void;
 }
 
 const BulkActionBar: React.FC<BulkActionBarProps> = ({
@@ -16,7 +17,8 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
   allSelected,
   onSelectAll,
   onClearSelection,
-  onBulkDelete
+  onBulkDelete,
+  onBulkUpdate
 }) => {
   return (
     <div className="flex items-center justify-between px-4 py-3 rounded-md mb-4 bg-gray-100/25 dark:bg-gray-800/25 border border-gray-200 dark:border-gray-700">
@@ -49,6 +51,14 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
       <div className="flex items-center gap-2">
         {selectedCount > 0 && (
           <>
+            {onBulkUpdate && (
+              <button
+                onClick={onBulkUpdate}
+                className="btn-primary px-3 py-1.5 text-xs font-medium rounded-md"
+              >
+                Bulk Update ({selectedCount})
+              </button>
+            )}
             <button
               onClick={onBulkDelete}
               className="btn-danger px-3 py-1.5 text-xs font-medium rounded-md"
