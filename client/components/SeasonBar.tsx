@@ -8,6 +8,9 @@ interface SeasonBarProps {
 }
 
 const SEASONS = ['spring', 'summer', 'fall', 'winter'] as const
+const SEASON_COUNT = 4
+const MAX_SEASON_INDEX = 3
+
 const SEASON_LABELS: Record<string, string> = {
   spring: 'Spring',
   summer: 'Summer',
@@ -51,6 +54,13 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
 
   const { start: startIndex, end: endIndex } = getIndices()
 
+  // ドラッグ中の一時的な状態を保持
+  const [tempIndices, setTempIndices] = useState<{ start: number; end: number } | null>(null)
+
+  // 表示用のインデックス（ドラッグ中は一時的な値を使用）
+  const displayStart = tempIndices ? tempIndices.start : startIndex
+  const displayEnd = tempIndices ? tempIndices.end : endIndex
+
   // インデックスから季節配列を生成
   const indicesToSeasons = (start: number, end: number): string[] => {
     if (start === -1 || end === -1) return []
@@ -66,7 +76,7 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
     const percentage = Math.max(0, Math.min(1, relativeX / rect.width))
 
     // 4つの季節を均等に配置
-    const rawIndex = percentage * (SEASONS.length - 1)
+    const rawIndex = percentage * MAX_SEASON_INDEX
     return Math.round(rawIndex)
   }
 
@@ -79,9 +89,17 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
     setDraggingHandle(handle)
   }
 
+  // onChangeをrefに保存して依存配列から除外
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
   // ドラッグ中
   useEffect(() => {
     if (!draggingHandle || !isEditing) return
+
+    let latestIndices: { start: number; end: number } | null = null
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
       e.preventDefault()
@@ -93,20 +111,27 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
       let newEnd = endIndex
 
       if (draggingHandle === 'start') {
-        newStart = Math.min(newIndex, endIndex === -1 ? SEASONS.length - 1 : endIndex)
+        newStart = Math.min(newIndex, endIndex === -1 ? MAX_SEASON_INDEX : endIndex)
         if (newEnd === -1) newEnd = newStart
       } else {
         newEnd = Math.max(newIndex, startIndex === -1 ? 0 : startIndex)
         if (newStart === -1) newStart = newEnd
       }
 
-      if (newStart !== startIndex || newEnd !== endIndex) {
-        onChange?.(indicesToSeasons(newStart, newEnd))
-      }
+      // ローカル変数に保存（クロージャで参照）
+      latestIndices = { start: newStart, end: newEnd }
+      // ドラッグ中は一時的な状態を保存するだけ（onChangeは呼ばない）
+      setTempIndices(latestIndices)
     }
 
     const handleUp = () => {
+      // ドラッグ終了時に一度だけonChangeを呼ぶ（ローカル変数から取得）
+      if (latestIndices && onChangeRef.current) {
+        const newSeasons = indicesToSeasons(latestIndices.start, latestIndices.end)
+        onChangeRef.current(newSeasons)
+      }
       setDraggingHandle(null)
+      setTempIndices(null)
     }
 
     document.addEventListener('mousemove', handleMove)
@@ -126,10 +151,10 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
   // 各季節の位置（0-3のインデックスを0%-100%に変換）
   const getPosition = (index: number): number => {
     if (index === -1) return 0
-    return (index / (SEASONS.length - 1)) * 100
+    return (index / MAX_SEASON_INDEX) * 100
   }
 
-  const hasSelection = startIndex !== -1 && endIndex !== -1
+  const hasSelection = displayStart !== -1 && displayEnd !== -1
   const isSmall = size === 'sm'
   const labels = isSmall ? SEASON_LABELS_SHORT : SEASON_LABELS
 
@@ -164,8 +189,8 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
           <div
             className="absolute h-full bg-blue-500 rounded-full transition-all duration-150"
             style={{
-              left: `${getPosition(startIndex)}%`,
-              right: `${100 - getPosition(endIndex)}%`
+              left: `${getPosition(displayStart)}%`,
+              right: `${100 - getPosition(displayEnd)}%`
             }}
           />
         )}
@@ -176,7 +201,7 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
             className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 ${isSmall ? 'w-3 h-3' : 'w-4 h-4'} bg-blue-600 border-2 border-white dark:border-gray-800 rounded-full shadow-md transition-transform ${
               isEditing ? 'cursor-grab hover:scale-125' : 'cursor-default'
             } ${draggingHandle === 'start' ? 'scale-125 cursor-grabbing' : ''}`}
-            style={{ left: `${getPosition(startIndex)}%` }}
+            style={{ left: `${getPosition(displayStart)}%` }}
             onMouseDown={handleMouseDown('start')}
             onTouchStart={handleMouseDown('start')}
           />
@@ -188,7 +213,7 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
             className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 ${isSmall ? 'w-3 h-3' : 'w-4 h-4'} bg-blue-600 border-2 border-white dark:border-gray-800 rounded-full shadow-md transition-transform ${
               isEditing ? 'cursor-grab hover:scale-125' : 'cursor-default'
             } ${draggingHandle === 'end' ? 'scale-125 cursor-grabbing' : ''}`}
-            style={{ left: `${getPosition(endIndex)}%` }}
+            style={{ left: `${getPosition(displayEnd)}%` }}
             onMouseDown={handleMouseDown('end')}
             onTouchStart={handleMouseDown('end')}
           />

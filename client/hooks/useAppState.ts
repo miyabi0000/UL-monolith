@@ -70,13 +70,36 @@ export const useAppState = () => {
   };
 
   const handleUpdateGear = async (id: string, gearData: any) => {
-    await GearApiService.updateGear(id, gearData);
-    await fetchGearItems(); // データを再取得
+    // 楽観的UI更新: API呼び出し前にローカル状態を更新
+    setRawGearItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, ...gearData } : item
+      )
+    );
+
+    try {
+      await GearApiService.updateGear(id, gearData);
+      // 成功時は再取得しない（既にローカル状態を更新済み）
+    } catch (err) {
+      // エラー時のみデータを再取得してロールバック
+      await fetchGearItems();
+      throw err;
+    }
   };
 
   const handleDeleteGear = async (id: string) => {
-    await GearApiService.deleteGear(id);
-    await fetchGearItems(); // データを再取得
+    // 楽観的UI更新: API呼び出し前にローカル状態から削除
+    const previousItems = rawGearItems;
+    setRawGearItems(prevItems => prevItems.filter(item => item.id !== id));
+
+    try {
+      await GearApiService.deleteGear(id);
+      // 成功時は再取得しない（既にローカル状態を更新済み）
+    } catch (err) {
+      // エラー時のみロールバック
+      setRawGearItems(previousItems);
+      throw err;
+    }
   };
 
   // カテゴリAPI操作関数
