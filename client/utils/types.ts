@@ -35,7 +35,7 @@ export interface GearItem {
 
   // 価格・メタ
   priceCents?: number;
-  season?: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[]; // Multiple seasons selection
   priority: number; // 1-5
 
   // LLM
@@ -77,6 +77,9 @@ export interface ChartData {
 }
 
 export type ChartViewMode = 'weight' | 'cost';
+
+// Gear field values type for type-safe updates
+export type GearFieldValue = string | number | null | string[] | boolean;
 
 // API レスポンス
 export interface ApiResponse<T> {

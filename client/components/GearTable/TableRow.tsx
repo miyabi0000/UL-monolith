@@ -1,8 +1,15 @@
 import React from 'react'
 import { GearItemWithCalculated, Category } from '../../utils/types'
-import { getPriorityColor } from '../../utils/designSystem'
-import { formatPrice } from '../../utils/formatters'
-import SeasonBar from '../SeasonBar'
+import {
+  EditableImageField,
+  EditableTextField,
+  EditableCategoryField,
+  EditablePriceField,
+  EditableWeightField,
+  EditableSeasonField,
+  QuantitySelector,
+  PrioritySelector
+} from './EditableFields'
 
 interface TableRowProps {
   item: GearItemWithCalculated
@@ -44,51 +51,24 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Image */}
       <td className="px-2 py-1 text-center" style={{ height: '64px' }}>
-        {showCheckboxes ? (
-          <input
-            type="url"
-            value={item.imageUrl || ''}
-            onChange={(e) => onUpdateItem(item.id, 'imageUrl', e.target.value || null)}
-            placeholder="Image URL"
-            className={`w-20 text-xs px-1 py-1 rounded border ${
-              isFieldChanged('imageUrl')
-                ? 'border-red-500 text-red-600 dark:text-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-        ) : item.imageUrl ? (
-          <div className="flex items-center justify-center h-[56px]">
-            <img
-              src={item.imageUrl}
-              alt={item.name}
-              className="max-w-[80px] max-h-[56px] w-auto h-auto object-contain rounded-md"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-[56px]">
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              -
-            </span>
-          </div>
-        )}
+        <EditableImageField
+          value={item.imageUrl || null}
+          onChange={(value) => onUpdateItem(item.id, 'imageUrl', value)}
+          isEditing={showCheckboxes}
+          isChanged={isFieldChanged('imageUrl')}
+        />
       </td>
 
       {/* Name & Brand */}
       <td className="px-2 py-1">
         <div className="text-left">
           {showCheckboxes ? (
-            <input
-              type="text"
+            <EditableTextField
               value={item.name}
-              onChange={(e) => onUpdateItem(item.id, 'name', e.target.value)}
-              className={`w-full text-sm px-2 py-1 rounded border ${
-                isFieldChanged('name')
-                  ? 'border-red-500 text-red-600 dark:text-red-400'
-                  : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              onChange={(value) => onUpdateItem(item.id, 'name', value)}
+              isEditing={true}
+              isChanged={isFieldChanged('name')}
+              className="text-sm"
             />
           ) : (
             <div className="text-sm font-medium break-words text-gray-900 dark:text-gray-100">
@@ -107,17 +87,16 @@ const TableRow: React.FC<TableRowProps> = ({
             </div>
           )}
           {showCheckboxes ? (
-            <input
-              type="text"
-              value={item.brand || ''}
-              onChange={(e) => onUpdateItem(item.id, 'brand', e.target.value || null)}
-              placeholder="Brand"
-              className={`w-full text-xs px-2 py-1 mt-1 rounded border ${
-                isFieldChanged('brand')
-                  ? 'border-red-500 text-red-600 dark:text-red-400'
-                  : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
+            <div className="mt-1">
+              <EditableTextField
+                value={item.brand || ''}
+                onChange={(value) => onUpdateItem(item.id, 'brand', value || null)}
+                isEditing={true}
+                isChanged={isFieldChanged('brand')}
+                placeholder="Brand"
+                className="text-xs"
+              />
+            </div>
           ) : item.brand ? (
             <div className="text-xs break-words text-gray-500 dark:text-gray-400">
               {item.brand}
@@ -128,139 +107,68 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Category */}
       <td className="px-2 py-1 whitespace-nowrap text-center">
-        {showCheckboxes ? (
-          <select
-            value={item.categoryId || ''}
-            onChange={(e) => onUpdateItem(item.id, 'categoryId', e.target.value)}
-            className={`text-xs px-2 py-1 rounded-md border ${
-              isFieldChanged('categoryId')
-                ? 'border-red-500 text-red-600 dark:text-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          >
-            <option value="">No Category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.path.join(' > ')}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span
-            className="text-xs px-2 py-1 rounded-full font-medium inline-block"
-            style={{
-              backgroundColor: `${item.category?.color || '#9CA3AF'}20`,
-              color: item.category?.color || '#9CA3AF',
-              border: `1px solid ${item.category?.color || '#9CA3AF'}40`
-            }}
-          >
-            {item.category?.name || 'Other'}
-          </span>
-        )}
+        <EditableCategoryField
+          value={item.categoryId}
+          onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
+          isEditing={showCheckboxes}
+          isChanged={isFieldChanged('categoryId')}
+          categories={categories}
+          category={item.category}
+        />
       </td>
 
       {/* Own/Need */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        <div className="flex items-center justify-center space-x-1">
-          <select
-            value={item.ownedQuantity}
-            onChange={(e) => onUpdateItem(item.id, 'ownedQuantity', parseInt(e.target.value))}
-            className="w-8 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
-          >
-            {Array.from({ length: 11 }, (_, i) => (
-              <option key={i} value={i}>{i}</option>
-            ))}
-          </select>
-          <span className="text-gray-400 dark:text-gray-500">/</span>
-          <select
-            value={item.requiredQuantity}
-            onChange={(e) => onUpdateItem(item.id, 'requiredQuantity', parseInt(e.target.value))}
-            className="w-8 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
-          >
-            {Array.from({ length: 10 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
-            ))}
-          </select>
-        </div>
+        <QuantitySelector
+          ownedQuantity={item.ownedQuantity}
+          requiredQuantity={item.requiredQuantity}
+          onOwnedChange={(value) => onUpdateItem(item.id, 'ownedQuantity', value)}
+          onRequiredChange={(value) => onUpdateItem(item.id, 'requiredQuantity', value)}
+        />
       </td>
 
       {/* Weight */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        {showCheckboxes ? (
-          <input
-            type="number"
-            min="0"
-            value={item.weightGrams || ''}
-            onChange={(e) => onUpdateItem(item.id, 'weightGrams', e.target.value ? parseInt(e.target.value) : null)}
-            placeholder="0"
-            className={`w-16 text-xs px-1 py-1 rounded border ${
-              isFieldChanged('weightGrams')
-                ? 'border-red-500 text-red-600 dark:text-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-        ) : (
-          <>
-            {item.weightGrams ? `${item.totalWeight}g` : '-'}
-            {item.weightGrams && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                ({item.weightGrams}g × {item.requiredQuantity})
-              </div>
-            )}
-          </>
-        )}
+        <EditableWeightField
+          weightGrams={item.weightGrams}
+          totalWeight={item.totalWeight}
+          requiredQuantity={item.requiredQuantity}
+          onChange={(value) => onUpdateItem(item.id, 'weightGrams', value)}
+          isEditing={showCheckboxes}
+          isChanged={isFieldChanged('weightGrams')}
+        />
       </td>
 
       {/* Priority */}
       <td className="px-2 py-1 whitespace-nowrap text-center">
-        <div className="flex items-center justify-center space-x-2">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: getPriorityColor(item.priority) }}
-          />
-          <select
-            value={item.priority}
-            onChange={(e) => onUpdateItem(item.id, 'priority', parseInt(e.target.value))}
-            className="text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer"
-          >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-          </select>
-        </div>
+        <PrioritySelector
+          priority={item.priority}
+          onChange={(value) => onUpdateItem(item.id, 'priority', value)}
+        />
       </td>
 
       {/* Price */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        {showCheckboxes ? (
-          <input
-            type="number"
-            min="0"
-            value={item.priceCents || ''}
-            onChange={(e) => onUpdateItem(item.id, 'priceCents', e.target.value ? parseInt(e.target.value) : null)}
-            placeholder="0"
-            className={`w-20 text-xs px-1 py-1 rounded border ${
-              isFieldChanged('priceCents')
-                ? 'border-red-500 text-red-600 dark:text-red-400'
-                : 'border-gray-300 dark:border-gray-600'
-            } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-        ) : (
-          formatPrice(item.priceCents)
-        )}
+        <EditablePriceField
+          value={item.priceCents}
+          onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
+          isEditing={showCheckboxes}
+          isChanged={isFieldChanged('priceCents')}
+        />
       </td>
 
-      {/* Season - 常に読み取り専用 */}
-      <td className="px-2 py-1 text-center">
-        <div className="flex justify-center">
-          <SeasonBar
-            seasons={item.seasons || []}
-            isEditing={false}
-            size="sm"
-          />
-        </div>
+      {/* Season */}
+      <td
+        className="px-2 py-1 text-center"
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => showCheckboxes && e.stopPropagation()}
+      >
+        <EditableSeasonField
+          seasons={item.seasons || []}
+          onChange={(newSeasons) => onUpdateItem(item.id, 'seasons', newSeasons)}
+          isEditing={showCheckboxes}
+          isChanged={isFieldChanged('seasons')}
+        />
       </td>
     </tr>
   )

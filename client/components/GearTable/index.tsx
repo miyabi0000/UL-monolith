@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react'
-import { GearItemWithCalculated, Category } from '../../utils/types'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import { GearItemWithCalculated, Category, GearFieldValue } from '../../utils/types'
 import { SPACING_SCALE } from '../../utils/designSystem'
 import Card from '../ui/Card'
-import BulkActionMenu from '../BulkActionMenu'
+import GearListHeader from '../GearListHeader'
 import BulkActionBar from '../BulkActionBar'
 import TableHeader, { SortField, SortDirection } from './TableHeader'
 import TableRow from './TableRow'
+
+type ViewMode = 'table' | 'card'
 
 interface GearTableProps {
   items: GearItemWithCalculated[]
@@ -14,28 +16,34 @@ interface GearTableProps {
   onEdit: (gear: GearItemWithCalculated) => void
   onDelete: (ids: string[]) => void
   onSave: (gear: GearItemWithCalculated) => void
-  onUpdateItem: (id: string, field: string, value: any) => void
+  onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   showCheckboxes: boolean
   onToggleCheckboxes?: () => void
   onShowForm: () => void
+  onCreate?: (gear: any) => void
+  currentView: ViewMode
+  onViewChange: (view: ViewMode) => void
 }
 
-const GearTable: React.FC<GearTableProps> = React.memo(({ 
-  items, 
-  categories, 
+const GearTable: React.FC<GearTableProps> = React.memo(({
+  items,
+  categories,
   filteredByCategory = [],
-  onEdit, 
-  onDelete, 
-  onSave, 
-  onUpdateItem, 
+  onEdit,
+  onDelete,
+  onSave,
+  onUpdateItem,
   showCheckboxes,
   onToggleCheckboxes,
-  onShowForm
+  onShowForm,
+  onCreate,
+  currentView,
+  onViewChange
 }) => {
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [changedFields, setChangedFields] = useState<Record<string, Set<string>>>({})
 
   // ソート処理
   const processedItems = useMemo(() => {
@@ -128,34 +136,58 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   useEffect(() => {
     if (!showCheckboxes) {
       setSelectedIds([])
+      setChangedFields({})
     }
   }, [showCheckboxes])
 
+  const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
+    // 変更されたフィールドを記録
+    setChangedFields(prev => {
+      const updated = { ...prev }
+      if (!updated[id]) {
+        updated[id] = new Set()
+      } else {
+        // Setを正しくコピー
+        updated[id] = new Set(updated[id])
+      }
+      updated[id].add(field)
+      return updated
+    })
+
+    try {
+      await onUpdateItem(id, field, value)
+
+      // API呼び出し成功後、該当フィールドのハイライトをクリア
+      setChangedFields(prev => {
+        const updated = { ...prev }
+        if (updated[id]) {
+          updated[id] = new Set(updated[id])
+          updated[id].delete(field)
+          // すべてのフィールドがクリアされたらidも削除
+          if (updated[id].size === 0) {
+            delete updated[id]
+          }
+        }
+        return updated
+      })
+    } catch (err) {
+      // エラー時はハイライトを残す
+      console.error('Failed to update field:', err)
+    }
+  }, [onUpdateItem])
+
   return (
-    <Card variant="default">
-      {/* ヘッダー */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="font-semibold text-base text-gray-900 dark:text-gray-100">
-          GEAR LIST
-        </h3>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {processedItems.length} items
-          </span>
-          <button
-            onClick={onShowForm}
-            className="btn-primary font-semibold text-sm px-3 py-2 rounded shadow-sm"
-          >
-            + ADD
-          </button>
-          {onToggleCheckboxes && (
-          <BulkActionMenu
-            showCheckboxes={showCheckboxes}
-            onToggleCheckboxes={onToggleCheckboxes}
-          />
-          )}
-        </div>
-      </div>
+    <>
+      <Card variant="default">
+        {/* 共通ヘッダー */}
+        <GearListHeader
+          itemCount={processedItems.length}
+          currentView={currentView}
+          onViewChange={onViewChange}
+          showCheckboxes={showCheckboxes}
+          onToggleCheckboxes={onToggleCheckboxes}
+          onShowForm={onShowForm}
+        />
 
       {/* 一括操作バー */}
       {showCheckboxes && (
@@ -188,21 +220,19 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
               <TableRow
                 key={item.id}
                 item={item}
+                categories={categories}
                 showCheckboxes={showCheckboxes}
                 isSelected={selectedIds.includes(item.id)}
-                openDropdown={openDropdown}
+                changedFields={changedFields[item.id]}
                 onSelectItem={handleSelectItem}
-                onUpdateItem={onUpdateItem}
-                onEdit={onEdit}
-                onSave={onSave}
-                onDelete={onDelete}
-                onToggleDropdown={setOpenDropdown}
+                onUpdateItem={handleFieldChange}
               />
             ))}
           </tbody>
         </table>
       </div>
     </Card>
+    </>
   )
 }) as React.FC<GearTableProps>
 

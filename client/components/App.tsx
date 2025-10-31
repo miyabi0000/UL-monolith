@@ -1,12 +1,11 @@
-import React, { Suspense, useMemo, useState, useEffect } from 'react';
+import React, { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
-import { ChartViewMode } from '../utils/types';
+import { ChartViewMode, GearFieldValue } from '../utils/types';
 import AppHeader from './AppHeader';
-import ViewSwitcher from './ViewSwitcher';
 import GearTable from './GearTable';
 import GearView from './GearView';
 import GearChart from './GearChart';
@@ -104,16 +103,16 @@ export default function App() {
     setShowForm(true);
   };
 
-  const handleUpdateItem = async (id: string, field: string, value: any) => {
+  const handleUpdateItem = useCallback(async (id: string, field: string, value: GearFieldValue) => {
     try {
       const updates = { [field]: value };
       await handleUpdateGear(id, updates);
-      await refreshGearItems();
+      // handleUpdateGear内で既にfetchGearItemsを呼んでいるので、ここでは不要
     } catch (err) {
       showError('アイテムの更新に失敗しました');
       console.error('Error updating item:', err);
     }
-  };
+  }, [handleUpdateGear, showError]);
 
   const handleBulkDelete = async (selectedIds: string[]) => {
     const loadingId = showLoading(`${selectedIds.length}個のアイテムを削除中...`);
@@ -150,8 +149,8 @@ export default function App() {
       <main
         className="max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]"
         style={{
-          paddingTop: `${SPACING_SCALE.lg}px`,
-          paddingBottom: `${SPACING_SCALE.lg}px`,
+          paddingTop: `${SPACING_SCALE.md}px`,
+          paddingBottom: `${SPACING_SCALE.md}px`,
           paddingRight: showChat ? '400px' : undefined, // Chat offset
         }}
       >
@@ -169,7 +168,7 @@ export default function App() {
             // データ読み込み完了後の実際のコンテンツ
             <>
               {/* チャート */}
-              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
+              <div style={{ marginBottom: `${SPACING_SCALE.sm}px` }}>
                 <GearChart
                   data={chartData}
                   totalWeight={totals.weight}
@@ -178,14 +177,6 @@ export default function App() {
                   selectedCategories={selectedCategories}
                   onCategorySelect={setSelectedCategories}
                   onViewModeChange={setViewMode}
-                />
-              </div>
-
-              {/* ビュー切替 */}
-              <div style={{ marginBottom: `${SPACING_SCALE.md}px` }}>
-                <ViewSwitcher
-                  currentView={gearViewMode}
-                  onViewChange={setGearViewMode}
                 />
               </div>
 
@@ -203,6 +194,9 @@ export default function App() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
+                    onCreate={handleCreateGear}
+                    currentView={gearViewMode}
+                    onViewChange={setGearViewMode}
                   />
                 ) : (
                   <GearView
@@ -214,6 +208,8 @@ export default function App() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
+                    currentView={gearViewMode}
+                    onViewChange={setGearViewMode}
                   />
                 )}
               </div>
