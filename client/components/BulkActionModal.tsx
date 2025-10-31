@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Category } from '../utils/types';
+import SeasonBar from './SeasonBar';
 
 interface BulkActionModalProps {
   isOpen: boolean;
@@ -10,17 +11,18 @@ interface BulkActionModalProps {
   onBulkDelete: () => void;
 }
 
-const BulkActionModal: React.FC<BulkActionModalProps> = ({ 
-  isOpen, 
-  selectedCount, 
+const BulkActionModal: React.FC<BulkActionModalProps> = ({
+  isOpen,
+  selectedCount,
   categories,
-  onClose, 
-  onBulkUpdate, 
-  onBulkDelete 
+  onClose,
+  onBulkUpdate,
+  onBulkDelete
 }) => {
   const [action, setAction] = useState<'update' | 'delete'>('update');
-  const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required'>('category');
+  const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required' | 'seasons' | 'weight' | 'price'>('category');
   const [updateValue, setUpdateValue] = useState<string>('');
+  const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +38,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
 
     if (action === 'update') {
       let data: any = {};
-      
+
       switch (updateField) {
         case 'category':
           data.categoryId = updateValue;
@@ -49,6 +51,15 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           break;
         case 'required':
           data.requiredQuantity = parseInt(updateValue);
+          break;
+        case 'seasons':
+          data.seasons = selectedSeasons;
+          break;
+        case 'weight':
+          data.weightGrams = parseInt(updateValue);
+          break;
+        case 'price':
+          data.priceCents = parseInt(updateValue);
           break;
       }
 
@@ -63,6 +74,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     setAction('update');
     setUpdateField('category');
     setUpdateValue('');
+    setSelectedSeasons([]);
   };
 
   React.useEffect(() => {
@@ -126,6 +138,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   onChange={(e) => {
                     setUpdateField(e.target.value as any);
                     setUpdateValue('');
+                    setSelectedSeasons([]);
                   }}
                   className="input w-full"
                 >
@@ -133,6 +146,9 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   <option value="priority">優先度</option>
                   <option value="owned">所有数量</option>
                   <option value="required">必要数量</option>
+                  <option value="weight">重量 (g)</option>
+                  <option value="price">価格 (¥)</option>
+                  <option value="seasons">Season（季節）</option>
                 </select>
               </div>
 
@@ -168,6 +184,33 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     <option value="4">4 - 低</option>
                     <option value="5">5 - 最低</option>
                   </select>
+                ) : updateField === 'seasons' ? (
+                  <SeasonBar
+                    seasons={selectedSeasons}
+                    isEditing={true}
+                    onChange={setSelectedSeasons}
+                    size="md"
+                  />
+                ) : updateField === 'weight' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    value={updateValue}
+                    onChange={(e) => setUpdateValue(e.target.value)}
+                    className="input w-full"
+                    placeholder="重量（グラム）"
+                    required
+                  />
+                ) : updateField === 'price' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    value={updateValue}
+                    onChange={(e) => setUpdateValue(e.target.value)}
+                    className="input w-full"
+                    placeholder="価格（円）"
+                    required
+                  />
                 ) : (
                   <input
                     type="number"
@@ -217,7 +260,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
             <button
               type="submit"
               className={action === 'delete' ? 'btn-danger' : 'btn-primary'}
-              disabled={action === 'update' && !updateValue}
+              disabled={action === 'update' && !['seasons'].includes(updateField) && !updateValue}
             >
               {action === 'delete' ? '削除実行' : '更新実行'}
             </button>

@@ -1,36 +1,31 @@
 import React from 'react'
-import { GearItemWithCalculated } from '../../utils/types'
+import { GearItemWithCalculated, Category } from '../../utils/types'
 import { getPriorityColor } from '../../utils/designSystem'
 import { formatPrice } from '../../utils/formatters'
-import ActionMenu from './ActionMenu'
+import SeasonBar from '../SeasonBar'
 
 interface TableRowProps {
   item: GearItemWithCalculated
+  categories: Category[]
   showCheckboxes: boolean
   isSelected: boolean
-  openDropdown: string | null
+  changedFields?: Set<string>
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: any) => void
-  onEdit: (item: GearItemWithCalculated) => void
-  onSave: (item: GearItemWithCalculated) => void
-  onDelete: (ids: string[]) => void
-  onToggleDropdown: (id: string | null) => void
 }
 
 const TableRow: React.FC<TableRowProps> = ({
   item,
+  categories,
   showCheckboxes,
   isSelected,
-  openDropdown,
+  changedFields,
   onSelectItem,
-  onUpdateItem,
-  onEdit,
-  onSave,
-  onDelete,
-  onToggleDropdown
+  onUpdateItem
 }) => {
+  const isFieldChanged = (field: string) => changedFields?.has(field) || false
   return (
-    <tr 
+    <tr
       className={`transition-colors hover:opacity-90 ${
         isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
       }`}
@@ -49,7 +44,19 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Image */}
       <td className="px-2 py-1 text-center" style={{ height: '64px' }}>
-        {item.imageUrl ? (
+        {showCheckboxes ? (
+          <input
+            type="url"
+            value={item.imageUrl || ''}
+            onChange={(e) => onUpdateItem(item.id, 'imageUrl', e.target.value || null)}
+            placeholder="Image URL"
+            className={`w-20 text-xs px-1 py-1 rounded border ${
+              isFieldChanged('imageUrl')
+                ? 'border-red-500 text-red-600 dark:text-red-400'
+                : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+        ) : item.imageUrl ? (
           <div className="flex items-center justify-center h-[56px]">
             <img
               src={item.imageUrl}
@@ -72,40 +79,84 @@ const TableRow: React.FC<TableRowProps> = ({
       {/* Name & Brand */}
       <td className="px-2 py-1">
         <div className="text-left">
-          <div className="text-sm font-medium break-words text-gray-900 dark:text-gray-100">
-            {item.productUrl ? (
-              <a
-                href={item.productUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline transition-colors text-gray-700 dark:text-gray-300"
-              >
-                {item.name}
-              </a>
-            ) : (
-              item.name
-            )}
-          </div>
-          {item.brand && (
+          {showCheckboxes ? (
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => onUpdateItem(item.id, 'name', e.target.value)}
+              className={`w-full text-sm px-2 py-1 rounded border ${
+                isFieldChanged('name')
+                  ? 'border-red-500 text-red-600 dark:text-red-400'
+                  : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+          ) : (
+            <div className="text-sm font-medium break-words text-gray-900 dark:text-gray-100">
+              {item.productUrl ? (
+                <a
+                  href={item.productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline transition-colors text-gray-700 dark:text-gray-300"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                item.name
+              )}
+            </div>
+          )}
+          {showCheckboxes ? (
+            <input
+              type="text"
+              value={item.brand || ''}
+              onChange={(e) => onUpdateItem(item.id, 'brand', e.target.value || null)}
+              placeholder="Brand"
+              className={`w-full text-xs px-2 py-1 mt-1 rounded border ${
+                isFieldChanged('brand')
+                  ? 'border-red-500 text-red-600 dark:text-red-400'
+                  : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+          ) : item.brand ? (
             <div className="text-xs break-words text-gray-500 dark:text-gray-400">
               {item.brand}
             </div>
-          )}
+          ) : null}
         </div>
       </td>
 
       {/* Category */}
       <td className="px-2 py-1 whitespace-nowrap text-center">
-        <span
-          className="text-xs px-2 py-1 rounded-full font-medium inline-block"
-          style={{
-            backgroundColor: `${item.category?.color || '#9CA3AF'}20`,
-            color: item.category?.color || '#9CA3AF',
-            border: `1px solid ${item.category?.color || '#9CA3AF'}40`
-          }}
-        >
-          {item.category?.name || 'Other'}
-        </span>
+        {showCheckboxes ? (
+          <select
+            value={item.categoryId || ''}
+            onChange={(e) => onUpdateItem(item.id, 'categoryId', e.target.value)}
+            className={`text-xs px-2 py-1 rounded-md border ${
+              isFieldChanged('categoryId')
+                ? 'border-red-500 text-red-600 dark:text-red-400'
+                : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          >
+            <option value="">No Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.path.join(' > ')}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span
+            className="text-xs px-2 py-1 rounded-full font-medium inline-block"
+            style={{
+              backgroundColor: `${item.category?.color || '#9CA3AF'}20`,
+              color: item.category?.color || '#9CA3AF',
+              border: `1px solid ${item.category?.color || '#9CA3AF'}40`
+            }}
+          >
+            {item.category?.name || 'Other'}
+          </span>
+        )}
       </td>
 
       {/* Own/Need */}
@@ -135,11 +186,28 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Weight */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        {item.weightGrams ? `${item.totalWeight}g` : '-'}
-        {item.weightGrams && (
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            ({item.weightGrams}g × {item.requiredQuantity})
-          </div>
+        {showCheckboxes ? (
+          <input
+            type="number"
+            min="0"
+            value={item.weightGrams || ''}
+            onChange={(e) => onUpdateItem(item.id, 'weightGrams', e.target.value ? parseInt(e.target.value) : null)}
+            placeholder="0"
+            className={`w-16 text-xs px-1 py-1 rounded border ${
+              isFieldChanged('weightGrams')
+                ? 'border-red-500 text-red-600 dark:text-red-400'
+                : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+        ) : (
+          <>
+            {item.weightGrams ? `${item.totalWeight}g` : '-'}
+            {item.weightGrams && (
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                ({item.weightGrams}g × {item.requiredQuantity})
+              </div>
+            )}
+          </>
         )}
       </td>
 
@@ -166,24 +234,36 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Price */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        {formatPrice(item.priceCents)}
+        {showCheckboxes ? (
+          <input
+            type="number"
+            min="0"
+            value={item.priceCents || ''}
+            onChange={(e) => onUpdateItem(item.id, 'priceCents', e.target.value ? parseInt(e.target.value) : null)}
+            placeholder="0"
+            className={`w-20 text-xs px-1 py-1 rounded border ${
+              isFieldChanged('priceCents')
+                ? 'border-red-500 text-red-600 dark:text-red-400'
+                : 'border-gray-300 dark:border-gray-600'
+            } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+        ) : (
+          formatPrice(item.priceCents)
+        )}
       </td>
 
-      {/* Actions */}
-      <td className="px-2 py-1 whitespace-nowrap text-xs font-medium text-center relative">
-        <ActionMenu
-          item={item}
-          isOpen={openDropdown === item.id}
-          onToggle={() => onToggleDropdown(openDropdown === item.id ? null : item.id)}
-          onClose={() => onToggleDropdown(null)}
-          onEdit={onEdit}
-          onSave={onSave}
-          onDelete={onDelete}
-        />
+      {/* Season - 常に読み取り専用 */}
+      <td className="px-2 py-1 text-center">
+        <div className="flex justify-center">
+          <SeasonBar
+            seasons={item.seasons || []}
+            isEditing={false}
+            size="sm"
+          />
+        </div>
       </td>
     </tr>
   )
 }
 
 export default TableRow
-

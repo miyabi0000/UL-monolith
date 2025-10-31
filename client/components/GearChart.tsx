@@ -7,9 +7,9 @@ import Card from './ui/Card'
 // ==================== 定数 ====================
 const CHART_CONFIG = {
   height: {
-    mobile: 350,
-    tablet: 450,
-    desktop: 500
+    mobile: 500,  // ラベル分を追加
+    tablet: 600,
+    desktop: 700
   },
   outerRadius: {
     mobile: { outer: 120, inner: 85 },
@@ -33,26 +33,59 @@ const SELECTED_COLOR = '#404040' // Gray color for selection (gray.700)
 const SELECTED_STROKE_WIDTH = 3
 
 // ==================== ヘルパー関数 ====================
-// 色を濃くする関数
-const darkenColor = (color: string, amount: number = 0.3): string => {
+/**
+ * HEX形式の色を暗くする
+ * @param color HEX形式の色（例: #FF6B6B）
+ * @param amount 暗くする割合（0-1）
+ * @returns 暗くされたHEX色
+ */
+const darkenColor = (color: string, amount: number = 0.2): string => {
   const hex = color.replace('#', '')
   const r = parseInt(hex.substr(0, 2), 16)
   const g = parseInt(hex.substr(2, 2), 16)
   const b = parseInt(hex.substr(4, 2), 16)
-  
+
   const newR = Math.max(0, Math.floor(r * (1 - amount)))
   const newG = Math.max(0, Math.floor(g * (1 - amount)))
   const newB = Math.max(0, Math.floor(b * (1 - amount)))
-  
+
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
 }
 
+/**
+ * HSL形式の色を暗くする
+ * @param hslColor HSL形式の色（例: hsl(120, 50%, 60%)）
+ * @param amount 暗くする割合（0-1）
+ * @returns 暗くされたHSL色
+ */
+const darkenHslColor = (hslColor: string, amount: number = 0.2): string => {
+  const hslMatch = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/)
+  if (!hslMatch) return hslColor
+
+  const h = parseInt(hslMatch[1])
+  const s = parseInt(hslMatch[2])
+  const l = parseInt(hslMatch[3])
+
+  const newL = Math.max(0, Math.floor(l * (1 - amount)))
+
+  return `hsl(${h}, ${s}%, ${newL}%)`
+}
+
+/**
+ * カテゴリの基本色からアイテム用のグラデーション色を生成
+ * @param baseColor カテゴリの基本色（HEX形式）
+ * @param index アイテムのインデックス
+ * @param total アイテムの総数
+ * @returns HSL形式の色
+ */
 const generateItemColor = (baseColor: string, index: number, total: number): string => {
+  // HEXからRGBに変換
   const hex = baseColor.replace('#', '')
   const r = parseInt(hex.substr(0, 2), 16)
   const g = parseInt(hex.substr(2, 2), 16)
   const b = parseInt(hex.substr(4, 2), 16)
 
+  // RGBからHSLに変換
   const rNorm = r / 255
   const gNorm = g / 255
   const bNorm = b / 255
@@ -73,6 +106,7 @@ const generateItemColor = (baseColor: string, index: number, total: number): str
   const l = (max + min) / 2
   const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1))
 
+  // アイテムごとにグラデーションを適用
   const progress = index / total
   const newSaturation = Math.max(0.3, Math.min(0.9, s * (1 - progress * 0.7)))
   const newLightness = Math.max(0.4, Math.min(0.7, l + progress * 0.2))
@@ -90,6 +124,7 @@ const formatValue = (value: number, mode: ChartViewMode): string => {
 const getItemValue = (item: any, mode: ChartViewMode): number => {
   return mode === 'cost' ? item.totalPrice : item.totalWeight
 }
+
 
 // ==================== サブコンポーネント ====================
 // カスタムツールチップ
@@ -216,23 +251,23 @@ const SummaryButton: React.FC<SummaryButtonProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-2 rounded-lg hover:scale-105 ${
+      className={`flex flex-col items-center justify-center cursor-pointer transition-all duration-200 p-1.5 rounded-lg hover:scale-105 ${
         isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''
       }`}
       onClick={onClick}
     >
       <div className="flex items-center space-x-1 mb-0.5">
         <span
-          className="text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm"
+          className="text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded shadow-sm"
           style={{ backgroundColor: color, color: COLORS.white }}
         >
           {icon}
         </span>
-        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+        <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400">
           {label}
         </span>
       </div>
-      <div className="text-sm font-bold" style={{ color }}>
+      <div className="text-xs font-bold" style={{ color }}>
         {value}
       </div>
     </div>
@@ -252,28 +287,28 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
   viewMode,
   onClick
 }) => {
-  const darkenedColor = darkenColor(category.color, 0.3)
+  const darkenedColor = darkenColor(category.color, 0.2)
   return (
     <div
-      className="flex items-center justify-between p-2 rounded cursor-pointer transition-all duration-200"
+      className="flex items-center justify-between p-1.5 rounded cursor-pointer transition-all duration-200"
       style={{
         backgroundColor: isSelected ? `${category.color}15` : 'transparent',
-        borderLeft: isSelected ? `4px solid ${darkenedColor}` : '4px solid transparent',
-        paddingLeft: isSelected ? '6px' : '8px'
+        borderLeft: isSelected ? `3px solid ${darkenedColor}` : '3px solid transparent',
+        paddingLeft: isSelected ? '5px' : '6px'
       }}
       onClick={onClick}
     >
-      <div className="flex items-center space-x-2">
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+      <div className="flex items-center space-x-1.5">
+        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
+        <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
           {category.name}
         </span>
       </div>
       <div className="text-right">
-        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
           {formatValue(category.value, viewMode)}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-[10px] text-gray-500 dark:text-gray-400">
           {category.percentage}%
         </div>
       </div>
@@ -357,6 +392,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     }))
   }, [displayData, totalValue, viewMode])
 
+
   const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : null
   const selectedData = useMemo(
     () => (selectedCategory ? sortedData.find(d => d.name === selectedCategory) : null),
@@ -364,11 +400,26 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   )
 
   const outerPieData = useMemo(() => {
-    return (selectedData?.sortedItems || []).map(item => ({
-      name: item.name,
-      value: getItemValue(item, viewMode),
-      id: item.id
-    }))
+    return (selectedData?.sortedItems || []).map((item, index) => {
+      const itemValue = getItemValue(item, viewMode)
+      const fillColor = generateItemColor(
+        selectedData?.color || DEFAULT_COLOR,
+        index,
+        selectedData?.sortedItems?.length || 1
+      )
+      return {
+        name: item.name,
+        value: itemValue,
+        id: item.id,
+        color: fillColor,
+        brand: item.brand,
+        owned: item.owned,
+        needed: item.needed,
+        priority: item.priority,
+        percentage: item.totalPercentage,
+        systemPercentage: item.systemPercentage
+      }
+    })
   }, [selectedData, viewMode])
 
   // ==================== イベントハンドラー ====================
@@ -386,9 +437,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   }
 
   const handleCenterClick = () => {
-    onCategorySelect([])
-    setSelectedItem(null)
-    
+    // カテゴリが選択されている場合は選択解除
+    if (selectedCategory) {
+      onCategorySelect([])
+      setSelectedItem(null)
+    } else {
+      // カテゴリが選択されていない場合は表示モードを切り替え
+      onViewModeChange(viewMode === 'weight' ? 'cost' : 'weight')
+    }
+
     // パルスアニメーション
     setCenterPulse(true)
     setTimeout(() => setCenterPulse(false), 600)
@@ -396,13 +453,22 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== レンダリング ====================
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[4fr_1fr] gap-4">
-      {/* グラフエリア */}
-      <Card className="p-3">
+    <div className="space-y-2">
+      {/* ヘッダー */}
+      <div className="flex items-center">
+        <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
+          GEAR ANALYSIS
+        </h3>
+      </div>
+
+      {/* メインコンテンツ */}
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-3">
+        {/* グラフエリア */}
+        <Card className="p-2">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              {/* 外側円 - アイテム */}
+              {/* 外側円 - アイテム（先に描画） */}
               {selectedCategory && (
                 <Pie
                   data={outerPieData}
@@ -421,8 +487,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       selectedData?.sortedItems?.length || 1
                     )
                     const isSelected = selectedItem === item.id
-                    const darkenedFillColor = darkenColor(fillColor, 0.35)
-                    const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.3)
+                    const darkenedFillColor = darkenHslColor(fillColor, 0.2)
+                    const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.2)
                     return (
                       <Cell
                         key={`item-${index}`}
@@ -441,9 +507,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 </Pie>
               )}
 
-              {/* 内側円 - カテゴリ */}
+              {/* 内側円 - カテゴリ（最後に描画して最上面に） */}
               <Pie
-                data={sortedData}
+                data={sortedData.map(d => ({ ...d, color: d.color }))}
                 dataKey="value"
                 cx="50%"
                 cy="50%"
@@ -454,14 +520,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               >
                 {sortedData.map((entry, index) => {
                   const isCategorySelected = selectedCategory === entry.name
-                  const darkenedFillColor = darkenColor(entry.color, 0.35)
-                  const darkenedStrokeColor = darkenColor(entry.color, 0.3)
+                  const hasSelection = selectedCategory !== null
+                  const darkenedFillColor = darkenColor(entry.color, 0.15)
+                  const darkenedStrokeColor = darkenColor(entry.color, 0.2)
                   return (
                     <Cell
-                      key={`category-${index}`}
+                      key={`category-${entry.name}`}
                       fill={isCategorySelected ? darkenedFillColor : entry.color}
                       stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
                       strokeWidth={isCategorySelected ? 2 : 1}
+                      opacity={hasSelection ? 0.4 : 1}
                       style={{
                         filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
                         transition: 'all 0.2s ease',
@@ -497,81 +565,80 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               }}
               onClick={handleCenterClick}
             >
-              <div 
-                className="font-bold mb-1 text-gray-900 dark:text-gray-100" 
-                style={{ 
-                  fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
-                }}
-              >
-                {formatValue(totalValue, viewMode)}
-              </div>
-              <div 
-                className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400" 
-                style={{ 
-                  fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem'
-                }}
-              >
-                TOTAL
-              </div>
-              {selectedCategory && (
-                <div className="mt-2">
-                  <span
-                    className="text-xs font-medium px-2 py-1 rounded truncate block bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              {selectedCategory && selectedData ? (
+                // カテゴリ選択時: カテゴリの情報を表示
+                <>
+                  <div
+                    className="font-bold mb-1 text-gray-900 dark:text-gray-100"
+                    style={{
+                      fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
+                    }}
+                  >
+                    {formatValue(selectedData.value, viewMode)}
+                  </div>
+                  <div
+                    className="uppercase tracking-wide font-bold mb-2"
+                    style={{
+                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem',
+                      color: selectedData.color
+                    }}
                   >
                     {selectedCategory}
-                  </span>
-                </div>
+                  </div>
+                  <div
+                    className="text-xs text-gray-500 dark:text-gray-400"
+                    style={{
+                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.7rem'
+                    }}
+                  >
+                    {selectedData.percentage}% of total
+                  </div>
+                </>
+              ) : (
+                // 未選択時: 全体の情報を表示
+                <>
+                  <div
+                    className="font-bold mb-1 text-gray-900 dark:text-gray-100"
+                    style={{
+                      fontSize: screenSize === 'mobile' ? '1.25rem' : '1.5rem'
+                    }}
+                  >
+                    {formatValue(totalValue, viewMode)}
+                  </div>
+                  <div
+                    className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                    style={{
+                      fontSize: screenSize === 'mobile' ? '0.625rem' : '0.75rem'
+                    }}
+                  >
+                    {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
       </Card>
 
-      {/* サイドパネル */}
-      <Card className="p-3">
-        {/* Pack Summary */}
-        <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <h4 className="text-xs font-semibold mb-2 text-gray-900 dark:text-gray-100">
-            PACK SUMMARY
+        {/* サイドパネル */}
+        <Card className="p-2">
+          {/* Distribution */}
+          <h4 className="font-semibold mb-2 text-[10px] text-gray-900 dark:text-gray-100 tracking-wide">
+            DISTRIBUTION
           </h4>
-          <div className="grid grid-cols-1 gap-2">
-            <SummaryButton
-              mode="weight"
-              currentMode={viewMode}
-              label="Total Weight"
-              icon="W"
-              color={SELECTED_COLOR}
-              value={`${totalWeight}g`}
-              onClick={() => onViewModeChange('weight')}
-            />
-            <SummaryButton
-              mode="cost"
-              currentMode={viewMode}
-              label="Total Cost"
-              icon="¥"
-              color={SELECTED_COLOR}
-              value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
-              onClick={() => onViewModeChange('cost')}
-            />
+          <div className="space-y-1.5">
+            {sortedData.map((category) => (
+              <CategoryItem
+                key={category.name}
+                category={category}
+                isSelected={selectedCategory === category.name}
+                viewMode={viewMode}
+                onClick={() => handleCategoryClick(category.name)}
+              />
+            ))}
           </div>
-        </div>
-
-        {/* Distribution */}
-        <h4 className="font-semibold mb-3 text-xs text-gray-900 dark:text-gray-100">
-          DISTRIBUTION
-        </h4>
-        <div className="space-y-2">
-          {sortedData.map((category) => (
-            <CategoryItem
-              key={category.name}
-              category={category}
-              isSelected={selectedCategory === category.name}
-              viewMode={viewMode}
-              onClick={() => handleCategoryClick(category.name)}
-            />
-          ))}
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 })
