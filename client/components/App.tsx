@@ -6,6 +6,7 @@ import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import { ChartViewMode, GearFieldValue } from '../utils/types';
 import AppHeader from './AppHeader';
+import AppSummary from './AppSummary';
 import GearTable from './GearTable';
 import GearView from './GearView';
 import GearChart from './GearChart';
@@ -167,6 +168,11 @@ export default function App() {
           ) : (
             // データ読み込み完了後の実際のコンテンツ
             <>
+              {/* サマリーカード */}
+              <div style={{ marginBottom: `${SPACING_SCALE.sm}px` }}>
+                <AppSummary totals={totals} />
+              </div>
+
               {/* チャート */}
               <div style={{ marginBottom: `${SPACING_SCALE.sm}px` }}>
                 <GearChart

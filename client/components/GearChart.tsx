@@ -136,14 +136,14 @@ interface CustomTooltipProps {
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode }) => {
   if (!active || !payload?.[0]) return null
-  
+
   const data = payload[0].payload
   const isItem = 'brand' in data || 'id' in data
-  
+
   return (
-    <div 
+    <div
       className="rounded-lg shadow-xl p-3 max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-      style={{ 
+      style={{
         backdropFilter: 'blur(8px)'
       }}
     >
@@ -159,12 +159,12 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
             </p>
           )}
         </div>
-        <div 
+        <div
           className="w-3 h-3 rounded-full ml-2 flex-shrink-0"
           style={{ backgroundColor: data.color || SELECTED_COLOR }}
         />
       </div>
-      
+
       {/* メイン情報 */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
             {formatValue(data.value, viewMode)}
           </span>
         </div>
-        
+
         {/* パーセンテージ */}
         {data.percentage !== undefined && (
           <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
             </span>
           </div>
         )}
-        
+
         {/* システムパーセンテージ（アイテムの場合） */}
         {isItem && data.systemPercentage !== undefined && (
           <div className="flex items-center justify-between">
@@ -200,7 +200,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
           </div>
         )}
       </div>
-      
+
       {/* 追加情報（アイテムの場合） */}
       {isItem && (data.owned !== undefined || data.priority !== undefined) && (
         <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
@@ -224,48 +224,6 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-interface CategoryItemProps {
-  category: any
-  isSelected: boolean
-  viewMode: ChartViewMode
-  onClick: () => void
-}
-
-const CategoryItem: React.FC<CategoryItemProps> = ({
-  category,
-  isSelected,
-  viewMode,
-  onClick
-}) => {
-  const darkenedColor = darkenColor(category.color, 0.2)
-  return (
-    <div
-      className="flex items-center justify-between p-1.5 rounded cursor-pointer transition-all duration-200"
-      style={{
-        backgroundColor: isSelected ? `${category.color}15` : 'transparent',
-        borderLeft: isSelected ? `3px solid ${darkenedColor}` : '3px solid transparent',
-        paddingLeft: isSelected ? '5px' : '6px'
-      }}
-      onClick={onClick}
-    >
-      <div className="flex items-center space-x-1.5">
-        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-        <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
-          {category.name}
-        </span>
-      </div>
-      <div className="text-right">
-        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-          {formatValue(category.value, viewMode)}
-        </div>
-        <div className="text-[10px] text-gray-500 dark:text-gray-400">
-          {category.percentage}%
-        </div>
-      </div>
     </div>
   )
 }
@@ -410,7 +368,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </div>
 
       {/* メインコンテンツ */}
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-3">
+      <div>
         {/* グラフエリア */}
         <Card className="p-2">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
@@ -630,25 +588,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           </div>
         </div>
       </Card>
-
-        {/* サイドパネル */}
-        <Card className="p-2">
-          {/* Distribution */}
-          <h4 className="font-semibold mb-2 text-[10px] text-gray-900 dark:text-gray-100 tracking-wide">
-            DISTRIBUTION
-          </h4>
-          <div className="space-y-1.5">
-            {sortedData.map((category) => (
-              <CategoryItem
-                key={category.name}
-                category={category}
-                isSelected={selectedCategory === category.name}
-                viewMode={viewMode}
-                onClick={() => handleCategoryClick(category.name)}
-              />
-            ))}
-          </div>
-        </Card>
       </div>
     </div>
   )
