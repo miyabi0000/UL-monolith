@@ -17,6 +17,7 @@ interface TableRowProps {
   showCheckboxes: boolean
   isSelected: boolean
   changedFields?: Set<string>
+  quantityDisplayMode: 'owned' | 'required' | 'shortage'
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: any) => void
 }
@@ -27,10 +28,20 @@ const TableRow: React.FC<TableRowProps> = ({
   showCheckboxes,
   isSelected,
   changedFields,
+  quantityDisplayMode,
   onSelectItem,
   onUpdateItem
 }) => {
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
+
+  const getQuantityValue = () => {
+    switch (quantityDisplayMode) {
+      case 'owned': return item.ownedQuantity
+      case 'required': return item.requiredQuantity
+      case 'shortage': return item.shortage
+      default: return item.ownedQuantity
+    }
+  }
   return (
     <tr
       className={`transition-colors hover:opacity-90 ${
@@ -119,12 +130,16 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Own/Need */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        <QuantitySelector
-          ownedQuantity={item.ownedQuantity}
-          requiredQuantity={item.requiredQuantity}
-          onOwnedChange={(value) => onUpdateItem(item.id, 'ownedQuantity', value)}
-          onRequiredChange={(value) => onUpdateItem(item.id, 'requiredQuantity', value)}
-        />
+        {showCheckboxes ? (
+          <QuantitySelector
+            ownedQuantity={item.ownedQuantity}
+            requiredQuantity={item.requiredQuantity}
+            onOwnedChange={(value) => onUpdateItem(item.id, 'ownedQuantity', value)}
+            onRequiredChange={(value) => onUpdateItem(item.id, 'requiredQuantity', value)}
+          />
+        ) : (
+          <span>{getQuantityValue()}</span>
+        )}
       </td>
 
       {/* Weight */}

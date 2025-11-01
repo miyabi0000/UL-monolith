@@ -44,23 +44,32 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [changedFields, setChangedFields] = useState<Record<string, Set<string>>>({})
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<'owned' | 'required' | 'shortage'>('owned')
 
   // ソート処理
   const processedItems = useMemo(() => {
     // 安全性チェック: itemsが配列でない場合は空配列を使用
     const safeItems = Array.isArray(items) ? items : [];
-    
+
     // カテゴリフィルタリング
     const filteredItems = filteredByCategory.length > 0
-      ? safeItems.filter(item => 
+      ? safeItems.filter(item =>
           item.category && filteredByCategory.includes(item.category.name)
         )
       : safeItems;
 
+    // 季節の順序定義
+    const seasonOrder: Record<string, number> = {
+      'spring': 0,
+      'summer': 1,
+      'fall': 2,
+      'winter': 3
+    }
+
     // ソート
     return [...filteredItems].sort((a, b) => {
       let aVal: any, bVal: any
-      
+
       switch (sortField) {
         case 'name':
           aVal = a.name.toLowerCase()
@@ -78,6 +87,14 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
           aVal = a.shortage
           bVal = b.shortage
           break
+        case 'owned':
+          aVal = a.ownedQuantity
+          bVal = b.ownedQuantity
+          break
+        case 'required':
+          aVal = a.requiredQuantity
+          bVal = b.requiredQuantity
+          break
         case 'priority':
           aVal = a.priority
           bVal = b.priority
@@ -85,6 +102,11 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
         case 'price':
           aVal = a.priceCents || 0
           bVal = b.priceCents || 0
+          break
+        case 'season':
+          // 複数季節の場合は最初の季節で比較
+          aVal = a.seasons && a.seasons.length > 0 ? seasonOrder[a.seasons[0]] ?? 999 : 999
+          bVal = b.seasons && b.seasons.length > 0 ? seasonOrder[b.seasons[0]] ?? 999 : 999
           break
         default:
           return 0
@@ -103,6 +125,14 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
       setSortField(field)
       setSortDirection('asc')
     }
+  }
+
+  const handleQuantityDisplayModeChange = () => {
+    setQuantityDisplayMode(prev => {
+      if (prev === 'owned') return 'required'
+      if (prev === 'required') return 'shortage'
+      return 'owned'
+    })
   }
 
   // Selection handlers
@@ -212,8 +242,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             isPartiallySelected={isPartiallySelected}
             sortField={sortField}
             sortDirection={sortDirection}
+            quantityDisplayMode={quantityDisplayMode}
             onSelectAll={handleSelectAll}
             onSort={handleSort}
+            onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
           />
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
             {processedItems.map((item) => (
@@ -224,6 +256,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
                 showCheckboxes={showCheckboxes}
                 isSelected={selectedIds.includes(item.id)}
                 changedFields={changedFields[item.id]}
+                quantityDisplayMode={quantityDisplayMode}
                 onSelectItem={handleSelectItem}
                 onUpdateItem={handleFieldChange}
               />
