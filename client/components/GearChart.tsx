@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData, ChartViewMode } from '../utils/types'
 import { COLORS, getPriorityColor } from '../utils/designSystem'
 import Card from './ui/Card'
+import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 
 // ==================== 定数 ====================
 const CHART_CONFIG = {
@@ -237,6 +238,9 @@ interface GearChartProps {
   selectedCategories: string[]
   onCategorySelect: (categories: string[]) => void
   onViewModeChange: (mode: ChartViewMode) => void
+  items: any[] // すべてのギアアイテム
+  onEdit: (item: any) => void
+  onDelete: (id: string) => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -246,9 +250,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   viewMode,
   selectedCategories,
   onCategorySelect,
-  onViewModeChange
+  onViewModeChange,
+  items,
+  onEdit,
+  onDelete
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  const [selectedCategoryForPanel, setSelectedCategoryForPanel] = useState<string | null>(null)
+  const [panelMode, setPanelMode] = useState<PanelMode>('overview')
   const [centerPulse, setCenterPulse] = useState(false)
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
@@ -304,11 +313,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     }))
   }, [displayData, totalValue, viewMode])
 
-
-  const selectedCategory = selectedCategories.length === 1 ? selectedCategories[0] : null
+  // チャートで選択中のカテゴリ
+  const selectedCategoryFromChart = selectedCategories.length === 1 ? selectedCategories[0] : null
   const selectedData = useMemo(
-    () => (selectedCategory ? sortedData.find(d => d.name === selectedCategory) : null),
-    [sortedData, selectedCategory]
+    () => (selectedCategoryFromChart ? sortedData.find(d => d.name === selectedCategoryFromChart) : null),
+    [sortedData, selectedCategoryFromChart]
   )
 
   const outerPieData = useMemo(() => {
@@ -338,15 +347,42 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const handleCategoryClick = (categoryName: string) => {
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
+      setSelectedCategoryForPanel(null)
+      setPanelMode('overview')
     } else {
       onCategorySelect([categoryName])
+      setSelectedCategoryForPanel(categoryName)
+      setPanelMode('category')
     }
     setSelectedItem(null)
   }
 
   const handleItemClick = (itemId: string) => {
-    setSelectedItem(selectedItem === itemId ? null : itemId)
+    if (selectedItem === itemId) {
+      setSelectedItem(null)
+      // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
+      if (selectedCategoryForPanel) {
+        setPanelMode('category')
+      } else {
+        setPanelMode('overview')
+      }
+    } else {
+      setSelectedItem(itemId)
+      setPanelMode('item')
+    }
   }
+
+  // CategorySummaryViewからのアイテムクリック
+  const handlePanelItemClick = (itemId: string) => {
+    setSelectedItem(itemId)
+    setPanelMode('item')
+  }
+
+  // 選択されたアイテムオブジェクトを取得
+  const selectedItemData = useMemo(() => {
+    if (!selectedItem || !items) return null
+    return items.find(item => item.id === selectedItem) || null
+  }, [selectedItem, items])
 
   const handleCenterClick = () => {
     // 常にWeight/Cost切り替え（カテゴリ選択状態に関係なく）
@@ -368,14 +404,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </div>
 
       {/* メインコンテンツ */}
-      <div>
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-3">
         {/* グラフエリア */}
         <Card className="p-2">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* 外側円 - アイテム（先に描画） */}
-              {selectedCategory && (
+              {selectedCategoryFromChart && (
                 <Pie
                   data={outerPieData}
                   dataKey="value"
@@ -425,8 +461,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 className="cursor-pointer"
               >
                 {sortedData.map((entry, index) => {
-                  const isCategorySelected = selectedCategory === entry.name
-                  const hasSelection = selectedCategory !== null
+                  const isCategorySelected = selectedCategoryFromChart === entry.name
+                  const hasSelection = selectedCategoryFromChart !== null
                   const darkenedFillColor = darkenColor(entry.color, 0.15)
                   const darkenedStrokeColor = darkenColor(entry.color, 0.2)
                   return (
@@ -530,7 +566,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 }
 
                 // レベル2: カテゴリ選択時
-                if (selectedCategory && selectedData) {
+                if (selectedCategoryFromChart && selectedData) {
                   return (
                     <>
                       <div
@@ -548,7 +584,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                           color: selectedData.color
                         }}
                       >
-                        {selectedCategory}
+                        {selectedCategoryFromChart}
                       </div>
                       <div
                         className="text-xs text-gray-500 dark:text-gray-400"
@@ -588,6 +624,20 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           </div>
         </div>
       </Card>
+
+        {/* Gear Detail Panel（右側サイドパネル） */}
+        <Card className="p-2">
+          <GearDetailPanel
+            mode={panelMode}
+            selectedItem={selectedItemData}
+            selectedCategory={selectedCategoryForPanel}
+            items={items}
+            viewMode={viewMode}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onItemClick={handlePanelItemClick}
+          />
+        </Card>
       </div>
     </div>
   )
