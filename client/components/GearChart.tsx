@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { ChartData, ChartViewMode } from '../utils/types'
-import { COLORS, getPriorityColor } from '../utils/designSystem'
+import { COLORS } from '../utils/designSystem'
 import Card from './ui/Card'
 import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 
@@ -126,108 +126,6 @@ const getItemValue = (item: any, mode: ChartViewMode): number => {
   return mode === 'cost' ? item.totalPrice : item.totalWeight
 }
 
-
-// ==================== サブコンポーネント ====================
-// カスタムツールチップ
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: any[]
-  viewMode: ChartViewMode
-}
-
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, viewMode }) => {
-  if (!active || !payload?.[0]) return null
-
-  const data = payload[0].payload
-  const isItem = 'brand' in data || 'id' in data
-
-  return (
-    <div
-      className="rounded-lg shadow-xl p-3 max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-      style={{
-        backdropFilter: 'blur(8px)'
-      }}
-    >
-      {/* ヘッダー */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <p className="font-bold text-sm mb-0.5 text-gray-900 dark:text-gray-100">
-            {data.name}
-          </p>
-          {isItem && data.brand && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {data.brand}
-            </p>
-          )}
-        </div>
-        <div
-          className="w-3 h-3 rounded-full ml-2 flex-shrink-0"
-          style={{ backgroundColor: data.color || SELECTED_COLOR }}
-        />
-      </div>
-
-      {/* メイン情報 */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {viewMode === 'cost' ? '価格' : '重量'}:
-          </span>
-          <span className="font-bold text-sm" style={{ color: data.color || SELECTED_COLOR }}>
-            {formatValue(data.value, viewMode)}
-          </span>
-        </div>
-
-        {/* パーセンテージ */}
-        {data.percentage !== undefined && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              全体比:
-            </span>
-            <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
-              {data.percentage}%
-            </span>
-          </div>
-        )}
-
-        {/* システムパーセンテージ（アイテムの場合） */}
-        {isItem && data.systemPercentage !== undefined && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              カテゴリ内:
-            </span>
-            <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
-              {data.systemPercentage}%
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* 追加情報（アイテムの場合） */}
-      {isItem && (data.owned !== undefined || data.priority !== undefined) && (
-        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {data.owned !== undefined && data.needed !== undefined && (
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">所有/必要: </span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">
-                  {data.owned}/{data.needed}
-                </span>
-              </div>
-            )}
-            {data.priority !== undefined && (
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">優先度: </span>
-                <span className="font-medium" style={{ color: getPriorityColor(data.priority) }}>
-                  {data.priority}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ==================== メインコンポーネント ====================
 interface GearChartProps {
@@ -393,11 +291,78 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setTimeout(() => setCenterPulse(false), 600)
   }, [viewMode, onViewModeChange])
 
+  // パンくずリスト用の選択中アイテム名を取得
+  const selectedItemName = useMemo(() => {
+    if (!selectedItem || !items) return null
+    const item = items.find(i => i.id === selectedItem)
+    return item?.name || null
+  }, [selectedItem, items])
+
+  // パンくずリストナビゲーションのハンドラ
+  const handleBreadcrumbClick = useCallback((level: 'all' | 'category') => {
+    if (level === 'all') {
+      onCategorySelect([])
+      setSelectedCategoryForPanel(null)
+      setSelectedItem(null)
+      setPanelMode('overview')
+    } else if (level === 'category') {
+      setSelectedItem(null)
+      setPanelMode('category')
+    }
+  }, [onCategorySelect])
+
   // ==================== レンダリング ====================
   return (
     <div className="space-y-2">
       {/* ヘッダー */}
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
+        {/* パンくずリストナビゲーション */}
+        <div className="flex items-center gap-1 text-xs">
+          <button
+            onClick={() => handleBreadcrumbClick('all')}
+            className={`transition-colors ${
+              !selectedCategoryFromChart && !selectedItem
+                ? 'font-bold text-gray-900 dark:text-gray-100'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            ALL
+          </button>
+
+          {selectedCategoryFromChart && (
+            <>
+              <span className="text-gray-400 dark:text-gray-500">›</span>
+              <button
+                onClick={() => handleBreadcrumbClick('category')}
+                className={`transition-all ${
+                  selectedItem
+                    ? 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    : 'font-bold text-gray-900 dark:text-gray-100'
+                }`}
+                style={{
+                  animation: selectedItem ? 'none' : 'slideIn 0.3s ease-out'
+                }}
+              >
+                {selectedCategoryFromChart}
+              </button>
+            </>
+          )}
+
+          {selectedItem && selectedItemName && (
+            <>
+              <span className="text-gray-400 dark:text-gray-500">›</span>
+              <span
+                className="font-bold text-gray-900 dark:text-gray-100"
+                style={{
+                  animation: 'slideIn 0.3s ease-out'
+                }}
+              >
+                {selectedItemName}
+              </span>
+            </>
+          )}
+        </div>
+
         <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
           GEAR ANALYSIS
         </h3>
@@ -483,14 +448,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   )
                 })}
               </Pie>
-
-              <Tooltip 
-                content={<CustomTooltip viewMode={viewMode} />}
-                cursor={false}
-                wrapperStyle={{ outline: 'none', zIndex: 1000 }}
-                allowEscapeViewBox={{ x: true, y: true }}
-                offset={30}
-              />
             </PieChart>
           </ResponsiveContainer>
 
