@@ -28,30 +28,31 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   onItemClick,
 }) => {
   // モードに応じて適切なビューを表示
-  if (mode === 'item') {
-    return (
-      <GearCardCompact
-        item={selectedItem}
-        viewMode={viewMode}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
-    );
-  }
+  return (
+    <div className="w-full h-full min-w-0 overflow-hidden">
+      {mode === 'item' && (
+        <GearCardCompact
+          item={selectedItem}
+          viewMode={viewMode}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
 
-  if (mode === 'category' && selectedCategory) {
-    return (
-      <CategorySummaryView
-        categoryName={selectedCategory}
-        items={items}
-        viewMode={viewMode}
-        onItemClick={onItemClick}
-      />
-    );
-  }
+      {mode === 'category' && selectedCategory && (
+        <CategorySummaryView
+          categoryName={selectedCategory}
+          items={items}
+          viewMode={viewMode}
+          onItemClick={onItemClick}
+        />
+      )}
 
-  // デフォルト: overview
-  return <OverviewView items={items} viewMode={viewMode} />;
+      {mode === 'overview' && (
+        <OverviewView items={items} viewMode={viewMode} />
+      )}
+    </div>
+  );
 };
 
 export default React.memo(GearDetailPanel);

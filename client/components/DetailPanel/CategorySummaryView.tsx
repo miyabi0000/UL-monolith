@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
 import { COLORS, getCategoryBadgeStyle } from '../../utils/designSystem';
 
@@ -9,6 +9,7 @@ interface CategorySummaryViewProps {
   onItemClick: (itemId: string) => void;
 }
 
+// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
 const formatPrice = (priceCents?: number) => {
   if (!priceCents) return '-';
   const price = priceCents / 100;
@@ -55,7 +56,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   const categoryColor = categoryItems[0]?.category?.color || '#6B7280';
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full">
+    <div className="p-4 space-y-4 overflow-y-auto h-full w-full min-w-0">
       {/* カテゴリ名 */}
       <div>
         <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -107,58 +108,57 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
       {/* アイテムリスト */}
       <div>
         <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">ITEMS</div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           {categoryItems.length === 0 ? (
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
               No items in this category
             </p>
           ) : (
             categoryItems.map(item => {
-              const imageUrl = item.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image';
+              const imageUrl = item.imageUrl || 'https://via.placeholder.com/40x40?text=No+Image';
               return (
                 <button
                   key={item.id}
                   onClick={() => onItemClick(item.id)}
-                  className="w-full p-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left flex gap-2"
+                  className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700
+                    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left flex items-center gap-2"
                 >
                   {/* 画像 */}
-                  <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+                  <div className="relative w-8 h-8 flex-shrink-0 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
                     <img
                       src={imageUrl}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
-                    {item.shortage > 0 && (
-                      <div className="absolute top-0 right-0">
-                        <span
-                          className="text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full"
-                          style={{
-                            backgroundColor: COLORS.warning,
-                            color: COLORS.white,
-                          }}
-                        >
-                          !
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   {/* 情報 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
+                  <div className="flex-1 min-w-0 text-[10px]">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                       {item.name}
                     </div>
-                    <div className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400">
+                    <div className="flex gap-2 text-gray-500 dark:text-gray-500 mt-0.5">
+                      <span>{item.ownedQuantity}/{item.requiredQuantity}</span>
                       <span>{item.totalWeight}g</span>
-                      <span>{formatPrice(item.totalPrice)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500 mt-0.5">
-                      <span>Own/Need: {item.ownedQuantity}/{item.requiredQuantity}</span>
                       <span>P{item.priority}</span>
                     </div>
                   </div>
+
+                  {/* 不足インジケーター */}
+                  {item.shortage > 0 && (
+                    <div className="flex-shrink-0">
+                      <span
+                        className="text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full"
+                        style={{
+                          backgroundColor: COLORS.warning,
+                          color: COLORS.white,
+                        }}
+                      >
+                        !
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })

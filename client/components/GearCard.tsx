@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, RADIUS_SCALE, getCategoryBadgeStyle } from '../utils/designSystem';
 
@@ -11,6 +11,7 @@ interface GearCardProps {
   showCheckbox?: boolean;
 }
 
+// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
 const formatPrice = (priceCents?: number) => {
   if (!priceCents) return '-';
   const price = priceCents / 100;
@@ -34,27 +35,28 @@ const GearCard: React.FC<GearCardProps> = ({
   const hasShortage = item.shortage > 0;
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image';
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  // イベントハンドラをuseCallbackでmemo化
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
     // アクションボタンがクリックされた場合は除外
     if ((e.target as HTMLElement).closest('.action-button')) {
       return;
     }
     onEdit(item);
-  };
+  }, [onEdit, item]);
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(`「${item.name}」を削除しますか？`)) {
       onDelete(item.id);
     }
-  };
+  }, [onDelete, item.id, item.name]);
 
-  const handleOpenUrl = (e: React.MouseEvent) => {
+  const handleOpenUrl = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.productUrl) {
       window.open(item.productUrl, '_blank', 'noopener,noreferrer');
     }
-  };
+  }, [item.productUrl]);
 
   return (
     <div

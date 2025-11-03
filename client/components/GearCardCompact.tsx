@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
 import SeasonBar from './SeasonBar';
@@ -10,6 +10,7 @@ interface GearCardCompactProps {
   onDelete?: (id: string) => void;
 }
 
+// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
 const formatPrice = (priceCents?: number) => {
   if (!priceCents) return '-';
   const price = priceCents / 100;
@@ -32,25 +33,26 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/150x150?text=No+Image';
   const hasShortage = item.shortage > 0;
 
-  const handleDelete = (e: React.MouseEvent) => {
+  // イベントハンドラをuseCallbackでmemo化
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete && window.confirm(`「${item.name}」を削除しますか？`)) {
+    if (onDelete && item && window.confirm(`「${item.name}」を削除しますか？`)) {
       onDelete(item.id);
     }
-  };
+  }, [onDelete, item]);
 
-  const handleOpenUrl = (e: React.MouseEvent) => {
+  const handleOpenUrl = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (item.productUrl) {
+    if (item?.productUrl) {
       window.open(item.productUrl, '_blank', 'noopener,noreferrer');
     }
-  };
+  }, [item?.productUrl]);
 
   return (
-    <div className="p-3 space-y-3 overflow-y-auto h-full">
+    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* 画像 */}
       <div
-        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
+        className="relative w-full max-w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => onEdit?.(item)}
@@ -151,12 +153,12 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       </div>
 
       {/* 名前とブランド */}
-      <div>
-        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words">
+      <div className="min-w-0">
+        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words overflow-wrap-anywhere">
           {item.name}
         </h4>
         {item.brand && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
+          <p className="text-xs text-gray-500 dark:text-gray-400 break-words overflow-wrap-anywhere">
             {item.brand}
           </p>
         )}

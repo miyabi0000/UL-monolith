@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { ChartData, ChartViewMode } from '../utils/types'
 import { COLORS, getPriorityColor } from '../utils/designSystem'
@@ -343,8 +343,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     })
   }, [selectedData, viewMode])
 
-  // ==================== イベントハンドラー ====================
-  const handleCategoryClick = (categoryName: string) => {
+  // ==================== イベントハンドラー（memo化） ====================
+  const handleCategoryClick = useCallback((categoryName: string) => {
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
       setSelectedCategoryForPanel(null)
@@ -355,9 +355,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       setPanelMode('category')
     }
     setSelectedItem(null)
-  }
+  }, [selectedCategories, onCategorySelect])
 
-  const handleItemClick = (itemId: string) => {
+  const handleItemClick = useCallback((itemId: string) => {
     if (selectedItem === itemId) {
       setSelectedItem(null)
       // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
@@ -370,13 +370,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       setSelectedItem(itemId)
       setPanelMode('item')
     }
-  }
+  }, [selectedItem, selectedCategoryForPanel])
 
   // CategorySummaryViewからのアイテムクリック
-  const handlePanelItemClick = (itemId: string) => {
+  const handlePanelItemClick = useCallback((itemId: string) => {
     setSelectedItem(itemId)
     setPanelMode('item')
-  }
+  }, [])
 
   // 選択されたアイテムオブジェクトを取得
   const selectedItemData = useMemo(() => {
@@ -384,14 +384,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     return items.find(item => item.id === selectedItem) || null
   }, [selectedItem, items])
 
-  const handleCenterClick = () => {
+  const handleCenterClick = useCallback(() => {
     // 常にWeight/Cost切り替え（カテゴリ選択状態に関係なく）
     onViewModeChange(viewMode === 'weight' ? 'cost' : 'weight')
 
     // パルスアニメーション
     setCenterPulse(true)
     setTimeout(() => setCenterPulse(false), 600)
-  }
+  }, [viewMode, onViewModeChange])
 
   // ==================== レンダリング ====================
   return (
@@ -404,9 +404,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </div>
 
       {/* メインコンテンツ */}
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
         {/* グラフエリア */}
-        <Card className="p-2">
+        <Card className="p-2 min-w-0">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -626,7 +626,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </Card>
 
         {/* Gear Detail Panel（右側サイドパネル） */}
-        <Card className="p-2">
+        <Card className="p-2 w-[320px] min-w-[320px] max-w-[320px]">
           <GearDetailPanel
             mode={panelMode}
             selectedItem={selectedItemData}

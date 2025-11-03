@@ -7,6 +7,7 @@ interface OverviewViewProps {
   viewMode: 'weight' | 'cost';
 }
 
+// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
 const formatPrice = (priceCents?: number) => {
   if (!priceCents) return '-';
   const price = priceCents / 100;
@@ -58,7 +59,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode }) => {
   }, [items]);
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full">
+    <div className="p-4 space-y-4 overflow-y-auto h-full w-full min-w-0">
       {/* 全体サマリー */}
       <div>
         <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">OVERVIEW</div>
