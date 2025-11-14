@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { ChartData, ChartViewMode } from '../utils/types'
+import { ChartData, ChartViewMode, QuantityDisplayMode } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import Card from './ui/Card'
 import GearDetailPanel, { PanelMode } from './GearDetailPanel'
@@ -133,9 +133,11 @@ interface GearChartProps {
   totalWeight: number
   totalCost: number
   viewMode: ChartViewMode
+  quantityDisplayMode: QuantityDisplayMode
   selectedCategories: string[]
   onCategorySelect: (categories: string[]) => void
   onViewModeChange: (mode: ChartViewMode) => void
+  onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void
   items: any[] // すべてのギアアイテム
   onEdit: (item: any) => void
   onDelete: (id: string) => void
@@ -146,9 +148,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   totalWeight,
   totalCost,
   viewMode,
+  quantityDisplayMode,
   selectedCategories,
   onCategorySelect,
   onViewModeChange,
+  onQuantityDisplayModeChange,
   items,
   onEdit,
   onDelete
@@ -316,8 +320,22 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     <div className="space-y-2">
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
-        {/* パンくずリストナビゲーション */}
-        <div className="flex items-center gap-1 text-xs">
+        <div className="flex items-center gap-3">
+          {/* 数量表示モード切り替えボタン */}
+          <button
+            onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
+            className="px-2 py-1 text-[10px] font-semibold rounded transition-all uppercase tracking-wide"
+            style={{
+              backgroundColor: quantityDisplayMode === 'owned' ? COLORS.gray[700] : COLORS.gray[600],
+              color: COLORS.white,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+          >
+            {quantityDisplayMode === 'owned' ? 'Own' : 'Need'}
+          </button>
+
+          {/* パンくずリストナビゲーション */}
+          <div className="flex items-center gap-1 text-xs">
           <button
             onClick={() => handleBreadcrumbClick('all')}
             className={`transition-colors ${
@@ -361,6 +379,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               </span>
             </>
           )}
+          </div>
         </div>
 
         <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">

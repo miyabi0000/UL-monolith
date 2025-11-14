@@ -4,7 +4,7 @@ import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
-import { ChartViewMode, GearFieldValue } from '../utils/types';
+import { ChartViewMode, QuantityDisplayMode, GearFieldValue } from '../utils/types';
 import AppHeader from './AppHeader';
 import GearTable from './GearTable';
 import GearView from './GearView';
@@ -57,13 +57,16 @@ export default function App() {
 
   // ビューモード状態（Weight/Cost切り替え）
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
-  
+
+  // 数量表示モード（owned/required切り替え）
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned');
+
   // ギア表示モード（table/card切り替え）
   const [gearViewMode, setGearViewMode] = useState<'table' | 'card'>(() => {
     const saved = localStorage.getItem('gearViewMode');
     return (saved === 'table' || saved === 'card') ? saved : 'table';
   });
-  
+
   // 選択中のカテゴリ（グラフフィルタ用）
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
@@ -73,8 +76,8 @@ export default function App() {
   }, [gearViewMode]);
 
   // チャートデータと合計を useMemo でメモ化（無駄な再計算を防止）
-  const chartData = useMemo(() => calculateChartData(gearItems), [gearItems]);
-  const totals = useMemo(() => calculateTotals(gearItems), [gearItems]);
+  const chartData = useMemo(() => calculateChartData(gearItems, quantityDisplayMode), [gearItems, quantityDisplayMode]);
+  const totals = useMemo(() => calculateTotals(gearItems, quantityDisplayMode), [gearItems, quantityDisplayMode]);
 
   const handleSaveGear = async (gearItem: any) => {
     const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
@@ -174,9 +177,11 @@ export default function App() {
                   totalWeight={totals.weight}
                   totalCost={totals.price}
                   viewMode={viewMode}
+                  quantityDisplayMode={quantityDisplayMode}
                   selectedCategories={selectedCategories}
                   onCategorySelect={setSelectedCategories}
                   onViewModeChange={setViewMode}
+                  onQuantityDisplayModeChange={setQuantityDisplayMode}
                   items={gearItems}
                   onEdit={handleEditGear}
                   onDelete={handleDeleteGear}

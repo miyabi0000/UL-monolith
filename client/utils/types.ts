@@ -77,6 +77,7 @@ export interface ChartData {
 }
 
 export type ChartViewMode = 'weight' | 'cost';
+export type QuantityDisplayMode = 'owned' | 'required';
 
 // Gear field values type for type-safe updates
 export type GearFieldValue = string | number | null | string[] | boolean;
