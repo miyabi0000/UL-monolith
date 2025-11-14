@@ -82,6 +82,39 @@ export type QuantityDisplayMode = 'owned' | 'required';
 // Gear field values type for type-safe updates
 export type GearFieldValue = string | number | null | string[] | boolean;
 
+// ==================== ギア比較機能 ====================
+
+// 比較ソートキー
+export type ComparisonSortKey = 'price' | 'weight' | 'efficiency'; // efficiency = g/¥
+
+// 比較プリセット
+export type ComparisonPreset = 'lightest' | 'cheapest' | 'best-value' | 'balanced';
+
+// 比較状態
+export interface ComparisonState {
+  itemIds: string[]; // 最大4件
+  categoryId: string | null; // 同一カテゴリ制約
+  baselineItemId: string | null; // ベースライン（現行装備）
+  sortKey: ComparisonSortKey;
+  preset: ComparisonPreset | null;
+}
+
+// 比較メトリクス
+export interface ComparisonMetrics {
+  efficiency: number; // g/¥ (weight / price)
+  categorySpecific?: {
+    volumeToWeight?: number; // Backpack: 容量/重量
+    warmthToWeight?: number; // Sleep System: 暖かさ/重量
+  };
+}
+
+// 意思決定サマリー
+export interface DecisionSummary {
+  deltaWeight: number; // 総重量の差分（g）
+  deltaCost: number; // 総コストの差分（円）
+  adoptedItemId: string | null;
+}
+
 // API レスポンス
 export interface ApiResponse<T> {
   data: T;
