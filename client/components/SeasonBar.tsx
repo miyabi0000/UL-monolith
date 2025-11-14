@@ -158,6 +158,16 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
   const isSmall = size === 'sm'
   const labels = isSmall ? SEASON_LABELS_SHORT : SEASON_LABELS
 
+  // クリックでの初期選択ハンドラ
+  const handleBarClick = (e: React.MouseEvent) => {
+    if (!isEditing || hasSelection) return
+
+    const clickedIndex = getIndexFromPosition(e.clientX)
+    if (onChange) {
+      onChange(indicesToSeasons(clickedIndex, clickedIndex))
+    }
+  }
+
   // 選択なしの場合（編集モードでない場合のみ"-"を表示）
   if (!hasSelection && !isEditing) {
     return (
@@ -169,6 +179,13 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
 
   return (
     <div className="season-bar w-full" onClick={(e) => e.stopPropagation()}>
+      {/* 編集モードかつ未選択の場合のヒント */}
+      {isEditing && !hasSelection && (
+        <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 italic text-center">
+          Click to select season
+        </div>
+      )}
+
       {/* 季節ラベル */}
       <div className={`flex justify-between mb-1 ${isSmall ? 'text-[9px]' : 'text-[10px]'} text-gray-500 dark:text-gray-400 select-none`}>
         {SEASONS.map(season => (
@@ -181,8 +198,11 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
       {/* スライダー */}
       <div
         ref={sliderRef}
-        className={`relative ${isSmall ? 'h-1.5' : 'h-2'} bg-gray-200 dark:bg-gray-700 rounded-full`}
+        className={`relative ${isSmall ? 'h-1.5' : 'h-2'} bg-gray-200 dark:bg-gray-700 rounded-full ${
+          isEditing && !hasSelection ? 'cursor-pointer' : ''
+        }`}
         style={{ userSelect: 'none' }}
+        onClick={handleBarClick}
       >
         {/* 選択範囲バー */}
         {hasSelection && (

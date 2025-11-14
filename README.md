@@ -6,26 +6,27 @@ Ultralight gear management system with LLM integration - Production ready API la
 ## 🚀 クイックスタート
 
 ### 前提条件
-- Node.js 18.0.0 以上
-- npm 9.0.0 以上
+- **Docker Desktop**: データベース管理に使用
+- **Node.js**: 18.0.0以上
+- **npm**: 9.0.0以上
 
-### インストール
+### セットアップ
 ```bash
-# 依存関係をインストール
+# 1. Docker Desktopを起動
+open -a Docker
+
+# 2. PostgreSQLコンテナを起動
+docker compose up -d postgres
+
+# 3. 依存関係をインストール
 npm install
+
+# 4. サーバーを起動（別々のターミナルで）
+npm run server:dev  # バックエンド: http://localhost:8000
+npm run dev         # フロントエンド: http://localhost:3001
 ```
 
-### 開発サーバー起動
-```bash
-# クライアント開発サーバーを起動
-npm run dev
-
-# サーバー開発環境を起動
-npm run server:dev
-```
-
-クライアント: http://localhost:3000/  
-サーバー: http://localhost:8000/
+**詳細**: [起動ガイド](./docs/startup-guide.md)を参照してください
 
 ### ビルド
 ```bash
@@ -90,6 +91,8 @@ ULモノリス/
 
 ### バックエンド
 - **Node.js** + Express + TypeScript
+- **PostgreSQL 15** - リレーショナルデータベース
+- **Docker** - コンテナ化環境
 - **OpenAI GPT-4** - LLM統合
 - **Axios** - HTTP通信
 - **tsx** - TypeScript実行環境
@@ -191,8 +194,10 @@ npx tsc --noEmit
 - [x] LLM 自動抽出機能実装
 - [x] OpenAI GPT-4統合
 
-### Phase 2: 機能拡張
-- [ ] PostgreSQL データベース接続
+### Phase 2: 機能拡張 ✅
+- [x] PostgreSQL データベース接続
+- [x] 一体型ダッシュボード
+- [x] ギアチャート分析機能
 - [ ] ユーザー認証システム
 - [ ] ギアリスト共有機能
 - [ ] 印刷・エクスポート機能
