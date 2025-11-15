@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { COLORS, getMessageStyle, type MessageVariant } from '../utils/designSystem';
 
 export interface NotificationMessage {
   id: string;
@@ -44,40 +43,45 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
     }, 300);
   };
 
+  const getMessageClasses = (type: string) => {
+    switch (type) {
+      case 'error':
+        return 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 border-red-500';
+      case 'success':
+        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-green-500';
+      case 'info':
+        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-blue-500';
+      case 'loading':
+        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-500';
+      default:
+        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-500';
+    }
+  };
+
   if (messages.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
       {messages.map((message) => {
-        const messageStyle = getMessageStyle(message.type as MessageVariant);
         const isAnimatingOut = animatingOut.has(message.id);
 
         return (
           <div
             key={message.id}
-            className={`p-4 rounded-lg border-l-4 backdrop-blur-sm transition-all duration-300 transform ${
+            className={`p-4 rounded-lg border-l-4 backdrop-blur-sm shadow-md transition-all duration-300 transform ${
               isAnimatingOut
                 ? 'translate-x-full opacity-0'
                 : 'translate-x-0 opacity-100'
             } ${
               message.type === 'loading' ? 'animate-pulse' : ''
-            }`}
-            style={messageStyle}
+            } ${getMessageClasses(message.type)}`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 flex-1">
                 {message.type === 'loading' && (
-                  <div
-                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-                    style={{ borderColor: COLORS.primary.dark }}
-                  />
+                  <div className="w-4 h-4 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin" />
                 )}
-                <p
-                  className="text-sm font-medium flex-1"
-                  style={{
-                    color: message.type === 'error' ? COLORS.accent : COLORS.primary.dark
-                  }}
-                >
+                <p className="text-sm font-medium flex-1">
                   {message.message}
                 </p>
               </div>
@@ -86,9 +90,6 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
                 <button
                   onClick={() => handleRemove(message.id)}
                   className="ml-3 text-current opacity-60 hover:opacity-100 transition-opacity"
-                  style={{
-                    color: message.type === 'error' ? COLORS.accent : COLORS.primary.dark
-                  }}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

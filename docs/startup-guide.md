@@ -1,257 +1,181 @@
-# 🚀 UL Gear List Manager - 起動ガイド
+# 🚀 UL Gear Manager - 起動ガイド
 
-## 📋 前提条件チェック
+## 📋 前提条件
 
 ### 必要なソフトウェア
-```bash
-# Node.js バージョン確認
-node --version  # 18.0.0以上が必要
+- **Docker Desktop**: データベース管理に使用
+- **Node.js**: 18.0.0以上
+- **npm**: 9.0.0以上
 
-# npm バージョン確認
-npm --version   # 9.0.0以上が必要
+バージョン確認:
+```bash
+node --version
+npm --version
+docker --version
 ```
 
-### 推奨環境
-- **OS**: macOS 12+, Windows 10+, Ubuntu 20.04+
-- **メモリ**: 4GB以上
-- **ディスク**: 1GB以上の空き容量
+## 🚀 起動手順
 
-## 🔧 セットアップ手順
+### 1. Dockerでデータベースを起動
 
-### 1. プロジェクトクローン
 ```bash
-# プロジェクトディレクトリに移動
-cd ULモノリス
+# Docker Desktopを起動（GUIから起動）
+open -a Docker
 
-# 現在のディレクトリ確認
-pwd
+# PostgreSQLコンテナを起動
+docker compose up -d postgres
+
+# 起動確認
+docker compose ps
 ```
 
-### 2. 依存関係インストール
-```bash
-# 既存のnode_modulesを削除（クリーンインストール）
-rm -rf node_modules package-lock.json
+**初回起動時**: データベースが自動的に初期化され、テーブルとデフォルトカテゴリが作成されます。
 
-# 依存関係をインストール
+### 2. 依存関係のインストール
+
+```bash
 npm install
 ```
 
-### 3. 開発サーバー起動
+### 3. アプリケーションの起動
+
 ```bash
-# 開発サーバーを起動
-npm run dev
+# バックエンドサーバー（別ターミナル）
+npm run server:dev  # http://localhost:8000
+
+# フロントエンドクライアント
+npm run dev  # http://localhost:3001
 ```
 
 ### 4. ブラウザでアクセス
-- **URL**: http://localhost:5173/
-- **推奨ブラウザ**: Chrome, Firefox, Safari, Edge
 
-## 🎯 動作確認
+- **フロントエンド**: http://localhost:3001
+- **バックエンドAPI**: http://localhost:8000/api/health
 
-### 正常起動の確認
-```bash
-# サーバーが起動しているか確認
-curl -s http://localhost:5173/ | head -5
+## 📊 データベース管理
 
-# 期待される出力
-# <!doctype html>
-# <html>
-#   <head>
-#     <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+### 接続情報
+```
+Host: localhost
+Port: 5433
+Database: gear_manager
+User: postgres
+Password: password
 ```
 
-### アプリケーション機能確認
-1. **ダッシュボード表示**: サマリーカードが表示される
-2. **ギアテーブル**: サンプルデータが表示される
-3. **円グラフ**: 重量分析チャートが表示される
-4. **ギア追加**: "+ Add Gear"ボタンが機能する
+### psqlで接続
+```bash
+docker compose exec postgres psql -U postgres -d gear_manager
+```
+
+### よく使うコマンド
+```bash
+# コンテナ起動
+docker compose up -d postgres
+
+# コンテナ停止
+docker compose down
+
+# ログ確認
+docker compose logs -f postgres
+
+# データベースリセット（全データ削除）
+docker compose down -v
+docker compose up -d postgres
+```
 
 ## 🐛 トラブルシューティング
 
-### よくある問題と解決方法
+### データベース接続エラー
 
-#### 1. ポート5173が使用中
+**症状**: `ECONNREFUSED ::1:5433` エラー
+
+**解決方法**:
 ```bash
-# 既存のViteプロセスを停止
-pkill -f "vite"
+# 1. Dockerが起動しているか確認
+docker compose ps
 
-# または別ポートで起動
-npm run dev -- --port 3000
+# 2. PostgreSQLコンテナを起動
+docker compose up -d postgres
+
+# 3. バックエンドサーバーを再起動
+# サーバーのターミナルでCtrl+Cして再実行
+npm run server:dev
 ```
 
-#### 2. 依存関係エラー
+### ポート競合エラー
+
+**症状**: ポート5433が既に使用中
+
+**解決方法**:
 ```bash
-# 完全クリーンインストール
-rm -rf node_modules package-lock.json
-npm cache clean --force
-npm install
+# 使用中のプロセスを確認
+lsof -ti:5433
+
+# Homebrewのpostgresqlを停止
+brew services stop postgresql
 ```
 
-#### 3. TypeScriptエラー
+### コンテナが起動しない
+
 ```bash
-# 型チェック実行
-npx tsc --noEmit
+# ログを確認
+docker compose logs postgres
 
-# 型定義の再生成
-npm run build
-```
-
-#### 4. TailwindCSSが適用されない
-```bash
-# PostCSS設定確認
-cat postcss.config.js
-
-# TailwindCSS設定確認
-cat tailwind.config.js
-```
-
-#### 5. モジュール解決エラー
-```bash
-# Vite設定確認
-cat vite.config.ts
-
-# ファイル存在確認
-ls -la src/components/
-```
-
-## 🔄 再起動手順
-
-### 開発サーバーの再起動
-```bash
-# 1. 既存プロセスを停止
-pkill -f "vite"
-
-# 2. 開発サーバーを再起動
-npm run dev
-```
-
-### 完全リセット
-```bash
-# 1. すべてのプロセスを停止
-pkill -f "node"
-pkill -f "vite"
-
-# 2. 依存関係を再インストール
-rm -rf node_modules package-lock.json
-npm install
-
-# 3. 開発サーバーを起動
-npm run dev
-```
-
-## 📱 デバイス別アクセス
-
-### ローカルネットワーク内の他のデバイスからアクセス
-```bash
-# ホストを指定して起動
-npm run dev -- --host 0.0.0.0
-```
-
-### アクセスURL
-- **ローカル**: http://localhost:5173/
-- **ネットワーク**: http://[IPアドレス]:5173/
-
-## 🛠️ 開発者向け情報
-
-### ファイル監視
-```bash
-# ファイル変更の監視状況確認
-# Viteが自動的にファイル変更を検知してホットリロード
-
-# 手動リロード
-# ブラウザで F5 または Cmd+R (Mac) / Ctrl+R (Windows)
-```
-
-### ログ確認
-```bash
-# 開発サーバーのログを確認
-# ターミナルにリアルタイムでログが表示される
-
-# エラーログの例
-# [vite] Internal server error: Failed to resolve import...
-```
-
-### パフォーマンス確認
-```bash
-# ビルド時間確認
-time npm run build
-
-# バンドルサイズ確認
-npm run build
-ls -la dist/
-```
-
-## 📊 動作環境
-
-### テスト済み環境
-- **macOS**: 14.0 (M1/M2)
-- **Windows**: 11 (x64)
-- **Ubuntu**: 22.04 LTS
-- **Node.js**: 18.17.0, 20.5.0
-- **npm**: 9.6.7, 10.2.0
-
-### ブラウザ対応
-- **Chrome**: 100+
-- **Firefox**: 100+
-- **Safari**: 15+
-- **Edge**: 100+
-
-## 🔒 セキュリティ注意事項
-
-### 開発環境
-- 開発サーバーは本番環境では使用しない
-- ファイアウォールでポート5173を制限することを推奨
-- 機密情報は環境変数で管理
-
-### 本番デプロイ
-```bash
-# 本番用ビルド
-npm run build
-
-# 静的ファイルの配信
-npm run preview
-```
-
-## 📞 サポート
-
-### 問題が解決しない場合
-1. **ログ確認**: ターミナルのエラーメッセージを確認
-2. **環境確認**: Node.js、npmのバージョンを確認
-3. **依存関係確認**: package.jsonの内容を確認
-4. **ファイル確認**: 必要なファイルが存在するか確認
-
-### 緊急時の対処法
-```bash
 # 完全リセット
-rm -rf node_modules package-lock.json
-npm cache clean --force
-npm install
+docker compose down -v
+docker compose up -d postgres
+```
+
+## 🔄 日常の開発フロー
+
+### 1. 開発開始時
+```bash
+# Docker起動（必要な場合）
+docker compose up -d postgres
+
+# サーバー起動（別々のターミナル）
+npm run server:dev
 npm run dev
 ```
+
+### 2. 開発終了時
+```bash
+# サーバーを停止（Ctrl+C）
+
+# Dockerコンテナ停止（オプション - 次回も使う場合は停止不要）
+docker compose down
+```
+
+## 📝 環境変数
+
+`.env`ファイル（プロジェクトルート）:
+```bash
+# データベース設定
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=gear_manager
+DB_USER=postgres
+DB_PASSWORD=password
+
+# OpenAI API（オプション）
+OPENAI_API_KEY=your_key_here
+
+# サーバー設定
+PORT=8000
+NODE_ENV=development
+```
+
+## 🔐 セキュリティ
+
+- `.env`ファイルはGitにコミットしない（`.gitignore`に含まれています）
+- 本番環境では強力なパスワードを使用
+- ポート5433は開発環境でのみ使用
 
 ---
 
-**最終更新**: 2024年8月  
-**バージョン**: 1.0.0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+**困ったときは**:
+1. Docker Desktopが起動しているか確認
+2. `docker compose ps`でPostgreSQLコンテナの状態を確認
+3. サーバーを再起動してデータベース接続を再試行
 

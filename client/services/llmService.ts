@@ -16,11 +16,11 @@ export class APIError extends Error {
 /**
  * Extract gear information from prompt
  */
-export async function extractFromPrompt(prompt: string): Promise<LLMExtractionResult> {
+export async function extractFromPrompt(prompt: string, userCategories?: any[]): Promise<LLMExtractionResult> {
   try {
     const response = await callAPIWithRetry(
       '/llm/extract-prompt',
-      { prompt },
+      { prompt, userCategories },
       API_CONFIG.timeout.standard
     );
     
@@ -41,11 +41,11 @@ export async function extractFromPrompt(prompt: string): Promise<LLMExtractionRe
 /**
  * Extract gear information from URL
  */
-export async function extractFromUrl(url: string): Promise<LLMExtractionResult> {
+export async function extractFromUrl(url: string, userCategories?: any[]): Promise<LLMExtractionResult> {
   try {
     const response = await callAPIWithRetry(
       '/llm/extract-url',
-      { url },
+      { url, userCategories },
       API_CONFIG.timeout.heavy
     );
     

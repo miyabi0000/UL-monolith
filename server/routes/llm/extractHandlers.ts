@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { llmService } from '../../services/llmService.js';
+import { CategoryMatcher } from '../../services/categoryMatcher.js';
 
 /**
  * POST /api/v1/llm/extract-url - URLからギア情報を抽出
@@ -30,25 +31,20 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
     
     const extractionResult = await llmService.extractGearFromUrl(url);
     
-    // ユーザーカテゴリに適応
-    if (userCategories && Array.isArray(userCategories)) {
-      const matchedCategory = userCategories.find((cat: string) => {
-        const categoryLower = cat.toLowerCase();
-        const suggestedLower = extractionResult.suggestedCategory?.toLowerCase() || '';
-        
-        return categoryLower.includes('clothing') && suggestedLower.includes('clothing') ||
-               categoryLower.includes('shelter') && suggestedLower.includes('shelter') ||
-               categoryLower.includes('cook') && suggestedLower.includes('cook') ||
-               categoryLower.includes('safety') && suggestedLower.includes('safety') ||
-               categoryLower.includes('backpack') && suggestedLower.includes('backpack');
-      });
-      
-      if (matchedCategory) {
-        extractionResult.suggestedCategory = matchedCategory;
-      }
+    // 統一カテゴリマッチングを使用
+    if (userCategories && Array.isArray(userCategories) && userCategories.length > 0) {
+      const categoryNames = userCategories.map((cat: any) => cat.name || cat);
+      extractionResult.suggestedCategory = CategoryMatcher.matchCategory(
+        {
+          productName: extractionResult.name,
+          url: url,
+          llmSuggestion: extractionResult.suggestedCategory,
+        },
+        categoryNames
+      );
     }
 
-    console.log(`[LLM] URL extraction completed: ${extractionResult.name} (confidence: ${extractionResult.confidence})`);
+    console.log(`[LLM] URL extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory}`);
 
     res.json({
       success: true,
@@ -105,7 +101,19 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
 
     const extractionResult = await llmService.extractGearFromPrompt(prompt);
 
-    console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} (confidence: ${extractionResult.confidence})`);
+    // 統一カテゴリマッチングを使用
+    if (userCategories && Array.isArray(userCategories) && userCategories.length > 0) {
+      const categoryNames = userCategories.map((cat: any) => cat.name || cat);
+      extractionResult.suggestedCategory = CategoryMatcher.matchCategory(
+        {
+          productName: extractionResult.name,
+          llmSuggestion: extractionResult.suggestedCategory,
+        },
+        categoryNames
+      );
+    }
+
+    console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory} (confidence: ${extractionResult.confidence})`);
 
     res.json({
       success: true,

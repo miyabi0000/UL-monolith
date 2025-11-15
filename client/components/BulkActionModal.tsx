@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Category } from '../utils/types';
+import SeasonBar from './SeasonBar';
 
 interface BulkActionModalProps {
   isOpen: boolean;
@@ -10,17 +11,18 @@ interface BulkActionModalProps {
   onBulkDelete: () => void;
 }
 
-const BulkActionModal: React.FC<BulkActionModalProps> = ({ 
-  isOpen, 
-  selectedCount, 
+const BulkActionModal: React.FC<BulkActionModalProps> = ({
+  isOpen,
+  selectedCount,
   categories,
-  onClose, 
-  onBulkUpdate, 
-  onBulkDelete 
+  onClose,
+  onBulkUpdate,
+  onBulkDelete
 }) => {
   const [action, setAction] = useState<'update' | 'delete'>('update');
-  const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required'>('category');
+  const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required' | 'seasons' | 'weight' | 'price'>('category');
   const [updateValue, setUpdateValue] = useState<string>('');
+  const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +38,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
 
     if (action === 'update') {
       let data: any = {};
-      
+
       switch (updateField) {
         case 'category':
           data.categoryId = updateValue;
@@ -49,6 +51,15 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           break;
         case 'required':
           data.requiredQuantity = parseInt(updateValue);
+          break;
+        case 'seasons':
+          data.seasons = selectedSeasons;
+          break;
+        case 'weight':
+          data.weightGrams = parseInt(updateValue);
+          break;
+        case 'price':
+          data.priceCents = parseInt(updateValue);
           break;
       }
 
@@ -63,6 +74,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     setAction('update');
     setUpdateField('category');
     setUpdateValue('');
+    setSelectedSeasons([]);
   };
 
   React.useEffect(() => {
@@ -74,10 +86,10 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="modal-overlay">
+      <div className="modal-content max-w-md w-full">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             一括操作 ({selectedCount}個のアイテム)
           </h2>
         </div>
@@ -85,11 +97,11 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Action Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               操作を選択
             </label>
             <div className="space-y-2">
-              <label className="flex items-center">
+              <label className="flex items-center text-gray-900 dark:text-gray-100">
                 <input
                   type="radio"
                   name="action"
@@ -100,7 +112,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                 />
                 一括更新
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center text-gray-900 dark:text-gray-100">
                 <input
                   type="radio"
                   name="action"
@@ -118,7 +130,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           {action === 'update' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   更新する項目
                 </label>
                 <select
@@ -126,25 +138,29 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   onChange={(e) => {
                     setUpdateField(e.target.value as any);
                     setUpdateValue('');
+                    setSelectedSeasons([]);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="input w-full"
                 >
                   <option value="category">カテゴリ</option>
                   <option value="priority">優先度</option>
                   <option value="owned">所有数量</option>
                   <option value="required">必要数量</option>
+                  <option value="weight">重量 (g)</option>
+                  <option value="price">価格 (¥)</option>
+                  <option value="seasons">Season（季節）</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   新しい値
                 </label>
                 {updateField === 'category' ? (
                   <select
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="input w-full"
                     required
                   >
                     <option value="">カテゴリを選択</option>
@@ -158,7 +174,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   <select
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="input w-full"
                     required
                   >
                     <option value="">優先度を選択</option>
@@ -168,6 +184,33 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     <option value="4">4 - 低</option>
                     <option value="5">5 - 最低</option>
                   </select>
+                ) : updateField === 'seasons' ? (
+                  <SeasonBar
+                    seasons={selectedSeasons}
+                    isEditing={true}
+                    onChange={setSelectedSeasons}
+                    size="md"
+                  />
+                ) : updateField === 'weight' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    value={updateValue}
+                    onChange={(e) => setUpdateValue(e.target.value)}
+                    className="input w-full"
+                    placeholder="重量（グラム）"
+                    required
+                  />
+                ) : updateField === 'price' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    value={updateValue}
+                    onChange={(e) => setUpdateValue(e.target.value)}
+                    className="input w-full"
+                    placeholder="価格（円）"
+                    required
+                  />
                 ) : (
                   <input
                     type="number"
@@ -175,7 +218,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     max="10"
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="input w-full"
                     placeholder={updateField === 'owned' ? '所有数量' : '必要数量'}
                     required
                   />
@@ -186,18 +229,18 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
 
           {/* Delete Warning */}
           {action === 'delete' && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
                     警告: 削除操作
                   </h3>
-                  <div className="mt-2 text-sm text-red-700">
+                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
                     <p>選択した{selectedCount}個のアイテムが完全に削除されます。この操作は取り消せません。</p>
                   </div>
                 </div>
@@ -206,26 +249,18 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              className="btn-secondary"
             >
               キャンセル
             </button>
             <button
               type="submit"
-              className={`px-4 py-2 rounded-md text-white font-medium ${
-                action === 'delete' 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-blue-600 hover:bg-blue-700'
-              } ${
-                action === 'update' && !updateValue 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : ''
-              }`}
-              disabled={action === 'update' && !updateValue}
+              className={action === 'delete' ? 'btn-danger' : 'btn-primary'}
+              disabled={action === 'update' && !['seasons'].includes(updateField) && !updateValue}
             >
               {action === 'delete' ? '削除実行' : '更新実行'}
             </button>

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GearItemWithCalculated, Category } from '../utils/types';
 import { GearApiService } from '../services/gearApiService';
+import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
   const [showForm, setShowForm] = useState(false);
@@ -14,66 +15,107 @@ export const useAppState = () => {
   // データ読み込み状態
   const [isLoading, setIsLoading] = useState(true);
 
-  // APIから取得したギアアイテム（計算済み）
-  const [gearItems, setGearItems] = useState<GearItemWithCalculated[]>([]);
+  // APIから取得した生のギアアイテム
+  const [rawGearItems, setRawGearItems] = useState<any[]>([]);
   
-  const [categories, setCategories] = useState<Category[]>([
-    { id: '1', name: 'Clothing', path: ['Clothing'], color: '#FF6B6B', createdAt: new Date().toISOString() },
-    { id: '2', name: 'Sleep', path: ['Sleep'], color: '#4ECDC4', createdAt: new Date().toISOString() },
-    { id: '3', name: 'Pack', path: ['Pack'], color: '#FFE66D', createdAt: new Date().toISOString() },
-    { id: '4', name: 'Electronics', path: ['Electronics'], color: '#4D96FF', createdAt: new Date().toISOString() },
-    { id: '5', name: 'Hygiene', path: ['Hygiene'], color: '#A66DFF', createdAt: new Date().toISOString() },
-  ]);
+  // カテゴリをAPIから取得
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // カテゴリ情報を結合したギアアイテム（useMemoで計算）
+  const gearItems = useMemo(() => {
+    return rawGearItems.map(item => ({
+      ...item,
+      category: categories.find(cat => cat.id === item.categoryId)
+    })) as GearItemWithCalculated[];
+  }, [rawGearItems, categories]);
 
   // ギアアイテムをAPIから取得（useCallbackで安定化）
   const fetchGearItems = useCallback(async () => {
     try {
       setIsLoading(true);
       const items = await GearApiService.getAllGear();
-
-      // N+1問題解消: 事前にカテゴリマップ作成
-      const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-      const defaultCategory = {
-        id: '1',
-        name: 'Clothing',
-        path: ['Clothing'],
-        color: '#FF6B6B',
-        createdAt: new Date().toISOString()
-      };
-
-      const enrichedItems = items.map(item => ({
-        ...item,
-        category: categoryMap.get(item.categoryId) || defaultCategory
-      }));
-
-      setGearItems(enrichedItems);
+      setRawGearItems(items); // rawGearItemsに保存
     } catch (err) {
       console.error('Error fetching gear items:', err);
       throw err; // エラーを上位に委譲
     } finally {
       setIsLoading(false);
     }
-  }, [categories]); // categoriesが変更された時のみ再作成
+  }, []);
+
+  // カテゴリを取得
+  const fetchCategories = useCallback(async () => {
+    try {
+      const cats = await CategoryApiService.getAllCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      throw err;
+    }
+  }, []);
 
   // 初回ロード
   useEffect(() => {
-    fetchGearItems();
-  }, []); // 空の依存配列で初回のみ実行
+    const loadInitialData = async () => {
+      await fetchCategories();
+      await fetchGearItems();
+    };
+    loadInitialData();
+  }, [fetchCategories, fetchGearItems]);
 
-  // API操作関数（エラー・成功処理は上位コンポーネントで実装）
+  // ギアAPI操作関数
   const handleCreateGear = async (gearData: any) => {
     await GearApiService.createGear(gearData);
     await fetchGearItems(); // データを再取得
   };
 
   const handleUpdateGear = async (id: string, gearData: any) => {
-    await GearApiService.updateGear(id, gearData);
-    await fetchGearItems(); // データを再取得
+    // 楽観的UI更新: API呼び出し前にローカル状態を更新
+    setRawGearItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, ...gearData } : item
+      )
+    );
+
+    try {
+      await GearApiService.updateGear(id, gearData);
+      // 成功時は再取得しない（既にローカル状態を更新済み）
+    } catch (err) {
+      // エラー時のみデータを再取得してロールバック
+      await fetchGearItems();
+      throw err;
+    }
   };
 
   const handleDeleteGear = async (id: string) => {
-    await GearApiService.deleteGear(id);
-    await fetchGearItems(); // データを再取得
+    // 楽観的UI更新: API呼び出し前にローカル状態から削除
+    const previousItems = rawGearItems;
+    setRawGearItems(prevItems => prevItems.filter(item => item.id !== id));
+
+    try {
+      await GearApiService.deleteGear(id);
+      // 成功時は再取得しない（既にローカル状態を更新済み）
+    } catch (err) {
+      // エラー時のみロールバック
+      setRawGearItems(previousItems);
+      throw err;
+    }
+  };
+
+  // カテゴリAPI操作関数
+  const handleCreateCategory = async (name: string, color: string) => {
+    await CategoryApiService.createCategory(name, color);
+    await fetchCategories(); // データを再取得
+  };
+
+  const handleUpdateCategory = async (id: string, name: string, color: string) => {
+    await CategoryApiService.updateCategory(id, name, color);
+    await fetchCategories(); // データを再取得
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    await CategoryApiService.deleteCategory(id);
+    await fetchCategories(); // データを再取得
   };
 
   return {
@@ -91,10 +133,16 @@ export const useAppState = () => {
     categories, setCategories,
     isLoading,
 
-    // API操作関数
+    // ギアAPI操作関数
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    refreshGearItems: fetchGearItems
+    refreshGearItems: fetchGearItems,
+
+    // カテゴリAPI操作関数
+    handleCreateCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    refreshCategories: fetchCategories
   };
 };

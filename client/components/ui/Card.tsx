@@ -1,32 +1,28 @@
 import React from 'react';
-import { getCardStyle, CardVariant } from '../../utils/designSystem';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: CardVariant;
   hover?: boolean;
   children: React.ReactNode;
   as?: keyof JSX.IntrinsicElements;
 }
 
 const Card: React.FC<CardProps> = ({
-  variant = 'default',
   hover = false,
   children,
   className = '',
   as: Component = 'div',
   ...props
 }) => {
-  const baseClasses = `
-    transition-all
-    duration-300
-    ${hover ? 'hover:shadow-lg' : ''}
+  const classes = `
+    card
+    transition-shadow
+    ${hover ? 'hover:shadow-md dark:hover:shadow-dark-md' : ''}
     ${className}
-  `.trim();
+  `.trim().replace(/\s+/g, ' ');
 
   return (
     <Component
-      className={baseClasses}
-      style={getCardStyle(variant)}
+      className={classes}
       {...props}
     >
       {children}

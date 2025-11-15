@@ -13,7 +13,7 @@ export interface GearItem {
   requiredQuantity: number;
   ownedQuantity: number;
   priority: number;
-  season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[]; // Multiple seasons selection
   productUrl?: string;
   imageUrl?: string; // 商品画像URL
   createdAt: Date;
@@ -41,7 +41,7 @@ export interface LLMExtractionResult {
   requiredQuantity: number;
   ownedQuantity: number;
   priority: number;
-  season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
   productUrl?: string;
   imageUrl?: string; // 商品画像URL
   suggestedCategory?: string; // LLMが推測したカテゴリ名
@@ -58,7 +58,7 @@ export interface GearItemForm {
   requiredQuantity: number;
   ownedQuantity: number;
   priority: number;
-  season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
   productUrl?: string;
   imageUrl?: string; // 商品画像URL
 }

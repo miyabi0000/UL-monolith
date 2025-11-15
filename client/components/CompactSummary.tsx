@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS } from '../utils/designSystem';
+import { ChartViewMode } from '../utils/types';
 import Card from './ui/Card';
 
 interface CompactSummaryProps {
@@ -9,72 +9,82 @@ interface CompactSummaryProps {
     items: number;
     missing: number;
   };
+  viewMode?: ChartViewMode;
+  onViewModeChange?: (mode: ChartViewMode) => void;
 }
 
-const CompactSummary: React.FC<CompactSummaryProps> = ({ totals }) => {
+const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'weight', onViewModeChange }) => {
   const stats = [
     {
       label: 'Total Weight',
       value: `${totals.weight}g`,
-      color: COLORS.primary.dark,
-      icon: 'W'
+      icon: 'W',
+      mode: 'weight' as ChartViewMode
     },
     {
       label: 'Total Cost',
       value: `¥${Math.round(totals.price / 100).toLocaleString()}`,
-      color: COLORS.primary.medium,
-      icon: '¥'
+      icon: '¥',
+      mode: 'cost' as ChartViewMode
     },
     {
       label: 'Items',
       value: totals.items.toString(),
-      color: COLORS.text.primary,
-      icon: '#'
+      icon: '#',
+      mode: null
     }
   ];
 
   return (
-    <Card variant="square" hover className="p-2">
+    <Card hover className="p-2">
       <div className="mb-2">
-        <h3
-          className="text-xs font-semibold"
-          style={{ color: COLORS.text.primary }}
-        >
+        <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
           Pack Summary
         </h3>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center justify-center group transition-all duration-200 hover:scale-105 p-2 rounded-lg"
-            style={{ backgroundColor: `${stat.color}10` }}
-          >
-            <div className="flex items-center space-x-1 mb-0.5">
-              <span
-                className="text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 group-hover:scale-110"
-                style={{
-                  backgroundColor: stat.color,
-                  color: COLORS.white
-                }}
-              >
-                {stat.icon}
-              </span>
-              <span
-                className="text-[10px] font-medium"
-                style={{ color: COLORS.text.secondary }}
-              >
-                {stat.label}
-              </span>
-            </div>
+        {stats.map((stat, index) => {
+          const isSelected = stat.mode && viewMode === stat.mode;
+          const isClickable = stat.mode !== null && onViewModeChange;
+          
+          return (
             <div
-              className="text-sm font-bold transition-all duration-200 group-hover:scale-110"
-              style={{ color: stat.color }}
+              key={index}
+              className={`flex flex-col items-center justify-center group transition-all duration-200 p-2 rounded-lg border-2 ${
+                isClickable ? 'cursor-pointer hover:scale-105' : ''
+              } ${
+                isSelected 
+                  ? 'bg-gray-200 dark:bg-gray-700 border-gray-600 dark:border-gray-400' 
+                  : 'bg-gray-50 dark:bg-gray-800 border-transparent'
+              }`}
+              onClick={() => {
+                if (stat.mode && onViewModeChange) {
+                  onViewModeChange(stat.mode);
+                }
+              }}
             >
-              {stat.value}
+              <div className="flex items-center space-x-1 mb-0.5">
+                <span
+                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 dark:bg-gray-500 ${
+                    isClickable ? 'group-hover:scale-110' : ''
+                  }`}
+                >
+                  {stat.icon}
+                </span>
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  {stat.label}
+                </span>
+              </div>
+              <div
+                className={`text-sm font-bold transition-all duration-200 text-gray-700 dark:text-gray-200 ${
+                  isClickable ? 'group-hover:scale-110' : ''
+                }`}
+              >
+                {stat.value}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Card>
   );

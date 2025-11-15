@@ -46,15 +46,23 @@ export class LLMService {
     try {
       new URL(url); // URL検証
     } catch {
-      return this.createFallback(url);
+      return this.createFallbackFromUrl(url, 'Invalid URL format');
     }
-    
+
     try {
       // スクレイピングのみで情報取得（高速化）
-      return await webScrapingService.scrapeProductInfo(url);
+      const result = await webScrapingService.scrapeProductInfo(url);
+
+      // Validate result has minimum required fields
+      if (!result.name || result.name === 'Unknown Product' || result.name === 'Failed to Extract') {
+        console.warn(`[LLM] Incomplete scraping result for ${url}, attempting fallback with partial data`);
+        return this.createFallbackFromUrl(url, 'Scraping incomplete', result);
+      }
+
+      return result;
     } catch (error) {
-      console.error('URL extraction failed:', error);
-      return this.createFallback(url);
+      console.error(`[LLM] URL extraction failed for ${url}:`, error);
+      return this.createFallbackFromUrl(url, error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -162,7 +170,7 @@ export class LLMService {
   }
 
   /**
-   * フォールバック結果作成
+   * フォールバック結果作成（プロンプト用）
    */
   private createFallback(input: string): LLMExtractionResult {
     return {
@@ -174,6 +182,44 @@ export class LLMService {
       season: 'all',
       extractedFields: ['name'],
       source: 'fallback'
+    };
+  }
+
+  /**
+   * URL用フォールバック結果作成（部分データ保持）
+   */
+  private createFallbackFromUrl(
+    url: string,
+    reason: string,
+    partialData?: Partial<LLMExtractionResult>
+  ): LLMExtractionResult {
+    console.log(`[LLM] Creating fallback for ${url}: ${reason}`);
+
+    // Extract domain name as fallback product name
+    let fallbackName = 'Product from URL';
+    try {
+      const urlObj = new URL(url);
+      const domain = urlObj.hostname.replace('www.', '');
+      fallbackName = `Product from ${domain}`;
+    } catch {
+      // Use URL as-is if parsing fails
+    }
+
+    return {
+      name: partialData?.name || fallbackName,
+      brand: partialData?.brand,
+      productUrl: url,
+      imageUrl: partialData?.imageUrl, // Preserve image URL if available
+      weightGrams: partialData?.weightGrams,
+      priceCents: partialData?.priceCents,
+      suggestedCategory: partialData?.suggestedCategory || 'Other',
+      requiredQuantity: 1,
+      ownedQuantity: 0,
+      priority: 3,
+      season: 'all',
+      extractedFields: partialData?.extractedFields || [],
+      source: 'fallback',
+      confidence: 0.3 // Low confidence for fallback
     };
   }
 }

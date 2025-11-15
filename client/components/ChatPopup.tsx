@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, checkAPIHealth, APIError } from '../services/llmService'
-import { COLORS } from '../utils/colors'
-import { getSquareSeparatorStyle, getLiquidGlassStyle } from '../utils/colorHelpers'
+import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
+import { isFallbackResult } from '../utils/gearExtractionHelpers'
+import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
 
 interface ChatMessage {
   id: string
@@ -10,23 +10,21 @@ interface ChatMessage {
   timestamp: Date
 }
 
-type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'general'
+type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'multiple_urls' | 'general'
 
 interface ChatPopupProps {
   isOpen: boolean
   onClose: () => void
-  gearItems?: any[]
-  categories?: any[]
   onGearExtracted?: (gearData: any) => void
-  currentGearList?: any[] // ギアリスト分析用
+  categories?: any[]
 }
 
-const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], categories = [], onGearExtracted, currentGearList = [] }) => {
+const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted, categories = [] }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'こんにちは！AI搭載ギア管理システムです。以下の機能をご利用いただけます：\n\n**ギア登録**\n• ブランド名 + 製品名\n  例: "Arc\'teryx Beta AR 追加"\n\n**カテゴリ管理**  \n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n\n**URL解析**\n• 商品URLから自動抽出\n• URL + 追加情報\n  例: "URL + 実測230g"\n\nバックエンドAPIと連携して動作します。',
+      content: 'Hello! Welcome to the AI-powered Gear Management System. Available features:\n\n**Gear Registration**\n• Brand + Product name\n  Example: "Arc\'teryx Beta AR"\n\n**Category Management**  \n• Add new categories\n  Example: "Shelter category"\n\n**URL Analysis**\n• Single URL extraction\n• Batch processing for multiple URLs ✨NEW\n• URL + additional info\n  Example: "URL + actual weight 230g"\n\nYou can paste multiple URLs at once for batch registration!',
       timestamp: new Date()
     }
   ])
@@ -35,7 +33,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // メッセージエリアを下にスクロール
+  // Scroll message area to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -44,41 +42,55 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     scrollToBottom()
   }, [messages])
 
-  // チャットを開いた時にインプットにフォーカス
+  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [isOpen])
 
-  // プロンプト分類
+  // Extract multiple URLs from text
+  const extractMultipleUrls = (text: string): string[] => {
+    const urlRegex = /https?:\/\/[^\s]+/g
+    const urls = text.match(urlRegex) || []
+    // Remove duplicates
+    return [...new Set(urls)]
+  }
+
+  // Classify user prompt
   const classifyPrompt = (prompt: string): PromptType => {
-    
-    // URL + 追加情報のパターン
-    if (prompt.includes('http') && prompt.length > 50) {
+    const urls = extractMultipleUrls(prompt)
+    const lowerPrompt = prompt.toLowerCase()
+
+    // Multiple URLs pattern
+    if (urls.length > 1) {
+      return 'multiple_urls'
+    }
+
+    // URL + additional info pattern
+    if (urls.length === 1 && prompt.length > urls[0].length + 10) {
       return 'url_with_prompt'
     }
-    
-    // 純粋なURLパターン
-    if (/^https?:\/\/.+$/.test(prompt.trim())) {
+
+    // Pure single URL pattern
+    if (urls.length === 1 && /^https?:\/\/.+$/.test(prompt.trim())) {
       return 'url'
     }
-    
-    // カテゴリ追加パターン
-    if (prompt.includes('カテゴリ') || 
-        (prompt.includes('追加') && !containsBrand(prompt))) {
+
+    // Category pattern (English or Japanese)
+    if (lowerPrompt.includes('category') || lowerPrompt.includes('カテゴリ')) {
       return 'add_category'
     }
-    
-    // ギア追加パターン（ブランド名が含まれる）
+
+    // Gear pattern (contains brand name)
     if (containsBrand(prompt)) {
       return 'add_gear'
     }
-    
+
     return 'general'
   }
 
-  // ブランド名が含まれているかチェック
+  // Check if brand name is included
   const containsBrand = (prompt: string): boolean => {
     const brandPatterns = [
       'Arc\'teryx', 'Patagonia', 'Montbell', 'REI', 'Osprey', 'Deuter', 'Gregory',
@@ -109,24 +121,25 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
     setInputMessage('')
     setIsLoading(true)
 
-    setTimeout(async () => {
-      let assistantResponse: string
+    try {
+      let assistantResponse: string = ''
       let shouldExtractGear = false
       let mockGearData: any = null
 
-      try {
-        const promptType = classifyPrompt(currentInput)
+      const promptType = classifyPrompt(currentInput)
 
-        switch (promptType) {
+      switch (promptType) {
           case 'url':
             try {
-              const extractedData = await extractFromUrl(currentInput)
-              assistantResponse = `URL から商品情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              const extractedData = await extractFromUrl(currentInput, categories)
+              const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
+              assistantResponse = `Successfully extracted product info from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
                 brand: extractedData.brand,
                 productUrl: currentInput,
+                categoryId: matchedCategory?.id,
                 requiredQuantity: 1,
                 ownedQuantity: 0,
                 weightGrams: extractedData.weightGrams,
@@ -136,22 +149,24 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `URL解析エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。`
+                assistantResponse = `URL parsing error: ${error.message}\n\nThere might be a communication issue with the backend.`
               } else {
-                assistantResponse = `URL解析エラー: ${error instanceof Error ? error.message : 'URL からの情報抽出に失敗しました'}\n\n有効なURL を入力してください。`
+                assistantResponse = `URL parsing error: ${error instanceof Error ? error.message : 'Failed to extract info from URL'}\n\nPlease provide a valid URL.`
               }
             }
             break
 
           case 'add_gear':
             try {
-              const extractedData = await extractFromPrompt(currentInput)
-              assistantResponse = `ギア情報を抽出しました！\n\n商品名: ${extractedData.name}\nブランド: ${extractedData.brand || '不明'}\n重量: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : '推定中'}\n価格: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : '推定中'}\nカテゴリ: ${extractedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+              const extractedData = await extractFromPrompt(currentInput, categories)
+              const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
+              assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
                 brand: extractedData.brand,
                 productUrl: '',
+                categoryId: matchedCategory?.id,
                 requiredQuantity: 1,
                 ownedQuantity: 0,
                 weightGrams: extractedData.weightGrams,
@@ -161,9 +176,9 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。\n\n${error.status ? `ステータス: ${error.status}` : ''}`
+                assistantResponse = `API error: ${error.message}\n\nThere might be a communication issue with the backend.\n\n${error.status ? `Status: ${error.status}` : ''}`
               } else {
-                assistantResponse = `エラー: ${error instanceof Error ? error.message : 'ギア情報の抽出に失敗しました'}\n\n正しい形式で入力してください。\n例: "Arc'teryx Beta AR 追加"`
+                assistantResponse = `Error: ${error instanceof Error ? error.message : 'Failed to extract gear info'}\n\nPlease use correct format.\nExample: "Arc'teryx Beta AR"`
               }
             }
             break
@@ -172,36 +187,38 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
             try {
               const categoryData = await extractCategoryFromPrompt(currentInput)
               if (categoryData) {
-                assistantResponse = `カテゴリを作成しました！\n\nカテゴリ名: ${categoryData.englishName}\n日本語名: ${categoryData.name}\n\n新しいカテゴリが使用可能になりました。`
+                assistantResponse = `Category created!\n\nCategory: ${categoryData.englishName}\nJapanese: ${categoryData.name}\n\nNew category is now available.`
               } else {
-                assistantResponse = `カテゴリ名を特定できませんでした。\n\n例: "シェルター カテゴリ追加" や "調理器具 追加"`
+                assistantResponse = `Could not identify category name.\n\nExample: "Shelter category" or "Cooking gear"`
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドとの通信に問題がある可能性があります。`
+                assistantResponse = `API error: ${error.message}\n\nThere might be a communication issue with the backend.`
               } else {
-                assistantResponse = `カテゴリ処理エラー: ${error instanceof Error ? error.message : 'カテゴリの作成に失敗しました'}`
+                assistantResponse = `Category processing error: ${error instanceof Error ? error.message : 'Failed to create category'}`
               }
             }
             break
 
           case 'url_with_prompt':
             try {
-              // URLを抽出
+              // Extract URL
               const urlMatch = currentInput.match(/(https?:\/\/[^\s]+)/)
               if (urlMatch) {
                 const url = urlMatch[1]
-                // URL基本情報を取得
-                const urlData = await extractFromUrl(url)
-                // プロンプト情報で拡張
+                // Get basic URL info
+                const urlData = await extractFromUrl(url, categories)
+                // Enhance with prompt info
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
-                
-                assistantResponse = `URL + 追加情報を処理しました！\n\n商品名: ${enhancedData.name}\nブランド: ${enhancedData.brand}\n重量: ${enhancedData.weightGrams}g\n価格: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nカテゴリ: ${enhancedData.suggestedCategory}\n\nこの情報でギアリストに追加しますか？`
+                const matchedCategory = categories.find(cat => cat.name === enhancedData.suggestedCategory)
+
+                assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${enhancedData.weightGrams}g\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
                 shouldExtractGear = true
                 mockGearData = {
                   name: enhancedData.name,
                   brand: enhancedData.brand,
                   productUrl: url,
+                  categoryId: matchedCategory?.id,
                   requiredQuantity: 1,
                   ownedQuantity: 0,
                   weightGrams: enhancedData.weightGrams,
@@ -210,27 +227,105 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                   priority: 3
                 }
               } else {
-                assistantResponse = `URLが見つかりませんでした。\n\n例: "https://example.com/product + 実測230g"`
+                assistantResponse = `URL not found.\n\nExample: "https://example.com/product + actual weight230g"`
               }
             } catch (error) {
               if (error instanceof APIError) {
-                assistantResponse = `API エラー: ${error.message}\n\nバックエンドでのURL処理に問題があります。\nサイトがアクセスできないか、スクレイピングがブロックされている可能性があります。`
+                assistantResponse = `API error: ${error.message}\n\nThere is an issue processing the URL in the backend.\nThe site may be inaccessible or scraping may be blocked.`
               } else {
-                assistantResponse = `URL処理エラー: ${error instanceof Error ? error.message : 'URLの処理に失敗しました'}`
+                assistantResponse = `URL processing error: ${error instanceof Error ? error.message : 'Failed to process URL'}`
+              }
+            }
+            break
+
+          case 'multiple_urls':
+            try {
+              const urls = extractMultipleUrls(currentInput)
+              assistantResponse = `${urls.length} URLs detected. Starting parallel processing...\n\n`
+
+              // Process all URLs in parallel
+              const results = await Promise.allSettled(
+                urls.map(url => extractFromUrl(url, categories))
+              )
+
+              // Classify success/failure based on data quality
+              const successResults: any[] = []
+              const failedUrls: string[] = []
+
+              results.forEach((result, index) => {
+                if (result.status === 'fulfilled' && !isFallbackResult(result.value)) {
+                  // 成功: 有効な抽出結果
+                  successResults.push({
+                    url: urls[index],
+                    data: result.value
+                  })
+                } else {
+                  // 失敗またはフォールバック
+                  failedUrls.push(urls[index])
+                }
+              })
+
+              // Create response
+              if (successResults.length > 0) {
+                assistantResponse += `✅ Success: ${successResults.length} items\n\n`
+                successResults.forEach((item, idx) => {
+                  assistantResponse += `**${idx + 1}. ${item.data.name}**\n`
+                  assistantResponse += `  Brand: ${item.data.brand || 'Unknown'}\n`
+                  assistantResponse += `  Weight: ${item.data.weightGrams ? `${item.data.weightGrams}g` : 'Estimating...'}\n`
+                  assistantResponse += `  Price: ${item.data.priceCents ? `¥${Math.round(item.data.priceCents / 100).toLocaleString()}` : 'Estimating...'}\n`
+                  assistantResponse += `  Category: ${item.data.suggestedCategory}\n\n`
+                })
+
+                // Bulk register multiple gears
+                shouldExtractGear = true
+                mockGearData = successResults.map(item => {
+                  const matchedCategory = categories.find(cat => cat.name === item.data.suggestedCategory)
+                  return {
+                    name: item.data.name,
+                    brand: item.data.brand,
+                    productUrl: item.url,
+                    imageUrl: item.data.imageUrl,
+                    categoryId: matchedCategory?.id,
+                    requiredQuantity: 1,
+                    ownedQuantity: 0,
+                    weightGrams: item.data.weightGrams,
+                    priceCents: item.data.priceCents,
+                    season: '',
+                    priority: 3
+                  }
+                })
+              }
+
+              if (failedUrls.length > 0) {
+                assistantResponse += `\n❌ Failed: ${failedUrls.length} items\n`
+                failedUrls.forEach((url, idx) => {
+                  assistantResponse += `  ${idx + 1}. ${url.substring(0, 50)}...\n`
+                })
+              }
+
+              assistantResponse += `\n${successResults.length} gear items added to your list.`
+            } catch (error) {
+              if (error instanceof APIError) {
+                assistantResponse = `Batch processing error: ${error.message}\n\nThere's a communication issue with the backend.`
+              } else {
+                assistantResponse = `Multiple URL processing error: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`
               }
             }
             break
 
 
           default:
-            assistantResponse = `ギア管理のお手伝いをします！\n\n使用できる機能：\n• ブランド名 + 製品名で追加\n  例: "Arc'teryx Beta AR 追加"\n• カテゴリの追加\n  例: "シェルター カテゴリ追加"\n• 商品URLの処理\n  例: URLを貼り付け`
+            assistantResponse = `Let me help you manage your gear!\n\nAvailable features:\n• Brand + Product name\n  Example: "Arc'teryx Beta AR"\n• Add categories\n  Example: "Shelter category"\n• Process product URLs\n  Example: Paste URLs`
             break
-        }
-      } catch (error) {
-        if (error instanceof APIError) {
-          assistantResponse = `システムエラー: ${error.message}\n\nバックエンドAPIとの通信に問題が発生しました。\nしばらく時間をおいてから再度お試しください。\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
+      }
+
+      // Add gear data if extracted
+      if (shouldExtractGear && mockGearData && onGearExtracted) {
+        // Array: multiple gears, Object: single gear
+        if (Array.isArray(mockGearData)) {
+          mockGearData.forEach(gear => onGearExtracted(gear))
         } else {
-          assistantResponse = `処理中にエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}\n\n問題が継続する場合は、システム管理者にお問い合わせください。`
+          onGearExtracted(mockGearData)
         }
       }
 
@@ -242,14 +337,25 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
       }
 
       setMessages(prev => [...prev, assistantMessage])
-
-      // ギアデータの追加
-      if (shouldExtractGear && mockGearData && onGearExtracted) {
-        onGearExtracted(mockGearData)
+    } catch (error) {
+      let assistantResponse: string
+      if (error instanceof APIError) {
+        assistantResponse = `System error: ${error.message}\n\nThere was a communication issue with the backend API.\nPlease try again after a short while.\n\n${error.status ? `HTTP Status: ${error.status}` : ''}`
+      } else {
+        assistantResponse = `An error occurred during processing: ${error instanceof Error ? error.message : 'unknown error'}\n\nIf the problem persists, please contact the system administrator.`
       }
 
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: assistantResponse,
+        timestamp: new Date()
+      }
+
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -263,59 +369,49 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      {/* オーバーレイ */}
+      {/* Overlay */}
       <div
         className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-150"
         onClick={onClose}
       />
 
-      {/* チャットパネル */}
+      {/* Chat Panel */}
       <div
-        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out shadow-2xl"
+        className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out"
         style={{
-          ...getSquareSeparatorStyle(),
-          borderLeft: `2px solid ${COLORS.primary.medium}`,
-          borderRadius: '0',
+          backgroundColor: COLORS.white,
+          boxShadow: `-4px 0 6px -1px rgba(0, 0, 0, 0.1)`,
         }}
       >
-        {/* ヘッダー */}
+        {/* Header */}
         <div
-          className="p-5 border-b flex justify-between items-center backdrop-blur-md"
+          className="flex justify-between items-center"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-            color: COLORS.white
+            padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+            borderBottom: `1px solid ${COLORS.gray[200]}`,
           }}
         >
           <div>
-            <h3 className="text-base font-bold tracking-tight">AI ギアアシスタント</h3>
+            <h3 className="font-semibold" style={{ fontSize: `${FONT_SCALE.base}px`, color: COLORS.text.primary }}>AI Gear Assistant</h3>
             <p
-              className="text-xs mt-1"
-              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+              style={{ fontSize: `${FONT_SCALE.sm}px`, color: COLORS.text.secondary, marginTop: '4px' }}
             >
-              URLから自動抽出・スマート分析
+              Auto-extract & Smart Analysis
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl transition-all duration-200 hover:scale-110"
+            className="p-2 rounded-md transition-opacity hover:opacity-70"
             style={{
-              ...getLiquidGlassStyle(),
-              color: COLORS.white,
-              fontSize: '18px'
-            }}
-            onMouseEnter={(e) => {
-              Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-            }}
-            onMouseLeave={(e) => {
-              Object.assign(e.currentTarget.style, getLiquidGlassStyle());
+              color: COLORS.text.secondary,
+              fontSize: `${FONT_SCALE.lg}px`,
             }}
           >
             ✕
           </button>
         </div>
 
-        {/* メッセージエリア */}
+        {/* Message Area */}
         <div className="flex-1 p-5 overflow-y-auto space-y-4 backdrop-blur-sm">
           {messages.map((message) => (
             <div
@@ -329,18 +425,18 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
                 style={{
                   ...(message.role === 'user'
                     ? {
-                        backgroundColor: COLORS.primary.dark,
+                        backgroundColor: COLORS.gray[700],
                         color: COLORS.white,
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                        boxShadow: SHADOW
                       }
                     : {
-                        ...getSquareSeparatorStyle(),
+                        backgroundColor: COLORS.white,
                         color: COLORS.text.primary,
-                        border: `1px solid rgba(255, 255, 255, 0.3)`
+                        boxShadow: SHADOW
                       })
                 }}
               >
-                <div className={`${message.role === 'user' ? 'text-sm' : 'text-sm'} whitespace-pre-wrap leading-relaxed`}>
+                <div className="text-sm whitespace-pre-wrap leading-relaxed">
                   {message.content}
                 </div>
                 <div
@@ -360,17 +456,17 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               <div
                 className="p-4 rounded-2xl rounded-bl-md transition-all duration-200"
                 style={{
-                  ...getSquareSeparatorStyle(),
+                  backgroundColor: COLORS.white,
                   color: COLORS.text.primary,
-                  border: `1px solid rgba(255, 255, 255, 0.3)`
+                  boxShadow: SHADOW
                 }}
               >
                 <div className="flex items-center space-x-3">
                   <div
                     className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
-                    style={{ borderColor: COLORS.primary.medium }}
+                    style={{ borderColor: COLORS.gray[700] }}
                   ></div>
-                  <span className="text-sm font-medium">分析中...</span>
+                  <span className="text-sm font-medium">Analyzing...</span>
                 </div>
               </div>
             </div>
@@ -379,12 +475,12 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* 入力エリア */}
+        {/* Input Area */}
         <div
-          className="p-5 border-t backdrop-blur-md"
           style={{
-            borderTopColor: 'rgba(255, 255, 255, 0.2)',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)'
+            padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
+            borderTop: `1px solid ${COLORS.gray[200]}`,
+            backgroundColor: COLORS.gray[50]
           }}
         >
           <div className="flex space-x-3">
@@ -394,36 +490,34 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, gearItems = [], 
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="商品URL または指示を入力..."
+              placeholder="Enter product URL or instructions..."
               disabled={isLoading}
-              className="flex-1 px-4 py-3 rounded-xl border-0 focus:outline-none focus:ring-2 text-sm transition-all duration-200 disabled:opacity-50"
+              className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50"
               style={{
-                ...getSquareSeparatorStyle(),
-                borderRadius: '12px',
+                backgroundColor: COLORS.white,
+                boxShadow: SHADOW,
                 color: COLORS.text.primary,
-                fontSize: '14px',
-                '::placeholder': {
-                  color: COLORS.text.secondary
-                }
+                fontSize: `${FONT_SCALE.sm}px`,
               }}
             />
             <button
               onClick={handleSend}
               disabled={!inputMessage.trim() || isLoading}
-              className="px-5 py-3 rounded-xl text-white text-sm font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="px-5 py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                backgroundColor: COLORS.primary.dark,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                backgroundColor: COLORS.gray[700],
+                boxShadow: SHADOW,
+                fontSize: `${FONT_SCALE.sm}px`,
               }}
             >
-送信
+              Send
             </button>
           </div>
           <p
-            className="text-xs mt-3 leading-relaxed"
-            style={{ color: COLORS.text.secondary }}
+            className="mt-3 leading-relaxed"
+            style={{ color: COLORS.text.secondary, fontSize: `${FONT_SCALE.sm}px` }}
           >
-例: "Arc'teryx Beta AR 追加" / "シェルター カテゴリ追加" / Amazon URL
+            Example: "Arc'teryx Beta AR" / "Shelter category" / Product URLs
           </p>
         </div>
       </div>

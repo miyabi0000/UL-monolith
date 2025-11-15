@@ -25,20 +25,5 @@ export async function extractFromUrl(url: string, userCategories?: string[]): Pr
   }
 }
 
-/**
- * Adapt extracted data to user's categories
- */
-export function adaptToUserCategories(
-  extractedData: LLMExtractionResult, 
-  userCategories: string[]
-): LLMExtractionResult {
-  // Simple category matching logic
-  const suggestedCategory = userCategories.find(cat => 
-    cat.toLowerCase().includes(extractedData.suggestedCategory?.toLowerCase() || '')
-  ) || extractedData.suggestedCategory || 'Other';
-
-  return {
-    ...extractedData,
-    suggestedCategory
-  };
-}
+// Removed: adaptToUserCategories()
+// Category matching is now handled server-side by CategoryMatcher

@@ -19,39 +19,19 @@ export function extractJsonLd($: cheerio.Root): any | null {
   return null;
 }
 
-/**
- * カテゴリ判定用パターン（優先度順）
- */
-export const CATEGORY_PATTERNS = {
-  'Backpack': /バッグ|リュック|backpack|bag|鞄|ザック/i,
-  'Shelter': /ビビィ|bivy|bivvy|シェルター|テント|tent|shelter|tarp|タープ/i,
-  'Clothing': /服|ウェア|ファッション|clothing|apparel|jacket|shirt|ジャケット|パンツ|pants/i,
-  'Cooking': /キッチン|調理|クッキング|kitchen|cooking|stove|ストーブ|クッカー|cooker/i,
-  'Safety': /安全|セーフティ|safety|first.?aid|emergency|救急|ライト|light/i
-} as const;
-
-/**
- * テキストからカテゴリを推測
- */
-export function guessCategory(text: string): string {
-  const lowerText = text.toLowerCase();
-  
-  for (const [category, pattern] of Object.entries(CATEGORY_PATTERNS)) {
-    if (pattern.test(lowerText)) {
-      return category;
-    }
-  }
-  
-  return 'Other';
-}
+// Removed: CATEGORY_PATTERNS and guessCategory()
+// Category matching is now handled by CategoryMatcher in server/services/categoryMatcher.ts
 
 /**
  * 重量抽出パターン（日本語・英語対応）
  */
 const WEIGHT_PATTERNS = [
   /重量[:\s\/]*(?:ポール[無込み・]*[\/\s])?(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i,
-  /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|pounds|oz|ounce)/i,
-  /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i
+  /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,
+  /weighs\s+(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,  // "weighs 1lb"
+  /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i,
+  /(\d+(?:\.\d+)?)\s*(lbs?|pounds?)(?!\d)/i,  // "1lb", "1 lb"
+  /(\d+(?:\.\d+)?)\s*(oz|ounce)(?!\d)/i
 ];
 
 /**

@@ -1,73 +1,45 @@
 import React from 'react';
-import { getButtonStyle, ButtonVariant, getLiquidGlassStyle } from '../../utils/designSystem';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
+  variant?: 'primary' | 'secondary' | 'danger';
   size?: 'sm' | 'md' | 'lg';
-  isGlass?: boolean;
   children: React.ReactNode;
 }
 
+const variantClasses = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  danger: 'btn-danger',
+};
+
 const sizeClasses = {
-  sm: 'px-2 py-0.5 text-xs',
-  md: 'px-3 py-1.5 text-xs',
-  lg: 'px-4 py-2 text-sm',
+  sm: 'px-2 py-1 text-xs',
+  md: 'px-3 py-1.5 text-sm',
+  lg: 'px-4 py-2 text-base',
 };
 
 const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
-  isGlass = false,
   children,
   className = '',
-  onMouseEnter,
-  onMouseLeave,
-  onMouseDown,
-  onMouseUp,
+  disabled,
   ...props
 }) => {
-  const baseClasses = `
+  const classes = `
+    ${variantClasses[variant]}
     ${sizeClasses[size]}
     font-medium
     rounded-md
-    transition-all
-    duration-200
-    hover:scale-105
+    disabled:opacity-50
+    disabled:cursor-not-allowed
     ${className}
-  `.trim();
-
-  if (isGlass) {
-    return (
-      <button
-        className={baseClasses}
-        style={getLiquidGlassStyle()}
-        onMouseEnter={(e) => {
-          Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-          onMouseEnter?.(e);
-        }}
-        onMouseLeave={(e) => {
-          Object.assign(e.currentTarget.style, getLiquidGlassStyle());
-          onMouseLeave?.(e);
-        }}
-        onMouseDown={(e) => {
-          Object.assign(e.currentTarget.style, getLiquidGlassStyle('active'));
-          onMouseDown?.(e);
-        }}
-        onMouseUp={(e) => {
-          Object.assign(e.currentTarget.style, getLiquidGlassStyle('hover'));
-          onMouseUp?.(e);
-        }}
-        {...props}
-      >
-        {children}
-      </button>
-    );
-  }
+  `.trim().replace(/\s+/g, ' ');
 
   return (
     <button
-      className={baseClasses}
-      style={getButtonStyle(variant)}
+      className={classes}
+      disabled={disabled}
       {...props}
     >
       {children}

@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { getTruncatedTextStyle, getExpandedTextStyle } from '../utils/colorHelpers';
-import { COLORS } from '../utils/colors';
 
 interface TruncatedTextProps {
   text: string;
@@ -31,11 +29,10 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
   return (
     <div className="relative inline-block">
       <span
-        className={`${className} transition-all duration-300`}
+        className={`${className} transition-all duration-300 inline-block overflow-hidden whitespace-nowrap text-ellipsis cursor-pointer hover:text-gray-700 dark:hover:text-gray-300`}
         style={{
           ...style,
-          ...getTruncatedTextStyle(maxWidth),
-          ...(isHovered ? { color: COLORS.primary.dark } : {})
+          maxWidth: maxWidth
         }}
         onMouseEnter={() => {
           setIsHovered(true);
@@ -51,16 +48,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
       </span>
 
       {isExpanded && isHovered && (
-        <div
-          className="z-50"
-          style={{
-            ...getExpandedTextStyle(),
-            color: COLORS.text.primary,
-            top: '100%',
-            left: '0',
-            marginTop: '4px',
-          }}
-        >
+        <div className="absolute z-50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 p-2 rounded-md shadow-md top-full left-0 mt-1 max-w-xs break-words">
           {text}
         </div>
       )}

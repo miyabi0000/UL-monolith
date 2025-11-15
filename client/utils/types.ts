@@ -35,7 +35,7 @@ export interface GearItem {
 
   // 価格・メタ
   priceCents?: number;
-  season?: 'spring' | 'summer' | 'autumn' | 'winter' | 'all';
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[]; // Multiple seasons selection
   priority: number; // 1-5
 
   // LLM
@@ -68,9 +68,51 @@ export interface GearList {
 // チャート用データ
 export interface ChartData {
   name: string;
-  value: number;
+  value: number; // 現在表示中の値（weight or cost or itemCount）
+  weight: number; // 重量
+  cost: number; // コスト（priceCents）
+  itemCount: number; // アイテム数
   color: string;
   items: GearItemWithCalculated[];
+}
+
+export type ChartViewMode = 'weight' | 'cost';
+export type QuantityDisplayMode = 'owned' | 'required';
+
+// Gear field values type for type-safe updates
+export type GearFieldValue = string | number | null | string[] | boolean;
+
+// ==================== ギア比較機能 ====================
+
+// 比較ソートキー
+export type ComparisonSortKey = 'price' | 'weight' | 'efficiency'; // efficiency = g/¥
+
+// 比較プリセット
+export type ComparisonPreset = 'lightest' | 'cheapest' | 'best-value' | 'balanced';
+
+// 比較状態
+export interface ComparisonState {
+  itemIds: string[]; // 最大4件
+  categoryId: string | null; // 同一カテゴリ制約
+  baselineItemId: string | null; // ベースライン（現行装備）
+  sortKey: ComparisonSortKey;
+  preset: ComparisonPreset | null;
+}
+
+// 比較メトリクス
+export interface ComparisonMetrics {
+  efficiency: number; // g/¥ (weight / price)
+  categorySpecific?: {
+    volumeToWeight?: number; // Backpack: 容量/重量
+    warmthToWeight?: number; // Sleep System: 暖かさ/重量
+  };
+}
+
+// 意思決定サマリー
+export interface DecisionSummary {
+  deltaWeight: number; // 総重量の差分（g）
+  deltaCost: number; // 総コストの差分（円）
+  adoptedItemId: string | null;
 }
 
 // API レスポンス

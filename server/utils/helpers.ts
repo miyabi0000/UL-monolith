@@ -10,7 +10,7 @@ export const sanitizeGearData = (data: any) => {
     ownedQuantity: Math.max(0, Math.min(10, parseInt(data.ownedQuantity) || 0)),
     weightGrams: data.weightGrams ? Math.max(0, parseInt(data.weightGrams)) : undefined,
     priceCents: data.priceCents ? Math.max(0, parseInt(data.priceCents)) : undefined,
-    season: data.season?.trim() || undefined,
+    season: (data.season?.trim() || 'all') as 'spring' | 'summer' | 'autumn' | 'winter' | 'all',
     priority: Math.max(1, Math.min(5, parseInt(data.priority) || 3))
   };
 };

@@ -135,11 +135,12 @@ INSERT INTO categories (id, user_id, name, parent_id, path, color) VALUES
 ('550e8400-e29b-41d4-a716-446655440007', NULL, 'Cooking', NULL, ARRAY['Cooking'], '#F39C12'),
 ('550e8400-e29b-41d4-a716-446655440008', NULL, 'Water', NULL, ARRAY['Water'], '#27AE60'),
 ('550e8400-e29b-41d4-a716-446655440009', NULL, 'Safety', NULL, ARRAY['Safety'], '#E74C3C'),
-('550e8400-e29b-41d4-a716-446655440010', NULL, 'Tools', NULL, ARRAY['Tools'], '#8E44AD')
+('550e8400-e29b-41d4-a716-446655440010', NULL, 'Tools', NULL, ARRAY['Tools'], '#8E44AD'),
+('550e8400-e29b-41d4-a716-446655440011', NULL, 'Other', NULL, ARRAY['Other'], '#9CA3AF')
 ON CONFLICT (id) DO NOTHING;
 
 -- デモユーザーの作成（開発用）
 INSERT INTO users (id, email, password_hash, name) VALUES
-('demo-user-1', 'demo@example.com', '$2b$10$dummy.hash.for.demo.user', 'Demo User')
+('550e8400-e29b-41d4-a716-446655440100', 'demo@example.com', '$2b$10$dummy.hash.for.demo.user', 'Demo User')
 ON CONFLICT (email) DO NOTHING;
 
