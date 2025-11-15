@@ -32,14 +32,14 @@ export default function ComparisonPage() {
             onClick={() => navigate('/')}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             style={{
-              backgroundColor: COLORS.primary[600],
+              backgroundColor: COLORS.gray[700],
               color: COLORS.white
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.primary[700];
+              e.currentTarget.style.backgroundColor = COLORS.gray[800];
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = COLORS.primary[600];
+              e.currentTarget.style.backgroundColor = COLORS.gray[700];
             }}
           >
             ホームに戻る
