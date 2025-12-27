@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
-import { isFallbackResult } from '../utils/gearExtractionHelpers'
 import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
 
 interface ChatMessage {
@@ -253,14 +252,25 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
               const failedUrls: string[] = []
 
               results.forEach((result, index) => {
-                if (result.status === 'fulfilled' && !isFallbackResult(result.value)) {
-                  // 成功: 有効な抽出結果
-                  successResults.push({
-                    url: urls[index],
-                    data: result.value
-                  })
+                if (result.status === 'fulfilled') {
+                  const data = result.value
+
+                  // Check if the result is actually valid (not a fallback)
+                  const isFallback = data.source === 'fallback' ||
+                                    data.confidence !== undefined && data.confidence < 0.5 ||
+                                    !data.name ||
+                                    data.name.includes('Failed to Extract') ||
+                                    data.name.includes('Product from')
+
+                  if (!isFallback) {
+                    successResults.push({
+                      url: urls[index],
+                      data: result.value
+                    })
+                  } else {
+                    failedUrls.push(urls[index])
+                  }
                 } else {
-                  // 失敗またはフォールバック
                   failedUrls.push(urls[index])
                 }
               })

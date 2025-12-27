@@ -17,7 +17,6 @@ interface GearViewProps {
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   onShowForm: () => void;
-  onShowBulkUrlInput?: () => void;
   currentView: ViewMode;
   onViewChange: (view: ViewMode) => void;
 }
@@ -34,7 +33,6 @@ const GearView: React.FC<GearViewProps> = React.memo(({
   showCheckboxes,
   onToggleCheckboxes,
   onShowForm,
-  onShowBulkUrlInput,
   currentView,
   onViewChange
 }) => {
@@ -134,7 +132,6 @@ const GearView: React.FC<GearViewProps> = React.memo(({
           showCheckboxes={showCheckboxes}
           onToggleCheckboxes={onToggleCheckboxes}
           onShowForm={onShowForm}
-          onShowBulkUrlInput={onShowBulkUrlInput}
         />
 
         {/* ソートボタン */}

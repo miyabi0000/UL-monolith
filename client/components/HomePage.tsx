@@ -5,9 +5,6 @@ import { useNotifications } from '../hooks/useNotifications';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import { ChartViewMode, QuantityDisplayMode, GearFieldValue } from '../utils/types';
-import { ExtractedGearWithUrl } from '../utils/gearExtractionHelpers';
-import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
-import { GEAR_MESSAGES, AUTH_MESSAGES } from '../utils/messages';
 import GearTable from './GearTable';
 import GearView from './GearView';
 import GearChart from './GearChart';
@@ -15,8 +12,7 @@ import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 
 // 遅延インポート（コード分割）
-const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
-const UrlBulkImportModal = React.lazy(() => import('./gear-input/UrlBulkImportModal'));
+const GearForm = React.lazy(() => import('./GearForm'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
 const Login = React.lazy(() => import('./Login'));
 const ChatPopup = React.lazy(() => import('./ChatPopup'));
@@ -73,13 +69,6 @@ export default function HomePage() {
   // 選択中のカテゴリ（グラフフィルタ用）
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  // バルクギア入力フロー用の状態
-  const [showBulkUrlInput, setShowBulkUrlInput] = useState(false)
-  const [bulkMode, setBulkMode] = useState(false)
-
-  // バルク抽出フック（extractedGearsを直接使用するため、bulkGearsは不要）
-  const { extractGears, extractedGears, failedUrls, isExtracting, progress, reset } = useBulkGearExtraction()
-
   // gearViewModeの変更をlocalStorageに保存
   useEffect(() => {
     localStorage.setItem('gearViewMode', gearViewMode);
@@ -90,23 +79,21 @@ export default function HomePage() {
   const totals = useMemo(() => calculateTotals(gearItems, quantityDisplayMode), [gearItems, quantityDisplayMode]);
 
   const handleSaveGear = async (gearItem: any) => {
-    const loadingMessage = editingGear ? GEAR_MESSAGES.UPDATING : GEAR_MESSAGES.CREATING
-    const loadingId = showLoading(loadingMessage);
+    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
 
     try {
       if (editingGear) {
         await handleUpdateGear(editingGear.id, gearItem);
-        showSuccess(GEAR_MESSAGES.UPDATE_SUCCESS);
+        showSuccess('アイテムが正常に更新されました');
       } else {
         await handleCreateGear(gearItem);
-        showSuccess(GEAR_MESSAGES.CREATE_SUCCESS);
+        showSuccess('アイテムが正常に作成されました');
       }
 
       setShowForm(false);
       setEditingGear(null);
     } catch (err) {
-      const errorMessage = editingGear ? GEAR_MESSAGES.UPDATE_ERROR : GEAR_MESSAGES.CREATE_ERROR
-      showError(errorMessage);
+      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
       console.error('Error saving gear:', err);
     } finally {
       removeNotification(loadingId);
@@ -124,20 +111,20 @@ export default function HomePage() {
       await handleUpdateGear(id, updates);
       // handleUpdateGear内で既にfetchGearItemsを呼んでいるので、ここでは不要
     } catch (err) {
-      showError(GEAR_MESSAGES.UPDATE_ERROR);
+      showError('アイテムの更新に失敗しました');
       console.error('Error updating item:', err);
     }
   }, [handleUpdateGear, showError]);
 
   const handleBulkDelete = async (selectedIds: string[]) => {
-    const loadingId = showLoading(GEAR_MESSAGES.DELETING(selectedIds.length));
+    const loadingId = showLoading(`${selectedIds.length}個のアイテムを削除中...`);
 
     try {
       // 複数のアイテムを並列で削除
       await Promise.all(selectedIds.map(id => handleDeleteGear(id)));
-      showSuccess(GEAR_MESSAGES.DELETE_SUCCESS(selectedIds.length));
+      showSuccess(`${selectedIds.length}個のアイテムが正常に削除されました`);
     } catch (err) {
-      showError(GEAR_MESSAGES.DELETE_ERROR);
+      showError('アイテムの一括削除に失敗しました');
       console.error('Error bulk deleting gear:', err);
     } finally {
       removeNotification(loadingId);
@@ -145,50 +132,9 @@ export default function HomePage() {
   };
 
   const handleLoginSuccess = (userData: any) => {
-    showSuccess(AUTH_MESSAGES.LOGIN_SUCCESS);
+    showSuccess('ログインに成功しました');
     setShowLogin(false);
   };
-
-  /**
-   * バルクURL入力から抽出処理を実行
-   * @param urls - 抽出対象のURLリスト
-   */
-  const handleBulkUrlExtract = async (urls: string[]) => {
-    try {
-      await extractGears(urls, categories)
-      // 抽出完了後はモーダル内で結果を表示（モーダルは閉じない）
-    } catch (error) {
-      console.error('Bulk extraction error:', error)
-    }
-  }
-
-  /**
-   * モーダルから「確認してレビューへ」が押された時の処理
-   * 抽出結果がある場合はバルクモードでフォームを開く
-   */
-  const handleProceedToReview = () => {
-    setShowBulkUrlInput(false)
-
-    if (extractedGears.length > 0) {
-      // バルクモードに切り替え（extractedGearsを直接使用）
-      setBulkMode(true)
-      setShowForm(true)
-    }
-  }
-
-  /**
-   * バルク入力完了時の処理
-   * @param savedCount - 保存された件数
-   * @param skippedCount - スキップされた件数
-   */
-  const handleBulkComplete = (savedCount: number, skippedCount: number) => {
-    showSuccess(GEAR_MESSAGES.BULK_COMPLETE(savedCount, skippedCount))
-    setBulkMode(false)
-    setShowForm(false)
-    refreshGearItems()
-    // Clear any leftover extraction state after bulk flow completes
-    reset()
-  }
 
   return (
     <>
@@ -246,11 +192,6 @@ export default function HomePage() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
-                    onShowBulkUrlInput={() => {
-                      // Ensure any previous extraction state is cleared when opening the modal
-                      reset()
-                      setShowBulkUrlInput(true)
-                    }}
                     onCreate={handleCreateGear}
                     currentView={gearViewMode}
                     onViewChange={setGearViewMode}
@@ -265,11 +206,6 @@ export default function HomePage() {
                     showCheckboxes={showCheckboxes}
                     onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
                     onShowForm={() => setShowForm(true)}
-                    onShowBulkUrlInput={() => {
-                      // Ensure any previous extraction state is cleared when opening the modal
-                      reset()
-                      setShowBulkUrlInput(true)
-                    }}
                     currentView={gearViewMode}
                     onViewChange={setGearViewMode}
                   />
@@ -281,37 +217,16 @@ export default function HomePage() {
       </main>
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {showBulkUrlInput && (
-          <UrlBulkImportModal
-            isOpen={showBulkUrlInput}
-            onClose={() => {
-              setShowBulkUrlInput(false)
-              // Clear any leftover extraction state when modal is closed
-              reset()
-            }}
-            onExtract={handleBulkUrlExtract}
-            onProceed={handleProceedToReview}
-            isExtracting={isExtracting}
-            progress={progress}
-            extractedCount={extractedGears.length}
-            failedCount={failedUrls.length}
-          />
-        )}
-
         {showForm && (
-          <GearInputModal
+          <GearForm
             isOpen={showForm}
             onClose={() => {
               setShowForm(false);
               setEditingGear(null);
-              setBulkMode(false);
             }}
             onSave={handleSaveGear}
             categories={categories}
             editingGear={editingGear}
-            bulkMode={bulkMode}
-            bulkGears={extractedGears}
-            onBulkComplete={handleBulkComplete}
           />
         )}
 

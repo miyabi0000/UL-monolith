@@ -20,7 +20,6 @@ interface GearTableProps {
   showCheckboxes: boolean
   onToggleCheckboxes?: () => void
   onShowForm: () => void
-  onShowBulkUrlInput?: () => void
   onCreate?: (gear: any) => void
   currentView: ViewMode
   onViewChange: (view: ViewMode) => void
@@ -37,7 +36,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   showCheckboxes,
   onToggleCheckboxes,
   onShowForm,
-  onShowBulkUrlInput,
   onCreate,
   currentView,
   onViewChange
@@ -219,7 +217,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
           showCheckboxes={showCheckboxes}
           onToggleCheckboxes={onToggleCheckboxes}
           onShowForm={onShowForm}
-          onShowBulkUrlInput={onShowBulkUrlInput}
         />
 
       {/* 一括操作バー */}

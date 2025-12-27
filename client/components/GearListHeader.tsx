@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React from 'react'
 import BulkActionMenu from './BulkActionMenu'
 
 type ViewMode = 'table' | 'card'
@@ -10,7 +10,6 @@ interface GearListHeaderProps {
   showCheckboxes: boolean
   onToggleCheckboxes?: () => void
   onShowForm: () => void
-  onShowBulkUrlInput?: () => void
 }
 
 const GearListHeader: React.FC<GearListHeaderProps> = ({
@@ -19,29 +18,8 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
   onViewChange,
   showCheckboxes,
   onToggleCheckboxes,
-  onShowForm,
-  onShowBulkUrlInput
+  onShowForm
 }) => {
-  const [showAddMenu, setShowAddMenu] = useState(false)
-  const addMenuRef = useRef<HTMLDivElement>(null)
-
-  // メニュー外クリックで閉じる
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (addMenuRef.current && !addMenuRef.current.contains(event.target as Node)) {
-        setShowAddMenu(false)
-      }
-    }
-
-    if (showAddMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showAddMenu])
-
   return (
     <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3">
@@ -80,44 +58,12 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* ADD ドロップダウンメニュー */}
-        <div className="relative" ref={addMenuRef}>
-          <button
-            onClick={() => setShowAddMenu(!showAddMenu)}
-            className="btn-primary font-semibold text-xs px-2.5 py-1.5 rounded shadow-sm flex items-center gap-1"
-          >
-            + ADD
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {showAddMenu && (
-            <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-              <button
-                onClick={() => {
-                  onShowForm()
-                  setShowAddMenu(false)
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-md"
-              >
-                Add Single Gear
-              </button>
-              {onShowBulkUrlInput && (
-                <button
-                  onClick={() => {
-                    onShowBulkUrlInput()
-                    setShowAddMenu(false)
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-md border-t border-gray-200 dark:border-gray-700"
-                >
-                  Add from URLs
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
+        <button
+          onClick={onShowForm}
+          className="btn-primary font-semibold text-xs px-2.5 py-1.5 rounded shadow-sm"
+        >
+          + ADD
+        </button>
         {onToggleCheckboxes && (
           <BulkActionMenu
             showCheckboxes={showCheckboxes}
