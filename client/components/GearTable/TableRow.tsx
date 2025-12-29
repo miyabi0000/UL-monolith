@@ -20,6 +20,12 @@ interface TableRowProps {
   quantityDisplayMode: 'owned' | 'required' | 'shortage'
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: any) => void
+  /**
+   * 編集可能かどうか
+   * - true: 編集可能フィールドを表示（通常の編集モード）
+   * - false: 読み取り専用表示（通常表示モード、Compareモード）
+   */
+  isEditable?: boolean
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -30,7 +36,8 @@ const TableRow: React.FC<TableRowProps> = ({
   changedFields,
   quantityDisplayMode,
   onSelectItem,
-  onUpdateItem
+  onUpdateItem,
+  isEditable = false
 }) => {
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
@@ -65,7 +72,7 @@ const TableRow: React.FC<TableRowProps> = ({
         <EditableImageField
           value={item.imageUrl || null}
           onChange={(value) => onUpdateItem(item.id, 'imageUrl', value)}
-          isEditing={showCheckboxes}
+          isEditing={isEditable}
           isChanged={isFieldChanged('imageUrl')}
         />
       </td>
@@ -73,7 +80,7 @@ const TableRow: React.FC<TableRowProps> = ({
       {/* Name & Brand */}
       <td className="px-2 py-1">
         <div className="text-left">
-          {showCheckboxes ? (
+          {isEditable ? (
             <EditableTextField
               value={item.name}
               onChange={(value) => onUpdateItem(item.id, 'name', value)}
@@ -97,7 +104,7 @@ const TableRow: React.FC<TableRowProps> = ({
               )}
             </div>
           )}
-          {showCheckboxes ? (
+          {isEditable ? (
             <div className="mt-1">
               <EditableTextField
                 value={item.brand || ''}
@@ -121,7 +128,7 @@ const TableRow: React.FC<TableRowProps> = ({
         <EditableCategoryField
           value={item.categoryId}
           onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
-          isEditing={showCheckboxes}
+          isEditing={isEditable}
           isChanged={isFieldChanged('categoryId')}
           categories={categories}
           category={item.category}
@@ -130,7 +137,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Own/Need */}
       <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100">
-        {showCheckboxes ? (
+        {isEditable ? (
           <QuantitySelector
             ownedQuantity={item.ownedQuantity}
             requiredQuantity={item.requiredQuantity}
@@ -149,7 +156,7 @@ const TableRow: React.FC<TableRowProps> = ({
           totalWeight={item.totalWeight}
           requiredQuantity={item.requiredQuantity}
           onChange={(value) => onUpdateItem(item.id, 'weightGrams', value)}
-          isEditing={showCheckboxes}
+          isEditing={isEditable}
           isChanged={isFieldChanged('weightGrams')}
         />
       </td>
@@ -167,7 +174,7 @@ const TableRow: React.FC<TableRowProps> = ({
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
-          isEditing={showCheckboxes}
+          isEditing={isEditable}
           isChanged={isFieldChanged('priceCents')}
         />
       </td>
@@ -176,12 +183,12 @@ const TableRow: React.FC<TableRowProps> = ({
       <td
         className="px-2 py-1 text-center"
         onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => showCheckboxes && e.stopPropagation()}
+        onMouseDown={(e) => isEditable && e.stopPropagation()}
       >
         <EditableSeasonField
           seasons={item.seasons || []}
           onChange={(newSeasons) => onUpdateItem(item.id, 'seasons', newSeasons)}
-          isEditing={showCheckboxes}
+          isEditing={isEditable}
           isChanged={isFieldChanged('seasons')}
         />
       </td>

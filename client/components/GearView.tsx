@@ -1,12 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { GearItemWithCalculated, Category } from '../utils/types';
+import { GearItemWithCalculated, Category, ViewMode } from '../utils/types';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import GearCard from './GearCard';
 import Card from './ui/Card';
 import GearListHeader from './GearListHeader';
 import BulkActionBar from './BulkActionBar';
-
-type ViewMode = 'table' | 'card';
 
 interface GearViewProps {
   items: GearItemWithCalculated[];

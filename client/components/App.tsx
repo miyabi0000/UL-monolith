@@ -1,11 +1,10 @@
 import React, { Suspense, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import AppHeader from './AppHeader';
 import HomePage from './HomePage';
-import ComparisonPage from './ComparisonPage';
 import NotificationPopup from './NotificationPopup';
 
 // 遅延インポート（コード分割）
@@ -14,7 +13,6 @@ const ChatPopup = React.lazy(() => import('./ChatPopup'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
 
 export default function App() {
-  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const {
     showLogin, setShowLogin,
@@ -44,7 +42,6 @@ export default function App() {
         onLogout={logout}
         onToggleChat={() => setShowChat(!showChat)}
         onShowCategoryManager={() => setShowCategoryManager(true)}
-        onNavigateToComparison={() => navigate('/comparison')}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
       />
@@ -52,7 +49,6 @@ export default function App() {
       {/* ルーティング */}
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/comparison" element={<ComparisonPage />} />
       </Routes>
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>

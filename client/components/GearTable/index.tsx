@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { GearItemWithCalculated, Category, GearFieldValue } from '../../utils/types'
+import { GearItemWithCalculated, Category, GearFieldValue, ViewMode } from '../../utils/types'
 import { SPACING_SCALE } from '../../utils/designSystem'
 import Card from '../ui/Card'
 import GearListHeader from '../GearListHeader'
 import BulkActionBar from '../BulkActionBar'
 import TableHeader, { SortField, SortDirection } from './TableHeader'
 import TableRow from './TableRow'
-
-type ViewMode = 'table' | 'card'
+import ComparisonTable from '../ComparisonTable'
 
 interface GearTableProps {
   items: GearItemWithCalculated[]
@@ -20,6 +19,7 @@ interface GearTableProps {
   showCheckboxes: boolean
   onToggleCheckboxes?: () => void
   onShowForm: () => void
+  onShowBulkUrlInput?: () => void
   onCreate?: (gear: any) => void
   currentView: ViewMode
   onViewChange: (view: ViewMode) => void
@@ -36,6 +36,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   showCheckboxes,
   onToggleCheckboxes,
   onShowForm,
+  onShowBulkUrlInput,
   onCreate,
   currentView,
   onViewChange
@@ -146,6 +147,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
 
   const handleSelectItem = (id: string, checked: boolean) => {
     if (checked) {
+      // Compareモード時は最大3件まで
+      if (isCompareMode && selectedIds.length >= MAX_COMPARE_ITEMS) {
+        return
+      }
       setSelectedIds([...selectedIds, id])
     } else {
       setSelectedIds(selectedIds.filter(selectedId => selectedId !== id))
@@ -159,16 +164,75 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
     }
   }
 
+  // ========================================
+  // Compareモード関連の状態と設定
+  // ========================================
+  const isCompareMode = currentView === 'compare'
+  const MAX_COMPARE_ITEMS = 4
+  const [showComparisonModal, setShowComparisonModal] = useState(false)
+
+  // Compareモード時の表示制御
+  // - Compareモード: チェックボックスあり、編集不可
+  // - 通常の編集モード: チェックボックスあり、編集可能
+  // - 通常の表示モード: チェックボックスなし、編集不可
+  const shouldShowCheckboxes = showCheckboxes || isCompareMode
+  const isEditable = !isCompareMode && showCheckboxes
+
+  // ========================================
+  // 選択関連の状態
+  // ========================================
   const isAllSelected = processedItems.length > 0 && selectedIds.length === processedItems.length
   const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < processedItems.length
 
-  // Clear selected items when checkboxes are hidden
+  const selectedItems = useMemo(() =>
+    processedItems.filter(item => selectedIds.includes(item.id)),
+    [processedItems, selectedIds]
+  )
+
+  // チェックボックスが非表示になったら選択をクリア
   useEffect(() => {
     if (!showCheckboxes) {
       setSelectedIds([])
       setChangedFields({})
     }
   }, [showCheckboxes])
+
+  // ========================================
+  // Compareモードのハンドラー
+  // ========================================
+  const handleCompare = () => {
+    const categories = new Set(selectedItems.map(item => item.category?.id).filter(Boolean))
+    if (categories.size > 1 || categories.size === 0) {
+      // TODO: 通知システムでエラー表示
+      console.error('同一カテゴリ内で比較してください')
+      return
+    }
+    setShowComparisonModal(true)
+  }
+
+  const handleCloseComparisonModal = () => {
+    setShowComparisonModal(false)
+  }
+
+  const handleRemoveFromComparison = (itemId: string) => {
+    setSelectedIds(selectedIds.filter(id => id !== itemId))
+    if (selectedIds.length <= 2) {
+      setShowComparisonModal(false)
+    }
+  }
+
+  const handleAdoptItem = async (itemId: string) => {
+    const item = selectedItems.find(i => i.id === itemId)
+    if (item) {
+      await onUpdateItem(itemId, 'ownedQuantity', (item.ownedQuantity || 0) + 1)
+      setShowComparisonModal(false)
+      setSelectedIds([])
+    }
+  }
+
+  // ========================================
+  // フィールド編集ハンドラー
+  // ========================================
 
   const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
     // 変更されたフィールドを記録
@@ -206,21 +270,39 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
     }
   }, [onUpdateItem])
 
+  // ========================================
+  // レンダリング
+  // ========================================
+
+  // Compareモード時の比較表示（縦型テーブル）
+  if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
+    return (
+      <ComparisonTable
+        items={selectedItems}
+        onClose={handleCloseComparisonModal}
+        onRemove={handleRemoveFromComparison}
+        onAdopt={handleAdoptItem}
+      />
+    )
+  }
+
+  // 通常のテーブル表示
   return (
     <>
       <Card variant="default">
-        {/* 共通ヘッダー */}
+        {/* ヘッダー */}
         <GearListHeader
           itemCount={processedItems.length}
           currentView={currentView}
           onViewChange={onViewChange}
-          showCheckboxes={showCheckboxes}
-          onToggleCheckboxes={onToggleCheckboxes}
+          showCheckboxes={shouldShowCheckboxes}
+          onToggleCheckboxes={isCompareMode ? undefined : onToggleCheckboxes}
           onShowForm={onShowForm}
+          onShowBulkUrlInput={onShowBulkUrlInput}
         />
 
-      {/* 一括操作バー */}
-      {showCheckboxes && (
+      {/* 一括操作バー（チェックボックス表示時のみ） */}
+      {shouldShowCheckboxes && (
         <div style={{ padding: `${SPACING_SCALE.base}px` }}>
           <BulkActionBar
             selectedCount={selectedIds.length}
@@ -229,15 +311,18 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             onSelectAll={handleSelectAll}
             onClearSelection={() => setSelectedIds([])}
             onBulkDelete={handleBulkDelete}
+            onCompare={isCompareMode ? handleCompare : undefined}
+            isCompareMode={isCompareMode}
+            maxCompareItems={MAX_COMPARE_ITEMS}
           />
         </div>
       )}
 
-      {/* テーブル */}
+      {/* テーブル表示 */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <TableHeader
-            showCheckboxes={showCheckboxes}
+            showCheckboxes={shouldShowCheckboxes}
             isAllSelected={isAllSelected}
             isPartiallySelected={isPartiallySelected}
             sortField={sortField}
@@ -253,12 +338,13 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
                 key={item.id}
                 item={item}
                 categories={categories}
-                showCheckboxes={showCheckboxes}
+                showCheckboxes={shouldShowCheckboxes}
                 isSelected={selectedIds.includes(item.id)}
                 changedFields={changedFields[item.id]}
                 quantityDisplayMode={quantityDisplayMode}
                 onSelectItem={handleSelectItem}
                 onUpdateItem={handleFieldChange}
+                isEditable={isEditable}
               />
             ))}
           </tbody>

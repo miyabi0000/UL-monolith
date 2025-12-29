@@ -79,21 +79,21 @@ export default function HomePage() {
   const totals = useMemo(() => calculateTotals(gearItems, quantityDisplayMode), [gearItems, quantityDisplayMode]);
 
   const handleSaveGear = async (gearItem: any) => {
-    const loadingId = showLoading(editingGear ? 'Updating item...' : 'Creating item...');
+    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
 
     try {
       if (editingGear) {
         await handleUpdateGear(editingGear.id, gearItem);
-        showSuccess('Item updated successfully');
+        showSuccess('アイテムが正常に更新されました');
       } else {
         await handleCreateGear(gearItem);
-        showSuccess('Item created successfully');
+        showSuccess('アイテムが正常に作成されました');
       }
 
       setShowForm(false);
       setEditingGear(null);
     } catch (err) {
-      showError(editingGear ? 'Failed to update item' : 'Failed to create item');
+      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
       console.error('Error saving gear:', err);
     } finally {
       removeNotification(loadingId);

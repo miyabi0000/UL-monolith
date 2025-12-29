@@ -1,6 +1,5 @@
 import React from 'react';
-
-type ViewMode = 'table' | 'card';
+import { ViewMode } from '../utils/types';
 
 interface ViewSwitcherProps {
   currentView: ViewMode;
