@@ -60,10 +60,10 @@ export default function HomePage() {
   // 数量表示モード（owned/required切り替え）
   const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned');
 
-  // ギア表示モード（table/card切り替え）
-  const [gearViewMode, setGearViewMode] = useState<'table' | 'card'>(() => {
+  // ギア表示モード（table/card/compare切り替え）
+  const [gearViewMode, setGearViewMode] = useState<'table' | 'card' | 'compare'>(() => {
     const saved = localStorage.getItem('gearViewMode');
-    return (saved === 'table' || saved === 'card') ? saved : 'table';
+    return (saved === 'table' || saved === 'card' || saved === 'compare') ? saved : 'table';
   });
 
   // 選択中のカテゴリ（グラフフィルタ用）
@@ -79,21 +79,21 @@ export default function HomePage() {
   const totals = useMemo(() => calculateTotals(gearItems, quantityDisplayMode), [gearItems, quantityDisplayMode]);
 
   const handleSaveGear = async (gearItem: any) => {
-    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
+    const loadingId = showLoading(editingGear ? 'Updating item...' : 'Creating item...');
 
     try {
       if (editingGear) {
         await handleUpdateGear(editingGear.id, gearItem);
-        showSuccess('アイテムが正常に更新されました');
+        showSuccess('Item updated successfully');
       } else {
         await handleCreateGear(gearItem);
-        showSuccess('アイテムが正常に作成されました');
+        showSuccess('Item created successfully');
       }
 
       setShowForm(false);
       setEditingGear(null);
     } catch (err) {
-      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
+      showError(editingGear ? 'Failed to update item' : 'Failed to create item');
       console.error('Error saving gear:', err);
     } finally {
       removeNotification(loadingId);
@@ -111,20 +111,20 @@ export default function HomePage() {
       await handleUpdateGear(id, updates);
       // handleUpdateGear内で既にfetchGearItemsを呼んでいるので、ここでは不要
     } catch (err) {
-      showError('アイテムの更新に失敗しました');
+      showError('Failed to update item');
       console.error('Error updating item:', err);
     }
   }, [handleUpdateGear, showError]);
 
   const handleBulkDelete = async (selectedIds: string[]) => {
-    const loadingId = showLoading(`${selectedIds.length}個のアイテムを削除中...`);
+    const loadingId = showLoading(`Deleting ${selectedIds.length} items...`);
 
     try {
       // 複数のアイテムを並列で削除
       await Promise.all(selectedIds.map(id => handleDeleteGear(id)));
-      showSuccess(`${selectedIds.length}個のアイテムが正常に削除されました`);
+      showSuccess(`${selectedIds.length} items deleted successfully`);
     } catch (err) {
-      showError('アイテムの一括削除に失敗しました');
+      showError('Failed to delete items');
       console.error('Error bulk deleting gear:', err);
     } finally {
       removeNotification(loadingId);
@@ -132,7 +132,7 @@ export default function HomePage() {
   };
 
   const handleLoginSuccess = (userData: any) => {
-    showSuccess('ログインに成功しました');
+    showSuccess('Login successful');
     setShowLogin(false);
   };
 
@@ -180,7 +180,7 @@ export default function HomePage() {
 
               {/* ギアテーブル or カードビュー */}
               <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
-                {gearViewMode === 'table' ? (
+                {gearViewMode === 'table' || gearViewMode === 'compare' ? (
                   <GearTable
                     items={gearItems}
                     categories={categories}

@@ -5,7 +5,6 @@ interface AppHeaderProps {
   onLogout: () => void;
   onToggleChat: () => void;
   onShowCategoryManager?: () => void;
-  onNavigateToComparison?: () => void;
   isAuthenticated: boolean;
   userName?: string;
 }
@@ -15,7 +14,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onLogout,
   onToggleChat,
   onShowCategoryManager,
-  onNavigateToComparison,
   isAuthenticated,
   userName
 }) => {
@@ -52,15 +50,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
         {/* ボタングループ */}
           <div className="flex items-center gap-2 sm:gap-3">
-          {onNavigateToComparison && (
-            <button
-                className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
-              onClick={onNavigateToComparison}
-            >
-              compare
-            </button>
-          )}
-
           {onShowCategoryManager && (
             <button
                 className="text-xs sm:text-sm px-2 py-1 sm:px-3 md:px-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
@@ -81,8 +70,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <button
               className="text-xs sm:text-sm p-1.5 sm:p-2 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 hover:-translate-y-0.5 transition-all duration-150"
               onClick={toggleDarkMode}
-              aria-label="ダークモード切り替え"
-              title={isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+              aria-label="Toggle dark mode"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? (
                 // 太陽アイコン（ライトモード）

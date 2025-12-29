@@ -74,7 +74,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
   }
 
   const handleDelete = () => {
-    if (window.confirm(`"${gear.name}" を削除しますか？この操作は取り消せません。`)) {
+    if (window.confirm(`Delete "${gear.name}"? This action cannot be undone.`)) {
       onDelete(gear.id)
       onClose()
     }

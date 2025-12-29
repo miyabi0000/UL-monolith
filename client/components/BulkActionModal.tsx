@@ -28,7 +28,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     e.preventDefault();
 
     if (action === 'delete') {
-      const confirmed = window.confirm(`${selectedCount}個のアイテムを削除しますか？この操作は取り消せません。`);
+      const confirmed = window.confirm(`Delete ${selectedCount} items? This action cannot be undone.`);
       if (confirmed) {
         onBulkDelete();
         onClose();
@@ -90,7 +90,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
       <div className="modal-content max-w-md w-full">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            一括操作 ({selectedCount}個のアイテム)
+            Bulk Actions ({selectedCount} items)
           </h2>
         </div>
 
@@ -98,7 +98,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           {/* Action Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              操作を選択
+              Select Action
             </label>
             <div className="space-y-2">
               <label className="flex items-center text-gray-900 dark:text-gray-100">
@@ -110,7 +110,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   onChange={(e) => setAction(e.target.value as 'update')}
                   className="mr-2"
                 />
-                一括更新
+                Bulk Update
               </label>
               <label className="flex items-center text-gray-900 dark:text-gray-100">
                 <input
@@ -121,7 +121,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   onChange={(e) => setAction(e.target.value as 'delete')}
                   className="mr-2"
                 />
-                一括削除
+                Bulk Delete
               </label>
             </div>
           </div>
@@ -131,7 +131,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  更新する項目
+                  Field to Update
                 </label>
                 <select
                   value={updateField}
@@ -142,19 +142,19 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   }}
                   className="input w-full"
                 >
-                  <option value="category">カテゴリ</option>
-                  <option value="priority">優先度</option>
-                  <option value="owned">所有数量</option>
-                  <option value="required">必要数量</option>
-                  <option value="weight">重量 (g)</option>
-                  <option value="price">価格 (¥)</option>
-                  <option value="seasons">Season（季節）</option>
+                  <option value="category">Category</option>
+                  <option value="priority">Priority</option>
+                  <option value="owned">Owned Quantity</option>
+                  <option value="required">Required Quantity</option>
+                  <option value="weight">Weight (g)</option>
+                  <option value="price">Price (¥)</option>
+                  <option value="seasons">Season</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  新しい値
+                  New Value
                 </label>
                 {updateField === 'category' ? (
                   <select
@@ -163,7 +163,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     className="input w-full"
                     required
                   >
-                    <option value="">カテゴリを選択</option>
+                    <option value="">Select Category</option>
                     {categories.map(category => (
                       <option key={category.id} value={category.id}>
                         {category.path.join(' > ')}
@@ -177,12 +177,12 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     className="input w-full"
                     required
                   >
-                    <option value="">優先度を選択</option>
-                    <option value="1">1 - 最高</option>
-                    <option value="2">2 - 高</option>
-                    <option value="3">3 - 中</option>
-                    <option value="4">4 - 低</option>
-                    <option value="5">5 - 最低</option>
+                    <option value="">Select Priority</option>
+                    <option value="1">1 - Highest</option>
+                    <option value="2">2 - High</option>
+                    <option value="3">3 - Medium</option>
+                    <option value="4">4 - Low</option>
+                    <option value="5">5 - Lowest</option>
                   </select>
                 ) : updateField === 'seasons' ? (
                   <SeasonBar
@@ -198,7 +198,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
                     className="input w-full"
-                    placeholder="重量（グラム）"
+                    placeholder="Weight (grams)"
                     required
                   />
                 ) : updateField === 'price' ? (
@@ -208,7 +208,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
                     className="input w-full"
-                    placeholder="価格（円）"
+                    placeholder="Price (yen)"
                     required
                   />
                 ) : (
@@ -219,7 +219,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
                     className="input w-full"
-                    placeholder={updateField === 'owned' ? '所有数量' : '必要数量'}
+                    placeholder={updateField === 'owned' ? 'Owned Quantity' : 'Required Quantity'}
                     required
                   />
                 )}
@@ -238,10 +238,10 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
-                    警告: 削除操作
+                    Warning: Delete Operation
                   </h3>
                   <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                    <p>選択した{selectedCount}個のアイテムが完全に削除されます。この操作は取り消せません。</p>
+                    <p>Selected {selectedCount} items will be permanently deleted. This action cannot be undone.</p>
                   </div>
                 </div>
               </div>
@@ -255,14 +255,14 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
               onClick={onClose}
               className="btn-secondary"
             >
-              キャンセル
+              Cancel
             </button>
             <button
               type="submit"
               className={action === 'delete' ? 'btn-danger' : 'btn-primary'}
               disabled={action === 'update' && !['seasons'].includes(updateField) && !updateValue}
             >
-              {action === 'delete' ? '削除実行' : '更新実行'}
+              {action === 'delete' ? 'Execute Delete' : 'Execute Update'}
             </button>
           </div>
         </form>
