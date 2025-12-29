@@ -185,7 +185,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
             {item.weightGrams}g
             {item.requiredQuantity > 1 && (
               <span className="text-gray-500 dark:text-gray-400 ml-1">
-                (Total: {item.totalWeight}g)
+                Total: {item.totalWeight}g
               </span>
             )}
           </span>

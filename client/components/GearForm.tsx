@@ -193,7 +193,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                   />
                   <label
                     htmlFor="image-upload"
-                    className="btn-secondary inline-block px-4 py-2 rounded-md cursor-pointer"
+                    className="btn-secondary inline-block cursor-pointer"
                   >
                     Choose Image
                   </label>
@@ -219,7 +219,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 type="button"
                 onClick={handleExtractFromUrl}
                 disabled={!form.productUrl || isExtracting}
-                className="btn-primary px-4 py-2 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isExtracting ? 'Extracting...' : 'Extract'}
               </button>
@@ -398,13 +398,13 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary px-4 py-2 rounded-md"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn-primary px-4 py-2 rounded-md"
+              className="btn-primary"
             >
               {(editingGear || gear) ? 'Update' : 'Add'} Gear
             </button>

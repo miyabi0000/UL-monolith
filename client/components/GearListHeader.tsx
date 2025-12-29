@@ -1,7 +1,7 @@
 import React from 'react'
 import BulkActionMenu from './BulkActionMenu'
+import { ViewMode } from '../utils/types'
 
-type ViewMode = 'table' | 'card' | 'compare'
 type SortDirection = 'asc' | 'desc'
 
 interface GearListHeaderProps {
@@ -115,7 +115,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
       <div className="flex items-center gap-2">
         <button
           onClick={onShowForm}
-          className="btn-primary font-semibold text-xs px-2.5 py-1.5 rounded shadow-sm"
+          className="btn-primary btn-xs"
         >
           + ADD
         </button>

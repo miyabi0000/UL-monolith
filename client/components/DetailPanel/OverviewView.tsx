@@ -108,7 +108,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode }) => {
             <div>
               <div className="text-gray-500 dark:text-gray-500">Heaviest</div>
               <div className="font-semibold text-gray-900 dark:text-gray-100">
-                {stats.maxWeightItem.name} ({stats.maxWeightItem.totalWeight}g)
+                {stats.maxWeightItem.name} - {stats.maxWeightItem.totalWeight}g
               </div>
             </div>
           )}
@@ -116,7 +116,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode }) => {
             <div>
               <div className="text-gray-500 dark:text-gray-500">Most Expensive</div>
               <div className="font-semibold text-gray-900 dark:text-gray-100">
-                {stats.maxPriceItem.name} ({formatPrice(stats.maxPriceItem.totalPrice)})
+                {stats.maxPriceItem.name} - {formatPrice(stats.maxPriceItem.totalPrice)}
               </div>
             </div>
           )}
