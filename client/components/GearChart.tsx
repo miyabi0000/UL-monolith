@@ -321,19 +321,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* 数量表示モード切り替えボタン */}
-          <button
-            onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-            className="px-2 py-1 text-[10px] font-semibold rounded transition-all uppercase tracking-wide"
-            style={{
-              backgroundColor: quantityDisplayMode === 'owned' ? COLORS.gray[700] : COLORS.gray[600],
-              color: COLORS.white,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            {quantityDisplayMode === 'owned' ? 'Own' : 'Need'}
-          </button>
-
           {/* パンくずリストナビゲーション */}
           <div className="flex items-center gap-1 text-xs">
           <button
@@ -597,6 +584,51 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 )
               })()}
             </div>
+          </div>
+        </div>
+
+        {/* 数量表示モード切り替えセクション */}
+        <div className="px-4 pb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Display Mode:</span>
+            <button
+              onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all"
+              style={{
+                backgroundColor: quantityDisplayMode === 'owned' ? COLORS.gray[700] : COLORS.blue[600],
+                color: COLORS.white,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              {/* アイコン */}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {quantityDisplayMode === 'owned' ? (
+                  // 所有アイコン（チェックマーク付きボックス）
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                ) : (
+                  // 必要アイコン（クリップボード）
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                )}
+              </svg>
+              <span className="uppercase tracking-wide">
+                {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
+              </span>
+            </button>
           </div>
         </div>
       </Card>
