@@ -595,20 +595,20 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all"
               style={{
-                backgroundColor: quantityDisplayMode === 'owned' ? COLORS.gray[700] : COLORS.blue[600],
+                backgroundColor: quantityDisplayMode === 'required' ? COLORS.gray[700] : COLORS.blue[600],
                 color: COLORS.white,
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
             >
-              {/* アイコン */}
+              {/* アイコン - 次の状態を表示 */}
               <svg
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                {quantityDisplayMode === 'owned' ? (
-                  // 所有アイコン（チェックマーク付きボックス）
+                {quantityDisplayMode === 'required' ? (
+                  // 所有アイコン（チェックマーク）- 次は所有モードへ
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -616,7 +616,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     d="M5 13l4 4L19 7"
                   />
                 ) : (
-                  // 必要アイコン（クリップボード）
+                  // 必要アイコン（クリップボード）- 次は必要モードへ
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -626,7 +626,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 )}
               </svg>
               <span className="uppercase tracking-wide">
-                {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
+                Show {quantityDisplayMode === 'owned' ? 'Required' : 'Owned'}
               </span>
             </button>
           </div>
