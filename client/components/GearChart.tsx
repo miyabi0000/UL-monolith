@@ -222,6 +222,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     [sortedData, selectedCategoryFromChart]
   )
 
+  // 選択中のアイテムの色を取得
+  const selectedItemColor = useMemo(() => {
+    if (!selectedItem || !selectedData) return null
+    const itemData = (selectedData.sortedItems || []).find((item: any) => item.id === selectedItem)
+    if (!itemData) return null
+    const index = (selectedData.sortedItems || []).findIndex((item: any) => item.id === selectedItem)
+    return generateItemColor(selectedData.color || DEFAULT_COLOR, index, selectedData.sortedItems?.length || 1)
+  }, [selectedItem, selectedData])
+
   const outerPieData = useMemo(() => {
     return (selectedData?.sortedItems || []).map((item, index) => {
       const itemValue = getItemValue(item, viewMode)
@@ -325,51 +334,80 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             GEAR ANALYSIS
           </h3>
 
-          {/* パンくずリストナビゲーション */}
-          <div className="flex items-center gap-1 text-xs">
-          <button
-            onClick={() => handleBreadcrumbClick('all')}
-            className={`transition-colors ${
-              !selectedCategoryFromChart && !selectedItem
-                ? 'font-bold text-gray-900 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            ALL
-          </button>
+          {/* ディレクトリタブ型ナビゲーション */}
+          <div className="flex items-center gap-0 text-xs">
+            {/* ALL タブ */}
+            <button
+              onClick={() => handleBreadcrumbClick('all')}
+              className={`px-3 py-1.5 font-semibold transition-all duration-200 ${
+                !selectedCategoryFromChart && !selectedItem
+                  ? 'text-white dark:text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              }`}
+              style={{
+                backgroundColor: !selectedCategoryFromChart && !selectedItem
+                  ? COLORS.gray[600]
+                  : 'transparent',
+                borderTopLeftRadius: '6px',
+                borderBottomLeftRadius: '6px',
+                borderTopRightRadius: selectedCategoryFromChart ? '0' : '6px',
+                borderBottomRightRadius: selectedCategoryFromChart ? '0' : '6px',
+                clipPath: selectedCategoryFromChart
+                  ? 'polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%)'
+                  : 'none',
+                paddingRight: selectedCategoryFromChart ? '16px' : '12px'
+              }}
+            >
+              ALL
+            </button>
 
-          {selectedCategoryFromChart && (
-            <>
-              <span className="text-gray-400 dark:text-gray-500">›</span>
+            {/* Category タブ */}
+            {selectedCategoryFromChart && (
               <button
                 onClick={() => handleBreadcrumbClick('category')}
-                className={`transition-all ${
-                  selectedItem
-                    ? 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    : 'font-bold text-gray-900 dark:text-gray-100'
+                className={`px-3 py-1.5 font-semibold transition-all duration-200 ${
+                  !selectedItem
+                    ? 'text-white dark:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
                 }`}
                 style={{
+                  backgroundColor: !selectedItem && selectedData?.color
+                    ? selectedData.color
+                    : !selectedItem
+                    ? COLORS.gray[600]
+                    : 'transparent',
+                  marginLeft: '-8px',
+                  clipPath: selectedItem
+                    ? 'polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%)'
+                    : 'polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%)',
+                  paddingLeft: '20px',
+                  paddingRight: selectedItem ? '16px' : '12px',
+                  borderTopRightRadius: selectedItem ? '0' : '6px',
+                  borderBottomRightRadius: selectedItem ? '0' : '6px',
                   animation: selectedItem ? 'none' : 'slideIn 0.3s ease-out'
                 }}
               >
                 {selectedCategoryFromChart}
               </button>
-            </>
-          )}
+            )}
 
-          {selectedItem && selectedItemName && (
-            <>
-              <span className="text-gray-400 dark:text-gray-500">›</span>
-              <span
-                className="font-bold text-gray-900 dark:text-gray-100"
+            {/* Item タブ */}
+            {selectedItem && selectedItemName && (
+              <button
+                className="px-3 py-1.5 font-semibold text-white dark:text-white transition-all duration-200"
                 style={{
+                  backgroundColor: selectedItemColor || COLORS.gray[600],
+                  marginLeft: '-8px',
+                  clipPath: 'polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%)',
+                  paddingLeft: '20px',
+                  borderTopRightRadius: '6px',
+                  borderBottomRightRadius: '6px',
                   animation: 'slideIn 0.3s ease-out'
                 }}
               >
                 {selectedItemName}
-              </span>
-            </>
-          )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -595,7 +633,19 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
               title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
             >
-              <span>🔄</span>
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
               <span className="uppercase tracking-wide">
                 {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
               </span>
