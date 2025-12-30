@@ -8,24 +8,24 @@ import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 // ==================== 定数 ====================
 const CHART_CONFIG = {
   height: {
-    mobile: 500,
-    tablet: 600,
-    desktop: 650
+    mobile: 325,
+    tablet: 390,
+    desktop: 420
   },
   outerRadius: {
-    mobile: { outer: 130, inner: 95 },
-    tablet: { outer: 180, inner: 130 },
-    desktop: { outer: 220, inner: 160 }
+    mobile: { outer: 85, inner: 62 },
+    tablet: { outer: 117, inner: 85 },
+    desktop: { outer: 143, inner: 104 }
   },
   innerRadius: {
-    mobile: { outer: 95, inner: 60 },
-    tablet: { outer: 130, inner: 85 },
-    desktop: { outer: 160, inner: 105 }
+    mobile: { outer: 62, inner: 40 },
+    tablet: { outer: 85, inner: 55 },
+    desktop: { outer: 104, inner: 68 }
   },
   centerMaxWidth: {
-    mobile: 110,
-    tablet: 150,
-    desktop: 190
+    mobile: 72,
+    tablet: 98,
+    desktop: 124
   }
 } as const
 
@@ -317,10 +317,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== レンダリング ====================
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-3">
+          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
+            GEAR ANALYSIS
+          </h3>
+
           {/* パンくずリストナビゲーション */}
           <div className="flex items-center gap-1 text-xs">
           <button
@@ -368,16 +372,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           )}
           </div>
         </div>
-
-        <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
-          GEAR ANALYSIS
-        </h3>
       </div>
 
       {/* メインコンテンツ */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-2">
         {/* グラフエリア */}
-        <Card className="p-2 min-w-0">
+        <Card className="p-1.5 min-w-0">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -588,45 +588,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
 
         {/* 数量表示モード切り替えセクション */}
-        <div className="px-4 pb-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Display Mode:</span>
+        <div className="px-2 pb-1.5 pt-1 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center">
             <button
               onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all"
-              style={{
-                backgroundColor: quantityDisplayMode === 'required' ? COLORS.gray[700] : COLORS.blue[600],
-                color: COLORS.white,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+              title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
             >
-              {/* アイコン - 次の状態を表示 */}
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {quantityDisplayMode === 'required' ? (
-                  // 所有アイコン（チェックマーク）- 次は所有モードへ
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                ) : (
-                  // 必要アイコン（クリップボード）- 次は必要モードへ
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                )}
-              </svg>
+              <span>🔄</span>
               <span className="uppercase tracking-wide">
-                Show {quantityDisplayMode === 'owned' ? 'Required' : 'Owned'}
+                {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
               </span>
             </button>
           </div>
@@ -634,7 +605,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </Card>
 
         {/* Gear Detail Panel（右側サイドパネル） */}
-        <Card className="p-2 w-[320px] min-w-[320px] max-w-[320px]">
+        <Card className="p-1.5 w-[320px] min-w-[320px] max-w-[320px]">
           <GearDetailPanel
             mode={panelMode}
             selectedItem={selectedItemData}
