@@ -19,6 +19,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const [isDark, setIsDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // 初期状態の読み込み
   useEffect(() => {
@@ -44,10 +45,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       if (menuOpen && !(event.target as Element).closest('.menu-container')) {
         setMenuOpen(false);
       }
+      if (userMenuOpen && !(event.target as Element).closest('.user-menu-container')) {
+        setUserMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
+  }, [menuOpen, userMenuOpen]);
 
   return (
     <header className="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -119,27 +123,52 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               )}
             </button>
 
-            {/* User section */}
-            {isAuthenticated ? (
-              <>
-                <span className="hidden sm:inline text-xs lowercase text-gray-400 dark:text-gray-500 px-1">
-                  {userName}
-                </span>
-                <button
-                  className="text-xs px-2 py-1 sm:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 transition-all duration-150"
-                  onClick={onLogout}
-                >
-                  logout
-                </button>
-              </>
-            ) : (
+            {/* User menu */}
+            <div className="relative user-menu-container">
               <button
-                className="text-xs px-2 py-1 sm:px-3 bg-gray-700 dark:bg-gray-600 text-white rounded-full shadow-sm hover:bg-gray-800 dark:hover:bg-gray-500 transition-all duration-150"
-                onClick={onShowLogin}
+                className="p-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-150"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-label="User menu"
               >
-                login
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </button>
-            )}
+
+              {/* User dropdown menu */}
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  {isAuthenticated ? (
+                    <>
+                      {userName && (
+                        <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                          {userName}
+                        </div>
+                      )}
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          onLogout();
+                          setUserMenuOpen(false);
+                        }}
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        onShowLogin();
+                        setUserMenuOpen(false);
+                      }}
+                    >
+                      Login
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
