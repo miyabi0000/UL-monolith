@@ -299,6 +299,9 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
           onToggleCheckboxes={isCompareMode ? undefined : onToggleCheckboxes}
           onShowForm={onShowForm}
           onShowBulkUrlInput={onShowBulkUrlInput}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
 
       {/* 一括操作バー（チェックボックス表示時のみ） */}
