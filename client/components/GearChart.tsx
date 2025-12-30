@@ -334,28 +334,19 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             GEAR ANALYSIS
           </h3>
 
-          {/* ディレクトリタブ型ナビゲーション */}
-          <div className="flex items-center gap-0 text-xs">
+          {/* ファイルタブ型ナビゲーション */}
+          <div className="inline-flex items-center text-xs border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
             {/* ALL タブ */}
             <button
               onClick={() => handleBreadcrumbClick('all')}
-              className={`px-3 py-1.5 font-semibold transition-all duration-200 ${
-                !selectedCategoryFromChart && !selectedItem
-                  ? 'text-white dark:text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
+              className="px-2.5 py-1 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
               style={{
                 backgroundColor: !selectedCategoryFromChart && !selectedItem
-                  ? COLORS.gray[600]
+                  ? COLORS.gray[100]
                   : 'transparent',
-                borderTopLeftRadius: '6px',
-                borderBottomLeftRadius: '6px',
-                borderTopRightRadius: selectedCategoryFromChart ? '0' : '6px',
-                borderBottomRightRadius: selectedCategoryFromChart ? '0' : '6px',
-                clipPath: selectedCategoryFromChart
-                  ? 'polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%)'
-                  : 'none',
-                paddingRight: selectedCategoryFromChart ? '16px' : '12px'
+                color: !selectedCategoryFromChart && !selectedItem
+                  ? COLORS.gray[900]
+                  : COLORS.gray[500]
               }}
             >
               ALL
@@ -365,26 +356,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             {selectedCategoryFromChart && (
               <button
                 onClick={() => handleBreadcrumbClick('category')}
-                className={`px-3 py-1.5 font-semibold transition-all duration-200 ${
-                  !selectedItem
-                    ? 'text-white dark:text-white'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-                }`}
+                className="px-2.5 py-1 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
                 style={{
                   backgroundColor: !selectedItem && selectedData?.color
-                    ? selectedData.color
-                    : !selectedItem
-                    ? COLORS.gray[600]
+                    ? `${selectedData.color}15`
                     : 'transparent',
-                  marginLeft: '-8px',
-                  clipPath: selectedItem
-                    ? 'polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%)'
-                    : 'polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%)',
-                  paddingLeft: '20px',
-                  paddingRight: selectedItem ? '16px' : '12px',
-                  borderTopRightRadius: selectedItem ? '0' : '6px',
-                  borderBottomRightRadius: selectedItem ? '0' : '6px',
-                  animation: selectedItem ? 'none' : 'slideIn 0.3s ease-out'
+                  color: !selectedItem && selectedData?.color
+                    ? selectedData.color
+                    : COLORS.gray[500],
+                  borderLeftColor: selectedData?.color ? `${selectedData.color}40` : undefined
                 }}
               >
                 {selectedCategoryFromChart}
@@ -394,15 +374,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             {/* Item タブ */}
             {selectedItem && selectedItemName && (
               <button
-                className="px-3 py-1.5 font-semibold text-white dark:text-white transition-all duration-200"
+                className="px-2.5 py-1 font-medium transition-colors duration-150"
                 style={{
-                  backgroundColor: selectedItemColor || COLORS.gray[600],
-                  marginLeft: '-8px',
-                  clipPath: 'polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%)',
-                  paddingLeft: '20px',
-                  borderTopRightRadius: '6px',
-                  borderBottomRightRadius: '6px',
-                  animation: 'slideIn 0.3s ease-out'
+                  backgroundColor: selectedItemColor ? `${selectedItemColor}15` : 'transparent',
+                  color: selectedItemColor || COLORS.gray[900],
+                  borderLeftColor: selectedItemColor ? `${selectedItemColor}40` : undefined
                 }}
               >
                 {selectedItemName}
