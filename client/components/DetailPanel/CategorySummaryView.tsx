@@ -72,7 +72,6 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
 
       {/* 統計 */}
       <div>
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">STATS</div>
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between items-center">
             <span className="text-gray-500 dark:text-gray-500">Avg Weight</span>
