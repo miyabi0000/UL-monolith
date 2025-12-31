@@ -76,27 +76,23 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
       {/* 統計 */}
       <div>
         <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">STATS</div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div>
-            <div className="text-gray-500 dark:text-gray-500">Items</div>
-            <div className="font-semibold text-gray-900 dark:text-gray-100">{stats.itemCount}</div>
+        <div className="space-y-1.5 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 dark:text-gray-500">Avg Weight</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.avgWeight}g</span>
           </div>
-          <div>
-            <div className="text-gray-500 dark:text-gray-500">Avg Weight</div>
-            <div className="font-semibold text-gray-900 dark:text-gray-100">{stats.avgWeight}g</div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 dark:text-gray-500">Weight</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</span>
           </div>
-          <div>
-            <div className="text-gray-500 dark:text-gray-500">Weight</div>
-            <div className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</div>
-          </div>
-          <div>
-            <div className="text-gray-500 dark:text-gray-500">Price</div>
-            <div className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500 dark:text-gray-500">Price</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
           </div>
           {stats.shortageCount > 0 && (
-            <div className="col-span-2">
-              <div className="text-gray-500 dark:text-gray-500">Shortage</div>
-              <div className="font-semibold text-red-600 dark:text-red-400">{stats.shortageCount}</div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 dark:text-gray-500">Shortage</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{stats.shortageCount}</span>
             </div>
           )}
         </div>
@@ -107,7 +103,10 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
 
       {/* アイテムリスト */}
       <div>
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">ITEMS</div>
+        <div className="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <span>ITEMS</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.itemCount}</span>
+        </div>
         <div className="space-y-1">
           {categoryItems.length === 0 ? (
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
