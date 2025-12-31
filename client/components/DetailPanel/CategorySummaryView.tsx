@@ -22,9 +22,11 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   viewMode,
   onItemClick,
 }) => {
-  // カテゴリに属するアイテムをフィルタ
+  // カテゴリに属するアイテムをフィルタして重さ昇順でソート
   const categoryItems = useMemo(() => {
-    return items.filter(item => item.category?.name === categoryName);
+    return items
+      .filter(item => item.category?.name === categoryName)
+      .sort((a, b) => (a.totalWeight || 0) - (b.totalWeight || 0));
   }, [items, categoryName]);
 
   // カテゴリ統計を計算
@@ -74,10 +76,6 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
       <div>
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-500">Avg Weight</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.avgWeight}g</span>
-          </div>
-          <div className="flex justify-between items-center">
             <span className="text-gray-500 dark:text-gray-500">Weight</span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</span>
           </div>
@@ -85,12 +83,6 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
             <span className="text-gray-500 dark:text-gray-500">Price</span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
           </div>
-          {stats.shortageCount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500 dark:text-gray-500">Shortage</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">{stats.shortageCount}</span>
-            </div>
-          )}
         </div>
       </div>
 
