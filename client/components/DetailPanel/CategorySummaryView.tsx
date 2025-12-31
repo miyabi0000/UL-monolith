@@ -57,11 +57,8 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
 
   return (
     <div className="p-4 space-y-4 overflow-y-auto h-full w-full min-w-0">
-      {/* カテゴリ名 */}
+      {/* カテゴリバッジ */}
       <div>
-        <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">
-          {categoryName}
-        </h3>
         <span
           className="inline-block text-xs font-semibold px-2 py-1 rounded"
           style={getCategoryBadgeStyle(categoryColor)}
