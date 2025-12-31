@@ -128,7 +128,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
                     <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                       {item.name}
                     </div>
-                    <div className="flex justify-end gap-2 text-gray-500 dark:text-gray-500 mt-0.5">
+                    <div className="text-right text-gray-500 dark:text-gray-500 mt-0.5 space-x-2">
                       <span>{item.ownedQuantity}/{item.requiredQuantity}</span>
                       <span>{item.totalWeight}g</span>
                       <span className="font-semibold">{weightPercentage}%</span>
