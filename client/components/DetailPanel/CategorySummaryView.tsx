@@ -103,6 +103,9 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
           ) : (
             categoryItems.map(item => {
               const imageUrl = item.imageUrl || 'https://via.placeholder.com/40x40?text=No+Image';
+              const weightPercentage = stats.totalWeight > 0
+                ? Math.round((item.totalWeight / stats.totalWeight) * 100)
+                : 0;
               return (
                 <button
                   key={item.id}
@@ -125,9 +128,10 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
                     <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
                       {item.name}
                     </div>
-                    <div className="flex gap-2 text-gray-500 dark:text-gray-500 mt-0.5">
+                    <div className="flex justify-end gap-2 text-gray-500 dark:text-gray-500 mt-0.5">
                       <span>{item.ownedQuantity}/{item.requiredQuantity}</span>
                       <span>{item.totalWeight}g</span>
+                      <span className="font-semibold">{weightPercentage}%</span>
                       <span>P{item.priority}</span>
                     </div>
                   </div>
