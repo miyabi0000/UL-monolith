@@ -126,7 +126,7 @@ const GearCard: React.FC<GearCardProps> = ({
         src={imageUrl}
         alt={item.name}
         loading="lazy"
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain"
       />
 
       {/* ホバーオーバーレイ */}

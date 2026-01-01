@@ -118,7 +118,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
                     <img
                       src={imageUrl}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       loading="lazy"
                     />
                   </div>
