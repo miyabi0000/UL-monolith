@@ -71,37 +71,6 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode }) => {
             <span className="text-gray-500 dark:text-gray-500">Price</span>
             <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
           </div>
-          {stats.highPriorityCount > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500 dark:text-gray-500">Priority 1</span>
-              <span className="font-semibold" style={{ color: COLORS.danger }}>{stats.highPriorityCount}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 区切り線 */}
-      <div className="border-t border-gray-200 dark:border-gray-700" />
-
-      {/* 詳細統計 */}
-      <div>
-        <div className="space-y-2 text-xs">
-          {stats.maxWeightItem && (
-            <div>
-              <div className="text-gray-500 dark:text-gray-500">Heaviest</div>
-              <div className="font-semibold text-gray-900 dark:text-gray-100">
-                {stats.maxWeightItem.name} - {stats.maxWeightItem.totalWeight}g
-              </div>
-            </div>
-          )}
-          {stats.maxPriceItem && (
-            <div>
-              <div className="text-gray-500 dark:text-gray-500">Most Expensive</div>
-              <div className="font-semibold text-gray-900 dark:text-gray-100">
-                {stats.maxPriceItem.name} - {formatPrice(stats.maxPriceItem.totalPrice)}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
