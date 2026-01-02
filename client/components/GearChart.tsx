@@ -10,22 +10,22 @@ const CHART_CONFIG = {
   height: {
     mobile: 280,
     tablet: 340,
-    desktop: 320
+    desktop: 380
   },
   outerRadius: {
     mobile: { outer: 75, inner: 55 },
     tablet: { outer: 105, inner: 75 },
-    desktop: { outer: 110, inner: 80 }
+    desktop: { outer: 130, inner: 95 }
   },
   innerRadius: {
     mobile: { outer: 55, inner: 35 },
     tablet: { outer: 75, inner: 48 },
-    desktop: { outer: 80, inner: 52 }
+    desktop: { outer: 95, inner: 62 }
   },
   centerMaxWidth: {
     mobile: 65,
     tablet: 88,
-    desktop: 97
+    desktop: 115
   }
 } as const
 
@@ -332,7 +332,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-2 min-h-0">
         {/* グラフエリア */}
-        <Card className="flex flex-col min-w-0 overflow-hidden p-1.5">
+        <Card className="flex flex-col min-w-0 overflow-hidden p-2">
         <div className="relative flex items-center justify-center flex-1" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
