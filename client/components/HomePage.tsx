@@ -158,59 +158,23 @@ export default function HomePage() {
               <SkeletonLoader variant="table" />
             </>
           ) : (
-            // データ読み込み完了後の実際のコンテンツ - 2カラムレイアウト
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 mb-16">
-              {/* 左カラム: GEAR ANALYSIS */}
-              <div className="min-w-0">
-                <GearChart
-                  data={chartData}
-                  totalWeight={totals.weight}
-                  totalCost={totals.price}
-                  viewMode={viewMode}
-                  quantityDisplayMode={quantityDisplayMode}
-                  selectedCategories={selectedCategories}
-                  onCategorySelect={setSelectedCategories}
-                  onViewModeChange={setViewMode}
-                  onQuantityDisplayModeChange={setQuantityDisplayMode}
-                  items={gearItems}
-                  onEdit={handleEditGear}
-                  onDelete={handleDeleteGear}
-                />
-              </div>
-
-              {/* 右カラム: ギアリスト */}
-              <div className="min-w-0">
-                {gearViewMode === 'table' || gearViewMode === 'compare' ? (
-                  <GearTable
-                    items={gearItems}
-                    categories={categories}
-                    filteredByCategory={selectedCategories}
-                    onEdit={handleEditGear}
-                    onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
-                    onSave={handleSaveGear}
-                    onUpdateItem={handleUpdateItem}
-                    showCheckboxes={showCheckboxes}
-                    onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
-                    onShowForm={() => setShowForm(true)}
-                    onCreate={handleCreateGear}
-                    currentView={gearViewMode}
-                    onViewChange={setGearViewMode}
-                  />
-                ) : (
-                  <GearView
-                    items={gearItems}
-                    categories={categories}
-                    filteredByCategory={selectedCategories}
-                    onEdit={handleEditGear}
-                    onDelete={(ids) => ids.forEach(id => handleDeleteGear(id))}
-                    showCheckboxes={showCheckboxes}
-                    onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
-                    onShowForm={() => setShowForm(true)}
-                    currentView={gearViewMode}
-                    onViewChange={setGearViewMode}
-                  />
-                )}
-              </div>
+            // データ読み込み完了後の実際のコンテンツ - チャート中心UI
+            <div className="mb-16">
+              <GearChart
+                data={chartData}
+                totalWeight={totals.weight}
+                totalCost={totals.price}
+                viewMode={viewMode}
+                quantityDisplayMode={quantityDisplayMode}
+                selectedCategories={selectedCategories}
+                onCategorySelect={setSelectedCategories}
+                onViewModeChange={setViewMode}
+                onQuantityDisplayModeChange={setQuantityDisplayMode}
+                items={gearItems}
+                onEdit={handleEditGear}
+                onDelete={handleDeleteGear}
+                onShowForm={() => setShowForm(true)}
+              />
             </div>
           )}
         </div>

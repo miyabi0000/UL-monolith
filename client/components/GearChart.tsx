@@ -141,6 +141,7 @@ interface GearChartProps {
   items: any[] // すべてのギアアイテム
   onEdit: (item: any) => void
   onDelete: (id: string) => void
+  onShowForm?: () => void // + ADDボタン用
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -155,7 +156,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onQuantityDisplayModeChange,
   items,
   onEdit,
-  onDelete
+  onDelete,
+  onShowForm
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [selectedCategoryForPanel, setSelectedCategoryForPanel] = useState<string | null>(null)
@@ -386,6 +388,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             )}
           </div>
         </div>
+
+        {/* 右側: アクションボタン */}
+        {onShowForm && (
+          <button
+            onClick={onShowForm}
+            className="btn-primary btn-xs"
+          >
+            + ADD
+          </button>
+        )}
       </div>
 
       {/* メインコンテンツ */}
