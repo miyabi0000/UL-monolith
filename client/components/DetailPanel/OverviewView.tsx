@@ -64,7 +64,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode, onItemClic
   }, [items]);
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full w-full min-w-0">
+    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* 統計 */}
       <div>
         <div className="space-y-1.5 text-xs">

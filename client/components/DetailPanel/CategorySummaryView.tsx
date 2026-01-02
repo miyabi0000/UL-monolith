@@ -58,7 +58,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   const categoryColor = categoryItems[0]?.category?.color || '#6B7280';
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full w-full min-w-0">
+    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* カテゴリバッジ */}
       <div>
         <span

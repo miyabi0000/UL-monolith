@@ -8,24 +8,24 @@ import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 // ==================== 定数 ====================
 const CHART_CONFIG = {
   height: {
-    mobile: 325,
-    tablet: 390,
-    desktop: 420
+    mobile: 280,
+    tablet: 340,
+    desktop: 380
   },
   outerRadius: {
-    mobile: { outer: 85, inner: 62 },
-    tablet: { outer: 117, inner: 85 },
-    desktop: { outer: 143, inner: 104 }
+    mobile: { outer: 75, inner: 55 },
+    tablet: { outer: 105, inner: 75 },
+    desktop: { outer: 130, inner: 95 }
   },
   innerRadius: {
-    mobile: { outer: 62, inner: 40 },
-    tablet: { outer: 85, inner: 55 },
-    desktop: { outer: 104, inner: 68 }
+    mobile: { outer: 55, inner: 35 },
+    tablet: { outer: 75, inner: 48 },
+    desktop: { outer: 95, inner: 62 }
   },
   centerMaxWidth: {
-    mobile: 72,
-    tablet: 98,
-    desktop: 124
+    mobile: 65,
+    tablet: 88,
+    desktop: 115
   }
 } as const
 
@@ -328,12 +328,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== レンダリング ====================
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col">
+    <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-2 min-h-0">
         {/* グラフエリア */}
-        <Card className="flex flex-col min-w-0 overflow-hidden">
-        <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
+        <Card className="flex flex-col min-w-0 overflow-hidden p-2">
+        <div className="relative flex items-center justify-center flex-1" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* 外側円 - アイテム（先に描画） */}
@@ -574,7 +574,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
                 GEAR ANALYSIS
