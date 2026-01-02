@@ -543,16 +543,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
 
         {/* 数量表示モード切り替えセクション */}
-        <div className="px-2 py-1 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-1.5 py-0.5 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-            className="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            className="w-full inline-flex items-center justify-center gap-0.5 px-1.5 py-0 text-[9px] font-medium rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
             title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
           >
-            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="uppercase tracking-wide">
+            <span className="uppercase">
               {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
             </span>
           </button>
