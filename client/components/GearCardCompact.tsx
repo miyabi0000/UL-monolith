@@ -49,7 +49,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
   }, [item?.productUrl]);
 
   return (
-    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
+    <div className="p-2 space-y-2 overflow-y-auto h-full w-full min-w-0">
       {/* 画像 */}
       <div
         className="relative w-full max-w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
@@ -66,9 +66,9 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* 不足警告（右上） */}
         {hasShortage && (
-          <div className="absolute top-2 right-2 z-10">
+          <div className="absolute top-1.5 right-1.5 z-10">
             <span
-              className="text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full"
+              className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
               style={{
                 backgroundColor: COLORS.warning,
                 color: COLORS.white
@@ -82,7 +82,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* ホバーオーバーレイ */}
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-4"
+          className="absolute inset-0 flex flex-col items-center justify-center p-2"
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
             opacity: isHovered ? 1 : 0,
@@ -90,9 +90,9 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
           }}
         >
           {/* アクションボタン */}
-          <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col gap-1.5 w-full">
             <button
-              className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
+              className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
               style={{
                 backgroundColor: COLORS.gray[700],
                 color: COLORS.white
@@ -113,7 +113,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
             {item.productUrl && (
               <button
-                className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
+                className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
                 style={{
                   backgroundColor: COLORS.gray[700],
                   color: COLORS.white
@@ -132,7 +132,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
             {onDelete && (
               <button
-                className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
+                className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
                 style={{
                   backgroundColor: COLORS.danger,
                   color: COLORS.white
@@ -154,11 +154,11 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
       {/* 名前とブランド */}
       <div className="min-w-0">
-        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words overflow-wrap-anywhere">
+        <h4 className="text-xs font-bold text-gray-900 dark:text-gray-100 mb-0.5 break-words overflow-wrap-anywhere">
           {item.name}
         </h4>
         {item.brand && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 break-words overflow-wrap-anywhere">
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 break-words overflow-wrap-anywhere">
             {item.brand}
           </p>
         )}
@@ -168,7 +168,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       {item.category && (
         <div>
           <span
-            className="inline-block text-xs font-semibold px-2 py-1 rounded"
+            className="inline-block text-[11px] font-semibold px-1.5 py-0.5 rounded"
             style={getCategoryBadgeStyle(item.category.color)}
           >
             {item.category.name}
@@ -177,7 +177,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       )}
 
       {/* 情報グリッド */}
-      <div className="space-y-2 text-xs">
+      <div className="space-y-1.5 text-[11px]">
         {/* 重量 */}
         <div className="flex justify-between items-center">
           <span className="text-gray-600 dark:text-gray-400">Weight:</span>
@@ -226,7 +226,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         {/* シーズン */}
         {item.seasons && item.seasons.length > 0 && (
           <div>
-            <div className="text-gray-600 dark:text-gray-400 mb-1">Season:</div>
+            <div className="text-gray-600 dark:text-gray-400 mb-0.5">Season:</div>
             <SeasonBar seasons={item.seasons} size="sm" />
           </div>
         )}
