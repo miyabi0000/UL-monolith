@@ -49,7 +49,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       )}
 
       {mode === 'overview' && (
-        <OverviewView items={items} viewMode={viewMode} />
+        <OverviewView items={items} viewMode={viewMode} onItemClick={onItemClick} />
       )}
     </div>
   );
