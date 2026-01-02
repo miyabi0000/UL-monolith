@@ -543,10 +543,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
 
         {/* 数量表示モード切り替えセクション */}
-        <div className="px-1.5 py-0.5 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-1 py-0 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-            className="w-full inline-flex items-center justify-center gap-0.5 px-1.5 py-0 text-[9px] font-medium rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            className="w-full inline-flex items-center justify-center gap-0.5 px-1 py-0.5 text-[9px] font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
             title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
           >
             <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
