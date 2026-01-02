@@ -328,82 +328,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== レンダリング ====================
   return (
-    <div className="space-y-1">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between py-1">
-        <div className="flex items-center gap-3">
-          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
-            GEAR ANALYSIS
-          </h3>
-
-          {/* ファイルタブ型ナビゲーション */}
-          <div className="inline-flex items-center text-xs border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-            {/* ALL タブ */}
-            <button
-              onClick={() => handleBreadcrumbClick('all')}
-              className="px-2.5 py-1 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
-              style={{
-                backgroundColor: !selectedCategoryFromChart && !selectedItem
-                  ? COLORS.gray[100]
-                  : 'transparent',
-                color: !selectedCategoryFromChart && !selectedItem
-                  ? COLORS.gray[900]
-                  : COLORS.gray[500]
-              }}
-            >
-              ALL
-            </button>
-
-            {/* Category タブ */}
-            {selectedCategoryFromChart && (
-              <button
-                onClick={() => handleBreadcrumbClick('category')}
-                className="px-2.5 py-1 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
-                style={{
-                  backgroundColor: !selectedItem && selectedData?.color
-                    ? `${selectedData.color}15`
-                    : 'transparent',
-                  color: !selectedItem && selectedData?.color
-                    ? selectedData.color
-                    : COLORS.gray[500],
-                  borderLeftColor: selectedData?.color ? `${selectedData.color}40` : undefined
-                }}
-              >
-                {selectedCategoryFromChart}
-              </button>
-            )}
-
-            {/* Item タブ */}
-            {selectedItem && selectedItemName && (
-              <button
-                className="px-2.5 py-1 font-medium transition-colors duration-150"
-                style={{
-                  backgroundColor: selectedItemColor ? `${selectedItemColor}15` : 'transparent',
-                  color: selectedItemColor || COLORS.gray[900],
-                  borderLeftColor: selectedItemColor ? `${selectedItemColor}40` : undefined
-                }}
-              >
-                {selectedItemName}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* 右側: アクションボタン */}
-        {onShowForm && (
-          <button
-            onClick={onShowForm}
-            className="btn-primary btn-xs"
-          >
-            + ADD
-          </button>
-        )}
-      </div>
-
-      {/* メインコンテンツ */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-2">
+    <div className="h-[calc(100vh-120px)] flex flex-col">
+      {/* メインコンテンツ - 統合レイアウト */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-2 min-h-0">
         {/* グラフエリア */}
-        <Card className="p-1.5 min-w-0">
+        <Card className="flex flex-col min-w-0 overflow-hidden">
         <div className="relative flex items-center justify-center" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -642,18 +571,92 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
       </Card>
 
-        {/* Gear Detail Panel（右側サイドパネル） */}
-        <Card className="p-1.5 w-[320px] min-w-[320px] max-w-[320px]">
-          <GearDetailPanel
-            mode={panelMode}
-            selectedItem={selectedItemData}
-            selectedCategory={selectedCategoryForPanel}
-            items={items}
-            viewMode={viewMode}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onItemClick={handlePanelItemClick}
-          />
+        {/* Gear Detail Panel（右側パネル） */}
+        <Card className="flex flex-col min-w-0 overflow-hidden">
+          {/* パネルヘッダー */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
+                GEAR ANALYSIS
+              </h3>
+
+              {/* ファイルタブ型ナビゲーション */}
+              <div className="inline-flex items-center text-xs border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                {/* ALL タブ */}
+                <button
+                  onClick={() => handleBreadcrumbClick('all')}
+                  className="px-2 py-0.5 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
+                  style={{
+                    backgroundColor: !selectedCategoryFromChart && !selectedItem
+                      ? COLORS.gray[100]
+                      : 'transparent',
+                    color: !selectedCategoryFromChart && !selectedItem
+                      ? COLORS.gray[900]
+                      : COLORS.gray[500]
+                  }}
+                >
+                  ALL
+                </button>
+
+                {/* Category タブ */}
+                {selectedCategoryFromChart && (
+                  <button
+                    onClick={() => handleBreadcrumbClick('category')}
+                    className="px-2 py-0.5 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
+                    style={{
+                      backgroundColor: !selectedItem && selectedData?.color
+                        ? `${selectedData.color}15`
+                        : 'transparent',
+                      color: !selectedItem && selectedData?.color
+                        ? selectedData.color
+                        : COLORS.gray[500],
+                      borderLeftColor: selectedData?.color ? `${selectedData.color}40` : undefined
+                    }}
+                  >
+                    {selectedCategoryFromChart}
+                  </button>
+                )}
+
+                {/* Item タブ */}
+                {selectedItem && selectedItemName && (
+                  <button
+                    className="px-2 py-0.5 font-medium transition-colors duration-150"
+                    style={{
+                      backgroundColor: selectedItemColor ? `${selectedItemColor}15` : 'transparent',
+                      color: selectedItemColor || COLORS.gray[900],
+                      borderLeftColor: selectedItemColor ? `${selectedItemColor}40` : undefined
+                    }}
+                  >
+                    {selectedItemName}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* + ADDボタン */}
+            {onShowForm && (
+              <button
+                onClick={onShowForm}
+                className="btn-primary btn-xs flex-shrink-0"
+              >
+                + ADD
+              </button>
+            )}
+          </div>
+
+          {/* パネルコンテンツ */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <GearDetailPanel
+              mode={panelMode}
+              selectedItem={selectedItemData}
+              selectedCategory={selectedCategoryForPanel}
+              items={items}
+              viewMode={viewMode}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onItemClick={handlePanelItemClick}
+            />
+          </div>
         </Card>
       </div>
     </div>
