@@ -158,10 +158,10 @@ export default function HomePage() {
               <SkeletonLoader variant="table" />
             </>
           ) : (
-            // データ読み込み完了後の実際のコンテンツ
-            <>
-              {/* チャート */}
-              <div style={{ marginBottom: `${SPACING_SCALE.sm}px` }}>
+            // データ読み込み完了後の実際のコンテンツ - 2カラムレイアウト
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 mb-16">
+              {/* 左カラム: GEAR ANALYSIS */}
+              <div className="min-w-0">
                 <GearChart
                   data={chartData}
                   totalWeight={totals.weight}
@@ -178,8 +178,8 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* ギアテーブル or カードビュー */}
-              <div style={{ marginBottom: `${SPACING_SCALE['4xl']}px` }}>
+              {/* 右カラム: ギアリスト */}
+              <div className="min-w-0">
                 {gearViewMode === 'table' || gearViewMode === 'compare' ? (
                   <GearTable
                     items={gearItems}
@@ -211,7 +211,7 @@ export default function HomePage() {
                   />
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
       </main>
