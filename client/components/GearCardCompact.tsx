@@ -52,7 +52,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
     <div className="p-2 space-y-2 overflow-y-auto h-full w-full min-w-0">
       {/* 画像 */}
       <div
-        className="relative w-full max-w-full max-h-48 aspect-[4/3] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
+        className="relative w-full max-w-full max-h-[201px] aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => onEdit?.(item)}
