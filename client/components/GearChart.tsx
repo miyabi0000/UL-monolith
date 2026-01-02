@@ -10,22 +10,22 @@ const CHART_CONFIG = {
   height: {
     mobile: 280,
     tablet: 340,
-    desktop: 380
+    desktop: 450
   },
   outerRadius: {
     mobile: { outer: 75, inner: 55 },
     tablet: { outer: 105, inner: 75 },
-    desktop: { outer: 130, inner: 95 }
+    desktop: { outer: 155, inner: 115 }
   },
   innerRadius: {
     mobile: { outer: 55, inner: 35 },
     tablet: { outer: 75, inner: 48 },
-    desktop: { outer: 95, inner: 62 }
+    desktop: { outer: 115, inner: 75 }
   },
   centerMaxWidth: {
     mobile: 65,
     tablet: 88,
-    desktop: 115
+    desktop: 135
   }
 } as const
 
