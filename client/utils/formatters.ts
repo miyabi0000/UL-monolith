@@ -1,20 +1,12 @@
 /**
- * Format price in cents to display format
- * Automatically detects currency based on amount
+ * Format price in cents to JPY display format
+ * @param priceCents Price in cents (1/100 of a yen)
+ * @returns Formatted price string (e.g., "¥12,345")
  */
 export const formatPrice = (priceCents?: number): string => {
   if (!priceCents) return '-'
-  
   const price = priceCents / 100
-  
-  // Detect currency based on price range (simple heuristic)
-  if (price > 1000) {
-    // Assume JPY for larger numbers
-    return `¥${Math.round(price).toLocaleString()}`
-  } else {
-    // Assume USD for smaller numbers
-    return `$${price.toFixed(2)}`
-  }
+  return `¥${Math.round(price).toLocaleString()}`
 }
 
 /**

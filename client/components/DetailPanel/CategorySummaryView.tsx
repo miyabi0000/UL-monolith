@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
 import { COLORS, getCategoryBadgeStyle } from '../../utils/designSystem';
+import { formatPrice } from '../../utils/formatters';
 
 interface CategorySummaryViewProps {
   categoryName: string;
@@ -8,13 +9,6 @@ interface CategorySummaryViewProps {
   viewMode: 'weight' | 'cost';
   onItemClick: (itemId: string) => void;
 }
-
-// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
-const formatPrice = (priceCents?: number) => {
-  if (!priceCents) return '-';
-  const price = priceCents / 100;
-  return `¥${Math.round(price).toLocaleString()}`;
-};
 
 const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   categoryName,

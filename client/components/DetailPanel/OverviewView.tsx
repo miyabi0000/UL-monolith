@@ -1,19 +1,13 @@
 import React, { useMemo } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
 import { COLORS } from '../../utils/designSystem';
+import { formatPrice } from '../../utils/formatters';
 
 interface OverviewViewProps {
   items: GearItemWithCalculated[];
   viewMode: 'weight' | 'cost';
   onItemClick?: (itemId: string) => void;
 }
-
-// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
-const formatPrice = (priceCents?: number) => {
-  if (!priceCents) return '-';
-  const price = priceCents / 100;
-  return `¥${Math.round(price).toLocaleString()}`;
-};
 
 const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode, onItemClick }) => {
   // アイテムを重さ昇順でソート

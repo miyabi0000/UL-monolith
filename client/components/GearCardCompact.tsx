@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
+import { formatPrice } from '../utils/formatters';
 import SeasonBar from './SeasonBar';
 
 interface GearCardCompactProps {
@@ -9,13 +10,6 @@ interface GearCardCompactProps {
   onEdit?: (item: GearItemWithCalculated) => void;
   onDelete?: (id: string) => void;
 }
-
-// formatPrice関数をコンポーネント外に移動してmemo化の恩恵を受ける
-const formatPrice = (priceCents?: number) => {
-  if (!priceCents) return '-';
-  const price = priceCents / 100;
-  return `¥${Math.round(price).toLocaleString()}`;
-};
 
 const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
