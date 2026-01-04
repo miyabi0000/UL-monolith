@@ -7,26 +7,27 @@ import Card from './ui/Card'
 import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 
 // ==================== 定数 ====================
+// デザインシステムに基づいたチャート設定
 const CHART_CONFIG = {
   height: {
-    mobile: 280,
-    tablet: 340,
-    desktop: 450
+    mobile: 350,
+    tablet: 450,
+    desktop: 500
   },
   outerRadius: {
-    mobile: { outer: 75, inner: 55 },
-    tablet: { outer: 105, inner: 75 },
-    desktop: { outer: 155, inner: 115 }
+    mobile: { outer: 120, inner: 85 },
+    tablet: { outer: 160, inner: 115 },
+    desktop: { outer: 200, inner: 140 }
   },
   innerRadius: {
-    mobile: { outer: 55, inner: 35 },
-    tablet: { outer: 75, inner: 48 },
-    desktop: { outer: 115, inner: 75 }
+    mobile: { outer: 85, inner: 55 },
+    tablet: { outer: 115, inner: 75 },
+    desktop: { outer: 140, inner: 95 }
   },
   centerMaxWidth: {
-    mobile: 65,
-    tablet: 88,
-    desktop: 135
+    mobile: 100,
+    tablet: 140,
+    desktop: 180
   }
 } as const
 
@@ -252,10 +253,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-2 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
         {/* グラフエリア */}
-        <Card className="flex flex-col min-w-0 overflow-hidden p-2">
-        <div className="relative flex items-center justify-center flex-1" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
+        <Card className="flex flex-col min-w-0 overflow-hidden">
+        <div className="relative flex items-center justify-center flex-1 p-3" style={{ minHeight: chartHeight + 54, maxHeight: chartHeight + 54 }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* 外側円 - アイテム（先に描画） */}
@@ -465,16 +466,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         </div>
 
         {/* 数量表示モード切り替えセクション */}
-        <div className="px-1 py-0.5">
+        <div className="px-3 pb-3">
           <button
             onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-            className="w-full inline-flex items-center justify-center gap-0.5 px-1 py-0.5 text-[9px] font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded"
             title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
           >
-            <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="uppercase">
+            <span className="uppercase tracking-wide">
               {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
             </span>
           </button>
@@ -484,8 +485,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="flex items-center gap-3">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
                 GEAR ANALYSIS
               </h3>
