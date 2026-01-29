@@ -89,12 +89,8 @@ const GearView: React.FC<GearViewProps> = React.memo(({
     }
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === processedItems.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(processedItems.map(item => item.id));
-    }
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? processedItems.map(item => item.id) : []);
   };
 
   const handleSelect = (id: string) => {

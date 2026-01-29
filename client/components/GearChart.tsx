@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { ChartData, ChartViewMode, QuantityDisplayMode } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
+import { getQuantityForDisplayMode } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel, { PanelMode } from './GearDetailPanel'
 
@@ -45,10 +46,13 @@ const formatValue = (value: number, mode: ChartViewMode): string => {
   return `${value}g`
 }
 
-const getItemValue = (item: any, mode: ChartViewMode): number => {
-  return mode === 'cost' ? item.totalPrice : item.totalWeight
+const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, quantityMode: QuantityDisplayMode): number => {
+  const quantity = getQuantityForDisplayMode(item, quantityMode)
+  const unitValue = viewMode === 'cost' ? (item.priceCents || 0) : (item.weightGrams || 0)
+  return unitValue * quantity
 }
 
+type GearItemWithPercentages = GearItemWithCalculated & { systemPercentage: number; totalPercentage: number }
 
 // ==================== メインコンポーネント ====================
 interface GearChartProps {
@@ -61,10 +65,18 @@ interface GearChartProps {
   onCategorySelect: (categories: string[]) => void
   onViewModeChange: (mode: ChartViewMode) => void
   onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void
-  items: any[] // すべてのギアアイテム
-  onEdit: (item: any) => void
+  items: GearItemWithCalculated[] // すべてのギアアイテム
+  categories: Category[] // カテゴリリスト
+  onEdit: (item: GearItemWithCalculated) => void
   onDelete: (id: string) => void
-  onShowForm?: () => void // + ADDボタン用
+  onUpdateItem: (id: string, field: string, value: GearFieldValue) => void // フィールド更新用
+  onShowForm?: () => void // + ADDボタン用（Manual Add）
+  onShowUrlImport?: () => void // + ADDボタン用（From URL）
+  onShowCategoryManager?: () => void // カテゴリ管理用
+  gearViewMode?: 'table' | 'card' | 'compare' // ギア表示モード
+  onGearViewModeChange?: (mode: 'table' | 'card' | 'compare') => void // モード変更ハンドラ
+  showCheckboxes: boolean // チェックボックス表示状態
+  onToggleCheckboxes: () => void // チェックボックス切り替え
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -78,15 +90,25 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onViewModeChange,
   onQuantityDisplayModeChange,
   items,
+  categories,
   onEdit,
   onDelete,
-  onShowForm
+  onUpdateItem,
+  onShowForm,
+  onShowUrlImport,
+  onShowCategoryManager,
+  gearViewMode,
+  onGearViewModeChange,
+  showCheckboxes,
+  onToggleCheckboxes
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [selectedCategoryForPanel, setSelectedCategoryForPanel] = useState<string | null>(null)
   const [panelMode, setPanelMode] = useState<PanelMode>('overview')
   const [centerPulse, setCenterPulse] = useState(false)
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
+  const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
+  const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
 
   // レスポンシブ対応
   useEffect(() => {
@@ -100,11 +122,23 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         setScreenSize('desktop')
       }
     }
-    
+
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // メニューを閉じる（クリックアウトサイド）
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (showAddMenu && !target.closest('.add-menu-container')) {
+        setShowAddMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showAddMenu])
 
   // チャート設定を画面サイズに応じて取得
   const chartHeight = CHART_CONFIG.height[screenSize]
@@ -127,18 +161,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       ...category,
       percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
       sortedItems: (category.items || [])
-        .filter(item => getItemValue(item, viewMode) > 0)
-        .sort((a, b) => getItemValue(b, viewMode) - getItemValue(a, viewMode))
+        .filter(item => getItemValue(item, viewMode, quantityDisplayMode) > 0)
+        .sort((a, b) => getItemValue(b, viewMode, quantityDisplayMode) - getItemValue(a, viewMode, quantityDisplayMode))
         .map(item => {
-          const itemValue = getItemValue(item, viewMode)
+          const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
           return {
             ...item,
             systemPercentage: category.value > 0 ? Math.round((itemValue / category.value) * 100) : 0,
             totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0
-          }
-        })
+          } satisfies GearItemWithPercentages
+        }) as GearItemWithPercentages[]
     }))
-  }, [displayData, totalValue, viewMode])
+  }, [displayData, totalValue, viewMode, quantityDisplayMode])
 
   // チャートで選択中のカテゴリ
   const selectedCategoryFromChart = selectedCategories.length === 1 ? selectedCategories[0] : null
@@ -147,18 +181,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     [sortedData, selectedCategoryFromChart]
   )
 
-  // 選択中のアイテムの色を取得
-  const selectedItemColor = useMemo(() => {
-    if (!selectedItem || !selectedData) return null
-    const itemData = (selectedData.sortedItems || []).find((item: any) => item.id === selectedItem)
-    if (!itemData) return null
-    const index = (selectedData.sortedItems || []).findIndex((item: any) => item.id === selectedItem)
-    return generateItemColor(selectedData.color || DEFAULT_COLOR, index, selectedData.sortedItems?.length || 1)
-  }, [selectedItem, selectedData])
-
   const outerPieData = useMemo(() => {
     return (selectedData?.sortedItems || []).map((item, index) => {
-      const itemValue = getItemValue(item, viewMode)
+      const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
       const fillColor = generateItemColor(
         selectedData?.color || DEFAULT_COLOR,
         index,
@@ -170,14 +195,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         id: item.id,
         color: fillColor,
         brand: item.brand,
-        owned: item.owned,
-        needed: item.needed,
+        ownedQuantity: item.ownedQuantity,
+        requiredQuantity: item.requiredQuantity,
+        shortage: item.shortage,
         priority: item.priority,
         percentage: item.totalPercentage,
         systemPercentage: item.systemPercentage
       }
     })
-  }, [selectedData, viewMode])
+  }, [selectedData, viewMode, quantityDisplayMode])
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
@@ -253,10 +279,57 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
+      <div className="flex-1 flex gap-3 min-h-0 overflow-x-auto">
         {/* グラフエリア */}
-        <Card className="flex flex-col min-w-0 overflow-hidden">
-        <div className="relative flex items-center justify-center flex-1 p-3" style={{ minHeight: chartHeight + 54, maxHeight: chartHeight + 54 }}>
+        <Card className={`flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12' : 'w-full lg:w-[40%]'}`}>
+          {/* グラフヘッダー */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            {isChartCollapsed ? (
+              <div className="flex items-center justify-center w-full">
+                <button
+                  onClick={() => setIsChartCollapsed(false)}
+                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors py-2"
+                  aria-label="Expand chart"
+                >
+                  <svg
+                    className="w-4 h-4 text-gray-600 dark:text-gray-400 mb-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
+                  </svg>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 font-medium" style={{ writingMode: 'vertical-rl' }}>
+                    Chart
+                  </span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Chart</h3>
+                <button
+                  onClick={() => setIsChartCollapsed(true)}
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                  aria-label="Collapse chart"
+                >
+                  <svg
+                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+
+          {!isChartCollapsed && (
+            <>
+        {/* チャートエリア */}
+        <div className="relative flex items-center justify-center flex-1 p-3" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* 外側円 - アイテム（先に描画） */}
@@ -465,108 +538,229 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           </div>
         </div>
 
-        {/* 数量表示モード切り替えセクション */}
-        <div className="px-3 pb-3">
-          <button
-            onClick={() => onQuantityDisplayModeChange(quantityDisplayMode === 'owned' ? 'required' : 'owned')}
-            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded"
-            title={`Switch to ${quantityDisplayMode === 'owned' ? 'Required' : 'Owned'} mode`}
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="uppercase tracking-wide">
-              {quantityDisplayMode === 'owned' ? 'Owned' : 'Required'}
-            </span>
-          </button>
+        {/* Weight/Price表示セクション */}
+        <div className="px-3 py-1.5 flex justify-center gap-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 uppercase">Weight:</span>
+            <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">{totalWeight.toLocaleString()}g</span>
+          </div>
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 uppercase">Price:</span>
+            <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">¥{Math.round(totalCost / 100).toLocaleString()}</span>
+          </div>
         </div>
+            </>
+          )}
       </Card>
 
         {/* Gear Detail Panel（右側パネル） */}
-        <Card className="flex flex-col min-w-0 overflow-hidden">
+        <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
           <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wide">
-                GEAR ANALYSIS
-              </h3>
-
-              {/* ファイルタブ型ナビゲーション */}
-              <div className="inline-flex items-center text-xs border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-                {/* ALL タブ */}
+            <div className="flex items-center gap-2">
+              {/* Owned/Need/All切り替え */}
+              <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
                 <button
-                  onClick={() => handleBreadcrumbClick('all')}
-                  className="px-2 py-0.5 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
-                  style={{
-                    backgroundColor: !selectedCategoryFromChart && !selectedItem
-                      ? COLORS.gray[100]
-                      : 'transparent',
-                    color: !selectedCategoryFromChart && !selectedItem
-                      ? COLORS.gray[900]
-                      : COLORS.gray[500]
-                  }}
+                  onClick={() => onQuantityDisplayModeChange('owned')}
+                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
+                    quantityDisplayMode === 'owned'
+                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Owned
+                </button>
+                <button
+                  onClick={() => onQuantityDisplayModeChange('need')}
+                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
+                    quantityDisplayMode === 'need'
+                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Need
+                </button>
+                <button
+                  onClick={() => onQuantityDisplayModeChange('all')}
+                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
+                    quantityDisplayMode === 'all'
+                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
                 >
                   ALL
                 </button>
-
-                {/* Category タブ */}
-                {selectedCategoryFromChart && (
-                  <button
-                    onClick={() => handleBreadcrumbClick('category')}
-                    className="px-2 py-0.5 font-medium transition-colors duration-150 border-r border-gray-200 dark:border-gray-700"
-                    style={{
-                      backgroundColor: !selectedItem && selectedData?.color
-                        ? `${selectedData.color}15`
-                        : 'transparent',
-                      color: !selectedItem && selectedData?.color
-                        ? selectedData.color
-                        : COLORS.gray[500],
-                      borderLeftColor: selectedData?.color ? `${selectedData.color}40` : undefined
-                    }}
-                  >
-                    {selectedCategoryFromChart}
-                  </button>
-                )}
-
-                {/* Item タブ */}
-                {selectedItem && selectedItemName && (
-                  <button
-                    className="px-2 py-0.5 font-medium transition-colors duration-150"
-                    style={{
-                      backgroundColor: selectedItemColor ? `${selectedItemColor}15` : 'transparent',
-                      color: selectedItemColor || COLORS.gray[900],
-                      borderLeftColor: selectedItemColor ? `${selectedItemColor}40` : undefined
-                    }}
-                  >
-                    {selectedItemName}
-                  </button>
-                )}
               </div>
+
+              {/* ナビゲーション切り替えボタン（リバースアイコン） */}
+              <button
+                onClick={() => handleBreadcrumbClick('all')}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                aria-label="Reset to all items"
+                title={selectedItem ? selectedItemName || 'Item' : selectedCategoryFromChart || 'All Items'}
+              >
+                <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+
+              {/* 現在の状態表示 */}
+              {(selectedCategoryFromChart || selectedItem) && (
+                <div className="text-xs text-gray-500 dark:text-gray-400 max-w-[120px] truncate">
+                  {selectedItem && selectedItemName ? selectedItemName : selectedCategoryFromChart}
+                </div>
+              )}
             </div>
 
-            {/* + ADDボタン */}
-            {onShowForm && (
-              <button
-                onClick={onShowForm}
-                className="btn-primary btn-xs flex-shrink-0"
-              >
-                + ADD
-              </button>
-            )}
+            {/* 右側ボタン群 */}
+            <div className="flex items-center gap-2">
+              {/* アクションメニュー（ADD + Edit Mode統合） */}
+              {onShowForm && (
+                <div className="relative add-menu-container">
+                  <button
+                    onClick={() => setShowAddMenu(!showAddMenu)}
+                    className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ${
+                      showCheckboxes
+                        ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Actions
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* ドロップダウンメニュー */}
+                  {showAddMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        onClick={() => {
+                          onShowForm()
+                          setShowAddMenu(false)
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Manually
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        onClick={() => {
+                          onShowUrlImport?.()
+                          setShowAddMenu(false)
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        Add from URL
+                      </button>
+                      {onShowCategoryManager && (
+                        <>
+                          <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                          <button
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                            onClick={() => {
+                              onShowCategoryManager()
+                              setShowAddMenu(false)
+                            }}
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Manage Categories
+                          </button>
+                        </>
+                      )}
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                      <button
+                        className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center gap-2 ${
+                          showCheckboxes
+                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        }`}
+                        onClick={() => {
+                          onToggleCheckboxes()
+                          setShowAddMenu(false)
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        {showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ビュー切り替え (Card/Table/Compare) */}
+              {onGearViewModeChange && (
+                <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
+                  <button
+                    onClick={() => onGearViewModeChange('card')}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      gearViewMode === 'card'
+                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                    aria-label="Card view"
+                  >
+                    Card
+                  </button>
+                  <button
+                    onClick={() => onGearViewModeChange('table')}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      gearViewMode === 'table'
+                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                    aria-label="Table view"
+                  >
+                    Table
+                  </button>
+                  <button
+                    onClick={() => onGearViewModeChange('compare')}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      gearViewMode === 'compare'
+                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                    aria-label="Comparison view"
+                  >
+                    Compare
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* パネルコンテンツ */}
           <div className="flex-1 min-h-0 overflow-hidden">
-            <GearDetailPanel
-              mode={panelMode}
-              selectedItem={selectedItemData}
-              selectedCategory={selectedCategoryForPanel}
-              items={items}
-              viewMode={viewMode}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onItemClick={handlePanelItemClick}
-            />
+              <GearDetailPanel
+                mode={panelMode}
+                selectedItem={selectedItemData}
+                selectedCategory={selectedCategoryForPanel}
+                items={items}
+                categories={categories}
+                viewMode={viewMode}
+                gearViewMode={gearViewMode}
+                quantityDisplayMode={quantityDisplayMode}
+                onQuantityDisplayModeChange={onQuantityDisplayModeChange}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onUpdateItem={onUpdateItem}
+                onItemClick={handlePanelItemClick}
+                showCheckboxes={showCheckboxes}
+                onToggleCheckboxes={onToggleCheckboxes}
+                filteredByCategory={selectedCategories}
+              />
           </div>
         </Card>
       </div>

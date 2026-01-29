@@ -87,6 +87,9 @@ export const COLORS = {
 
   // State Colors
   error: '#EF4444',
+  danger: '#EF4444',   // Alias for error (for consistency)
+  warning: '#F59E0B',  // Warning/Alert color
+  success: '#10B981',  // Success color
 } as const;
 
 // Unified shadow system (single shadow variant)

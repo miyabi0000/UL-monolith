@@ -5,7 +5,7 @@ interface BulkActionBarProps {
   selectedCount: number;
   totalCount: number;
   allSelected: boolean;
-  onSelectAll: () => void;
+  onSelectAll: (checked: boolean) => void;
   onClearSelection: () => void;
   onBulkDelete: () => void;
   onBulkUpdate?: () => void;
@@ -36,7 +36,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
           <input
             type="checkbox"
             checked={allSelected}
-            onChange={onSelectAll}
+            onChange={(e) => onSelectAll(e.target.checked)}
             className="w-4 h-4 cursor-pointer accent-gray-700 dark:accent-gray-500"
           />
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -103,4 +103,3 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
 };
 
 export default BulkActionBar;
-

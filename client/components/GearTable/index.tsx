@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { GearItemWithCalculated, Category, GearFieldValue, ViewMode } from '../../utils/types'
+import { GearItemWithCalculated, Category, GearFieldValue, QuantityDisplayMode, ViewMode } from '../../utils/types'
 import { SPACING_SCALE } from '../../utils/designSystem'
 import Card from '../ui/Card'
 import GearListHeader from '../GearListHeader'
@@ -45,7 +45,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [changedFields, setChangedFields] = useState<Record<string, Set<string>>>({})
-  const [quantityDisplayMode, setQuantityDisplayMode] = useState<'owned' | 'required' | 'shortage'>('owned')
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned')
 
   // ソート処理
   const processedItems = useMemo(() => {
@@ -130,8 +130,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
 
   const handleQuantityDisplayModeChange = () => {
     setQuantityDisplayMode(prev => {
-      if (prev === 'owned') return 'required'
-      if (prev === 'required') return 'shortage'
+      if (prev === 'owned') return 'need'
+      if (prev === 'need') return 'all'
       return 'owned'
     })
   }
@@ -334,6 +334,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             onSelectAll={handleSelectAll}
             onSort={handleSort}
             onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
+            showEditColumn={!isEditable}
           />
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
             {processedItems.map((item) => (
@@ -359,4 +360,3 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
 }) as React.FC<GearTableProps>
 
 export default GearTable
-

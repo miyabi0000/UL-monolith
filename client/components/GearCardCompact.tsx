@@ -1,7 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
-import { formatPrice } from '../utils/formatters';
 import SeasonBar from './SeasonBar';
 
 interface GearCardCompactProps {
@@ -10,6 +9,12 @@ interface GearCardCompactProps {
   onEdit?: (item: GearItemWithCalculated) => void;
   onDelete?: (id: string) => void;
 }
+
+const formatPrice = (priceCents?: number) => {
+  if (!priceCents) return '-';
+  const price = priceCents / 100;
+  return `¥${Math.round(price).toLocaleString()}`;
+};
 
 const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -27,26 +32,25 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/150x150?text=No+Image';
   const hasShortage = item.shortage > 0;
 
-  // イベントハンドラをuseCallbackでmemo化
-  const handleDelete = useCallback((e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete && item && window.confirm(`「${item.name}」を削除しますか？`)) {
+    if (onDelete && window.confirm(`「${item.name}」を削除しますか？`)) {
       onDelete(item.id);
     }
-  }, [onDelete, item]);
+  };
 
-  const handleOpenUrl = useCallback((e: React.MouseEvent) => {
+  const handleOpenUrl = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (item?.productUrl) {
+    if (item.productUrl) {
       window.open(item.productUrl, '_blank', 'noopener,noreferrer');
     }
-  }, [item?.productUrl]);
+  };
 
   return (
-    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
+    <div className="p-3 space-y-3 overflow-y-auto h-full">
       {/* 画像 */}
       <div
-        className="relative w-full max-w-full max-h-[280px] aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
+        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => onEdit?.(item)}
@@ -54,15 +58,15 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         <img
           src={imageUrl}
           alt={item.name}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           loading="lazy"
         />
 
         {/* 不足警告（右上） */}
         {hasShortage && (
-          <div className="absolute top-1.5 right-1.5 z-10">
+          <div className="absolute top-2 right-2 z-10">
             <span
-              className="text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
+              className="text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full"
               style={{
                 backgroundColor: COLORS.warning,
                 color: COLORS.white
@@ -76,7 +80,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* ホバーオーバーレイ */}
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-2"
+          className="absolute inset-0 flex flex-col items-center justify-center p-4"
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
             opacity: isHovered ? 1 : 0,
@@ -84,9 +88,9 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
           }}
         >
           {/* アクションボタン */}
-          <div className="flex flex-col gap-1.5 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <button
-              className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
+              className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
               style={{
                 backgroundColor: COLORS.gray[700],
                 color: COLORS.white
@@ -107,7 +111,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
             {item.productUrl && (
               <button
-                className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
+                className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
                 style={{
                   backgroundColor: COLORS.gray[700],
                   color: COLORS.white
@@ -126,7 +130,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
             {onDelete && (
               <button
-                className="action-button px-2 py-1 rounded text-xs font-medium transition-colors w-full"
+                className="action-button px-3 py-1.5 rounded text-xs font-medium transition-colors w-full"
                 style={{
                   backgroundColor: COLORS.danger,
                   color: COLORS.white
@@ -147,12 +151,12 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       </div>
 
       {/* 名前とブランド */}
-      <div className="min-w-0">
-        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words overflow-wrap-anywhere leading-tight">
+      <div>
+        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words">
           {item.name}
         </h4>
         {item.brand && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 break-words overflow-wrap-anywhere opacity-75 leading-tight">
+          <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
             {item.brand}
           </p>
         )}
@@ -171,19 +175,14 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       )}
 
       {/* 情報グリッド */}
-      <div className="space-y-3 text-xs">
+      <div className="space-y-2 text-xs">
         {/* 重量 */}
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-            </svg>
-            <span>Weight</span>
-          </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Weight:</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
             {item.weightGrams}g
             {item.requiredQuantity > 1 && (
-              <span className="text-gray-500 dark:text-gray-400 ml-1.5">
+              <span className="text-gray-500 dark:text-gray-400 ml-1">
                 (Total: {item.totalWeight}g)
               </span>
             )}
@@ -191,30 +190,20 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         </div>
 
         {/* 価格 */}
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            <span>Price</span>
-          </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Price:</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
             {formatPrice(item.priceCents)}
           </span>
         </div>
 
         {/* 所有数/必要数 */}
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <span>Own/Need</span>
-          </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Own/Need:</span>
           <span className="font-semibold text-gray-900 dark:text-gray-100">
             {item.ownedQuantity} / {item.requiredQuantity}
             {item.shortage > 0 && (
-              <span className="text-red-600 dark:text-red-400 ml-1.5">
+              <span className="text-red-600 dark:text-red-400 ml-1">
                 (Short: {item.shortage})
               </span>
             )}
@@ -222,30 +211,20 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         </div>
 
         {/* 優先度 */}
-        <div className="flex justify-between items-center gap-3">
-          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-            <span>Priority</span>
-          </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600 dark:text-gray-400">Priority:</span>
           <span
             className="font-semibold"
             style={{ color: getPriorityColor(item.priority) }}
           >
-            P{item.priority}
+            {item.priority}
           </span>
         </div>
 
         {/* シーズン */}
         {item.seasons && item.seasons.length > 0 && (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-              <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span>Season</span>
-            </div>
+          <div>
+            <div className="text-gray-600 dark:text-gray-400 mb-1">Season:</div>
             <SeasonBar seasons={item.seasons} size="sm" />
           </div>
         )}

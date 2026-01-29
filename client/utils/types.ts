@@ -77,7 +77,8 @@ export interface ChartData {
 }
 
 export type ChartViewMode = 'weight' | 'cost';
-export type QuantityDisplayMode = 'owned' | 'required';
+// owned: 所持分, need: 不足分, all: 必要数（総数）
+export type QuantityDisplayMode = 'owned' | 'need' | 'all';
 export type ViewMode = 'table' | 'card' | 'compare';
 
 // Gear field values type for type-safe updates
@@ -169,5 +170,3 @@ export interface LLMExtractionResult {
   extractedFields: string[]; // 実際に抽出できたフィールド名
   source: 'web_scraping' | 'llm_prompt' | 'enhanced' | 'fallback';
 }
-
-
