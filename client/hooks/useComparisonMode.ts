@@ -44,6 +44,10 @@ interface UseComparisonModeReturn {
   removeFromComparison: (itemId: string) => void;
   /** アイテムを採用（ownedQuantity +1） */
   adoptItem: (itemId: string) => Promise<void>;
+  /** プレビュー中のアイテムID */
+  previewItemId: string | null;
+  /** プレビュー採用（グラフに影響を表示） */
+  previewAdopt: (itemId: string | null) => void;
 }
 
 /**
@@ -64,6 +68,7 @@ export function useComparisonMode(
   } = options;
 
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   /**
    * 比較可能かどうかを検証
@@ -117,8 +122,17 @@ export function useComparisonMode(
    */
   const closeComparison = useCallback(() => {
     setShowComparisonModal(false);
+    setPreviewItemId(null);
     onComparisonClose?.();
   }, [onComparisonClose]);
+
+  /**
+   * プレビュー採用（グラフに影響を表示）
+   * nullを渡すとプレビューをクリア
+   */
+  const previewAdopt = useCallback((itemId: string | null) => {
+    setPreviewItemId(itemId);
+  }, []);
 
   /**
    * 比較から削除
@@ -154,6 +168,7 @@ export function useComparisonMode(
     try {
       await onUpdateItem(itemId, 'ownedQuantity', (item.ownedQuantity || 0) + 1);
       setShowComparisonModal(false);
+      setPreviewItemId(null);
       onClearSelection?.();
       onComparisonClose?.();
     } catch (err) {
@@ -169,5 +184,7 @@ export function useComparisonMode(
     closeComparison,
     removeFromComparison,
     adoptItem,
+    previewItemId,
+    previewAdopt,
   };
 }
