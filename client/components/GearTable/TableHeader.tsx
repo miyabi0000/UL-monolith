@@ -122,21 +122,21 @@ const TableHeader: React.FC<TableHeaderProps> = ({
         >
           <span className="inline-flex items-center justify-center">
             Price
+            {onCurrencyChange && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCurrencyChange()
+                }}
+                className="ml-0.5 text-xs hover:text-gray-700 dark:hover:text-gray-300"
+                title="Toggle currency"
+              >
+                {currency === 'JPY' ? '¥' : '$'}
+              </button>
+            )}
             {renderSortIcon('price')}
           </span>
-          {onCurrencyChange && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCurrencyChange()
-              }}
-              className="ml-1 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              title="Toggle currency"
-            >
-              {currency}
-            </button>
-          )}
         </th>
         <th
           className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-16"

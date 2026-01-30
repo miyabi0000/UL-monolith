@@ -81,8 +81,10 @@ const TableRow: React.FC<TableRowProps> = ({
   }
   return (
     <tr
-      className={`transition-colors hover:opacity-90 ${
-        isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
+      className={`transition-all duration-200 hover:opacity-90 ${
+        isSelected
+          ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 dark:ring-blue-600 ring-inset'
+          : 'bg-white dark:bg-gray-800'
       }`}
     >
       {/* Checkbox */}
