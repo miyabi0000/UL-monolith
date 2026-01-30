@@ -153,10 +153,13 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   // 比較モードロジック（useComparisonMode フックを使用）
   const {
     showComparisonModal,
+    validationResult,
     openComparison: handleCompare,
     closeComparison: handleCloseComparisonModal,
     removeFromComparison: handleRemoveFromComparison,
     adoptItem: handleAdoptItem,
+    previewItemId,
+    previewAdopt: handlePreviewAdopt,
   } = useComparisonMode({
     selectedItems,
     onUpdateItem,
@@ -202,9 +205,12 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return (
       <ComparisonTable
         items={selectedItems}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
         onClose={handleCloseComparisonModal}
-        onRemove={handleRemoveFromComparison}
         onAdopt={handleAdoptItem}
+        onPreviewAdopt={handlePreviewAdopt}
+        previewItemId={previewItemId}
       />
     );
   }
@@ -240,6 +246,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onCompare={isCompareMode ? handleCompare : undefined}
               isCompareMode={isCompareMode}
               maxCompareItems={MAX_COMPARE_ITEMS}
+              canCompare={isCompareMode ? validationResult.isValid : undefined}
+              compareDisabledReason={isCompareMode ? validationResult.errorMessage : undefined}
             />
           </div>
         )}
