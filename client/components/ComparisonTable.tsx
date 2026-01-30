@@ -1,11 +1,15 @@
 import React from 'react';
 import { GearItemWithCalculated } from '../utils/types';
+import { Currency, formatPriceWithCurrency, calculateEfficiency } from '../utils/formatters';
 
 interface ComparisonTableProps {
   items: GearItemWithCalculated[];
+  currency?: Currency;
+  onCurrencyChange?: () => void;
   onClose: () => void;
-  onRemove: (itemId: string) => void;
   onAdopt: (itemId: string) => void;
+  onPreviewAdopt?: (itemId: string | null) => void;
+  previewItemId?: string | null;
 }
 
 /**
@@ -14,55 +18,67 @@ interface ComparisonTableProps {
  */
 export const ComparisonTable: React.FC<ComparisonTableProps> = ({
   items,
+  currency = 'JPY',
+  onCurrencyChange,
   onClose,
-  onRemove,
-  onAdopt
+  onAdopt,
+  onPreviewAdopt,
+  previewItemId
 }) => {
+  // 最良値を計算
+  const bestValues = React.useMemo(() => {
+    const weights = items.map(i => i.weightGrams).filter(Boolean) as number[];
+    const prices = items.map(i => i.priceCents).filter(Boolean) as number[];
+    const efficiencies = items
+      .filter(i => i.weightGrams && i.priceCents)
+      .map(i => parseFloat(calculateEfficiency(i.weightGrams, i.priceCents, currency)))
+      .filter(e => !isNaN(e));
+
+    return {
+      lightestWeight: weights.length > 0 ? Math.min(...weights) : null,
+      lowestPrice: prices.length > 0 ? Math.min(...prices) : null,
+      bestEfficiency: efficiencies.length > 0 ? Math.max(...efficiencies) : null,
+    };
+  }, [items, currency]);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="w-full h-full flex flex-col overflow-hidden">
       {/* ヘッダー */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              比較表示 ({items.length}件)
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {items[0]?.category?.name || 'カテゴリ未設定'}
-            </p>
-          </div>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+        <div className="flex items-center gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
-            ← 戻る
+            ← Back
           </button>
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Compare ({items.length} items)
+          </h2>
+          {items[0]?.category?.name && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {items[0].category.name}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* 比較テーブル */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full">
+      {/* 比較テーブル - 横・縦スクロール可能 */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse" style={{ minWidth: '600px' }}>
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600">
-                項目
+              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600">
+                Item
               </th>
               {items.map(item => (
                 <th
                   key={item.id}
-                  className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 relative min-w-[200px]"
+                  className="px-2 py-2 text-center text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 min-w-[140px]"
                 >
-                  <button
-                    onClick={() => onRemove(item.id)}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white text-sm transition-colors"
-                    title="削除"
-                  >
-                    ×
-                  </button>
-                  <div className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs">{item.name}</div>
                   {item.brand && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{item.brand}</div>
+                    <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">{item.brand}</div>
                   )}
                 </th>
               ))}
@@ -72,19 +88,19 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
             {/* 画像 */}
             {items.some(item => item.imageUrl) && (
               <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  画像
+                <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                  Image
                 </td>
                 {items.map(item => (
-                  <td key={item.id} className="px-6 py-4 text-center">
+                  <td key={item.id} className="px-2 py-2 text-center">
                     {item.imageUrl ? (
                       <img
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-24 h-24 object-contain rounded mx-auto"
+                        className="w-12 h-12 object-contain rounded mx-auto"
                       />
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
+                      <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
                     )}
                   </td>
                 ))}
@@ -93,40 +109,67 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
 
             {/* 重量 */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                重量
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Weight
               </td>
-              {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center text-gray-900 dark:text-gray-100">
-                  {item.weightGrams ? `${item.weightGrams}g` : '-'}
-                </td>
-              ))}
+              {items.map(item => {
+                const isBest = item.weightGrams && item.weightGrams === bestValues.lightestWeight;
+                return (
+                  <td
+                    key={item.id}
+                    className={`px-2 py-2 text-center text-xs ${
+                      isBest
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
+                    {item.weightGrams ? `${item.weightGrams}g` : '-'}
+                  </td>
+                );
+              })}
             </tr>
 
             {/* 価格 */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                価格
-              </td>
-              {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center text-gray-900 dark:text-gray-100">
-                  {item.priceCents ? `¥${(item.priceCents / 100).toLocaleString()}` : '-'}
-                </td>
-              ))}
-            </tr>
-
-            {/* コスパ (g/¥) */}
-            <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                コスパ (g/¥)
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Price
               </td>
               {items.map(item => {
-                const efficiency = item.weightGrams && item.priceCents
-                  ? (item.weightGrams / (item.priceCents / 100)).toFixed(2)
-                  : null;
+                const isBest = item.priceCents && item.priceCents === bestValues.lowestPrice;
                 return (
-                  <td key={item.id} className="px-6 py-4 text-center text-gray-900 dark:text-gray-100">
-                    {efficiency || '-'}
+                  <td
+                    key={item.id}
+                    className={`px-2 py-2 text-center text-xs ${
+                      isBest
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
+                    {formatPriceWithCurrency(item.priceCents, currency)}
+                  </td>
+                );
+              })}
+            </tr>
+
+            {/* コスパ */}
+            <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                (g/{currency === 'JPY' ? '¥' : '$'})
+              </td>
+              {items.map(item => {
+                const effValue = calculateEfficiency(item.weightGrams, item.priceCents, currency);
+                const effNum = parseFloat(effValue);
+                const isBest = !isNaN(effNum) && effNum === bestValues.bestEfficiency;
+                return (
+                  <td
+                    key={item.id}
+                    className={`px-2 py-2 text-center text-xs ${
+                      isBest
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
+                    {effValue}
                   </td>
                 );
               })}
@@ -134,11 +177,11 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
 
             {/* 所持数 */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                所持数
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Owned
               </td>
               {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center text-gray-900 dark:text-gray-100">
+                <td key={item.id} className="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-100">
                   {item.ownedQuantity}
                 </td>
               ))}
@@ -146,11 +189,11 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
 
             {/* 必要数 */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                必要数
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Required
               </td>
               {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center text-gray-900 dark:text-gray-100">
+                <td key={item.id} className="px-2 py-2 text-center text-xs text-gray-900 dark:text-gray-100">
                   {item.requiredQuantity}
                 </td>
               ))}
@@ -158,23 +201,23 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
 
             {/* 季節 */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                季節
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Season
               </td>
               {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center">
-                  <div className="flex flex-wrap gap-1 justify-center">
+                <td key={item.id} className="px-2 py-2 text-center">
+                  <div className="flex flex-wrap gap-0.5 justify-center">
                     {item.seasons && item.seasons.length > 0 ? (
                       item.seasons.map(season => (
                         <span
                           key={season}
-                          className="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                          className="px-1.5 py-0.5 text-[10px] rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
                         >
                           {season}
                         </span>
                       ))
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
+                      <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
                     )}
                   </div>
                 </td>
@@ -183,42 +226,92 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
 
             {/* URL */}
             <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                URL
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Link
               </td>
               {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center">
+                <td key={item.id} className="px-2 py-2 text-center">
                   {item.productUrl ? (
                     <a
                       href={item.productUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
                     >
-                      商品ページ
+                      Product
                     </a>
                   ) : (
-                    <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
                   )}
                 </td>
               ))}
             </tr>
 
-            {/* アクション */}
-            <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                アクション
+            {/* 採用時の影響 */}
+            <tr className="bg-amber-50 dark:bg-amber-900/20">
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Impact
               </td>
               {items.map(item => (
-                <td key={item.id} className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => onAdopt(item.id)}
-                    className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                  >
-                    採用 (+1)
-                  </button>
+                <td key={item.id} className="px-2 py-2 text-center">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">Weight:</span>
+                      <span className={`text-xs font-medium ${item.weightGrams ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`}>
+                        {item.weightGrams ? `+${item.weightGrams}g` : '-'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">Cost:</span>
+                      <span className={`text-xs font-medium ${item.priceCents ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400'}`}>
+                        {item.priceCents ? `+${formatPriceWithCurrency(item.priceCents, currency)}` : '-'}
+                      </span>
+                    </div>
+                  </div>
                 </td>
               ))}
+            </tr>
+
+            {/* アクション */}
+            <tr className="bg-blue-50 dark:bg-blue-900/20">
+              <td className="px-2 py-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                Action
+              </td>
+              {items.map(item => {
+                const isPreviewing = previewItemId === item.id;
+                return (
+                  <td key={item.id} className="px-2 py-2 text-center">
+                    {isPreviewing ? (
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => onAdopt(item.id)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-md bg-green-600 hover:bg-green-700 text-white transition-colors shadow-sm"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => onPreviewAdopt?.(null)}
+                          className="px-3 py-1 text-[10px] font-medium rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onPreviewAdopt?.(item.id)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-sm ${
+                          previewItemId
+                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
+                        disabled={!!previewItemId}
+                      >
+                        Adopt
+                      </button>
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           </tbody>
         </table>
