@@ -3,57 +3,130 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    font-family: Inter, sans-serif;
-    @apply bg-background-light text-gray-900 transition-colors duration-200;
+  :root {
+    /* Light Mode Colors */
+    --background: 250 250 250;
+    --foreground: 10 10 10;
+    --card: 255 255 255;
+    --card-foreground: 10 10 10;
+    --popover: 255 255 255;
+    --popover-foreground: 10 10 10;
+    --primary: 24 24 24;
+    --primary-foreground: 250 250 250;
+    --secondary: 245 245 245;
+    --secondary-foreground: 24 24 24;
+    --muted: 245 245 245;
+    --muted-foreground: 115 115 115;
+    --accent: 245 245 245;
+    --accent-foreground: 24 24 24;
+    --destructive: 239 68 68;
+    --destructive-foreground: 250 250 250;
+    --border: 229 229 229;
+    --input: 229 229 229;
+    --ring: 24 24 24;
+    --chart-1: 59 130 246;
+    --chart-2: 168 85 247;
+    --chart-3: 236 72 153;
+    --chart-4: 251 146 60;
+    --chart-5: 34 197 94;
+    --radius: 0.5rem;
   }
 
-  body.dark {
-    @apply bg-background-dark text-gray-100;
+  .dark {
+    /* Dark Mode Colors */
+    --background: 10 10 10;
+    --foreground: 250 250 250;
+    --card: 20 20 20;
+    --card-foreground: 250 250 250;
+    --popover: 20 20 20;
+    --popover-foreground: 250 250 250;
+    --primary: 250 250 250;
+    --primary-foreground: 10 10 10;
+    --secondary: 38 38 38;
+    --secondary-foreground: 250 250 250;
+    --muted: 38 38 38;
+    --muted-foreground: 163 163 163;
+    --accent: 38 38 38;
+    --accent-foreground: 250 250 250;
+    --destructive: 220 38 38;
+    --destructive-foreground: 250 250 250;
+    --border: 38 38 38;
+    --input: 38 38 38;
+    --ring: 212 212 212;
+    --chart-1: 96 165 250;
+    --chart-2: 192 132 252;
+    --chart-3: 244 114 182;
+    --chart-4: 251 191 36;
+    --chart-5: 74 222 128;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: 'Geist Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    @apply bg-background text-foreground leading-relaxed antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
   }
 }
 
 @layer components {
-  /* カード共通スタイル */
+  /* Card Components */
   .card {
-    @apply bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-dark-sm rounded-lg;
+    @apply bg-card text-card-foreground shadow-sm rounded-lg border border-border;
   }
 
-  /* ボタン共通スタイル */
+  /* Button Variants */
   .btn-primary {
-    @apply bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 ease-out shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 ease-out border border-border;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-accent hover:text-accent-foreground text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 ease-out;
   }
 
   .btn-danger {
-    @apply bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-150 ease-out;
   }
 
-  /* 小さいボタン（ヘッダーなど） */
   .btn-xs {
-    @apply text-xs font-semibold px-2.5 py-1.5 rounded shadow-sm transition-all duration-200;
+    @apply text-xs font-medium px-2.5 py-1.5 rounded-md transition-all duration-150 ease-out;
   }
 
-  /* 入力フィールド共通スタイル */
+  /* Input Fields */
   .input {
-    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 transition-all duration-200;
+    @apply bg-background text-foreground border border-input shadow-sm focus:ring-2 focus:ring-ring focus:border-ring rounded-lg transition-all duration-150 ease-out placeholder:text-muted-foreground;
   }
 
-  /* モーダル背景 */
+  /* Modal Components */
   .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50;
+    @apply fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm;
   }
 
-  /* モーダルコンテンツ */
   .modal-content {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-dark-md;
+    @apply bg-card text-card-foreground rounded-xl shadow-2xl border border-border;
+  }
+
+  /* Badge/Tag Components */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-3 py-1.5 text-xs bg-popover text-popover-foreground border border-border rounded-lg shadow-lg;
   }
 }
 
-/* アニメーション */
+/* Smooth Animations */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -62,5 +135,25 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
