@@ -205,6 +205,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
     validationResult,
     openComparison: handleCompare,
     closeComparison: handleCloseComparisonModal,
+    removeFromComparison: handleRemoveFromComparison,
     adoptItem: handleAdoptItem,
     previewItemId,
     previewAdopt: handlePreviewAdopt,
@@ -272,6 +273,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
         onAdopt={handleAdoptItem}
         onPreviewAdopt={handlePreviewAdopt}
         previewItemId={previewItemId}
+        onRemove={handleRemoveFromComparison}
       />
     )
   }

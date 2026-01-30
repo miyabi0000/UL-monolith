@@ -211,6 +211,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         onAdopt={handleAdoptItem}
         onPreviewAdopt={handlePreviewAdopt}
         previewItemId={previewItemId}
+        onRemove={handleRemoveFromComparison}
       />
     );
   }

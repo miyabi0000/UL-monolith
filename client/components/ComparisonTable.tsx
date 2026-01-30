@@ -10,7 +10,11 @@ interface ComparisonTableProps {
   onAdopt: (itemId: string) => void;
   onPreviewAdopt?: (itemId: string | null) => void;
   previewItemId?: string | null;
+  onRemove?: (itemId: string) => void;
 }
+
+// A/B/C/D ラベル
+const ITEM_LABELS = ['A', 'B', 'C', 'D'];
 
 /**
  * 縦型比較テーブルコンポーネント
@@ -23,7 +27,8 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
   onClose,
   onAdopt,
   onPreviewAdopt,
-  previewItemId
+  previewItemId,
+  onRemove
 }) => {
   // 最良値を計算
   const bestValues = React.useMemo(() => {
@@ -71,15 +76,35 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
               <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600">
                 Item
               </th>
-              {items.map(item => (
+              {items.map((item, index) => (
                 <th
                   key={item.id}
                   className="px-2 py-2 text-center text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 min-w-[140px]"
                 >
-                  <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs">{item.name}</div>
-                  {item.brand && (
-                    <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5">{item.brand}</div>
-                  )}
+                  <div className="flex items-start justify-between gap-1">
+                    {/* A/B/C/D ラベル */}
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex-shrink-0">
+                      {ITEM_LABELS[index] || index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs truncate">{item.name}</div>
+                      {item.brand && (
+                        <div className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">{item.brand}</div>
+                      )}
+                    </div>
+                    {/* 削除ボタン */}
+                    {onRemove && items.length > 2 && (
+                      <button
+                        onClick={() => onRemove(item.id)}
+                        className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex-shrink-0"
+                        title="Remove from comparison"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
