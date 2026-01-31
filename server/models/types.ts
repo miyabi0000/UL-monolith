@@ -1,6 +1,6 @@
 /**
  * サーバーサイド型定義
- * クライアントサイドの型定義と同期を保つ
+ * NOTE: client/utils/types.ts と同期を保つこと
  */
 
 // ==================== 意味論軸の型定義 ====================
@@ -26,80 +26,56 @@ export function deriveStatus(required: number, owned: number): ProcurementStatus
 
 // ==================== エンティティ ====================
 
-export interface GearItem {
-  id: string;
-  name: string;
-  brand?: string;
-  categoryId?: string;
-
-  // 会計軸
-  weightClass: WeightClass;
-
-  // 重量（信頼度付き）
-  weightGrams?: number;
-  weightConfidence: WeightConfidence;
-  weightSource: WeightSource;
-
-  priceCents?: number;
-  requiredQuantity: number;
-  ownedQuantity: number;
-  priority: number;
-  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[]; // Multiple seasons selection
-  productUrl?: string;
-  imageUrl?: string; // 商品画像URL
-
-  // キット包含フラグ
-  isInKit: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
-  llmData?: {
-    extractedFields?: string[];
-    source?: string;
-  };
-}
-
 export interface Category {
   id: string;
   name: string;
   color: string;
-  tags: string[]; // Big3タグ等
+  tags: string[];
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
 
-export interface LLMExtractionResult {
+export interface GearItem {
+  id: string;
+  userId?: string;
+  categoryId?: string;
   name: string;
   brand?: string;
-  categoryId?: string;
-  weightGrams?: number;
-  priceCents?: number;
+  productUrl?: string;
+  imageUrl?: string;
   requiredQuantity: number;
   ownedQuantity: number;
-  priority: number;
+  weightClass: WeightClass;
+  weightGrams?: number;
+  weightConfidence: WeightConfidence;
+  weightSource: WeightSource;
+  priceCents?: number;
   seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
-  productUrl?: string;
-  imageUrl?: string; // 商品画像URL
-  suggestedCategory?: string; // LLMが推測したカテゴリ名
-  extractedFields?: string[];
-  source?: string;
+  priority: number;
+  isInKit: boolean;
+  llmData?: {
+    extractedFields?: string[];
+    source?: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface GearItemForm {
   name: string;
   brand?: string;
   categoryId?: string;
+  productUrl?: string;
+  imageUrl?: string;
+  requiredQuantity: number;
+  ownedQuantity: number;
   weightClass: WeightClass;
   weightGrams?: number;
   weightConfidence: WeightConfidence;
   weightSource: WeightSource;
   priceCents?: number;
-  requiredQuantity: number;
-  ownedQuantity: number;
-  priority: number;
   seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
-  productUrl?: string;
-  imageUrl?: string; // 商品画像URL
+  priority: number;
   isInKit: boolean;
 }
 
@@ -113,6 +89,60 @@ export const DEFAULT_GEAR_VALUES = {
   requiredQuantity: 1,
   ownedQuantity: 0,
 } as const;
+
+// ==================== LLM ====================
+
+export interface LLMExtractionResult {
+  name: string;
+  brand?: string;
+  categoryId?: string;
+  productUrl?: string;
+  imageUrl?: string;
+  weightGrams?: number;
+  weightConfidence?: WeightConfidence;
+  priceCents?: number;
+  requiredQuantity?: number;
+  ownedQuantity?: number;
+  priority?: number;
+  seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
+  suggestedCategory?: string;
+  suggestedWeightClass?: WeightClass;
+  extractedFields?: string[];
+  source?: string;
+  confidence?: number; // 抽出信頼度（0-1）
+}
+
+// ==================== 集計（派生値） ====================
+
+export interface WeightBreakdown {
+  baseWeight: number;
+  wornWeight: number;
+  consumables: number;
+  packedWeight: number;
+  skinOutWeight: number;
+  big3: number;
+}
+
+export interface CostBreakdown {
+  ownedCost: number;
+  needCost: number;
+  totalCost: number;
+}
+
+export type ULClassification = 'ultralight' | 'lightweight' | 'traditional';
+
+export interface ULStatus {
+  classification: ULClassification;
+  baseWeight: number;
+  threshold: number;
+}
+
+export const UL_THRESHOLDS = {
+  ultralight: 4500,
+  lightweight: 9000,
+} as const;
+
+// ==================== API ====================
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -137,37 +167,3 @@ export interface GearStats {
   totalValue: number;
   categories: number;
 }
-
-// ==================== 集計（派生値） ====================
-
-// 重量内訳
-export interface WeightBreakdown {
-  baseWeight: number;      // Base装備の合計
-  wornWeight: number;      // Worn装備の合計
-  consumables: number;     // 消耗品の合計
-  packedWeight: number;    // Base + Consumables
-  skinOutWeight: number;   // Base + Worn + Consumables
-  big3: number;            // Backpack + Shelter + Sleep
-}
-
-// コスト内訳
-export interface CostBreakdown {
-  ownedCost: number;
-  needCost: number;   // need + partial
-  totalCost: number;
-}
-
-// UL分類
-export type ULClassification = 'ultralight' | 'lightweight' | 'traditional';
-
-export interface ULStatus {
-  classification: ULClassification;
-  baseWeight: number;
-  threshold: number;
-}
-
-// UL基準値（定数）
-export const UL_THRESHOLDS = {
-  ultralight: 4500,    // < 4.5kg
-  lightweight: 9000,   // < 9kg
-} as const;

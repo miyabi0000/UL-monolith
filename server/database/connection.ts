@@ -1,5 +1,15 @@
 import { Pool } from 'pg';
-import { GearItem, Category, GearItemWithCalculated, WeightBreakdown, deriveStatus } from '../../client/utils/types';
+import { GearItem, Category, WeightBreakdown, deriveStatus } from '../models/types';
+
+// GearItemWithCalculated は client型を利用（ランタイムで問題なし）
+interface GearItemWithCalculated extends GearItem {
+  shortage: number;
+  totalWeight: number;
+  totalPrice: number;
+  missingQuantity: number;
+  procurementStatus: 'owned' | 'partial' | 'need';
+  category?: Category & { path?: string[] };
+}
 
 /**
  * PostgreSQL データベース接続とクエリ実行
