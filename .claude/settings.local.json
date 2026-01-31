@@ -7,11 +7,7 @@
       "Bash(git reset:*)",
       "Bash(pkill:*)",
       "Bash(curl:*)",
-      "Bash(lsof:*)",
-      "Bash(git add:*)",
-      "Bash(npm run server:dev:*)",
-      "Bash(xargs kill -9)",
-      "Bash(git checkout:*)"
+      "Bash(git merge feat/integrate-analysis-gear-list-ui -m \"$\\(cat <<''EOF''\nMerge feat/integrate-analysis-gear-list-ui into main\n\n- 比較テーブルUI改善\n- データモデル概念仕様書追加\n- 比較モード状態管理の統一\nEOF\n\\)\")"
     ],
     "deny": []
   }

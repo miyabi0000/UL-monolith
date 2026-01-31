@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { GearItem, Category, GearItemWithCalculated } from '../../client/utils/types';
+import { GearItem, Category, GearItemWithCalculated, WeightBreakdown, deriveStatus } from '../../client/utils/types';
 
 /**
  * PostgreSQL データベース接続とクエリ実行
@@ -44,9 +44,10 @@ class DatabaseConnection {
       SELECT
         g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
+        g.weight_class, g.weight_confidence, g.weight_source, g.is_in_kit,
         g.seasons, g.priority, g.llm_data, g.created_at, g.updated_at,
         c.id as cat_id, c.name as cat_name, c.path as cat_path,
-        c.color as cat_color, c.created_at as cat_created_at,
+        c.color as cat_color, c.tags as cat_tags, c.created_at as cat_created_at,
         -- 計算フィールド
         (g.required_quantity - g.owned_quantity) as shortage,
         (g.weight_grams * g.required_quantity) as total_weight,
@@ -121,10 +122,14 @@ class DatabaseConnection {
         imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
+        weightClass: row.weight_class || 'base',
         weightGrams: row.weight_grams,
+        weightConfidence: row.weight_confidence || 'low',
+        weightSource: row.weight_source || 'manual',
         priceCents: row.price_cents,
         seasons: row.seasons,
         priority: row.priority,
+        isInKit: row.is_in_kit ?? true,
         llmData: row.llm_data,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -133,12 +138,14 @@ class DatabaseConnection {
         totalWeight: row.total_weight,
         totalPrice: row.total_price,
         missingQuantity: row.missing_quantity,
+        procurementStatus: deriveStatus(row.required_quantity, row.owned_quantity),
         // カテゴリ情報
         category: row.cat_id ? {
           id: row.cat_id,
           name: row.cat_name,
           path: row.cat_path,
           color: row.cat_color,
+          tags: row.cat_tags || [],
           createdAt: row.cat_created_at
         } : undefined
       }));
@@ -160,9 +167,10 @@ class DatabaseConnection {
       SELECT
         g.id, g.user_id, g.category_id, g.name, g.brand, g.product_url, g.image_url,
         g.required_quantity, g.owned_quantity, g.weight_grams, g.price_cents,
+        g.weight_class, g.weight_confidence, g.weight_source, g.is_in_kit,
         g.seasons, g.priority, g.llm_data, g.created_at, g.updated_at,
         c.id as cat_id, c.name as cat_name, c.path as cat_path,
-        c.color as cat_color, c.created_at as cat_created_at,
+        c.color as cat_color, c.tags as cat_tags, c.created_at as cat_created_at,
         -- 計算フィールド
         (g.required_quantity - g.owned_quantity) as shortage,
         (g.weight_grams * g.required_quantity) as total_weight,
@@ -175,7 +183,7 @@ class DatabaseConnection {
 
     try {
       const result = await this.pool.query(query, [id, userId]);
-      
+
       if (result.rows.length === 0) {
         return null;
       }
@@ -191,10 +199,14 @@ class DatabaseConnection {
         imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
+        weightClass: row.weight_class || 'base',
         weightGrams: row.weight_grams,
+        weightConfidence: row.weight_confidence || 'low',
+        weightSource: row.weight_source || 'manual',
         priceCents: row.price_cents,
         seasons: row.seasons,
         priority: row.priority,
+        isInKit: row.is_in_kit ?? true,
         llmData: row.llm_data,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
@@ -203,12 +215,14 @@ class DatabaseConnection {
         totalWeight: row.total_weight,
         totalPrice: row.total_price,
         missingQuantity: row.missing_quantity,
+        procurementStatus: deriveStatus(row.required_quantity, row.owned_quantity),
         // カテゴリ情報
         category: row.cat_id ? {
           id: row.cat_id,
           name: row.cat_name,
           path: row.cat_path,
           color: row.cat_color,
+          tags: row.cat_tags || [],
           createdAt: row.cat_created_at
         } : undefined
       };
@@ -293,6 +307,51 @@ class DatabaseConnection {
     }
   }
 
+  /**
+   * Weight Breakdown集計（データモデル仕様準拠）
+   * すべての集計は is_in_kit=true を前提とする
+   */
+  async getWeightBreakdown(userId: string): Promise<WeightBreakdown> {
+    const query = `
+      SELECT
+        -- Base Weight
+        COALESCE(SUM(CASE WHEN g.weight_class = 'base' THEN g.weight_grams * g.owned_quantity ELSE 0 END), 0) as base_weight,
+        -- Worn Weight
+        COALESCE(SUM(CASE WHEN g.weight_class = 'worn' THEN g.weight_grams * g.owned_quantity ELSE 0 END), 0) as worn_weight,
+        -- Consumables
+        COALESCE(SUM(CASE WHEN g.weight_class = 'consumable' THEN g.weight_grams * g.owned_quantity ELSE 0 END), 0) as consumables,
+        -- Big3 (categories with big3_* tags)
+        COALESCE(SUM(
+          CASE WHEN g.weight_class = 'base' AND c.tags && ARRAY['big3_pack', 'big3_shelter', 'big3_sleep']
+          THEN g.weight_grams * g.owned_quantity ELSE 0 END
+        ), 0) as big3
+      FROM gear_items g
+      LEFT JOIN categories c ON g.category_id = c.id
+      WHERE g.user_id = $1 AND g.is_in_kit = true AND g.weight_grams IS NOT NULL
+    `;
+
+    try {
+      const result = await this.pool.query(query, [userId]);
+      const row = result.rows[0];
+
+      const baseWeight = parseInt(row.base_weight || '0');
+      const wornWeight = parseInt(row.worn_weight || '0');
+      const consumables = parseInt(row.consumables || '0');
+      const big3 = parseInt(row.big3 || '0');
+
+      return {
+        baseWeight,
+        wornWeight,
+        consumables,
+        packedWeight: baseWeight + consumables,
+        skinOutWeight: baseWeight + wornWeight + consumables,
+        big3
+      };
+    } catch (error) {
+      console.error('Database query error:', error);
+      throw new Error('Failed to fetch weight breakdown');
+    }
+  }
 
   /**
    * 一括削除（IN句使用）
@@ -317,7 +376,7 @@ class DatabaseConnection {
    */
   async getCategories(userId?: string): Promise<Category[]> {
     const query = `
-      SELECT id, user_id, name, parent_id, path, color, created_at
+      SELECT id, user_id, name, parent_id, path, color, tags, created_at
       FROM categories
       WHERE user_id IS NULL OR user_id = $1
       ORDER BY path
@@ -332,6 +391,7 @@ class DatabaseConnection {
         parentId: row.parent_id,
         path: row.path,
         color: row.color,
+        tags: row.tags || [],
         createdAt: row.created_at
       }));
     } catch (error) {
@@ -343,15 +403,15 @@ class DatabaseConnection {
   /**
    * カテゴリを作成
    */
-  async createCategory(name: string, color: string, userId?: string): Promise<Category> {
+  async createCategory(name: string, color: string, userId?: string, tags?: string[]): Promise<Category> {
     const query = `
-      INSERT INTO categories (user_id, name, parent_id, path, color)
-      VALUES ($1, $2, $3, ARRAY[$2], $4)
-      RETURNING id, user_id, name, parent_id, path, color, created_at
+      INSERT INTO categories (user_id, name, parent_id, path, color, tags)
+      VALUES ($1, $2, $3, ARRAY[$2], $4, $5)
+      RETURNING id, user_id, name, parent_id, path, color, tags, created_at
     `;
 
     try {
-      const result = await this.pool.query(query, [userId || null, name, null, color]);
+      const result = await this.pool.query(query, [userId || null, name, null, color, tags || []]);
       const row = result.rows[0];
       return {
         id: row.id,
@@ -360,6 +420,7 @@ class DatabaseConnection {
         parentId: row.parent_id,
         path: row.path,
         color: row.color,
+        tags: row.tags || [],
         createdAt: row.created_at
       };
     } catch (error) {
@@ -371,7 +432,7 @@ class DatabaseConnection {
   /**
    * カテゴリを更新
    */
-  async updateCategory(id: string, updates: { name?: string; color?: string }): Promise<Category | null> {
+  async updateCategory(id: string, updates: { name?: string; color?: string; tags?: string[] }): Promise<Category | null> {
     const setClauses: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
@@ -389,6 +450,12 @@ class DatabaseConnection {
       paramIndex++;
     }
 
+    if (updates.tags !== undefined) {
+      setClauses.push(`tags = $${paramIndex}`);
+      values.push(updates.tags);
+      paramIndex++;
+    }
+
     if (setClauses.length === 0) {
       return null;
     }
@@ -398,7 +465,7 @@ class DatabaseConnection {
       UPDATE categories
       SET ${setClauses.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, user_id, name, parent_id, path, color, created_at
+      RETURNING id, user_id, name, parent_id, path, color, tags, created_at
     `;
 
     try {
@@ -414,6 +481,7 @@ class DatabaseConnection {
         parentId: row.parent_id,
         path: row.path,
         color: row.color,
+        tags: row.tags || [],
         createdAt: row.created_at
       };
     } catch (error) {
@@ -444,13 +512,14 @@ class DatabaseConnection {
     const query = `
       INSERT INTO gear_items (
         user_id, category_id, name, brand, product_url, image_url,
-        required_quantity, owned_quantity, weight_grams, price_cents,
-        seasons, priority
+        required_quantity, owned_quantity, weight_class, weight_grams,
+        weight_confidence, weight_source, price_cents, seasons, priority, is_in_kit
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING id, user_id, category_id, name, brand, product_url, image_url,
-                required_quantity, owned_quantity, weight_grams, price_cents,
-                seasons, priority, created_at, updated_at
+                required_quantity, owned_quantity, weight_class, weight_grams,
+                weight_confidence, weight_source, price_cents, seasons, priority,
+                is_in_kit, created_at, updated_at
     `;
 
     try {
@@ -463,10 +532,14 @@ class DatabaseConnection {
         gear.imageUrl || null,
         gear.requiredQuantity || 1,
         gear.ownedQuantity || 0,
+        gear.weightClass || 'base',
         gear.weightGrams || null,
+        gear.weightConfidence || 'low',
+        gear.weightSource || 'manual',
         gear.priceCents || null,
         gear.seasons || null,
-        gear.priority || 3
+        gear.priority || 3,
+        gear.isInKit ?? true
       ]);
 
       const row = result.rows[0];
@@ -480,10 +553,14 @@ class DatabaseConnection {
         imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
+        weightClass: row.weight_class,
         weightGrams: row.weight_grams,
+        weightConfidence: row.weight_confidence,
+        weightSource: row.weight_source,
         priceCents: row.price_cents,
         seasons: row.seasons,
         priority: row.priority,
+        isInKit: row.is_in_kit,
         createdAt: row.created_at,
         updatedAt: row.updated_at
       };
@@ -509,10 +586,14 @@ class DatabaseConnection {
       imageUrl: 'image_url',
       requiredQuantity: 'required_quantity',
       ownedQuantity: 'owned_quantity',
+      weightClass: 'weight_class',
       weightGrams: 'weight_grams',
+      weightConfidence: 'weight_confidence',
+      weightSource: 'weight_source',
       priceCents: 'price_cents',
       seasons: 'seasons',
-      priority: 'priority'
+      priority: 'priority',
+      isInKit: 'is_in_kit'
     };
 
     for (const [key, dbField] of Object.entries(fieldMapping)) {
@@ -533,8 +614,9 @@ class DatabaseConnection {
       SET ${setClauses.join(', ')}
       WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
       RETURNING id, user_id, category_id, name, brand, product_url, image_url,
-                required_quantity, owned_quantity, weight_grams, price_cents,
-                seasons, priority, created_at, updated_at
+                required_quantity, owned_quantity, weight_class, weight_grams,
+                weight_confidence, weight_source, price_cents, seasons, priority,
+                is_in_kit, created_at, updated_at
     `;
 
     try {
@@ -554,10 +636,14 @@ class DatabaseConnection {
         imageUrl: row.image_url,
         requiredQuantity: row.required_quantity,
         ownedQuantity: row.owned_quantity,
+        weightClass: row.weight_class,
         weightGrams: row.weight_grams,
+        weightConfidence: row.weight_confidence,
+        weightSource: row.weight_source,
         priceCents: row.price_cents,
         seasons: row.seasons,
         priority: row.priority,
+        isInKit: row.is_in_kit,
         createdAt: row.created_at,
         updatedAt: row.updated_at
       };

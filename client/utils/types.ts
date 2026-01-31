@@ -1,5 +1,31 @@
 // 簡素化された型定義
 
+// ==================== 意味論軸の型定義 ====================
+
+// 会計軸（Accounting）
+export type WeightClass = 'base' | 'worn' | 'consumable';
+
+// 重量信頼度
+export type WeightConfidence = 'high' | 'med' | 'low';
+
+// 重量ソース
+export type WeightSource = 'manual' | 'jsonld' | 'og' | 'html' | 'llm';
+
+// 調達状態（派生）
+export type ProcurementStatus = 'owned' | 'partial' | 'need';
+
+// 優先度
+export type Priority = 0 | 1 | 2 | 3;
+
+// 派生関数
+export function deriveStatus(required: number, owned: number): ProcurementStatus {
+  if (owned >= required) return 'owned';
+  if (owned === 0 && required > 0) return 'need';
+  return 'partial';
+}
+
+// ==================== エンティティ ====================
+
 export interface User {
   id: string;
   email: string;
@@ -14,6 +40,7 @@ export interface Category {
   parentId?: string;
   path: string[]; // ['Clothing', 'Outerwear', 'Jacket']
   color: string; // hex color
+  tags: string[]; // Big3タグ等（'big3_pack', 'big3_shelter', 'big3_sleep'）
   createdAt: string;
 }
 
@@ -28,15 +55,25 @@ export interface GearItem {
   productUrl?: string;
   imageUrl?: string; // 商品画像URL
 
-  // 数量・重量
+  // 数量（調達軸）
   requiredQuantity: number;
   ownedQuantity: number;
+
+  // 会計軸
+  weightClass: WeightClass; // 'base' | 'worn' | 'consumable'
+
+  // 重量（信頼度付き）
   weightGrams?: number;
+  weightConfidence: WeightConfidence; // 'high' | 'med' | 'low'
+  weightSource: WeightSource; // 'manual' | 'jsonld' | 'og' | 'html' | 'llm'
 
   // 価格・メタ
   priceCents?: number;
   seasons?: ('spring' | 'summer' | 'fall' | 'winter')[]; // Multiple seasons selection
   priority: number; // 1-5
+
+  // キット包含フラグ
+  isInKit: boolean; // 集計対象フラグ
 
   // LLM
   llmData?: {
@@ -54,8 +91,43 @@ export interface GearItemWithCalculated extends GearItem {
   totalWeight: number; // weightGrams * requiredQuantity
   totalPrice: number; // priceCents * requiredQuantity
   missingQuantity: number; // Math.max(0, requiredQuantity - ownedQuantity)
+  procurementStatus: ProcurementStatus; // 派生: owned | partial | need
   category?: Category; // join結果
 }
+
+// ==================== 集計（派生値） ====================
+
+// 重量内訳
+export interface WeightBreakdown {
+  baseWeight: number;      // Base装備の合計
+  wornWeight: number;      // Worn装備の合計
+  consumables: number;     // 消耗品の合計
+  packedWeight: number;    // Base + Consumables
+  skinOutWeight: number;   // Base + Worn + Consumables
+  big3: number;            // Backpack + Shelter + Sleep
+}
+
+// コスト内訳
+export interface CostBreakdown {
+  ownedCost: number;
+  needCost: number;   // need + partial
+  totalCost: number;
+}
+
+// UL分類
+export type ULClassification = 'ultralight' | 'lightweight' | 'traditional';
+
+export interface ULStatus {
+  classification: ULClassification;
+  baseWeight: number;
+  threshold: number;  // 4500 for UL
+}
+
+// UL基準値（定数）
+export const UL_THRESHOLDS = {
+  ultralight: 4500,    // < 4.5kg
+  lightweight: 9000,   // < 9kg
+} as const;
 
 export interface GearList {
   id: string;
@@ -139,11 +211,26 @@ export interface GearItemForm {
   categoryId?: string;
   requiredQuantity: number;
   ownedQuantity: number;
+  weightClass: WeightClass;
   weightGrams?: number;
+  weightConfidence: WeightConfidence;
+  weightSource: WeightSource;
   priceCents?: number;
   season?: string;
   priority: number;
+  isInKit: boolean;
 }
+
+// デフォルト値
+export const DEFAULT_GEAR_VALUES = {
+  weightClass: 'base' as WeightClass,
+  weightConfidence: 'low' as WeightConfidence,
+  weightSource: 'manual' as WeightSource,
+  isInKit: true,
+  priority: 3,
+  requiredQuantity: 1,
+  ownedQuantity: 0,
+} as const;
 
 export interface LLMExtractionResult {
   // 基本情報 - GearItemFormと完全対応
@@ -156,6 +243,7 @@ export interface LLMExtractionResult {
   requiredQuantity?: number;
   ownedQuantity?: number;
   weightGrams?: number;
+  weightConfidence?: WeightConfidence;
 
   // 価格・メタ
   priceCents?: number;
@@ -165,6 +253,7 @@ export interface LLMExtractionResult {
   // LLM固有
   suggestedCategory?: string;
   categoryId?: string; // マッチしたカテゴリID
+  suggestedWeightClass?: WeightClass; // LLMが推測した会計区分
 
   // 抽出メタデータ
   extractedFields: string[]; // 実際に抽出できたフィールド名
