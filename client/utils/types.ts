@@ -24,6 +24,34 @@ export function deriveStatus(required: number, owned: number): ProcurementStatus
   return 'partial';
 }
 
+// ==================== Big3ヘルパー ====================
+
+// Big3タグ定義
+export const BIG3_TAGS = ['big3_pack', 'big3_shelter', 'big3_sleep'] as const;
+export type Big3Tag = typeof BIG3_TAGS[number];
+
+/**
+ * カテゴリがBig3かどうかを判定
+ * Big3: Backpack, Shelter, Sleep System
+ */
+export function isBig3Category(category?: { tags?: string[] } | null): boolean {
+  if (!category?.tags) return false;
+  return category.tags.some(tag => (BIG3_TAGS as readonly string[]).includes(tag));
+}
+
+/**
+ * Big3カテゴリ時にweightClassを'base'に矯正
+ * @param weightClass 現在のweightClass
+ * @param category カテゴリ情報
+ * @returns 矯正後のweightClass
+ */
+export function enforceWeightClassForBig3(
+  weightClass: WeightClass,
+  category?: { tags?: string[] } | null
+): WeightClass {
+  return isBig3Category(category) ? 'base' : weightClass;
+}
+
 // ==================== エンティティ ====================
 
 export interface User {

@@ -330,9 +330,9 @@ class DatabaseConnection {
         COALESCE(SUM(CASE WHEN g.weight_class = 'worn' THEN g.weight_grams * g.owned_quantity ELSE 0 END), 0) as worn_weight,
         -- Consumables
         COALESCE(SUM(CASE WHEN g.weight_class = 'consumable' THEN g.weight_grams * g.owned_quantity ELSE 0 END), 0) as consumables,
-        -- Big3 (categories with big3_* tags)
+        -- Big3 (categories with big3_* tags, weight_class非依存)
         COALESCE(SUM(
-          CASE WHEN g.weight_class = 'base' AND c.tags && ARRAY['big3_pack', 'big3_shelter', 'big3_sleep']
+          CASE WHEN c.tags && ARRAY['big3_pack', 'big3_shelter', 'big3_sleep']
           THEN g.weight_grams * g.owned_quantity ELSE 0 END
         ), 0) as big3
       FROM gear_items g
