@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react'
-import { GearItemWithCalculated, Category } from '../../utils/types'
+import { GearItemWithCalculated, Category, WeightClass } from '../../utils/types'
 import { getPriorityColor } from '../../utils/designSystem'
 import { formatPrice } from '../../utils/formatters'
 import SeasonBar from '../SeasonBar'
+import WeightClassBadge from '../ui/WeightClassBadge'
 
 interface BaseFieldProps {
   isChanged?: boolean
@@ -455,5 +456,47 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
         <option value={5}>5</option>
       </select>
     </div>
+  )
+}
+
+interface EditableWeightClassFieldProps extends BaseFieldProps {
+  value: WeightClass
+  onChange: (value: WeightClass) => void
+  isEditing: boolean
+  isBig3?: boolean
+}
+
+export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> = ({
+  value,
+  onChange,
+  isEditing,
+  isChanged,
+  isBig3 = false
+}) => {
+  if (isEditing && !isBig3) {
+    // Big3カテゴリの場合は常にbaseに固定されるため編集不可
+    return (
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as WeightClass)}
+        className={`text-xs px-1 py-0.5 rounded border ${
+          isChanged
+            ? 'border-red-500 text-red-600 dark:text-red-400'
+            : 'border-gray-300 dark:border-gray-600'
+        } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+      >
+        <option value="base">Base</option>
+        <option value="worn">Worn</option>
+        <option value="consumable">Cons</option>
+      </select>
+    )
+  }
+
+  return (
+    <WeightClassBadge
+      weightClass={value}
+      isBig3={isBig3}
+      compact
+    />
   )
 }

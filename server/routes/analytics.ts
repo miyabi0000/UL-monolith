@@ -3,9 +3,12 @@ import { db } from '../database/connection';
 
 const router = Router();
 
+// デモユーザーID（認証実装までの仮ID）- gearルートと統一
+const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
+
 router.get('/summary', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userId = req.headers['x-user-id'] as string || DEMO_USER_ID;
     const summary = await db.getAnalyticsSummary(userId);
 
     res.json({
@@ -28,7 +31,7 @@ router.get('/summary', async (req, res) => {
  */
 router.get('/weight-breakdown', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string || 'anonymous';
+    const userId = req.headers['x-user-id'] as string || DEMO_USER_ID;
     const breakdown = await db.getWeightBreakdown(userId);
 
     // UL分類を判定

@@ -176,13 +176,57 @@ export interface ChartData {
   items: GearItemWithCalculated[];
 }
 
-export type ChartViewMode = 'weight' | 'cost';
+// Weight-Class用チャートデータ
+export interface WeightClassChartData {
+  name: 'Base' | 'Worn' | 'Consumable';
+  value: number; // 重量
+  color: string;
+  items: GearItemWithCalculated[];
+}
+
+// Weight-Class用カラー定義
+export const WEIGHT_CLASS_COLORS = {
+  base: '#6B7280',      // gray-500
+  worn: '#3B82F6',      // blue-500
+  consumable: '#F97316' // orange-500
+} as const;
+
+export type ChartViewMode = 'weight' | 'cost' | 'weight-class';
 // owned: 所持分, need: 不足分, all: 必要数（総数）
 export type QuantityDisplayMode = 'owned' | 'need' | 'all';
 export type ViewMode = 'table' | 'card' | 'compare';
 
 // Gear field values type for type-safe updates
 export type GearFieldValue = string | number | null | string[] | boolean;
+
+// ==================== 二重ドーナツチャート ====================
+
+// フォーカス状態（Inner ringの選択状態）
+export type ChartFocus = 'all' | 'big3' | 'other';
+
+// スコープ（集計対象のweight_class範囲）
+export type ChartScope = 'base' | 'packed' | 'skinout';
+
+// ドーナツセグメント
+export interface DonutSegment {
+  id: string;           // 'big3' | 'other' | categoryId | 'big3_pack' etc.
+  label: string;
+  value: number;        // weight in grams
+  color: string;
+  isBig3?: boolean;
+  items: GearItemWithCalculated[];
+}
+
+// 二重ドーナツ用カラートークン
+export const DUAL_RING_COLORS = {
+  // Inner ring
+  big3: '#8B5CF6',        // purple-500
+  other: '#6B7280',       // gray-500
+  // Big3内訳（Outer ring when focus='big3'）
+  big3_pack: '#7C3AED',   // violet-600
+  big3_shelter: '#A78BFA', // violet-400
+  big3_sleep: '#C4B5FD'   // violet-300
+} as const;
 
 // ==================== ギア比較機能 ====================
 

@@ -1,5 +1,7 @@
 import React from 'react'
 import type { GearItemWithCalculated, Category, QuantityDisplayMode } from '../../utils/types'
+import { deriveStatus, isBig3Category } from '../../utils/types'
+import StatusBadge from '../ui/StatusBadge'
 import {
   EditableImageField,
   EditableTextField,
@@ -7,6 +9,7 @@ import {
   EditablePriceField,
   EditableWeightField,
   EditableSeasonField,
+  EditableWeightClassField,
   QuantitySelector,
   PrioritySelector,
   Currency
@@ -186,6 +189,22 @@ const TableRow: React.FC<TableRowProps> = ({
         ) : (
           renderQuantityValue()
         )}
+      </td>
+
+      {/* Status */}
+      <td className="px-2 py-1 whitespace-nowrap text-center w-14">
+        <StatusBadge status={deriveStatus(item.requiredQuantity, item.ownedQuantity)} compact />
+      </td>
+
+      {/* Weight Class */}
+      <td className="px-2 py-1 whitespace-nowrap text-center w-16">
+        <EditableWeightClassField
+          value={item.weightClass || 'base'}
+          onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
+          isEditing={isEditable}
+          isChanged={isFieldChanged('weightClass')}
+          isBig3={isBig3Category(item.category)}
+        />
       </td>
 
       {/* Weight */}

@@ -98,6 +98,12 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             {getQuantityLabel()}
           </button>
         </th>
+        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-14">
+          Status
+        </th>
+        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
+          WtCls
+        </th>
         <th
           className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-20"
           onClick={() => onSort('weight')}
