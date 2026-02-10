@@ -6,6 +6,7 @@ import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHe
 import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData, filterByScope, sumWeight } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel, { PanelMode } from './GearDetailPanel'
+import ActiveCalloutShape from './charts/ActiveCalloutShape'
 
 // ==================== SVGアイコン ====================
 const BackpackIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -87,12 +88,12 @@ const UL_BADGE_COLORS = {
   traditional: '#EF4444'  // red-500
 } as const
 
-// フォントサイズトークン（80%縮小対応）
+// フォントサイズトークン
 const FONT_SIZES = {
   center: {
-    primary: { mobile: '0.9rem', desktop: '1.1rem' },      // 値表示
-    secondary: { mobile: '0.55rem', desktop: '0.6rem' },   // ラベル
-    tertiary: { mobile: '0.5rem', desktop: '0.55rem' }     // サブ情報
+    primary: { mobile: '1.1rem', desktop: '1.4rem' },      // 値表示
+    secondary: { mobile: '0.65rem', desktop: '0.75rem' },   // ラベル
+    tertiary: { mobile: '0.55rem', desktop: '0.65rem' }     // サブ情報
   },
   badge: { mobile: '0.5rem', desktop: '0.55rem' }
 } as const
@@ -179,6 +180,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
   const chartScope: ChartScope = 'base'
+  // hover callout用activeIndex
+  const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
+  const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
 
   // レスポンシブ対応
   useEffect(() => {
@@ -218,16 +222,20 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== データ処理 ====================
 
-  // 二重ドーナツ: Inner ring (Big3 vs Other)
+  // 二重ドーナツ: Inner ring (Big3 vs Other) - ratioを含む
   const dualRingInnerData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
-    return calculateInnerRingData(items, chartScope)
+    const data = calculateInnerRingData(items, chartScope)
+    const total = data.reduce((sum, d) => sum + d.value, 0)
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
   }, [viewMode, items, chartScope])
 
-  // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳)
+  // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
   const dualRingOuterData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
-    return calculateOuterRingData(items, chartScope, chartFocus, categories)
+    const data = calculateOuterRingData(items, chartScope, chartFocus, categories)
+    const total = data.reduce((sum, d) => sum + d.value, 0)
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
   }, [viewMode, items, chartScope, chartFocus, categories])
 
   // スコープに応じた合計重量
@@ -247,9 +255,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const totalValue = viewMode === 'cost' ? totalCost : totalWeight
 
   const sortedData = useMemo(() => {
+    const unit = viewMode === 'cost' ? '¥' : 'g'
     return [...displayData].sort((a, b) => b.value - a.value).map(category => ({
       ...category,
       percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
+      ratio: totalValue > 0 ? category.value / totalValue : 0,
+      label: category.name,
+      unit,
       sortedItems: (category.items || [])
         .filter(item => getItemValue(item, viewMode, quantityDisplayMode) > 0)
         .sort((a, b) => getItemValue(b, viewMode, quantityDisplayMode) - getItemValue(a, viewMode, quantityDisplayMode))
@@ -272,7 +284,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   )
 
   const outerPieData = useMemo(() => {
-    return (selectedData?.sortedItems || []).map((item, index) => {
+    const items = selectedData?.sortedItems || []
+    const categoryTotal = items.reduce((sum, item) => sum + getItemValue(item, viewMode, quantityDisplayMode), 0)
+    const unit = viewMode === 'cost' ? '¥' : 'g'
+    return items.map((item, index) => {
       const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
       const fillColor = generateItemColor(
         selectedData?.color || DEFAULT_COLOR,
@@ -290,7 +305,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         shortage: item.shortage,
         priority: item.priority,
         percentage: item.totalPercentage,
-        systemPercentage: item.systemPercentage
+        systemPercentage: item.systemPercentage,
+        ratio: categoryTotal > 0 ? itemValue / categoryTotal : 0,
+        label: item.name,
+        unit
       }
     })
   }, [selectedData, viewMode, quantityDisplayMode])
@@ -392,7 +410,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* グラフエリア */}
         <Card className={`flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
@@ -453,18 +471,24 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     outerRadius={outerRadiusConfig.outer}
                     innerRadius={outerRadiusConfig.inner}
                     onClick={(entry) => handleDualRingOuterClick(entry.id)}
+                    activeIndex={outerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
+                    onMouseLeave={() => setOuterActiveIndex(null)}
                     className="cursor-pointer"
                   >
                     {dualRingOuterData.map((entry, index) => {
                       const isSelected = selectedCategories.includes(entry.label)
                       const darkenedFill = darkenColor(entry.color, 0.15)
+                      // Outer ringは薄めに表示してInner ringを強調
+                      const baseOpacity = chartFocus !== 'all' ? 0.5 : 0.7
                       return (
                         <Cell
                           key={`dual-outer-${index}`}
                           fill={isSelected ? darkenedFill : entry.color}
                           stroke={COLORS.white}
                           strokeWidth={isSelected ? 2 : 1}
-                          opacity={isSelected ? 1 : 0.85}
+                          opacity={isSelected ? 0.95 : baseOpacity}
                           style={{
                             transition: 'all 0.2s ease',
                             outline: 'none',
@@ -483,20 +507,24 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     outerRadius={innerRadiusConfig.outer}
                     innerRadius={innerRadiusConfig.inner}
                     onClick={(entry) => handleInnerRingClick(entry.id)}
+                    activeIndex={innerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
+                    onMouseLeave={() => setInnerActiveIndex(null)}
                     className="cursor-pointer"
                   >
                     {dualRingInnerData.map((entry, index) => {
-                      const isFocused = chartFocus === entry.id
-                      const darkenedFill = darkenColor(entry.color, 0.2)
+                      const isFocused = chartFocus === entry.id || chartFocus === 'all'
+                      const darkenedFill = darkenColor(entry.color, 0.25)
                       return (
                         <Cell
                           key={`dual-inner-${index}`}
-                          fill={isFocused ? darkenedFill : entry.color}
-                          stroke={COLORS.white}
-                          strokeWidth={isFocused ? 2 : 1}
-                          opacity={chartFocus !== 'all' && !isFocused ? 0.4 : 1}
+                          fill={chartFocus === entry.id ? darkenedFill : entry.color}
+                          stroke={chartFocus === entry.id ? darkenedFill : COLORS.white}
+                          strokeWidth={chartFocus === entry.id ? 3 : 2}
+                          opacity={isFocused ? 1 : 0.35}
                           style={{
-                            filter: isFocused ? `drop-shadow(0 0 6px ${darkenedFill}99)` : 'none',
+                            filter: chartFocus === entry.id ? `drop-shadow(0 0 8px ${entry.color}aa)` : 'none',
                             transition: 'all 0.2s ease',
                             outline: 'none',
                             cursor: 'pointer'
@@ -518,6 +546,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       outerRadius={outerRadiusConfig.outer}
                       innerRadius={outerRadiusConfig.inner}
                       onClick={(entry) => handleItemClick(entry.id)}
+                      activeIndex={outerActiveIndex ?? undefined}
+                      activeShape={ActiveCalloutShape}
+                      onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
+                      onMouseLeave={() => setOuterActiveIndex(null)}
                       className="cursor-pointer"
                     >
                       {outerPieData.map((item, index) => {
@@ -556,6 +588,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     outerRadius={innerRadiusConfig.outer}
                     innerRadius={innerRadiusConfig.inner}
                     onClick={(entry) => handleCategoryClick(entry.name)}
+                    activeIndex={innerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
+                    onMouseLeave={() => setInnerActiveIndex(null)}
                     className="cursor-pointer"
                   >
                     {sortedData.map((entry, index) => {
@@ -691,7 +727,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 }
 
                 // レベル1: 未選択時
-                // Weight-Classモード用中央表示
+                // Weight-Classモード用中央表示（chartFocusに応じて表示切替）
                 if (viewMode === 'weight-class' && weightBreakdown && ulStatus) {
                   const ulProgress = Math.min(100, (weightBreakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
                   const ulBadgeColor = UL_BADGE_COLORS[ulStatus.classification]
@@ -701,41 +737,77 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       ? 'LW'
                       : 'Trad'
 
+                  // chartFocusに応じた値とラベル
+                  const otherWeight = weightBreakdown.baseWeight - weightBreakdown.big3
+                  const displayWeight = chartFocus === 'big3'
+                    ? weightBreakdown.big3
+                    : chartFocus === 'other'
+                      ? otherWeight
+                      : weightBreakdown.baseWeight
+                  const displayLabel = chartFocus === 'big3'
+                    ? 'BIG3'
+                    : chartFocus === 'other'
+                      ? 'OTHER'
+                      : 'BASE WEIGHT'
+                  const displayColor = chartFocus === 'big3'
+                    ? DUAL_RING_COLORS.big3
+                    : chartFocus === 'other'
+                      ? DUAL_RING_COLORS.other
+                      : undefined
+
                   return (
                     <>
                       <div
-                        className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
+                        className="font-bold mb-0.5"
                         style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop,
+                          color: displayColor || 'inherit'
                         }}
                       >
-                        {(weightBreakdown.baseWeight / 1000).toFixed(2)}kg
+                        {(displayWeight / 1000).toFixed(2)}kg
                       </div>
                       <div
-                        className="uppercase tracking-wide font-bold mb-1 text-gray-500 dark:text-gray-400"
+                        className="uppercase tracking-wide font-bold mb-1"
                         style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
+                          color: displayColor || '#6B7280'
                         }}
                       >
-                        BASE WEIGHT
+                        {displayLabel}
                       </div>
-                      <span
-                        className="px-1.5 py-0.5 rounded-full text-white font-bold"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
-                          backgroundColor: ulBadgeColor
-                        }}
-                      >
-                        {ulBadgeLabel}
-                      </span>
-                      <div
-                        className="text-gray-400 dark:text-gray-500 mt-0.5"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-                        }}
-                      >
-                        {Math.round(ulProgress)}% of UL
-                      </div>
+                      {chartFocus === 'all' && (
+                        <>
+                          <span
+                            className="px-1.5 py-0.5 rounded-full text-white font-bold"
+                            style={{
+                              fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
+                              backgroundColor: ulBadgeColor
+                            }}
+                          >
+                            {ulBadgeLabel}
+                          </span>
+                          <div
+                            className="text-gray-400 dark:text-gray-500 mt-0.5"
+                            style={{
+                              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+                            }}
+                          >
+                            {Math.round(ulProgress)}% of UL
+                          </div>
+                        </>
+                      )}
+                      {chartFocus !== 'all' && (
+                        <div
+                          className="text-gray-400 dark:text-gray-500 mt-0.5"
+                          style={{
+                            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+                          }}
+                        >
+                          {weightBreakdown.baseWeight > 0
+                            ? Math.round((displayWeight / weightBreakdown.baseWeight) * 100)
+                            : 0}% of Base
+                        </div>
+                      )}
                     </>
                   )
                 }
@@ -809,49 +881,114 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* サマリーフッター */}
           {viewMode === 'weight-class' && weightBreakdown ? (
             <>
-              {/* Weight-Classモード: Packed/Worn/Big3 */}
-              <div className="grid grid-cols-3 gap-1">
-                <div className="flex flex-col items-center p-1.5 rounded bg-gray-100 dark:bg-gray-800">
-                  <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Packed</span>
-                  <span className="text-xs font-bold text-gray-900 dark:text-gray-100">{weightBreakdown.packedWeight.toLocaleString()}g</span>
+              {/* Weight-Classモード: Big3 / Other - Inner ringの凡例と連動 */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => setChartFocus(chartFocus === 'other' ? 'all' : 'other')}
+                  className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+                    chartFocus === 'other'
+                      ? 'bg-gray-200 dark:bg-gray-700 ring-2 ring-gray-500 dark:ring-gray-400'
+                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-150 dark:hover:bg-gray-750'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: DUAL_RING_COLORS.other }}
+                    />
+                    <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Other</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                    {(weightBreakdown.baseWeight - weightBreakdown.big3).toLocaleString()}g
+                  </span>
+                  <span className="text-[9px] text-gray-500 dark:text-gray-400">
+                    {weightBreakdown.baseWeight > 0
+                      ? Math.round(((weightBreakdown.baseWeight - weightBreakdown.big3) / weightBreakdown.baseWeight) * 100)
+                      : 0}%
+                  </span>
+                </button>
+                <button
+                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
+                  className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+                    chartFocus === 'big3'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-2 ring-purple-500 dark:ring-purple-400'
+                      : 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: DUAL_RING_COLORS.big3 }}
+                    />
+                    <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300">Big3</span>
+                  </div>
+                  <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
+                    {weightBreakdown.big3.toLocaleString()}g
+                  </span>
+                  <span className="text-[9px] text-purple-600 dark:text-purple-400">
+                    {weightBreakdown.baseWeight > 0
+                      ? Math.round((weightBreakdown.big3 / weightBreakdown.baseWeight) * 100)
+                      : 0}%
+                  </span>
+                </button>
+              </div>
+              {/* Big3内訳表示 */}
+              <div className="grid grid-cols-3 gap-1 mt-1.5">
+                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
+                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Pack</span>
+                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
+                    {weightBreakdown.big3Pack?.toLocaleString() ?? 0}g
+                  </span>
                 </div>
-                <div className="flex flex-col items-center p-1.5 rounded bg-blue-50 dark:bg-blue-900/20">
-                  <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Worn</span>
-                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300">{weightBreakdown.skinOutWeight.toLocaleString()}g</span>
+                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
+                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Shelter</span>
+                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
+                    {weightBreakdown.big3Shelter?.toLocaleString() ?? 0}g
+                  </span>
                 </div>
-                <div className="flex flex-col items-center p-1.5 rounded bg-purple-50 dark:bg-purple-900/20">
-                  <span className="text-[10px] font-medium text-purple-600 dark:text-purple-400">Big3</span>
-                  <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{weightBreakdown.big3.toLocaleString()}g</span>
+                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
+                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Sleep</span>
+                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
+                    {weightBreakdown.big3Sleep?.toLocaleString() ?? 0}g
+                  </span>
                 </div>
               </div>
-              {/* Focus状態表示 */}
-              {chartFocus !== 'all' && (
-                <div className="flex justify-center mt-1">
-                  <button
-                    onClick={() => setChartFocus('all')}
-                    className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-1"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    {chartFocus === 'big3' ? 'Big3' : 'Other'} focus → Clear
-                  </button>
-                </div>
-              )}
             </>
           ) : (
             <>
-              {/* Weight/Costモード: 2カード */}
-              <div className="grid grid-cols-2 gap-1">
-                <div className="flex flex-col items-center p-1 rounded bg-gray-50 dark:bg-gray-800">
-                  <ScaleIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mb-0.5" />
-                  <span className="text-[8px] text-gray-500 dark:text-gray-400 uppercase">Weight</span>
-                  <span className="text-[9px] font-semibold text-gray-900 dark:text-gray-100">{totalWeight.toLocaleString()}g</span>
+              {/* Weight/Costモード: 2カード（Weight-Classモードと同じ高さに統一） */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+                  viewMode === 'weight'
+                    ? 'bg-gray-200 dark:bg-gray-700 ring-2 ring-gray-400 dark:ring-gray-500'
+                    : 'bg-gray-100 dark:bg-gray-800'
+                }`}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <ScaleIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
+                    <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Weight</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                    {totalWeight.toLocaleString()}g
+                  </span>
+                  <span className="text-[9px] text-gray-500 dark:text-gray-400">
+                    {(totalWeight / 1000).toFixed(2)}kg
+                  </span>
                 </div>
-                <div className="flex flex-col items-center p-1 rounded bg-green-50 dark:bg-green-900/20">
-                  <YenIcon className="w-3.5 h-3.5 text-green-500 dark:text-green-400 mb-0.5" />
-                  <span className="text-[8px] text-gray-500 dark:text-gray-400 uppercase">Price</span>
-                  <span className="text-[9px] font-semibold text-gray-900 dark:text-gray-100">¥{Math.round(totalCost / 100).toLocaleString()}</span>
+                <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+                  viewMode === 'cost'
+                    ? 'bg-green-100 dark:bg-green-900/40 ring-2 ring-green-400 dark:ring-green-500'
+                    : 'bg-green-50 dark:bg-green-900/20'
+                }`}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <YenIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                    <span className="text-[11px] font-semibold text-green-700 dark:text-green-300">Price</span>
+                  </div>
+                  <span className="text-sm font-bold text-green-800 dark:text-green-200">
+                    ¥{Math.round(totalCost / 100).toLocaleString()}
+                  </span>
+                  <span className="text-[9px] text-green-600 dark:text-green-400">
+                    {items.length} items
+                  </span>
                 </div>
               </div>
             </>
@@ -864,56 +1001,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-11">
             <div className="flex items-center gap-2">
-              {/* Owned/Need/All切り替え + トグルアイコン */}
-              <div className="inline-flex items-center rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800 gap-0.5">
-                <button
-                  onClick={() => onQuantityDisplayModeChange('owned')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'owned'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  Owned
-                </button>
-                <button
-                  onClick={() => onQuantityDisplayModeChange('need')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'need'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  Need
-                </button>
-                <button
-                  onClick={() => onQuantityDisplayModeChange('all')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'all'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  ALL
-                </button>
-                {/* サイクルトグルアイコン */}
-                <button
-                  onClick={() => {
-                    const next = quantityDisplayMode === 'owned' ? 'need' : quantityDisplayMode === 'need' ? 'all' : 'owned'
-                    onQuantityDisplayModeChange(next)
-                  }}
-                  className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                  aria-label="Cycle quantity display mode"
-                  title="Toggle quantity mode"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                  </svg>
-                </button>
-              </div>
-
               {/* 現在の状態表示 */}
               {(selectedCategoryFromChart || selectedItem) && (
                 <div className="text-xs text-gray-500 dark:text-gray-400 max-w-[120px] truncate">
@@ -923,54 +1012,75 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             </div>
 
             {/* 右側ボタン群 */}
-            <div className="flex items-center gap-2">
-              {/* ビュー切り替え (Card/Table) */}
-              {onGearViewModeChange && (
-                <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
-                  <button
-                    onClick={() => onGearViewModeChange('card')}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      gearViewMode === 'card'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Card view"
-                  >
-                    Card
-                  </button>
-                  <button
-                    onClick={() => onGearViewModeChange('table')}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      gearViewMode === 'table'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Table view"
-                  >
-                    Table
-                  </button>
-                </div>
-              )}
+            <div className="flex items-center gap-1.5">
+              {/* ビュー切替グループ */}
+              <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-0.5">
+                {/* ビュー切り替え (Card/Table) - Compareモードからも切り替え可能 */}
+                {onGearViewModeChange && (
+                  <div className="inline-flex rounded-md p-0.5 bg-gray-100 dark:bg-gray-800">
+                    <button
+                      onClick={() => onGearViewModeChange('card')}
+                      className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                        gearViewMode === 'card'
+                          ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                          : gearViewMode === 'compare'
+                            ? 'text-gray-400 dark:text-gray-500'
+                            : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                      aria-label="Card view"
+                    >
+                      Card
+                    </button>
+                    <button
+                      onClick={() => onGearViewModeChange('table')}
+                      className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                        gearViewMode === 'table'
+                          ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                          : gearViewMode === 'compare'
+                            ? 'text-gray-400 dark:text-gray-500'
+                            : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                      aria-label="Table view"
+                    >
+                      Table
+                    </button>
+                  </div>
+                )}
 
-              {/* Compare(A/B)ボタン */}
-              {onGearViewModeChange && (
-                <button
-                  onClick={() => onGearViewModeChange('compare')}
-                  className={`px-2 py-1.5 rounded-md transition-all duration-200 inline-flex items-center gap-1 ${
-                    gearViewMode === 'compare'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                  aria-label="Compare view"
-                  title="Compare items"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  <span className="text-[10px] font-medium">A/B</span>
-                </button>
-              )}
+                {/* Compare(A/B)ボタン - 編集モード中は無効 */}
+                {onGearViewModeChange && (
+                  <button
+                    onClick={() => {
+                      if (gearViewMode === 'compare') {
+                        onGearViewModeChange('table')
+                      } else {
+                        if (showCheckboxes) {
+                          onToggleCheckboxes()
+                        }
+                        onGearViewModeChange('compare')
+                      }
+                    }}
+                    disabled={showCheckboxes && gearViewMode !== 'compare'}
+                    className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                      gearViewMode === 'compare'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : showCheckboxes
+                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                    aria-label="Compare view"
+                    title={showCheckboxes ? 'Exit Edit mode first' : 'Compare items'}
+                  >
+                    A/B
+                  </button>
+                )}
+              </div>
 
+              {/* セパレータ */}
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
+
+              {/* アクショングループ */}
+              <div className="flex items-center gap-1">
               {/* アクションメニュー（ADD + Manage Categories） */}
               {onShowForm && (
                 <div className="relative add-menu-container">
@@ -1034,21 +1144,31 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 </div>
               )}
 
-              {/* Edit(✏️)ボタン */}
+              {/* Edit(✏️)ボタン - Compareモード中は無効 */}
               <button
-                onClick={onToggleCheckboxes}
+                onClick={() => {
+                  if (gearViewMode === 'compare') {
+                    // Compareモード中は編集モードに入れない
+                    return
+                  }
+                  onToggleCheckboxes()
+                }}
+                disabled={gearViewMode === 'compare'}
                 className={`p-1.5 rounded-md transition-all duration-200 ${
                   showCheckboxes
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    : gearViewMode === 'compare'
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
-                title={showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
+                title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
+              </div>
             </div>
           </div>
 
@@ -1071,6 +1191,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 showCheckboxes={showCheckboxes}
                 onToggleCheckboxes={onToggleCheckboxes}
                 filteredByCategory={selectedCategories}
+                chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
               />
           </div>
         </Card>

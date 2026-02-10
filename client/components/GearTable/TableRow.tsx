@@ -92,7 +92,7 @@ const TableRow: React.FC<TableRowProps> = ({
     >
       {/* Checkbox */}
       {showCheckboxes && (
-        <td className="px-2 py-1 whitespace-nowrap text-center w-8">
+        <td className="px-2 py-2 whitespace-nowrap text-center w-8">
           <input
             type="checkbox"
             checked={isSelected}
@@ -103,7 +103,7 @@ const TableRow: React.FC<TableRowProps> = ({
       )}
 
       {/* Image */}
-      <td className="px-2 py-1 text-center w-16" style={{ height: '64px' }}>
+      <td className="px-2 py-2 text-center w-16" style={{ height: '64px' }}>
         <EditableImageField
           value={item.imageUrl || null}
           onChange={(value) => onUpdateItem(item.id, 'imageUrl', value)}
@@ -113,11 +113,11 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Name & Brand */}
-      <td className="px-2 py-1 min-w-[120px] max-w-[200px]">
-        <div className="text-left space-y-1">
+      <td className="px-2 py-2 w-[160px] min-w-[120px] max-w-[200px]">
+        <div className="text-left space-y-0.5 overflow-hidden">
           {isEditable ? (
             <>
-              <div>
+              <div className="w-full">
                 <label className="block text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Name</label>
                 <EditableTextField
                   value={item.name}
@@ -127,7 +127,7 @@ const TableRow: React.FC<TableRowProps> = ({
                   className="text-xs"
                 />
               </div>
-              <div>
+              <div className="w-full">
                 <label className="block text-[9px] text-gray-500 dark:text-gray-400 mb-0.5">Brand</label>
                 <EditableTextField
                   value={item.brand || ''}
@@ -166,7 +166,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Category */}
-      <td className="px-2 py-1 whitespace-nowrap text-center w-20">
+      <td className="px-2 py-2 whitespace-nowrap text-center w-20">
         <EditableCategoryField
           value={item.categoryId}
           onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
@@ -178,7 +178,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Own/Need */}
-      <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-12">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-12">
         {isEditable ? (
           <QuantitySelector
             ownedQuantity={item.ownedQuantity}
@@ -192,12 +192,12 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Status */}
-      <td className="px-2 py-1 whitespace-nowrap text-center w-14">
+      <td className="px-2 py-2 whitespace-nowrap text-center w-14">
         <StatusBadge status={deriveStatus(item.requiredQuantity, item.ownedQuantity)} compact />
       </td>
 
       {/* Weight Class */}
-      <td className="px-2 py-1 whitespace-nowrap text-center w-16">
+      <td className="px-2 py-2 whitespace-nowrap text-center w-16">
         <EditableWeightClassField
           value={item.weightClass || 'base'}
           onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
@@ -208,7 +208,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Weight */}
-      <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-20">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-20">
         <EditableWeightField
           weightGrams={item.weightGrams}
           totalWeight={item.totalWeight}
@@ -220,7 +220,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Priority */}
-      <td className="px-2 py-1 whitespace-nowrap text-center w-12">
+      <td className="px-2 py-2 whitespace-nowrap text-center w-12">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}
@@ -228,7 +228,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Price */}
-      <td className="px-2 py-1 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-16">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 dark:text-gray-100 w-16">
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
@@ -240,7 +240,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Season */}
       <td
-        className="px-2 py-1 text-center w-16"
+        className="px-2 py-2 text-center w-16"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => isEditable && e.stopPropagation()}
       >
@@ -254,7 +254,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Edit button */}
       {onEdit && !isEditable && (
-        <td className="px-2 py-1 text-center w-8">
+        <td className="px-2 py-2 text-center w-8">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -273,4 +273,4 @@ const TableRow: React.FC<TableRowProps> = ({
   )
 }
 
-export default TableRow
+export default React.memo(TableRow)
