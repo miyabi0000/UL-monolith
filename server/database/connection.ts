@@ -334,7 +334,22 @@ class DatabaseConnection {
         COALESCE(SUM(
           CASE WHEN c.tags && ARRAY['big3_pack', 'big3_shelter', 'big3_sleep']
           THEN g.weight_grams * g.owned_quantity ELSE 0 END
-        ), 0) as big3
+        ), 0) as big3,
+        -- Big3 Pack
+        COALESCE(SUM(
+          CASE WHEN 'big3_pack' = ANY(c.tags)
+          THEN g.weight_grams * g.owned_quantity ELSE 0 END
+        ), 0) as big3_pack,
+        -- Big3 Shelter
+        COALESCE(SUM(
+          CASE WHEN 'big3_shelter' = ANY(c.tags)
+          THEN g.weight_grams * g.owned_quantity ELSE 0 END
+        ), 0) as big3_shelter,
+        -- Big3 Sleep
+        COALESCE(SUM(
+          CASE WHEN 'big3_sleep' = ANY(c.tags)
+          THEN g.weight_grams * g.owned_quantity ELSE 0 END
+        ), 0) as big3_sleep
       FROM gear_items g
       LEFT JOIN categories c ON g.category_id = c.id
       WHERE g.user_id = $1 AND g.is_in_kit = true AND g.weight_grams IS NOT NULL
@@ -348,6 +363,9 @@ class DatabaseConnection {
       const wornWeight = parseInt(row.worn_weight || '0');
       const consumables = parseInt(row.consumables || '0');
       const big3 = parseInt(row.big3 || '0');
+      const big3Pack = parseInt(row.big3_pack || '0');
+      const big3Shelter = parseInt(row.big3_shelter || '0');
+      const big3Sleep = parseInt(row.big3_sleep || '0');
 
       return {
         baseWeight,
@@ -355,7 +373,10 @@ class DatabaseConnection {
         consumables,
         packedWeight: baseWeight + consumables,
         skinOutWeight: baseWeight + wornWeight + consumables,
-        big3
+        big3,
+        big3Pack,
+        big3Shelter,
+        big3Sleep
       };
     } catch (error) {
       console.error('Database query error:', error);

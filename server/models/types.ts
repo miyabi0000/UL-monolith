@@ -149,6 +149,9 @@ export interface WeightBreakdown {
   packedWeight: number;
   skinOutWeight: number;
   big3: number;
+  big3Pack: number;
+  big3Shelter: number;
+  big3Sleep: number;
 }
 
 export interface CostBreakdown {

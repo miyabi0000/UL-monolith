@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode } from '../utils/types';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartFocus, isBig3Category } from '../utils/types';
 import GearCardCompact from './GearCardCompact';
 import OverviewView from './DetailPanel/OverviewView';
 import CategorySummaryView from './DetailPanel/CategorySummaryView';
@@ -32,6 +32,7 @@ interface GearDetailPanelProps {
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   filteredByCategory?: string[];
+  chartFocusFilter?: ChartFocus; // Big3/Otherフィルタ
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -51,6 +52,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   showCheckboxes,
   onToggleCheckboxes,
   filteredByCategory = [],
+  chartFocusFilter = 'all',
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -83,9 +85,21 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return items;
   }, [items, quantityDisplayMode]);
 
+  // Big3/Otherフィルタ（Weight-Classモードのチャートと連動）
+  const big3FilteredItems = useMemo(() => {
+    if (chartFocusFilter === 'all') {
+      return quantityFilteredItems;
+    }
+    if (chartFocusFilter === 'big3') {
+      return quantityFilteredItems.filter(item => isBig3Category(item.category));
+    }
+    // chartFocusFilter === 'other'
+    return quantityFilteredItems.filter(item => !isBig3Category(item.category));
+  }, [quantityFilteredItems, chartFocusFilter]);
+
   const chartFilteredItems = useMemo(() => {
-    return filterByCategories(quantityFilteredItems, filteredByCategory);
-  }, [quantityFilteredItems, filteredByCategory]);
+    return filterByCategories(big3FilteredItems, filteredByCategory);
+  }, [big3FilteredItems, filteredByCategory]);
 
   const panelItems = useMemo(() => {
     if (mode === 'category' && selectedCategory) {
@@ -170,6 +184,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   });
 
   const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
+    // 変更中フィールドをマーク
     setChangedFields(prev => {
       const updated = { ...prev };
       if (!updated[id]) {
@@ -183,7 +198,10 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
 
     try {
       await onUpdateItem(id, field, value);
-
+    } catch (err) {
+      console.error('Failed to update field:', err);
+    } finally {
+      // 成功・失敗に関わらずフィールドをクリア
       setChangedFields(prev => {
         const updated = { ...prev };
         if (updated[id]) {
@@ -195,8 +213,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         }
         return updated;
       });
-    } catch (err) {
-      console.error('Failed to update field:', err);
     }
   }, [onUpdateItem]);
 
@@ -268,6 +284,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
               currency={currency}
               onCurrencyChange={handleCurrencyChange}
+              isEditable={isEditable}
             />
             <tbody>
               {processedItems.map((item) => (

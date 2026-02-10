@@ -68,18 +68,18 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
         </div>
       </div>
 
-      {/* 比較テーブル - 横・縦スクロール可能 */}
+      {/* 比較テーブル - 横・縦スクロール可能、均等割付 */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse" style={{ minWidth: '600px' }}>
+        <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-700">
-              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600">
+              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 w-20">
                 Item
               </th>
               {items.map((item, index) => (
                 <th
                   key={item.id}
-                  className="px-2 py-2 text-center text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600 min-w-[140px]"
+                  className="px-2 py-2 text-center text-xs font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600"
                 >
                   <div className="flex items-start justify-between gap-1">
                     {/* A/B/C/D ラベル */}

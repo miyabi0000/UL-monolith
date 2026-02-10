@@ -133,6 +133,9 @@ export interface WeightBreakdown {
   packedWeight: number;    // Base + Consumables
   skinOutWeight: number;   // Base + Worn + Consumables
   big3: number;            // Backpack + Shelter + Sleep
+  big3Pack: number;        // バックパックの重量
+  big3Shelter: number;     // シェルターの重量
+  big3Sleep: number;       // スリープシステムの重量
 }
 
 // コスト内訳
@@ -219,13 +222,13 @@ export interface DonutSegment {
 
 // 二重ドーナツ用カラートークン
 export const DUAL_RING_COLORS = {
-  // Inner ring
-  big3: '#8B5CF6',        // purple-500
-  other: '#6B7280',       // gray-500
+  // Inner ring（濃い色でコントラスト強調）
+  big3: '#7C3AED',        // violet-600（より濃い紫）
+  other: '#4B5563',       // gray-600（より濃いグレー）
   // Big3内訳（Outer ring when focus='big3'）
-  big3_pack: '#7C3AED',   // violet-600
-  big3_shelter: '#A78BFA', // violet-400
-  big3_sleep: '#C4B5FD'   // violet-300
+  big3_pack: '#6D28D9',   // violet-700
+  big3_shelter: '#8B5CF6', // violet-500
+  big3_sleep: '#A78BFA'   // violet-400
 } as const;
 
 // ==================== ギア比較機能 ====================
