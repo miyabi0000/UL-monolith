@@ -1,5 +1,8 @@
 import { Pool } from 'pg';
-import { GearItem, Category, WeightBreakdown, deriveStatus } from '../models/types';
+import { GearItem, GearItemForm, Category, WeightBreakdown, deriveStatus } from '../models/types';
+
+// SQLパラメータ型
+type SqlParam = string | number | boolean | string[] | number[] | null | undefined;
 
 // GearItemWithCalculated は client型を利用（ランタイムで問題なし）
 interface GearItemWithCalculated extends GearItem {
@@ -68,7 +71,7 @@ class DatabaseConnection {
       WHERE g.user_id = $1
     `;
 
-    const params: any[] = [userId];
+    const params: SqlParam[] = [userId];
     let paramIndex = 2;
 
     // フィルタ条件の追加
@@ -91,8 +94,10 @@ class DatabaseConnection {
     }
 
     if (filters?.search) {
-      query += ` AND (g.name ILIKE $${paramIndex} OR g.brand ILIKE $${paramIndex})`;
-      params.push(`%${filters.search}%`);
+      // SQLインジェクション対策: ILIKE特殊文字をエスケープ
+      const escapedSearch = filters.search.replace(/[\\%_]/g, '\\$&');
+      query += ` AND (g.name ILIKE $${paramIndex} OR g.brand ILIKE $${paramIndex}) ESCAPE '\\'`;
+      params.push(`%${escapedSearch}%`);
       paramIndex++;
     }
 
@@ -539,7 +544,7 @@ class DatabaseConnection {
   /**
    * ギアアイテムを作成
    */
-  async createGearItem(gear: any, userId: string): Promise<GearItem> {
+  async createGearItem(gear: GearItemForm, userId: string): Promise<GearItem> {
     const query = `
       INSERT INTO gear_items (
         user_id, category_id, name, brand, product_url, image_url,
@@ -604,9 +609,9 @@ class DatabaseConnection {
   /**
    * ギアアイテムを更新
    */
-  async updateGearItem(id: string, updates: any, userId: string): Promise<GearItem | null> {
+  async updateGearItem(id: string, updates: Partial<GearItemForm>, userId: string): Promise<GearItem | null> {
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: SqlParam[] = [];
     let paramIndex = 1;
 
     const fieldMapping: Record<string, string> = {
@@ -628,9 +633,10 @@ class DatabaseConnection {
     };
 
     for (const [key, dbField] of Object.entries(fieldMapping)) {
-      if (updates[key] !== undefined) {
+      const typedKey = key as keyof GearItemForm;
+      if (updates[typedKey] !== undefined) {
         setClauses.push(`${dbField} = $${paramIndex}`);
-        values.push(updates[key]);
+        values.push(updates[typedKey] as SqlParam);
         paramIndex++;
       }
     }
