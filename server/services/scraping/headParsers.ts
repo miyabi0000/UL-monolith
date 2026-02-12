@@ -1,11 +1,8 @@
 import * as cheerio from 'cheerio';
 
 /**
- * JSON-LD / OGP 抽出を1箇所に集約するモジュール
- * 既存の scrapingHelpers.extractJsonLd と webScrapingService.extractJsonLdData の重複を解消
+ * JSON-LD / OGP 抽出の集約モジュール
  */
-
-// ==================== 型定義 ====================
 
 export interface OgpData {
   title?: string;
@@ -15,12 +12,7 @@ export interface OgpData {
   brand?: string;
 }
 
-// ==================== JSON-LD ====================
-
-/**
- * JSON-LD構造化データを抽出
- * ページ内の最初の application/ld+json スクリプトをパースして返す
- */
+/** JSON-LD構造化データを抽出 */
 export function extractJsonLd($: cheerio.Root): Record<string, unknown> | null {
   try {
     const jsonLdScript = $('script[type="application/ld+json"]').html();
@@ -33,12 +25,7 @@ export function extractJsonLd($: cheerio.Root): Record<string, unknown> | null {
   return null;
 }
 
-// ==================== OGP ====================
-
-/**
- * OGP（Open Graph Protocol）メタタグを一括抽出
- * og:title, og:image, og:brand, twitter:image 等をまとめて返す
- */
+/** OGPメタタグを一括抽出 */
 export function extractOgp($: cheerio.Root): OgpData {
   return {
     title: $('meta[property="og:title"]').attr('content') || undefined,

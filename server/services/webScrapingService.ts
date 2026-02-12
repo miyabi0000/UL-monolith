@@ -4,6 +4,7 @@ import { LLMExtractionResult } from '../models/types.js';
 import { normalizeBrand, extractBrandFromText, getBrandFromDomain } from '../utils/brandUtils.js';
 import { CategoryMatcher } from './categoryMatcher.js';
 import { extractJsonLd, extractOgp, OgpData } from './scraping/headParsers.js';
+import { extractWeight as extractWeightFromText } from '../utils/scrapingHelpers.js';
 
 /**
  * 汎用Web Scraping Service - 最小限実装
@@ -17,21 +18,19 @@ export class WebScrapingService {
    * 汎用スクレイピング（Amazon以外）
    * Amazon判定はオーケストレータ側で行う
    */
-  async scrapeGeneric(url: string): Promise<LLMExtractionResult> {
+  async scrapeGeneric(url: string): Promise<{ data: LLMExtractionResult; html: string }> {
     try {
       const html = await this.fetchHTML(url);
       const result = this.extractBasicInfo(html, url);
 
-      // If extraction found at least an image, keep it even if other fields failed
       if (result.imageUrl || result.extractedFields.length > 0) {
-        return result;
+        return { data: result, html };
       }
 
-      // Complete failure - return fallback with URL
-      return this.createFallback(url);
+      return { data: this.createFallback(url), html };
     } catch (error) {
       console.error(`Scraping failed for ${url}:`, error);
-      return this.createFallback(url);
+      return { data: this.createFallback(url), html: '' };
     }
   }
 
@@ -233,34 +232,8 @@ export class WebScrapingService {
 
     for (const selector of searchSelectors) {
       const text = $(selector).text();
-      const weight = this.extractWeightFromText(text);
+      const weight = extractWeightFromText(text);
       if (weight) return weight;
-    }
-  }
-
-  /**
-   * テキストから重量を抽出
-   */
-  private extractWeightFromText(text: string): number | undefined {
-    const patterns = [
-      /重量[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i,
-      /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|pounds|oz|ounce)/i,
-      /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i,
-      /(\d+(?:\.\d+)?)\s*(oz|ounce)(?!\d)/i
-    ];
-
-    const lowerText = text.toLowerCase();
-    for (const pattern of patterns) {
-      const match = lowerText.match(pattern);
-      if (match) {
-        const value = parseFloat(match[1]);
-        const unit = match[2].toLowerCase();
-        
-        if (unit.includes('k')) return Math.round(value * 1000);
-        if (unit.includes('lb') || unit.includes('pound')) return Math.round(value * 453.592);
-        if (unit.includes('oz') || unit.includes('ounce')) return Math.round(value * 28.3495);
-        return Math.round(value);
-      }
     }
   }
 

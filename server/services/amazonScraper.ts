@@ -29,23 +29,22 @@ export class AmazonScraper {
   /**
    * Amazon商品ページから情報を抽出
    */
-  async scrapeAmazonProduct(url: string): Promise<LLMExtractionResult> {
+  async scrapeAmazonProduct(url: string): Promise<{ data: LLMExtractionResult; html: string }> {
     try {
       const html = await this.fetchAmazonHTML(url);
       const $ = cheerio.load(html);
 
       const result = this.extractAmazonData($, url);
 
-      // Validate we extracted at least some useful data
       if (result.extractedFields.length === 0) {
         console.warn(`[Amazon] No data extracted from ${url}, using fallback`);
-        return this.createAmazonFallback(url);
+        return { data: this.createAmazonFallback(url), html };
       }
 
-      return result;
+      return { data: result, html };
     } catch (error) {
       console.error(`[Amazon] Scraping failed for ${url}:`, error);
-      return this.createAmazonFallback(url);
+      return { data: this.createAmazonFallback(url), html: '' };
     }
   }
 

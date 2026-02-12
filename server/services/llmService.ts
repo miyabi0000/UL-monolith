@@ -41,32 +41,16 @@ export class LLMService {
 
   /**
    * URLからギア情報を抽出（オーケストレータ経由）
+   * URL検証・エラーハンドリング・キャッシュはオーケストレータ側で処理済み
    */
   async extractGearFromUrl(url: string): Promise<LLMExtractionResult> {
-    try {
-      new URL(url); // URL検証
-    } catch {
-      return this.createFallbackFromUrl(url, 'Invalid URL format');
+    const { data, failureReasons } = await scrapeUrl(url);
+
+    if (failureReasons.length > 0) {
+      console.log(`[LLM] Scrape issues for ${url}: ${failureReasons.join(', ')}`);
     }
 
-    try {
-      const { data, failureReasons } = await scrapeUrl(url);
-
-      if (failureReasons.length > 0) {
-        console.log(`[LLM] Scrape issues for ${url}: ${failureReasons.join(', ')}`);
-      }
-
-      // Validate result has minimum required fields
-      if (!data.name || data.name === 'Unknown Product' || data.name === 'Failed to Extract') {
-        console.warn(`[LLM] Incomplete scraping result for ${url}, attempting fallback with partial data`);
-        return this.createFallbackFromUrl(url, 'Scraping incomplete', data);
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`[LLM] URL extraction failed for ${url}:`, error);
-      return this.createFallbackFromUrl(url, error instanceof Error ? error.message : 'Unknown error');
-    }
+    return data;
   }
 
   /**
@@ -163,16 +147,6 @@ export class LLMService {
   }
 
   /**
-   * 抽出フィールドマージ
-   */
-  private mergeExtractedFields(scrapedData: LLMExtractionResult, llmResult: any): string[] {
-    return [...new Set([
-      ...(scrapedData.extractedFields || []),
-      ...this.getExtractedFields(llmResult)
-    ])];
-  }
-
-  /**
    * フォールバック結果作成（プロンプト用）
    */
   private createFallback(input: string): LLMExtractionResult {
@@ -188,43 +162,6 @@ export class LLMService {
     };
   }
 
-  /**
-   * URL用フォールバック結果作成（部分データ保持）
-   */
-  private createFallbackFromUrl(
-    url: string,
-    reason: string,
-    partialData?: Partial<LLMExtractionResult>
-  ): LLMExtractionResult {
-    console.log(`[LLM] Creating fallback for ${url}: ${reason}`);
-
-    // Extract domain name as fallback product name
-    let fallbackName = 'Product from URL';
-    try {
-      const urlObj = new URL(url);
-      const domain = urlObj.hostname.replace('www.', '');
-      fallbackName = `Product from ${domain}`;
-    } catch {
-      // Use URL as-is if parsing fails
-    }
-
-    return {
-      name: partialData?.name || fallbackName,
-      brand: partialData?.brand,
-      productUrl: url,
-      imageUrl: partialData?.imageUrl, // Preserve image URL if available
-      weightGrams: partialData?.weightGrams,
-      priceCents: partialData?.priceCents,
-      suggestedCategory: partialData?.suggestedCategory || 'Other',
-      requiredQuantity: 1,
-      ownedQuantity: 0,
-      priority: 3,
-
-      extractedFields: partialData?.extractedFields || [],
-      source: 'fallback',
-      confidence: 0.3 // Low confidence for fallback
-    };
-  }
 }
 
 export const llmService = new LLMService();

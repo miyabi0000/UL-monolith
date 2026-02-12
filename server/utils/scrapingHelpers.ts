@@ -1,12 +1,7 @@
 /**
  * スクレイピング共通ヘルパー関数
+ * JSON-LD抽出は server/services/scraping/headParsers.ts に集約済み
  */
-
-// JSON-LD抽出は headParsers に集約。後方互換のため re-export
-export { extractJsonLd } from '../services/scraping/headParsers.js';
-
-// Removed: CATEGORY_PATTERNS and guessCategory()
-// Category matching is now handled by CategoryMatcher in server/services/categoryMatcher.ts
 
 /**
  * 重量抽出パターン（日本語・英語対応）

@@ -56,7 +56,10 @@ export function enforceWeightClassForBig3(
 
 export interface Category {
   id: string;
+  userId?: string;
   name: string;
+  parentId?: string;
+  path: string[];
   color: string;
   tags: string[];
   createdAt: Date;
@@ -135,8 +138,8 @@ export interface LLMExtractionResult {
   seasons?: ('spring' | 'summer' | 'fall' | 'winter')[];
   suggestedCategory?: string;
   suggestedWeightClass?: WeightClass;
-  extractedFields?: string[];
-  source?: string;
+  extractedFields: string[];
+  source: string;
   confidence?: number; // 抽出信頼度（0-1）
 }
 
