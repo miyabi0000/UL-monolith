@@ -11,7 +11,7 @@ interface GearItemWithCalculated extends GearItem {
   totalPrice: number;
   missingQuantity: number;
   procurementStatus: 'owned' | 'partial' | 'need';
-  category?: Category & { path?: string[] };
+  category?: Category;
 }
 
 /**
@@ -400,7 +400,7 @@ class DatabaseConnection {
 
     try {
       const result = await this.pool.query(query, [ids, userId]);
-      return result.rowCount;
+      return result.rowCount ?? 0;
     } catch (error) {
       console.error('Database delete error:', error);
       throw new Error('Failed to delete gear items');
@@ -710,6 +710,48 @@ class DatabaseConnection {
    */
   private camelToSnake(str: string): string {
     return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+  }
+
+  // ==================== スクレイピングキャッシュ ====================
+
+  /**
+   * キャッシュからスクレイピング結果を取得（TTL期限内のみ）
+   */
+  async getScrapeCache(normalizedUrl: string): Promise<Record<string, unknown> | null> {
+    try {
+      const result = await this.pool.query(
+        `SELECT payload_json FROM scrape_cache
+         WHERE normalized_url = $1
+           AND (ttl_expires_at IS NULL OR ttl_expires_at > now())`,
+        [normalizedUrl]
+      );
+      return result.rows[0]?.payload_json ?? null;
+    } catch (error) {
+      console.error('[ScrapeCache] Read error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * スクレイピング結果をキャッシュに保存（upsert）
+   */
+  async setScrapeCache(normalizedUrl: string, payload: Record<string, unknown>, ttlSeconds?: number): Promise<void> {
+    try {
+      const ttlExpiresAt = ttlSeconds
+        ? new Date(Date.now() + ttlSeconds * 1000).toISOString()
+        : null;
+      await this.pool.query(
+        `INSERT INTO scrape_cache (normalized_url, payload_json, updated_at, ttl_expires_at)
+         VALUES ($1, $2, now(), $3)
+         ON CONFLICT (normalized_url) DO UPDATE
+           SET payload_json = EXCLUDED.payload_json,
+               updated_at = now(),
+               ttl_expires_at = EXCLUDED.ttl_expires_at`,
+        [normalizedUrl, JSON.stringify(payload), ttlExpiresAt]
+      );
+    } catch (error) {
+      console.error('[ScrapeCache] Write error:', error);
+    }
   }
 
   /**
