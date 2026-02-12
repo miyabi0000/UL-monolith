@@ -1,6 +1,6 @@
 import { LLMExtractionResult } from '../models/types.js';
 import { openaiClient } from './openaiClient.js';
-import { webScrapingService } from './webScrapingService.js';
+import { scrapeUrl } from './scraping/scrapeOrchestrator.js';
 import { PROMPTS } from './llmPrompts.js';
 
 /**
@@ -29,7 +29,7 @@ export class LLMService {
         requiredQuantity: 1,
         ownedQuantity: 0,
         priority: 3,
-        season: 'all',
+
         extractedFields: this.getExtractedFields(result),
         source: 'llm_prompt'
       };
@@ -40,7 +40,7 @@ export class LLMService {
   }
 
   /**
-   * URLからギア情報を抽出（スクレイピングのみ、LLM補強なし）
+   * URLからギア情報を抽出（オーケストレータ経由）
    */
   async extractGearFromUrl(url: string): Promise<LLMExtractionResult> {
     try {
@@ -50,16 +50,19 @@ export class LLMService {
     }
 
     try {
-      // スクレイピングのみで情報取得（高速化）
-      const result = await webScrapingService.scrapeProductInfo(url);
+      const { data, failureReasons } = await scrapeUrl(url);
 
-      // Validate result has minimum required fields
-      if (!result.name || result.name === 'Unknown Product' || result.name === 'Failed to Extract') {
-        console.warn(`[LLM] Incomplete scraping result for ${url}, attempting fallback with partial data`);
-        return this.createFallbackFromUrl(url, 'Scraping incomplete', result);
+      if (failureReasons.length > 0) {
+        console.log(`[LLM] Scrape issues for ${url}: ${failureReasons.join(', ')}`);
       }
 
-      return result;
+      // Validate result has minimum required fields
+      if (!data.name || data.name === 'Unknown Product' || data.name === 'Failed to Extract') {
+        console.warn(`[LLM] Incomplete scraping result for ${url}, attempting fallback with partial data`);
+        return this.createFallbackFromUrl(url, 'Scraping incomplete', data);
+      }
+
+      return data;
     } catch (error) {
       console.error(`[LLM] URL extraction failed for ${url}:`, error);
       return this.createFallbackFromUrl(url, error instanceof Error ? error.message : 'Unknown error');
@@ -86,7 +89,7 @@ export class LLMService {
         requiredQuantity: 1,
         ownedQuantity: 0,
         priority: 3,
-        season: 'all',
+
         extractedFields: urlData.extractedFields || [],
         source: 'enhanced'
       };
@@ -179,7 +182,7 @@ export class LLMService {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields: ['name'],
       source: 'fallback'
     };
@@ -216,7 +219,7 @@ export class LLMService {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields: partialData?.extractedFields || [],
       source: 'fallback',
       confidence: 0.3 // Low confidence for fallback

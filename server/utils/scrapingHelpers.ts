@@ -1,23 +1,9 @@
-import * as cheerio from 'cheerio';
-
 /**
  * スクレイピング共通ヘルパー関数
  */
 
-/**
- * JSON-LD構造化データを抽出
- */
-export function extractJsonLd($: cheerio.Root): any | null {
-  try {
-    const jsonLdScript = $('script[type="application/ld+json"]').html();
-    if (jsonLdScript) {
-      return JSON.parse(jsonLdScript);
-    }
-  } catch (e) {
-    // パース失敗
-  }
-  return null;
-}
+// JSON-LD抽出は headParsers に集約。後方互換のため re-export
+export { extractJsonLd } from '../services/scraping/headParsers.js';
 
 // Removed: CATEGORY_PATTERNS and guessCategory()
 // Category matching is now handled by CategoryMatcher in server/services/categoryMatcher.ts

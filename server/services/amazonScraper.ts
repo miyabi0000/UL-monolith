@@ -2,11 +2,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { normalizeBrand } from '../utils/brandUtils.js';
-import { 
-  extractJsonLd, 
-  extractWeight, 
-  cleanBrandText
-} from '../utils/scrapingHelpers.js';
+import { extractJsonLd } from './scraping/headParsers.js';
+import { extractWeight, cleanBrandText } from '../utils/scrapingHelpers.js';
 import { CategoryMatcher } from './categoryMatcher.js';
 
 /**
@@ -112,7 +109,7 @@ export class AmazonScraper {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields,
       source: 'web_scraping'
     };
@@ -328,7 +325,7 @@ export class AmazonScraper {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields: [],
       source: 'fallback',
       confidence: 0.2
