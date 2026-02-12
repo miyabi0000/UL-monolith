@@ -3,10 +3,12 @@ import { amazonScraper } from '../amazonScraper.js';
 import { webScrapingService } from '../webScrapingService.js';
 import { normalizeUrl } from './normalizeUrl.js';
 import { db } from '../../database/connection.js';
+import { extractSnippets } from './snippet.js';
+import { llmFallback } from '../llm/llmFallback.js';
 
 /**
  * スクレイピング入口オーケストレータ
- * Amazon / 汎用の振り分け、キャッシュ、失敗理由コードの付与を行う
+ * Amazon / 汎用の振り分け、キャッシュ、LLMフォールバック、失敗理由コードの付与
  */
 
 // ==================== 型定義 ====================
@@ -28,14 +30,11 @@ export interface ScrapeResult {
 // ==================== 設定 ====================
 
 const CACHE_ENABLED = process.env.SCRAPE_CACHE === '1';
-const CACHE_TTL_SECONDS = parseInt(process.env.SCRAPE_CACHE_TTL || '86400'); // デフォルト24時間
+const CACHE_TTL_SECONDS = parseInt(process.env.SCRAPE_CACHE_TTL || '86400');
+const LLM_FALLBACK_ENABLED = process.env.LLM_FALLBACK === '1';
 
 // ==================== メイン ====================
 
-/**
- * URLをスクレイピングしてギア情報を返す
- * SCRAPE_CACHE=1 の場合、キャッシュを read-through で利用
- */
 export async function scrapeUrl(url: string): Promise<ScrapeResult> {
   // URL検証
   try {
@@ -55,27 +54,31 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
       const cached = await db.getScrapeCache(normalized);
       if (cached) {
         console.log(`[Orchestrator] Cache HIT: ${normalized}`);
-        return {
-          data: cached as unknown as LLMExtractionResult,
-          failureReasons: [],
-        };
+        return { data: cached as unknown as LLMExtractionResult, failureReasons: [] };
       }
-      console.log(`[Orchestrator] Cache MISS: ${normalized}`);
     } catch (error) {
-      console.warn('[Orchestrator] Cache read failed, proceeding without cache:', error);
+      console.warn('[Orchestrator] Cache read failed:', error);
     }
   }
 
   // ── スクレイピング実行 ──
   try {
     const isAmazon = url.includes('amazon.');
-    const data = isAmazon
+    const scrapeResult = isAmazon
       ? await amazonScraper.scrapeAmazonProduct(url)
       : await webScrapingService.scrapeGeneric(url);
 
+    let data = scrapeResult.data;
+
+    // ── LLMフォールバック（欠損時のみ、HTMLを再利用） ──
+    if (LLM_FALLBACK_ENABLED && needsLlmFallback(data) && scrapeResult.html) {
+      console.log(`[Orchestrator] LLM fallback triggered for ${url}`);
+      data = await tryLlmFallback(url, data, scrapeResult.html);
+    }
+
     const failureReasons = detectFailureReasons(data);
 
-    // ── キャッシュ書き込み（成功時のみ） ──
+    // ── キャッシュ書き込み（LLM補完後の結果を保存） ──
     if (CACHE_ENABLED && data.source !== 'fallback') {
       db.setScrapeCache(normalized, data as unknown as Record<string, unknown>, CACHE_TTL_SECONDS)
         .catch(err => console.warn('[Orchestrator] Cache write failed:', err));
@@ -84,52 +87,68 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
     return { data, failureReasons };
   } catch (error) {
     console.error(`[Orchestrator] Scraping failed for ${url}:`, error);
-
     const reason: ScrapeFailureReason =
-      error instanceof Error && error.message.includes('timeout')
-        ? 'timeout'
-        : 'fetch_error';
+      error instanceof Error && error.message.includes('timeout') ? 'timeout' : 'fetch_error';
+    return { data: createFallback(url, String(error)), failureReasons: [reason] };
+  }
+}
 
-    return {
-      data: createFallback(url, error instanceof Error ? error.message : 'Unknown error'),
-      failureReasons: [reason],
-    };
+// ==================== LLMゲート ====================
+
+/** 欠損がありLLM補完が必要か判定 */
+function needsLlmFallback(data: LLMExtractionResult): boolean {
+  if (data.source === 'fallback') return false; // 完全失敗時はスニペットも取れないので呼ばない
+  const nameMissing = !data.name || data.name === 'Unknown Product' || data.name === 'Amazon Product';
+  const weightMissing = !data.weightGrams;
+  const categoryUnknown = !data.suggestedCategory || data.suggestedCategory === 'Other';
+  return nameMissing || weightMissing || categoryUnknown;
+}
+
+/** LLMフォールバックを試行し、成功時はデータをマージして返す */
+async function tryLlmFallback(url: string, data: LLMExtractionResult, html: string): Promise<LLMExtractionResult> {
+  try {
+    const snippets = extractSnippets(html);
+    const patch = await llmFallback(url, data, snippets);
+    if (!patch) return data;
+
+    console.log(`[Orchestrator] LLM filled fields: ${Object.keys(patch).join(', ')}`);
+
+    const merged = { ...data, ...patch, source: 'web_scraping' };
+    // extractedFields にLLM補完分を追加
+    const newFields = new Set(data.extractedFields);
+    if (patch.name) newFields.add('name');
+    if (patch.brand) newFields.add('brand');
+    if (patch.weightGrams) newFields.add('weightGrams');
+    if (patch.priceCents) newFields.add('priceCents');
+    if (patch.suggestedCategory) newFields.add('suggestedCategory');
+    merged.extractedFields = [...newFields];
+
+    return merged;
+  } catch (error) {
+    console.warn('[Orchestrator] LLM fallback failed, using scrape-only result:', error);
+    return data;
   }
 }
 
 // ==================== ヘルパー ====================
 
-/**
- * 抽出結果から失敗理由コードを検出
- */
 function detectFailureReasons(data: LLMExtractionResult): ScrapeFailureReason[] {
   const reasons: ScrapeFailureReason[] = [];
-
   if (!data.name || data.name === 'Unknown Product' || data.name === 'Amazon Product') {
     reasons.push('selector_miss');
   }
-  if (data.source === 'fallback') {
-    reasons.push('fetch_error');
-  }
-
+  if (data.source === 'fallback') reasons.push('fetch_error');
   return reasons;
 }
 
-/**
- * フォールバック結果生成
- */
 function createFallback(url: string, reason: string): LLMExtractionResult {
   let fallbackName = 'Product from URL';
   try {
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname.replace('www.', '');
+    const domain = new URL(url).hostname.replace('www.', '');
     fallbackName = `Product from ${domain}`;
-  } catch {
-    // URL解析失敗時はデフォルト名を使用
-  }
+  } catch { /* ignore */ }
 
   console.log(`[Orchestrator] Creating fallback for ${url}: ${reason}`);
-
   return {
     name: fallbackName,
     productUrl: url,
