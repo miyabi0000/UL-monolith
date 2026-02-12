@@ -1,5 +1,14 @@
 import { GearItemWithCalculated, ChartData, QuantityDisplayMode } from './types';
 
+export const getQuantityForDisplayMode = (
+  item: GearItemWithCalculated,
+  quantityDisplayMode: QuantityDisplayMode
+): number => {
+  if (quantityDisplayMode === 'owned') return item.ownedQuantity;
+  if (quantityDisplayMode === 'all') return item.requiredQuantity;
+  return Math.max(0, item.requiredQuantity - item.ownedQuantity);
+};
+
 export const getCategoryColor = (systemName: string): string => {
   const colorMap: { [key: string]: string } = {
     'Clothing': '#FF6B6B',
@@ -23,10 +32,8 @@ export const calculateChartData = (
     }
 
     // 数量表示モードに応じて計算する数量を切り替え
-    // Own: 所持数、Need: 不足分（requiredQuantity - ownedQuantity）
-    const quantity = quantityDisplayMode === 'owned'
-      ? item.ownedQuantity
-      : Math.max(0, item.requiredQuantity - item.ownedQuantity);
+    // owned: 所持数 / need: 不足分 / all: 必要数（総数）
+    const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
     const weight = (item.weightGrams || 0) * quantity;
     const price = (item.priceCents || 0) * quantity;
 
@@ -54,10 +61,8 @@ export const calculateTotals = (
 ) => {
   return gearItems.reduce(
     (totals, item) => {
-      // Own: 所持数、Need: 不足分（requiredQuantity - ownedQuantity）
-      const quantity = quantityDisplayMode === 'owned'
-        ? item.ownedQuantity
-        : Math.max(0, item.requiredQuantity - item.ownedQuantity);
+      // owned: 所持数 / need: 不足分 / all: 必要数（総数）
+      const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
       const weight = (item.weightGrams || 0) * quantity;
       const price = (item.priceCents || 0) * quantity;
 

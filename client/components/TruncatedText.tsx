@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 interface TruncatedTextProps {
   text: string;
   maxWidth?: string;
+  maxLength?: number;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -10,13 +11,14 @@ interface TruncatedTextProps {
 const TruncatedText: React.FC<TruncatedTextProps> = ({
   text,
   maxWidth = '200px',
+  maxLength = 30,
   className = '',
   style = {}
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const shouldTruncate = text.length > 30; // 30文字以上で省略
+  const shouldTruncate = text.length > maxLength; // 指定文字数以上で省略
 
   if (!shouldTruncate) {
     return (

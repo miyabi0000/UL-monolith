@@ -1,6 +1,5 @@
 import { Category } from '../utils/types';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_CONFIG } from './api.client';
 
 /**
  * カテゴリAPI Service
@@ -10,7 +9,7 @@ export class CategoryApiService {
    * 全カテゴリ取得
    */
   static async getAllCategories(): Promise<Category[]> {
-    const response = await fetch(`${API_BASE_URL}/categories`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/categories`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch categories');
@@ -24,7 +23,7 @@ export class CategoryApiService {
    * カテゴリ作成
    */
   static async createCategory(name: string, color: string): Promise<Category> {
-    const response = await fetch(`${API_BASE_URL}/categories`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/categories`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -45,7 +44,7 @@ export class CategoryApiService {
    * カテゴリ更新
    */
   static async updateCategory(id: string, name: string, color: string): Promise<Category> {
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/categories/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -66,7 +65,7 @@ export class CategoryApiService {
    * カテゴリ削除
    */
   static async deleteCategory(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    const response = await fetch(`${API_CONFIG.baseUrl}/categories/${id}`, {
       method: 'DELETE'
     });
     

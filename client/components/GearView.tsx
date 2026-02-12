@@ -1,12 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { GearItemWithCalculated, Category } from '../utils/types';
+import { GearItemWithCalculated, Category, ViewMode } from '../utils/types';
 import { COLORS, SPACING_SCALE } from '../utils/designSystem';
 import GearCard from './GearCard';
 import Card from './ui/Card';
 import GearListHeader from './GearListHeader';
 import BulkActionBar from './BulkActionBar';
-
-type ViewMode = 'table' | 'card';
 
 interface GearViewProps {
   items: GearItemWithCalculated[];
@@ -91,12 +89,8 @@ const GearView: React.FC<GearViewProps> = React.memo(({
     }
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === processedItems.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(processedItems.map(item => item.id));
-    }
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? processedItems.map(item => item.id) : []);
   };
 
   const handleSelect = (id: string) => {
@@ -110,7 +104,7 @@ const GearView: React.FC<GearViewProps> = React.memo(({
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     
-    if (window.confirm(`選択した${selectedIds.length}個のアイテムを削除しますか？`)) {
+    if (window.confirm(`Delete ${selectedIds.length} selected items?`)) {
       onDelete(selectedIds);
       setSelectedIds([]);
     }
@@ -132,42 +126,10 @@ const GearView: React.FC<GearViewProps> = React.memo(({
           showCheckboxes={showCheckboxes}
           onToggleCheckboxes={onToggleCheckboxes}
           onShowForm={onShowForm}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSort={handleSort}
         />
-
-        {/* ソートボタン */}
-        <div className="flex items-center gap-2 px-3 pb-3 pt-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">並び替え:</span>
-          <button
-            onClick={() => handleSort('name')}
-            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
-              sortField === 'name'
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-            }`}
-          >
-            名前 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
-          </button>
-          <button
-            onClick={() => handleSort('weight')}
-            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
-              sortField === 'weight'
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-            }`}
-          >
-            重量 {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
-          </button>
-          <button
-            onClick={() => handleSort('price')}
-            className={`px-2.5 py-1 text-xs rounded transition-colors border ${
-              sortField === 'price'
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
-            }`}
-          >
-            価格 {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
-          </button>
-        </div>
       </Card>
 
       {/* 一括操作バー */}
@@ -186,8 +148,8 @@ const GearView: React.FC<GearViewProps> = React.memo(({
       <div className="mt-3">
         {processedItems.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <p className="text-lg mb-2">ギアアイテムがありません</p>
-            <p className="text-sm">「+ Add Gear」ボタンから追加してください</p>
+            <p className="text-lg mb-2">No gear items found</p>
+            <p className="text-sm">Click the "+ ADD" button to add gear</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

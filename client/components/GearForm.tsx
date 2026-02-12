@@ -141,13 +141,31 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800">
-        <div className="p-6 border-b border-gray-300 dark:border-gray-700">
+        <div className="px-6 py-3 border-b border-gray-300 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {(editingGear || gear) ? 'Edit Gear' : 'Add New Gear'}
           </h2>
+
+          {/* ヘッダーボタン */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="gear-form"
+              className="btn-primary"
+            >
+              {(editingGear || gear) ? 'Update' : 'Add'} Gear
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form id="gear-form" onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* 画像アップロード（ドラッグ&ドロップ） */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
@@ -193,7 +211,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                   />
                   <label
                     htmlFor="image-upload"
-                    className="btn-secondary inline-block px-4 py-2 rounded-md cursor-pointer"
+                    className="btn-secondary inline-block cursor-pointer"
                   >
                     Choose Image
                   </label>
@@ -219,7 +237,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
                 type="button"
                 onClick={handleExtractFromUrl}
                 disabled={!form.productUrl || isExtracting}
-                className="btn-primary px-4 py-2 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isExtracting ? 'Extracting...' : 'Extract'}
               </button>
@@ -393,22 +411,6 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
             </div>
           </div>
 
-          {/* ボタン */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-300 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary px-4 py-2 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn-primary px-4 py-2 rounded-md"
-            >
-              {(editingGear || gear) ? 'Update' : 'Add'} Gear
-            </button>
-          </div>
         </form>
       </div>
     </div>

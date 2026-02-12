@@ -6,7 +6,12 @@
       "Bash(git commit:*)",
       "Bash(git reset:*)",
       "Bash(pkill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(lsof:*)",
+      "Bash(git add:*)",
+      "Bash(npm run server:dev:*)",
+      "Bash(xargs kill -9)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
