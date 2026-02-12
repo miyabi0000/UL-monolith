@@ -315,6 +315,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
+    console.log('[DEBUG] handleCategoryClick', { categoryName, selectedCategories, selectedItem })
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
       setSelectedCategoryForPanel(null)
@@ -328,6 +329,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   }, [selectedCategories, onCategorySelect])
 
   const handleItemClick = useCallback((itemId: string) => {
+    console.log('[DEBUG] handleItemClick', { itemId, selectedItem, selectedCategoryForPanel })
     if (selectedItem === itemId) {
       setSelectedItem(null)
       // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
@@ -347,6 +349,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setSelectedItem(itemId)
     setPanelMode('item')
   }, [])
+
+  // アイテム詳細からカテゴリへナビゲート（トグルではなく常にカテゴリ選択）
+  const handleCategoryNavigate = useCallback((categoryName: string) => {
+    console.log('[DEBUG] handleCategoryNavigate', { categoryName })
+    setSelectedItem(null)
+    onCategorySelect([categoryName])
+    setSelectedCategoryForPanel(categoryName)
+    setPanelMode('category')
+  }, [onCategorySelect])
 
   // 選択されたアイテムオブジェクトを取得
   const selectedItemData = useMemo(() => {
@@ -1002,12 +1013,52 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-11">
-            <div className="flex items-center gap-2">
-              {/* 現在の状態表示 */}
-              {(selectedCategoryFromChart || selectedItem) && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 max-w-[120px] truncate">
-                  {selectedItem && selectedItemName ? selectedItemName : selectedCategoryFromChart}
-                </div>
+            <div className="flex items-center gap-1 text-xs min-w-0">
+              {/* DEBUG: 状態表示 */}
+              <span className="text-[9px] text-red-500 font-mono mr-1">[{panelMode}{selectedItem ? '/item' : ''}{selectedCategoryFromChart ? `/${selectedCategoryFromChart}` : ''}]</span>
+              {/* パンくずナビゲーション */}
+              <button
+                onClick={() => {
+                  console.log('[DEBUG] Breadcrumb All clicked', { panelMode, selectedItem, selectedCategoryForPanel })
+                  setSelectedItem(null)
+                  setSelectedCategoryForPanel(null)
+                  onCategorySelect([])
+                  setPanelMode('overview')
+                }}
+                className={`flex-shrink-0 transition-colors ${
+                  panelMode === 'overview'
+                    ? 'text-gray-700 dark:text-gray-200 font-medium'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+              >
+                All
+              </button>
+              {selectedCategoryFromChart && (
+                <>
+                  <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
+                  <button
+                    onClick={() => {
+                      setSelectedItem(null)
+                      setPanelMode('category')
+                    }}
+                    className={`truncate max-w-[80px] transition-colors ${
+                      panelMode === 'category'
+                        ? 'text-gray-700 dark:text-gray-200 font-medium'
+                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                    }`}
+                    title={selectedCategoryFromChart}
+                  >
+                    {selectedCategoryFromChart}
+                  </button>
+                </>
+              )}
+              {selectedItem && selectedItemName && (
+                <>
+                  <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                    {selectedItemName}
+                  </span>
+                </>
               )}
             </div>
 
@@ -1192,6 +1243,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 onToggleCheckboxes={onToggleCheckboxes}
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
+                onCategoryClick={handleCategoryNavigate}
               />
           </div>
         </Card>

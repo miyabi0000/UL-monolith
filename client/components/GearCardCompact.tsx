@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { GearItemWithCalculated } from '../utils/types';
+import { GearItemWithCalculated, ChartViewMode } from '../utils/types';
 import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
 import SeasonBar from './SeasonBar';
 
 interface GearCardCompactProps {
   item: GearItemWithCalculated | null;
-  viewMode: 'weight' | 'cost';
+  viewMode: ChartViewMode;
   onEdit?: (item: GearItemWithCalculated) => void;
   onDelete?: (id: string) => void;
+  onCategoryClick?: (categoryName: string) => void;
 }
 
 const formatPrice = (priceCents?: number) => {
@@ -16,7 +17,7 @@ const formatPrice = (priceCents?: number) => {
   return `¥${Math.round(price).toLocaleString()}`;
 };
 
-const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete }) => {
+const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete, onCategoryClick }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   if (!item) {
@@ -165,12 +166,13 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       {/* カテゴリ */}
       {item.category && (
         <div>
-          <span
-            className="inline-block text-xs font-semibold px-2 py-1 rounded"
+          <button
+            onClick={() => onCategoryClick?.(item.category!.name)}
+            className="inline-block text-xs font-semibold px-2 py-1 rounded cursor-pointer hover:opacity-80 transition-opacity"
             style={getCategoryBadgeStyle(item.category.color)}
           >
             {item.category.name}
-          </span>
+          </button>
         </div>
       )}
 

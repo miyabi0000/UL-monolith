@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartFocus, isBig3Category } from '../utils/types';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, isBig3Category } from '../utils/types';
 import GearCardCompact from './GearCardCompact';
 import OverviewView from './DetailPanel/OverviewView';
 import CategorySummaryView from './DetailPanel/CategorySummaryView';
@@ -21,7 +21,7 @@ interface GearDetailPanelProps {
   selectedCategory: string | null;
   items: GearItemWithCalculated[];
   categories: Category[];
-  viewMode: 'weight' | 'cost';
+  viewMode: ChartViewMode;
   gearViewMode?: 'table' | 'card' | 'compare';
   quantityDisplayMode: QuantityDisplayMode;
   onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void;
@@ -33,6 +33,7 @@ interface GearDetailPanelProps {
   onToggleCheckboxes: () => void;
   filteredByCategory?: string[];
   chartFocusFilter?: ChartFocus; // Big3/Otherフィルタ
+  onCategoryClick?: (categoryName: string) => void;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -53,6 +54,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   onToggleCheckboxes,
   filteredByCategory = [],
   chartFocusFilter = 'all',
+  onCategoryClick,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -232,6 +234,23 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     );
   }
 
+  // アイテム詳細モード（チャートからのアイテム選択時）
+  // gearViewModeより優先して表示
+  console.log('[DEBUG] GearDetailPanel render', { mode, selectedItem: !!selectedItem, gearViewMode })
+  if (mode === 'item' && selectedItem) {
+    return (
+      <div className="w-full h-full min-w-0 overflow-hidden">
+        <GearCardCompact
+          item={selectedItem}
+          viewMode={viewMode}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onCategoryClick={onCategoryClick}
+        />
+      </div>
+    );
+  }
+
   // Cardモード
   if (gearViewMode === 'card') {
     return (
@@ -305,20 +324,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
             </tbody>
           </table>
         </div>
-      </div>
-    );
-  }
-
-  // アイテム詳細モードの場合は常にGearCardCompactを表示
-  if (mode === 'item') {
-    return (
-      <div className="w-full h-full min-w-0 overflow-hidden">
-        <GearCardCompact
-          item={selectedItem}
-          viewMode={viewMode}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
       </div>
     );
   }
