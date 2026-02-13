@@ -7,14 +7,14 @@
       "Bash(git reset:*)",
       "Bash(pkill:*)",
       "Bash(curl:*)",
-      "Bash(git merge feat/integrate-analysis-gear-list-ui -m \"$\\(cat <<''EOF''\nMerge feat/integrate-analysis-gear-list-ui into main\n\n- 比較テーブルUI改善\n- データモデル概念仕様書追加\n- 比較モード状態管理の統一\nEOF\n\\)\")",
       "Bash(npm run lint:*)",
       "Bash(npx tsc:*)",
       "Bash(PGPASSWORD=password psql:*)",
       "Bash(git add:*)",
       "Bash(git checkout:*)",
       "Bash(npm install:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npm run server:dev:*)"
     ],
     "deny": []
   }
