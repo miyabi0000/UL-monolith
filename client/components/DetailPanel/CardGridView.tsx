@@ -35,24 +35,32 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, onItemClic
             No items
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-px bg-gray-200 dark:bg-gray-700">
+          <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-1.5">
             {sortedItems.map(item => {
-              const imageUrl = item.imageUrl || 'https://via.placeholder.com/100x100?text=No+Image';
+              const imageUrl = item.imageUrl || null;
 
               return (
                 <button
                   key={item.id}
                   onClick={() => onItemClick?.(item.id)}
-                  className="aspect-square relative overflow-hidden bg-white dark:bg-gray-900
-                    hover:opacity-80 transition-opacity flex items-center justify-center"
+                  className="aspect-square relative overflow-hidden rounded-md border border-gray-100 dark:border-gray-800
+                    hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all flex items-center justify-center
+                    bg-white dark:bg-gray-900"
                 >
-                  {/* 画像 */}
-                  <img
-                    src={imageUrl}
-                    alt={item.name}
-                    className="w-[90%] h-[90%] object-contain"
-                    loading="lazy"
-                  />
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={item.name}
+                      className="w-full h-full object-contain p-1"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-1">
+                      <span className="text-[9px] text-gray-400 dark:text-gray-500 text-center leading-tight line-clamp-2">
+                        {item.name}
+                      </span>
+                    </div>
+                  )}
                 </button>
               );
             })}

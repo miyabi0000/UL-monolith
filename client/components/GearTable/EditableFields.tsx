@@ -1,8 +1,80 @@
-import React, { useState, useRef } from 'react'
-import { GearItemWithCalculated, Category } from '../../utils/types'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Category, WeightClass } from '../../utils/types'
 import { getPriorityColor } from '../../utils/designSystem'
-import { formatPrice } from '../../utils/formatters'
 import SeasonBar from '../SeasonBar'
+import WeightClassBadge from '../ui/WeightClassBadge'
+
+// ==================== デバウンス入力フック ====================
+interface UseDebouncedInputOptions<T> {
+  value: T
+  onChange: (value: T) => void
+  delay?: number
+  serialize?: (value: T) => string
+  deserialize?: (input: string) => T
+}
+
+function useDebouncedInput<T>({
+  value,
+  onChange,
+  delay = 300,
+  serialize = (v) => String(v ?? ''),
+  deserialize = (s) => s as unknown as T
+}: UseDebouncedInputOptions<T>) {
+  // 関数参照を安定化（無限ループ防止）
+  const serializeRef = useRef(serialize)
+  const deserializeRef = useRef(deserialize)
+  const onChangeRef = useRef(onChange)
+  serializeRef.current = serialize
+  deserializeRef.current = deserialize
+  onChangeRef.current = onChange
+
+  const [localValue, setLocalValue] = useState(() => serializeRef.current(value))
+  const [isFocused, setIsFocused] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 親の値が変わったらローカル値を同期（フォーカス中でない場合のみ）
+  useEffect(() => {
+    if (!isFocused) {
+      setLocalValue(serializeRef.current(value))
+    }
+  }, [value, isFocused])
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [])
+
+  const handleChange = useCallback((inputValue: string) => {
+    setLocalValue(inputValue)
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    debounceRef.current = setTimeout(() => {
+      onChangeRef.current(deserializeRef.current(inputValue))
+    }, delay)
+  }, [delay])
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true)
+  }, [])
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false)
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    const deserialized = deserializeRef.current(localValue)
+    if (deserialized !== value) {
+      onChangeRef.current(deserialized)
+    }
+  }, [localValue, value])
+
+  return { localValue, handleChange, handleFocus, handleBlur }
+}
 
 interface BaseFieldProps {
   isChanged?: boolean
@@ -193,18 +265,25 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
   placeholder,
   className = 'text-sm'
 }) => {
+  const { localValue, handleChange, handleFocus, handleBlur } = useDebouncedInput({
+    value,
+    onChange
+  })
+
   if (isEditing) {
     return (
       <input
         type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={localValue}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full ${className} px-2 py-1 rounded border ${
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded border ${
           isChanged
             ? 'border-red-500 text-red-600 dark:text-red-400'
             : 'border-gray-300 dark:border-gray-600'
-        } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 box-border`}
       />
     )
   }
@@ -279,32 +358,37 @@ export const EditablePriceField: React.FC<EditablePriceFieldProps> = ({
   isChanged,
   currency = 'JPY'
 }) => {
+  const { localValue, handleChange, handleFocus, handleBlur } = useDebouncedInput<number | null>({
+    value: value ?? null,
+    onChange,
+    serialize: (v) => v ? Math.round(v / 100).toString() : '',
+    deserialize: (s) => s ? Math.round(parseFloat(s)) * 100 : null
+  })
+
   if (isEditing) {
     return (
       <input
         type="number"
         min="0"
-        step="0.01"
-        value={value ? (value / 100).toFixed(2) : ''}
-        onChange={(e) => {
-          const newValue = e.target.value ? Math.round(parseFloat(e.target.value) * 100) : null
-          onChange(newValue)
-        }}
-        placeholder="0.00"
-        className={`w-20 text-xs px-1 py-1 rounded border ${
+        step="1"
+        value={localValue}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder="0"
+        className={`w-16 text-xs px-1 py-0.5 rounded border ${
           isChanged
             ? 'border-red-500 text-red-600 dark:text-red-400'
             : 'border-gray-300 dark:border-gray-600'
-        } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 box-border`}
       />
     )
   }
 
   if (!value) return <span className="text-xs">-</span>
 
-  // 単位なしで数値のみ表示（通貨に応じた変換）
   const displayValue = currency === 'USD'
-    ? (value / 100 / 150).toFixed(0) // 仮のレート: 1 USD = 150 JPY
+    ? (value / 100 / 150).toFixed(0)
     : Math.round(value / 100)
 
   return <span className="text-xs">{Number(displayValue).toLocaleString()}</span>
@@ -326,32 +410,45 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
   isEditing,
   isChanged
 }) => {
+  const { localValue, handleChange, handleFocus, handleBlur } = useDebouncedInput<number | null>({
+    value: weightGrams ?? null,
+    onChange,
+    serialize: (v) => v?.toString() ?? '',
+    deserialize: (s) => s ? parseInt(s) : null
+  })
+
   if (isEditing) {
     return (
       <input
         type="number"
         min="0"
-        value={weightGrams || ''}
-        onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+        value={localValue}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         placeholder="0"
-        className={`w-16 text-xs px-1 py-1 rounded border ${
+        className={`w-14 text-xs px-1 py-0.5 rounded border ${
           isChanged
             ? 'border-red-500 text-red-600 dark:text-red-400'
             : 'border-gray-300 dark:border-gray-600'
-        } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        } bg-white dark:bg-gray-700 text-center focus:outline-none focus:ring-2 focus:ring-blue-500 box-border`}
       />
     )
   }
 
   if (!weightGrams) return <span className="text-xs">-</span>
 
+  // 数量が1の場合は単位重量のみ表示
+  if (requiredQuantity === 1) {
+    return <span className="text-xs font-semibold">{weightGrams.toLocaleString()}</span>
+  }
+
+  // 数量が2以上の場合は計算式を表示
   return (
-    <>
-      <div className="text-xs font-semibold">
-        {weightGrams} × {requiredQuantity}
-      </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400">{totalWeight.toLocaleString()}</div>
-    </>
+    <div className="text-xs">
+      <span className="text-gray-500 dark:text-gray-400">{weightGrams} × {requiredQuantity} = </span>
+      <span className="font-semibold">{totalWeight.toLocaleString()}</span>
+    </div>
   )
 }
 
@@ -403,27 +500,41 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   onOwnedChange,
   onRequiredChange
 }) => {
+  const shortage = requiredQuantity - ownedQuantity
+
   return (
-    <div className="flex items-center justify-center space-x-1">
+    <div className="flex items-center justify-center gap-1">
+      {/* Owned数（強調表示） */}
       <select
         value={ownedQuantity}
         onChange={(e) => onOwnedChange(parseInt(e.target.value))}
-        className="w-8 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
+        className={`w-7 text-xs font-semibold bg-transparent focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center ${
+          ownedQuantity >= requiredQuantity
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-gray-900 dark:text-gray-100'
+        }`}
       >
         {Array.from({ length: 11 }, (_, i) => (
           <option key={i} value={i}>{i}</option>
         ))}
       </select>
-      <span className="text-gray-400 dark:text-gray-500">/</span>
+      <span className="text-gray-300 dark:text-gray-600 text-xs">/</span>
+      {/* Required数 */}
       <select
         value={requiredQuantity}
         onChange={(e) => onRequiredChange(parseInt(e.target.value))}
-        className="w-8 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
+        className="w-7 text-xs text-gray-500 dark:text-gray-400 bg-transparent focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
       >
         {Array.from({ length: 10 }, (_, i) => (
           <option key={i + 1} value={i + 1}>{i + 1}</option>
         ))}
       </select>
+      {/* 不足バッジ */}
+      {shortage > 0 && (
+        <span className="ml-0.5 px-1 py-0.5 text-[10px] font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+          -{shortage}
+        </span>
+      )}
     </div>
   )
 }
@@ -455,5 +566,47 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
         <option value={5}>5</option>
       </select>
     </div>
+  )
+}
+
+interface EditableWeightClassFieldProps extends BaseFieldProps {
+  value: WeightClass
+  onChange: (value: WeightClass) => void
+  isEditing: boolean
+  isBig3?: boolean
+}
+
+export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> = ({
+  value,
+  onChange,
+  isEditing,
+  isChanged,
+  isBig3 = false
+}) => {
+  if (isEditing && !isBig3) {
+    // Big3カテゴリの場合は常にbaseに固定されるため編集不可
+    return (
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as WeightClass)}
+        className={`text-xs px-1 py-0.5 rounded border ${
+          isChanged
+            ? 'border-red-500 text-red-600 dark:text-red-400'
+            : 'border-gray-300 dark:border-gray-600'
+        } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+      >
+        <option value="base">Base</option>
+        <option value="worn">Worn</option>
+        <option value="consumable">Cons</option>
+      </select>
+    )
+  }
+
+  return (
+    <WeightClassBadge
+      weightClass={value}
+      isBig3={isBig3}
+      compact
+    />
   )
 }

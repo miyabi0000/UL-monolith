@@ -18,6 +18,8 @@ interface TableHeaderProps {
   onQuantityDisplayModeChange: () => void
   onCurrencyChange?: () => void
   showEditColumn?: boolean
+  /** 編集モード中はソートを無効化 */
+  isEditable?: boolean
 }
 
 const TableHeader: React.FC<TableHeaderProps> = ({
@@ -32,14 +34,33 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   onSort,
   onQuantityDisplayModeChange,
   onCurrencyChange,
-  showEditColumn = false
+  showEditColumn = false,
+  isEditable = false
 }) => {
-  const getQuantityLabel = () => {
+  // 編集モード中はソートを無効化
+  const handleSort = (field: SortField) => {
+    if (isEditable) return
+    onSort(field)
+  }
+
+  // ソート可能なヘッダーのスタイル
+  const sortableHeaderClass = isEditable
+    ? 'text-gray-400 dark:text-gray-500 cursor-default'
+    : 'text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+  const getStatusFilterLabel = () => {
     switch (quantityDisplayMode) {
       case 'owned': return 'Own'
       case 'need': return 'Need'
       case 'all': return 'All'
-      default: return 'Own'
+      default: return 'All'
+    }
+  }
+  const getStatusFilterColor = () => {
+    switch (quantityDisplayMode) {
+      case 'owned': return '#10B981'
+      case 'need': return '#EF4444'
+      case 'all': return '#6B7280'
+      default: return '#6B7280'
     }
   }
   const renderSortIcon = (field: SortField) => {
@@ -71,80 +92,90 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           Image
         </th>
         <th
-          className="group px-2 py-2 text-left font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[120px] max-w-[200px]"
-          onClick={() => onSort('name')}
+          className={`group px-2 py-2 text-left font-medium text-xs ${sortableHeaderClass} transition-colors min-w-[120px] max-w-[200px]`}
+          onClick={() => handleSort('name')}
         >
           <span className="flex items-center">
             Name
-            {renderSortIcon('name')}
+            {!isEditable && renderSortIcon('name')}
           </span>
         </th>
         <th
-          className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-20"
-          onClick={() => onSort('category')}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-20`}
+          onClick={() => handleSort('category')}
         >
           <span className="flex items-center justify-center">
             Cat
-            {renderSortIcon('category')}
+            {!isEditable && renderSortIcon('category')}
           </span>
         </th>
         <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-12">
+          Qty
+        </th>
+        <th className="px-2 py-2 text-center font-medium text-xs w-14">
           <button
             type="button"
             onClick={onQuantityDisplayModeChange}
-            className="inline-flex items-center justify-center hover:text-gray-700 dark:hover:text-gray-300"
-            title="Toggle quantity mode"
+            className="inline-flex items-center justify-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
           >
-            {getQuantityLabel()}
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: getStatusFilterColor() }}
+            />
+            <span className="text-[10px]">{getStatusFilterLabel()}</span>
           </button>
         </th>
+        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
+          WtCls
+        </th>
         <th
-          className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-20"
-          onClick={() => onSort('weight')}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-20`}
+          onClick={() => handleSort('weight')}
         >
           <span className="flex items-center justify-center">
             Wt(g)
-            {renderSortIcon('weight')}
+            {!isEditable && renderSortIcon('weight')}
           </span>
         </th>
         <th
-          className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-12"
-          onClick={() => onSort('priority')}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-12`}
+          onClick={() => handleSort('priority')}
         >
           <span className="flex items-center justify-center">
             Pri
-            {renderSortIcon('priority')}
+            {!isEditable && renderSortIcon('priority')}
           </span>
         </th>
         <th
-          className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-16"
-          onClick={() => onSort('price')}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-16`}
+          onClick={() => handleSort('price')}
         >
           <span className="inline-flex items-center justify-center">
             Price
-            {renderSortIcon('price')}
+            {onCurrencyChange && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCurrencyChange()
+                }}
+                className="ml-0.5 text-xs hover:text-gray-700 dark:hover:text-gray-300"
+                title="Toggle currency"
+              >
+                {currency === 'JPY' ? '¥' : '$'}
+              </button>
+            )}
+            {!isEditable && renderSortIcon('price')}
           </span>
-          {onCurrencyChange && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCurrencyChange()
-              }}
-              className="ml-1 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              title="Toggle currency"
-            >
-              {currency}
-            </button>
-          )}
         </th>
         <th
-          className="group px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-16"
-          onClick={() => onSort('season')}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-16`}
+          onClick={() => handleSort('season')}
         >
           <span className="flex items-center justify-center">
             Ssn
-            {renderSortIcon('season')}
+            {!isEditable && renderSortIcon('season')}
           </span>
         </th>
         {showEditColumn && (

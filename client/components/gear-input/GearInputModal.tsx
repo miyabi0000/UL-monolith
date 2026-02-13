@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category } from '../../utils/types'
+import React, { useState, useEffect, useMemo } from 'react'
+import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category, WeightClass, isBig3Category, DEFAULT_GEAR_VALUES } from '../../utils/types'
 import { ExtractedGearWithUrl } from '../../utils/gearExtractionHelpers'
 import { extractFromUrl } from '../../services/llmExtraction'
 import { sanitizeGearForm } from '../../utils/helpers'
@@ -35,12 +35,16 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
     productUrl: '',
     imageUrl: '',
     categoryId: '',
-    requiredQuantity: 1,
-    ownedQuantity: 0,
+    requiredQuantity: DEFAULT_GEAR_VALUES.requiredQuantity,
+    ownedQuantity: DEFAULT_GEAR_VALUES.ownedQuantity,
+    weightClass: DEFAULT_GEAR_VALUES.weightClass,
     weightGrams: undefined,
+    weightConfidence: DEFAULT_GEAR_VALUES.weightConfidence,
+    weightSource: DEFAULT_GEAR_VALUES.weightSource,
     priceCents: undefined,
     season: '',
-    priority: 3
+    priority: DEFAULT_GEAR_VALUES.priority,
+    isInKit: DEFAULT_GEAR_VALUES.isInKit
   })
 
   const [isExtracting, setIsExtracting] = useState(false)
@@ -63,6 +67,18 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
     setPreview,
     removeImage: removeImagePreview
   } = useImageUpload()
+
+  // 選択中のカテゴリを取得
+  const selectedCategory = useMemo(() =>
+    categories.find(c => c.id === form.categoryId),
+    [categories, form.categoryId]
+  )
+
+  // Big3カテゴリかどうか
+  const isBig3 = useMemo(() =>
+    isBig3Category(selectedCategory),
+    [selectedCategory]
+  )
 
   /**
    * AI抽出結果から未入力フィールドを検出
@@ -89,12 +105,16 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
         productUrl: currentGear.url || '',
         imageUrl: currentGear.imageUrl || '',
         categoryId: currentGear.categoryId || '',
-        requiredQuantity: currentGear.requiredQuantity || 1,
-        ownedQuantity: currentGear.ownedQuantity || 0,
+        requiredQuantity: currentGear.requiredQuantity || DEFAULT_GEAR_VALUES.requiredQuantity,
+        ownedQuantity: currentGear.ownedQuantity || DEFAULT_GEAR_VALUES.ownedQuantity,
+        weightClass: currentGear.suggestedWeightClass || DEFAULT_GEAR_VALUES.weightClass,
         weightGrams: currentGear.weightGrams,
+        weightConfidence: currentGear.weightConfidence || DEFAULT_GEAR_VALUES.weightConfidence,
+        weightSource: DEFAULT_GEAR_VALUES.weightSource,
         priceCents: currentGear.priceCents,
         season: currentGear.season || '',
-        priority: currentGear.priority || 3
+        priority: currentGear.priority || DEFAULT_GEAR_VALUES.priority,
+        isInKit: DEFAULT_GEAR_VALUES.isInKit
       })
       setPreview(currentGear.imageUrl || null)
       setEmptyFields(analyzeExtractionQuality(currentGear))
@@ -110,15 +130,26 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           categoryId: gearToEdit.categoryId || '',
           requiredQuantity: gearToEdit.requiredQuantity,
           ownedQuantity: gearToEdit.ownedQuantity,
+          weightClass: gearToEdit.weightClass || DEFAULT_GEAR_VALUES.weightClass,
           weightGrams: gearToEdit.weightGrams,
+          weightConfidence: gearToEdit.weightConfidence || DEFAULT_GEAR_VALUES.weightConfidence,
+          weightSource: gearToEdit.weightSource || DEFAULT_GEAR_VALUES.weightSource,
           priceCents: gearToEdit.priceCents,
           season: gearToEdit.season || '',
-          priority: gearToEdit.priority
+          priority: gearToEdit.priority,
+          isInKit: gearToEdit.isInKit ?? DEFAULT_GEAR_VALUES.isInKit
         })
         setPreview(gearToEdit.imageUrl || null)
       }
     }
   }, [gear, editingGear, bulkMode, bulkGears, currentBulkIndex])
+
+  // Big3カテゴリ選択時、weightClassを'base'に自動矯正
+  useEffect(() => {
+    if (isBig3 && form.weightClass !== 'base') {
+      setForm(prev => ({ ...prev, weightClass: 'base' }))
+    }
+  }, [isBig3, form.weightClass])
 
   /**
    * URLから商品情報を抽出
@@ -500,6 +531,46 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* 会計区分・キット包含 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+                Weight Class
+              </label>
+              <select
+                value={form.weightClass}
+                onChange={(e) => handleChange('weightClass', e.target.value as WeightClass)}
+                disabled={isBig3}
+                className={`input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 ${
+                  isBig3 ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''
+                }`}
+              >
+                <option value="base">Base - 背負って運ぶ</option>
+                <option value="worn">Worn - 身に着けて運ぶ</option>
+                <option value="consumable">Consumable - 消費物</option>
+              </select>
+              {isBig3 && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Big3カテゴリのため会計はBaseに固定
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isInKit}
+                  onChange={(e) => handleChange('isInKit', e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-900 dark:text-gray-100">
+                  キットに含める（集計対象）
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* 季節・優先度 */}

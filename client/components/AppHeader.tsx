@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 interface AppHeaderProps {
   onShowLogin: () => void;
   onLogout: () => void;
-  onToggleChat: () => void;
-  onShowCategoryManager?: () => void;
   isAuthenticated: boolean;
   userName?: string;
 }
@@ -12,13 +10,10 @@ interface AppHeaderProps {
 const AppHeader: React.FC<AppHeaderProps> = ({
   onShowLogin,
   onLogout,
-  onToggleChat,
-  onShowCategoryManager,
   isAuthenticated,
   userName
 }) => {
   const [isDark, setIsDark] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // 初期状態の読み込み
@@ -42,16 +37,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   // メニューを閉じる（クリックアウトサイド）
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuOpen && !(event.target as Element).closest('.menu-container')) {
-        setMenuOpen(false);
-      }
       if (userMenuOpen && !(event.target as Element).closest('.user-menu-container')) {
         setUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen, userMenuOpen]);
+  }, [userMenuOpen]);
 
   return (
     <header className="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -66,45 +58,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
           {/* Right: Main actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Hamburger menu for secondary actions */}
-            <div className="relative menu-container">
-              <button
-                className="p-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-150"
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Menu"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-
-              {/* Dropdown menu */}
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                  {onShowCategoryManager && (
-                    <button
-                      className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => {
-                        onShowCategoryManager();
-                        setMenuOpen(false);
-                      }}
-                    >
-                      Categories
-                    </button>
-                  )}
-                  <button
-                    className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      onToggleChat();
-                      setMenuOpen(false);
-                    }}
-                  >
-                    AI Assistant
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* Dark mode toggle */}
             <button
               className="p-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-150"

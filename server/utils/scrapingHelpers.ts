@@ -1,26 +1,7 @@
-import * as cheerio from 'cheerio';
-
 /**
  * スクレイピング共通ヘルパー関数
+ * JSON-LD抽出は server/services/scraping/headParsers.ts に集約済み
  */
-
-/**
- * JSON-LD構造化データを抽出
- */
-export function extractJsonLd($: cheerio.Root): any | null {
-  try {
-    const jsonLdScript = $('script[type="application/ld+json"]').html();
-    if (jsonLdScript) {
-      return JSON.parse(jsonLdScript);
-    }
-  } catch (e) {
-    // パース失敗
-  }
-  return null;
-}
-
-// Removed: CATEGORY_PATTERNS and guessCategory()
-// Category matching is now handled by CategoryMatcher in server/services/categoryMatcher.ts
 
 /**
  * 重量抽出パターン（日本語・英語対応）

@@ -53,6 +53,16 @@
   }
 }
 
+/* Recharts フォーカスリング非表示 */
+.recharts-pie-sector:focus,
+.recharts-pie-sector:focus-visible,
+.recharts-sector:focus,
+.recharts-sector:focus-visible,
+.recharts-pie path:focus,
+.recharts-pie path:focus-visible {
+  outline: none !important;
+}
+
 /* アニメーション */
 @keyframes slideIn {
   from {

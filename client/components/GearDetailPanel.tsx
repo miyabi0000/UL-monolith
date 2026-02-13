@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode } from '../utils/types';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, isBig3Category } from '../utils/types';
 import GearCardCompact from './GearCardCompact';
 import OverviewView from './DetailPanel/OverviewView';
 import CategorySummaryView from './DetailPanel/CategorySummaryView';
@@ -21,7 +21,7 @@ interface GearDetailPanelProps {
   selectedCategory: string | null;
   items: GearItemWithCalculated[];
   categories: Category[];
-  viewMode: 'weight' | 'cost';
+  viewMode: ChartViewMode;
   gearViewMode?: 'table' | 'card' | 'compare';
   quantityDisplayMode: QuantityDisplayMode;
   onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void;
@@ -32,6 +32,8 @@ interface GearDetailPanelProps {
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   filteredByCategory?: string[];
+  chartFocusFilter?: ChartFocus; // Big3/Otherフィルタ
+  onCategoryClick?: (categoryName: string) => void;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -51,6 +53,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   showCheckboxes,
   onToggleCheckboxes,
   filteredByCategory = [],
+  chartFocusFilter = 'all',
+  onCategoryClick,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -83,9 +87,21 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return items;
   }, [items, quantityDisplayMode]);
 
+  // Big3/Otherフィルタ（Weight-Classモードのチャートと連動）
+  const big3FilteredItems = useMemo(() => {
+    if (chartFocusFilter === 'all') {
+      return quantityFilteredItems;
+    }
+    if (chartFocusFilter === 'big3') {
+      return quantityFilteredItems.filter(item => isBig3Category(item.category));
+    }
+    // chartFocusFilter === 'other'
+    return quantityFilteredItems.filter(item => !isBig3Category(item.category));
+  }, [quantityFilteredItems, chartFocusFilter]);
+
   const chartFilteredItems = useMemo(() => {
-    return filterByCategories(quantityFilteredItems, filteredByCategory);
-  }, [quantityFilteredItems, filteredByCategory]);
+    return filterByCategories(big3FilteredItems, filteredByCategory);
+  }, [big3FilteredItems, filteredByCategory]);
 
   const panelItems = useMemo(() => {
     if (mode === 'category' && selectedCategory) {
@@ -153,10 +169,13 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   // 比較モードロジック（useComparisonMode フックを使用）
   const {
     showComparisonModal,
+    validationResult,
     openComparison: handleCompare,
     closeComparison: handleCloseComparisonModal,
     removeFromComparison: handleRemoveFromComparison,
     adoptItem: handleAdoptItem,
+    previewItemId,
+    previewAdopt: handlePreviewAdopt,
   } = useComparisonMode({
     selectedItems,
     onUpdateItem,
@@ -167,6 +186,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   });
 
   const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
+    // 変更中フィールドをマーク
     setChangedFields(prev => {
       const updated = { ...prev };
       if (!updated[id]) {
@@ -180,7 +200,10 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
 
     try {
       await onUpdateItem(id, field, value);
-
+    } catch (err) {
+      console.error('Failed to update field:', err);
+    } finally {
+      // 成功・失敗に関わらずフィールドをクリア
       setChangedFields(prev => {
         const updated = { ...prev };
         if (updated[id]) {
@@ -192,8 +215,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         }
         return updated;
       });
-    } catch (err) {
-      console.error('Failed to update field:', err);
     }
   }, [onUpdateItem]);
 
@@ -202,10 +223,31 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return (
       <ComparisonTable
         items={selectedItems}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
         onClose={handleCloseComparisonModal}
-        onRemove={handleRemoveFromComparison}
         onAdopt={handleAdoptItem}
+        onPreviewAdopt={handlePreviewAdopt}
+        previewItemId={previewItemId}
+        onRemove={handleRemoveFromComparison}
       />
+    );
+  }
+
+  // アイテム詳細モード（チャートからのアイテム選択時）
+  // gearViewModeより優先して表示
+  console.log('[DEBUG] GearDetailPanel render', { mode, selectedItem: !!selectedItem, gearViewMode })
+  if (mode === 'item' && selectedItem) {
+    return (
+      <div className="w-full h-full min-w-0 overflow-hidden">
+        <GearCardCompact
+          item={selectedItem}
+          viewMode={viewMode}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onCategoryClick={onCategoryClick}
+        />
+      </div>
     );
   }
 
@@ -240,6 +282,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onCompare={isCompareMode ? handleCompare : undefined}
               isCompareMode={isCompareMode}
               maxCompareItems={MAX_COMPARE_ITEMS}
+              canCompare={isCompareMode ? validationResult.isValid : undefined}
+              compareDisabledReason={isCompareMode ? validationResult.errorMessage : undefined}
             />
           </div>
         )}
@@ -259,6 +303,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
               currency={currency}
               onCurrencyChange={handleCurrencyChange}
+              isEditable={isEditable}
             />
             <tbody>
               {processedItems.map((item) => (
@@ -279,20 +324,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
             </tbody>
           </table>
         </div>
-      </div>
-    );
-  }
-
-  // アイテム詳細モードの場合は常にGearCardCompactを表示
-  if (mode === 'item') {
-    return (
-      <div className="w-full h-full min-w-0 overflow-hidden">
-        <GearCardCompact
-          item={selectedItem}
-          viewMode={viewMode}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
       </div>
     );
   }

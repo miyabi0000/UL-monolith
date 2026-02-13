@@ -31,6 +31,47 @@ interface ComparisonValidation {
   errorMessage?: string;
 }
 
+const MIN_COMPARISON_ITEMS = 2;
+
+const VALIDATION_MESSAGES = {
+  TOO_FEW_ITEMS: '比較するには2件以上のアイテムを選択してください',
+  MISSING_CATEGORY: 'カテゴリが設定されていないアイテムは比較できません',
+  MIXED_CATEGORIES: '同一カテゴリ内のアイテムのみ比較できます',
+} as const;
+
+function validateComparisonItems(
+  selectedItems: GearItemWithCalculated[]
+): ComparisonValidation {
+  if (selectedItems.length < MIN_COMPARISON_ITEMS) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.TOO_FEW_ITEMS,
+    };
+  }
+
+  const categorySet = new Set(
+    selectedItems
+      .map(item => item.category?.id)
+      .filter(Boolean)
+  );
+
+  if (categorySet.size === 0) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.MISSING_CATEGORY,
+    };
+  }
+
+  if (categorySet.size > 1) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.MIXED_CATEGORIES,
+    };
+  }
+
+  return { isValid: true };
+}
+
 interface UseComparisonModeReturn {
   /** 比較モーダルの表示状態 */
   showComparisonModal: boolean;
@@ -44,6 +85,10 @@ interface UseComparisonModeReturn {
   removeFromComparison: (itemId: string) => void;
   /** アイテムを採用（ownedQuantity +1） */
   adoptItem: (itemId: string) => Promise<void>;
+  /** プレビュー中のアイテムID */
+  previewItemId: string | null;
+  /** プレビュー採用（グラフに影響を表示） */
+  previewAdopt: (itemId: string | null) => void;
 }
 
 /**
@@ -64,6 +109,16 @@ export function useComparisonMode(
   } = options;
 
   const [showComparisonModal, setShowComparisonModal] = useState(false);
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
+
+  const finalizeComparison = useCallback((clearSelection = false) => {
+    setShowComparisonModal(false);
+    setPreviewItemId(null);
+    if (clearSelection) {
+      onClearSelection?.();
+    }
+    onComparisonClose?.();
+  }, [onClearSelection, onComparisonClose]);
 
   /**
    * 比較可能かどうかを検証
@@ -71,34 +126,7 @@ export function useComparisonMode(
    * - すべて同一カテゴリである
    */
   const validationResult = useMemo((): ComparisonValidation => {
-    if (selectedItems.length < 2) {
-      return {
-        isValid: false,
-        errorMessage: '比較するには2件以上のアイテムを選択してください',
-      };
-    }
-
-    const categorySet = new Set(
-      selectedItems
-        .map(item => item.category?.id)
-        .filter(Boolean)
-    );
-
-    if (categorySet.size === 0) {
-      return {
-        isValid: false,
-        errorMessage: 'カテゴリが設定されていないアイテムは比較できません',
-      };
-    }
-
-    if (categorySet.size > 1) {
-      return {
-        isValid: false,
-        errorMessage: '同一カテゴリ内のアイテムのみ比較できます',
-      };
-    }
-
-    return { isValid: true };
+    return validateComparisonItems(selectedItems);
   }, [selectedItems]);
 
   /**
@@ -116,9 +144,16 @@ export function useComparisonMode(
    * 比較モーダルを閉じる
    */
   const closeComparison = useCallback(() => {
-    setShowComparisonModal(false);
-    onComparisonClose?.();
-  }, [onComparisonClose]);
+    finalizeComparison();
+  }, [finalizeComparison]);
+
+  /**
+   * プレビュー採用（グラフに影響を表示）
+   * nullを渡すとプレビューをクリア
+   */
+  const previewAdopt = useCallback((itemId: string | null) => {
+    setPreviewItemId(itemId);
+  }, []);
 
   /**
    * 比較から削除
@@ -129,11 +164,10 @@ export function useComparisonMode(
 
     // 削除後のアイテム数をチェック
     const remainingCount = selectedItems.length - 1;
-    if (remainingCount < 2) {
-      setShowComparisonModal(false);
-      onComparisonClose?.();
+    if (remainingCount < MIN_COMPARISON_ITEMS) {
+      finalizeComparison();
     }
-  }, [selectedItems.length, onRemoveItem, onComparisonClose]);
+  }, [selectedItems.length, onRemoveItem, finalizeComparison]);
 
   /**
    * アイテムを採用（ownedQuantity を +1）
@@ -153,14 +187,12 @@ export function useComparisonMode(
 
     try {
       await onUpdateItem(itemId, 'ownedQuantity', (item.ownedQuantity || 0) + 1);
-      setShowComparisonModal(false);
-      onClearSelection?.();
-      onComparisonClose?.();
+      finalizeComparison(true);
     } catch (err) {
       console.error('Failed to adopt item:', err);
       throw err;
     }
-  }, [selectedItems, onUpdateItem, onClearSelection, onComparisonClose]);
+  }, [selectedItems, onUpdateItem, finalizeComparison]);
 
   return {
     showComparisonModal,
@@ -169,5 +201,7 @@ export function useComparisonMode(
     closeComparison,
     removeFromComparison,
     adoptItem,
+    previewItemId,
+    previewAdopt,
   };
 }

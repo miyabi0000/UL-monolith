@@ -7,6 +7,7 @@ import BulkActionBar from '../BulkActionBar'
 import TableHeader, { SortField, SortDirection } from './TableHeader'
 import TableRow from './TableRow'
 import ComparisonTable from '../ComparisonTable'
+import { useComparisonMode } from '../../hooks/useComparisonMode'
 
 interface GearTableProps {
   items: GearItemWithCalculated[]
@@ -169,7 +170,6 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   // ========================================
   const isCompareMode = currentView === 'compare'
   const MAX_COMPARE_ITEMS = 4
-  const [showComparisonModal, setShowComparisonModal] = useState(false)
 
   // Compareモード時の表示制御
   // - Compareモード: チェックボックスあり、編集不可
@@ -198,37 +198,27 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   }, [showCheckboxes])
 
   // ========================================
-  // Compareモードのハンドラー
+  // 比較モードロジック（useComparisonMode フックを使用）
   // ========================================
-  const handleCompare = () => {
-    const categories = new Set(selectedItems.map(item => item.category?.id).filter(Boolean))
-    if (categories.size > 1 || categories.size === 0) {
-      // TODO: 通知システムでエラー表示
-      console.error('同一カテゴリ内で比較してください')
-      return
-    }
-    setShowComparisonModal(true)
-  }
-
-  const handleCloseComparisonModal = () => {
-    setShowComparisonModal(false)
-  }
-
-  const handleRemoveFromComparison = (itemId: string) => {
-    setSelectedIds(selectedIds.filter(id => id !== itemId))
-    if (selectedIds.length <= 2) {
-      setShowComparisonModal(false)
-    }
-  }
-
-  const handleAdoptItem = async (itemId: string) => {
-    const item = selectedItems.find(i => i.id === itemId)
-    if (item) {
-      await onUpdateItem(itemId, 'ownedQuantity', (item.ownedQuantity || 0) + 1)
-      setShowComparisonModal(false)
-      setSelectedIds([])
-    }
-  }
+  const {
+    showComparisonModal,
+    validationResult,
+    openComparison: handleCompare,
+    closeComparison: handleCloseComparisonModal,
+    removeFromComparison: handleRemoveFromComparison,
+    adoptItem: handleAdoptItem,
+    previewItemId,
+    previewAdopt: handlePreviewAdopt,
+  } = useComparisonMode({
+    selectedItems,
+    onUpdateItem: async (id, field, value) => {
+      await onUpdateItem(id, field, value)
+    },
+    onClearSelection: () => setSelectedIds([]),
+    onRemoveItem: (itemId) => {
+      setSelectedIds(prev => prev.filter(id => id !== itemId))
+    },
+  })
 
   // ========================================
   // フィールド編集ハンドラー
@@ -280,8 +270,10 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
       <ComparisonTable
         items={selectedItems}
         onClose={handleCloseComparisonModal}
-        onRemove={handleRemoveFromComparison}
         onAdopt={handleAdoptItem}
+        onPreviewAdopt={handlePreviewAdopt}
+        previewItemId={previewItemId}
+        onRemove={handleRemoveFromComparison}
       />
     )
   }
@@ -317,6 +309,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             onCompare={isCompareMode ? handleCompare : undefined}
             isCompareMode={isCompareMode}
             maxCompareItems={MAX_COMPARE_ITEMS}
+            canCompare={isCompareMode ? validationResult.isValid : undefined}
+            compareDisabledReason={isCompareMode ? validationResult.errorMessage : undefined}
           />
         </div>
       )}

@@ -1,4 +1,4 @@
-import { GearItemWithCalculated, GearItemForm, ApiResponse } from '../utils/types';
+import { GearItemWithCalculated, GearItemForm, ApiResponse, WeightBreakdown, ULStatus } from '../utils/types';
 import { callAPIWithRetry, API_CONFIG } from './api.client';
 
 // History entry type for frontend
@@ -134,6 +134,33 @@ export class GearService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch analytics summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Weight Breakdown集計（データモデル仕様準拠）
+   * Base/Worn/Consumables/Packed/SkinOut/Big3 + UL分類
+   */
+  static async getWeightBreakdown(): Promise<{
+    breakdown: WeightBreakdown;
+    ulStatus: ULStatus;
+  }> {
+    try {
+      const response = await callAPIWithRetry('/analytics/weight-breakdown', {}, API_CONFIG.timeout.standard, 'GET');
+      return {
+        breakdown: {
+          baseWeight: response.data.baseWeight,
+          wornWeight: response.data.wornWeight,
+          consumables: response.data.consumables,
+          packedWeight: response.data.packedWeight,
+          skinOutWeight: response.data.skinOutWeight,
+          big3: response.data.big3
+        },
+        ulStatus: response.data.ulStatus
+      };
+    } catch (error) {
+      console.error('Failed to fetch weight breakdown:', error);
       throw error;
     }
   }

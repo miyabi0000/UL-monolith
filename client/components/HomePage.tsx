@@ -36,6 +36,8 @@ export default function HomePage() {
     gearItems,
     categories, setCategories,
     isLoading,
+    weightBreakdown,
+    ulStatus,
 
     // API操作関数
     handleCreateGear,
@@ -228,6 +230,8 @@ export default function HomePage() {
                 onGearViewModeChange={setGearViewMode}
                 showCheckboxes={showCheckboxes}
                 onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
+                weightBreakdown={weightBreakdown}
+                ulStatus={ulStatus}
               />
             </div>
           )}

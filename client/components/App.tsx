@@ -40,8 +40,6 @@ export default function App() {
       <AppHeader
         onShowLogin={() => setShowLogin(true)}
         onLogout={logout}
-        onToggleChat={() => setShowChat(!showChat)}
-        onShowCategoryManager={() => setShowCategoryManager(true)}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
       />
