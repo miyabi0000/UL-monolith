@@ -5,11 +5,18 @@ import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 interface CardGridViewProps {
   items: GearItemWithCalculated[];
   viewMode: 'weight' | 'cost';
-  onItemClick?: (itemId: string) => void;
   quantityDisplayMode: QuantityDisplayMode;
+  selectedItemId?: string | null;
+  onItemSelect?: (itemId: string | null) => void;
 }
 
-const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, onItemClick, quantityDisplayMode }) => {
+const CardGridView: React.FC<CardGridViewProps> = ({
+  items,
+  viewMode,
+  quantityDisplayMode,
+  selectedItemId,
+  onItemSelect,
+}) => {
   const getItemValue = (item: GearItemWithCalculated) => {
     const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
     return viewMode === 'cost'
@@ -38,14 +45,21 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, onItemClic
           <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-1.5">
             {sortedItems.map(item => {
               const imageUrl = item.imageUrl || null;
+              const isHighlighted = selectedItemId === item.id;
 
               return (
                 <button
+                  type="button"
                   key={item.id}
-                  onClick={() => onItemClick?.(item.id)}
-                  className="aspect-square relative overflow-hidden rounded-md border border-gray-100 dark:border-gray-800
-                    hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all flex items-center justify-center
-                    bg-white dark:bg-gray-900"
+                  onClick={() => {
+                    if (!onItemSelect) return;
+                    onItemSelect(selectedItemId === item.id ? null : item.id);
+                  }}
+                  className={`aspect-square relative overflow-hidden rounded-md border transition-all flex items-center justify-center ${
+                    isHighlighted
+                      ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/50 dark:ring-blue-500/50 shadow-md'
+                      : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
+                  } bg-white dark:bg-gray-900`}
                 >
                   {imageUrl ? (
                     <img

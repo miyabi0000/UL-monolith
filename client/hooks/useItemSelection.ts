@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 
 interface UseItemSelectionOptions {
@@ -11,6 +11,14 @@ interface UseItemSelectionOptions {
    * 選択解除時のコールバック（オプション）
    */
   onSelectionChange?: (selectedIds: string[]) => void;
+  /**
+   * 外部制御された選択ID配列（オプション）
+   */
+  selectedIds?: string[];
+  /**
+   * 外部制御選択の更新コールバック（オプション）
+   */
+  onSelectedIdsChange?: (selectedIds: string[]) => void;
 }
 
 interface UseItemSelectionReturn {
@@ -45,8 +53,25 @@ export function useItemSelection(
   items: GearItemWithCalculated[],
   options: UseItemSelectionOptions = {}
 ): UseItemSelectionReturn {
-  const { maxSelection, onSelectionChange } = options;
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { maxSelection, onSelectionChange, selectedIds: controlledSelectedIds, onSelectedIdsChange } = options;
+  const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
+
+  const selectedIds = controlledSelectedIds ?? internalSelectedIds;
+
+  const commitSelection = useCallback((newIds: string[]) => {
+    if (controlledSelectedIds === undefined) {
+      setInternalSelectedIds(newIds);
+    }
+    onSelectedIdsChange?.(newIds);
+    onSelectionChange?.(newIds);
+  }, [controlledSelectedIds, onSelectedIdsChange, onSelectionChange]);
+
+  const setSelectedIds = useCallback((value: React.SetStateAction<string[]>) => {
+    const nextIds = typeof value === 'function'
+      ? (value as (prevState: string[]) => string[])(selectedIds)
+      : value;
+    commitSelection(nextIds);
+  }, [selectedIds, commitSelection]);
 
   // 選択されたアイテムのオブジェクト配列
   const selectedItems = useMemo(
@@ -85,12 +110,9 @@ export function useItemSelection(
       } else {
         newIds = prevIds.filter(selectedId => selectedId !== id);
       }
-
-      // コールバック実行
-      onSelectionChange?.(newIds);
       return newIds;
     });
-  }, [maxSelection, onSelectionChange]);
+  }, [maxSelection, setSelectedIds]);
 
   // 全アイテムの選択/解除
   const handleSelectAll = useCallback((checked: boolean) => {
@@ -98,19 +120,25 @@ export function useItemSelection(
       ? items.slice(0, maxSelectableCount).map(item => item.id)
       : [];
     setSelectedIds(newIds);
-    onSelectionChange?.(newIds);
-  }, [items, maxSelectableCount, onSelectionChange]);
+  }, [items, maxSelectableCount, setSelectedIds]);
 
   // 選択をクリア
   const clearSelection = useCallback(() => {
     setSelectedIds([]);
-    onSelectionChange?.([]);
-  }, [onSelectionChange]);
+  }, [setSelectedIds]);
 
   // アイテムが選択されているかチェック
   const isSelected = useCallback((id: string) => {
     return selectedIds.includes(id);
   }, [selectedIds]);
+
+  useEffect(() => {
+    const validItemIds = new Set(items.map(item => item.id));
+    const filtered = selectedIds.filter(id => validItemIds.has(id));
+    if (filtered.length !== selectedIds.length) {
+      commitSelection(filtered);
+    }
+  }, [items, selectedIds, commitSelection]);
 
   return {
     selectedIds,
