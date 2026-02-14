@@ -20,6 +20,7 @@ interface TableRowProps {
   categories: Category[]
   showCheckboxes: boolean
   isSelected: boolean
+  isHighlighted?: boolean
   changedFields?: Set<string>
   quantityDisplayMode: QuantityDisplayMode
   currency?: Currency
@@ -39,6 +40,7 @@ const TableRow: React.FC<TableRowProps> = ({
   categories,
   showCheckboxes,
   isSelected,
+  isHighlighted,
   changedFields,
   quantityDisplayMode,
   currency = 'JPY',
@@ -87,7 +89,9 @@ const TableRow: React.FC<TableRowProps> = ({
       className={`transition-all duration-200 hover:opacity-90 ${
         isSelected
           ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 dark:ring-blue-600 ring-inset'
-          : 'bg-white dark:bg-gray-800'
+          : isHighlighted
+            ? 'bg-amber-50 dark:bg-amber-900/15 border-l-2 border-l-amber-400 dark:border-l-amber-500'
+            : 'bg-white dark:bg-gray-800'
       }`}
     >
       {/* Checkbox */}

@@ -63,7 +63,7 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
 
   // 数量表示モード（owned/need/all）
-  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned');
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
 
   // ギア表示モード（table/card/compare切り替え）
   const [gearViewMode, setGearViewMode] = useState<'table' | 'card' | 'compare'>(() => {

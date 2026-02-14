@@ -5,7 +5,7 @@ import { COLORS } from '../utils/designSystem'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
 import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData, filterByScope, sumWeight } from '../utils/chartHelpers'
 import Card from './ui/Card'
-import GearDetailPanel, { PanelMode } from './GearDetailPanel'
+import GearDetailPanel from './GearDetailPanel'
 import ActiveCalloutShape from './charts/ActiveCalloutShape'
 
 // ==================== SVGアイコン ====================
@@ -170,8 +170,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   ulStatus
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
-  const [selectedCategoryForPanel, setSelectedCategoryForPanel] = useState<string | null>(null)
-  const [panelMode, setPanelMode] = useState<PanelMode>('overview')
   const [centerPulse, setCenterPulse] = useState(false)
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
@@ -317,58 +315,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const handleCategoryClick = useCallback((categoryName: string) => {
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
-      setSelectedCategoryForPanel(null)
-      setPanelMode('overview')
     } else {
       onCategorySelect([categoryName])
-      setSelectedCategoryForPanel(categoryName)
-      setPanelMode('category')
     }
     setSelectedItem(null)
   }, [selectedCategories, onCategorySelect])
 
   const handleItemClick = useCallback((itemId: string) => {
-    if (selectedItem === itemId) {
-      setSelectedItem(null)
-      // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
-      if (selectedCategoryForPanel) {
-        setPanelMode('category')
-      } else {
-        setPanelMode('overview')
-      }
-    } else {
-      setSelectedItem(itemId)
-      setPanelMode('item')
-    }
-  }, [selectedItem, selectedCategoryForPanel])
-
-  // CategorySummaryViewからのアイテムクリック
-  const handlePanelItemClick = useCallback((itemId: string) => {
-    setSelectedItem(itemId)
-    setPanelMode('item')
+    setSelectedItem(prev => prev === itemId ? null : itemId)
   }, [])
 
-  // アイテム詳細からカテゴリへナビゲート（トグルではなく常にカテゴリ選択）
-  const handleCategoryNavigate = useCallback((categoryName: string) => {
-    setSelectedItem(null)
-    onCategorySelect([categoryName])
-    setSelectedCategoryForPanel(categoryName)
-    setPanelMode('category')
-  }, [onCategorySelect])
-
-  // 選択されたアイテムオブジェクトを取得
-  const selectedItemData = useMemo(() => {
-    if (!selectedItem || !items) return null
-    return items.find(item => item.id === selectedItem) || null
-  }, [selectedItem, items])
-
   const handleCenterClick = useCallback(() => {
-    // Weight → Cost → Weight-Class → Weight のサイクル
-    const nextMode: ChartViewMode = viewMode === 'weight'
-      ? 'cost'
-      : viewMode === 'cost'
-        ? 'weight-class'
-        : 'weight'
+    const nextMode: ChartViewMode = viewMode === 'weight' ? 'cost' : 'weight'
     onViewModeChange(nextMode)
 
     // パルスアニメーション
@@ -387,17 +345,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // 二重ドーナツ: Outer ringクリック（カテゴリ選択）
   const handleDualRingOuterClick = useCallback((segmentId: string) => {
-    // Big3内訳の場合はカテゴリ名で選択
     const segment = dualRingOuterData?.find(s => s.id === segmentId)
     if (segment) {
       if (selectedCategories.includes(segment.label)) {
         onCategorySelect([])
-        setSelectedCategoryForPanel(null)
-        setPanelMode('overview')
       } else {
         onCategorySelect([segment.label])
-        setSelectedCategoryForPanel(segment.label)
-        setPanelMode('category')
       }
     }
     setSelectedItem(null)
@@ -889,77 +842,60 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* サマリーフッター */}
           {viewMode === 'weight-class' && weightBreakdown ? (
             <>
-              {/* Weight-Classモード: Big3 / Other - Inner ringの凡例と連動 */}
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  onClick={() => setChartFocus(chartFocus === 'other' ? 'all' : 'other')}
-                  className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
-                    chartFocus === 'other'
-                      ? 'bg-gray-200 dark:bg-gray-700 ring-2 ring-gray-500 dark:ring-gray-400'
-                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-150 dark:hover:bg-gray-750'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: DUAL_RING_COLORS.other }}
-                    />
-                    <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Other</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                    {(weightBreakdown.baseWeight - weightBreakdown.big3).toLocaleString()}g
-                  </span>
-                  <span className="text-[9px] text-gray-500 dark:text-gray-400">
-                    {weightBreakdown.baseWeight > 0
-                      ? Math.round(((weightBreakdown.baseWeight - weightBreakdown.big3) / weightBreakdown.baseWeight) * 100)
-                      : 0}%
-                  </span>
-                </button>
+              {/* Weight-Classモード: Pack/Shelter/Sleep/Other フラット4列 */}
+              <div className="grid grid-cols-4 gap-1">
                 <button
                   onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
-                  className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
                     chartFocus === 'big3'
-                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-2 ring-purple-500 dark:ring-purple-400'
-                      : 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
+                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: DUAL_RING_COLORS.big3 }}
-                    />
-                    <span className="text-[11px] font-semibold text-purple-700 dark:text-purple-300">Big3</span>
-                  </div>
-                  <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
-                    {weightBreakdown.big3.toLocaleString()}g
-                  </span>
-                  <span className="text-[9px] text-purple-600 dark:text-purple-400">
-                    {weightBreakdown.baseWeight > 0
-                      ? Math.round((weightBreakdown.big3 / weightBreakdown.baseWeight) * 100)
-                      : 0}%
-                  </span>
-                </button>
-              </div>
-              {/* Big3内訳表示 */}
-              <div className="grid grid-cols-3 gap-1 mt-1.5">
-                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
                   <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Pack</span>
                   <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
                     {weightBreakdown.big3Pack?.toLocaleString() ?? 0}g
                   </span>
-                </div>
-                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
+                </button>
+                <button
+                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
+                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
+                    chartFocus === 'big3'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
+                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                >
                   <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Shelter</span>
                   <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
                     {weightBreakdown.big3Shelter?.toLocaleString() ?? 0}g
                   </span>
-                </div>
-                <div className="flex flex-col items-center py-1 px-0.5 bg-purple-50/50 dark:bg-purple-900/10 rounded">
+                </button>
+                <button
+                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
+                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
+                    chartFocus === 'big3'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
+                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                >
                   <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Sleep</span>
                   <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
                     {weightBreakdown.big3Sleep?.toLocaleString() ?? 0}g
                   </span>
-                </div>
+                </button>
+                <button
+                  onClick={() => setChartFocus(chartFocus === 'other' ? 'all' : 'other')}
+                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
+                    chartFocus === 'other'
+                      ? 'bg-gray-200 dark:bg-gray-700 ring-1 ring-gray-400'
+                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span className="text-[9px] font-medium text-gray-600 dark:text-gray-400">Other</span>
+                  <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">
+                    {(weightBreakdown.baseWeight - weightBreakdown.big3).toLocaleString()}g
+                  </span>
+                </button>
               </div>
             </>
           ) : (
@@ -1015,12 +951,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               <button
                 onClick={() => {
                   setSelectedItem(null)
-                  setSelectedCategoryForPanel(null)
                   onCategorySelect([])
-                  setPanelMode('overview')
                 }}
                 className={`flex-shrink-0 transition-colors ${
-                  panelMode === 'overview'
+                  !selectedCategoryFromChart && !selectedItem
                     ? 'text-gray-700 dark:text-gray-200 font-medium'
                     : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }`}
@@ -1031,12 +965,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <>
                   <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
                   <button
-                    onClick={() => {
-                      setSelectedItem(null)
-                      setPanelMode('category')
-                    }}
+                    onClick={() => setSelectedItem(null)}
                     className={`truncate max-w-[80px] transition-colors ${
-                      panelMode === 'category'
+                      !selectedItem
                         ? 'text-gray-700 dark:text-gray-200 font-medium'
                         : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                     }`}
@@ -1054,46 +985,35 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   </span>
                 </>
               )}
-            </div>
-
-            {/* 右側ボタン群 */}
-            <div className="flex items-center gap-1.5">
-              {/* ビュー切替グループ */}
-              <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-0.5">
-                {/* ビュー切り替え (Card/Table) - Compareモードからも切り替え可能 */}
-                {onGearViewModeChange && (
-                  <div className="inline-flex rounded-md p-0.5 bg-gray-100 dark:bg-gray-800">
-                    <button
-                      onClick={() => onGearViewModeChange('card')}
-                      className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
-                        gearViewMode === 'card'
-                          ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                          : gearViewMode === 'compare'
-                            ? 'text-gray-400 dark:text-gray-500'
-                            : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                      aria-label="Card view"
-                    >
-                      Card
-                    </button>
-                    <button
-                      onClick={() => onGearViewModeChange('table')}
-                      className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
-                        gearViewMode === 'table'
-                          ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                          : gearViewMode === 'compare'
-                            ? 'text-gray-400 dark:text-gray-500'
-                            : 'text-gray-500 dark:text-gray-400'
-                      }`}
-                      aria-label="Table view"
-                    >
-                      Table
-                    </button>
-                  </div>
-                )}
-
-                {/* Compare(A/B)ボタン - 編集モード中は無効 */}
-                {onGearViewModeChange && (
+              {/* ビュー切替（パンくず近く） */}
+              {onGearViewModeChange && (
+                <div className="inline-flex rounded-md p-0.5 bg-gray-100 dark:bg-gray-800 ml-2">
+                  <button
+                    onClick={() => onGearViewModeChange('card')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+                      gearViewMode === 'card'
+                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        : gearViewMode === 'compare'
+                          ? 'text-gray-400 dark:text-gray-500'
+                          : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                    aria-label="Card view"
+                  >
+                    Card
+                  </button>
+                  <button
+                    onClick={() => onGearViewModeChange('table')}
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+                      gearViewMode === 'table'
+                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        : gearViewMode === 'compare'
+                          ? 'text-gray-400 dark:text-gray-500'
+                          : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                    aria-label="Table view"
+                  >
+                    Table
+                  </button>
                   <button
                     onClick={() => {
                       if (gearViewMode === 'compare') {
@@ -1106,7 +1026,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       }
                     }}
                     disabled={showCheckboxes && gearViewMode !== 'compare'}
-                    className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'compare'
                         ? 'bg-blue-600 text-white shadow-sm'
                         : showCheckboxes
@@ -1116,16 +1036,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     aria-label="Compare view"
                     title={showCheckboxes ? 'Exit Edit mode first' : 'Compare items'}
                   >
-                    A/B
+                    A|B
                   </button>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              {/* セパレータ */}
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700" />
-
-              {/* アクショングループ */}
-              <div className="flex items-center gap-1">
+            {/* 右側: アクションのみ */}
+            <div className="flex items-center gap-1">
               {/* アクションメニュー（ADD + Manage Categories） */}
               {onShowForm && (
                 <div className="relative add-menu-container">
@@ -1213,16 +1131,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
-              </div>
             </div>
           </div>
 
           {/* パネルコンテンツ */}
           <div className="flex-1 min-h-0 overflow-hidden">
               <GearDetailPanel
-                mode={panelMode}
-                selectedItem={selectedItemData}
-                selectedCategory={selectedCategoryForPanel}
                 items={items}
                 categories={categories}
                 viewMode={viewMode}
@@ -1232,12 +1146,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onUpdateItem={onUpdateItem}
-                onItemClick={handlePanelItemClick}
                 showCheckboxes={showCheckboxes}
                 onToggleCheckboxes={onToggleCheckboxes}
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
-                onCategoryClick={handleCategoryNavigate}
+                selectedItemId={selectedItem}
               />
           </div>
         </Card>

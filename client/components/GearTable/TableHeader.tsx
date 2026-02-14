@@ -49,10 +49,10 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     : 'text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
   const getStatusFilterLabel = () => {
     switch (quantityDisplayMode) {
-      case 'owned': return 'Own'
-      case 'need': return 'Need'
-      case 'all': return 'All'
-      default: return 'All'
+      case 'owned': return 'own'
+      case 'need': return 'need'
+      case 'all': return 'all'
+      default: return 'all'
     }
   }
   const getStatusFilterColor = () => {
@@ -89,14 +89,14 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </th>
         )}
         <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
-          Image
+          image
         </th>
         <th
           className={`group px-2 py-2 text-left font-medium text-xs ${sortableHeaderClass} transition-colors min-w-[120px] max-w-[200px]`}
           onClick={() => handleSort('name')}
         >
           <span className="flex items-center">
-            Name
+            name
             {!isEditable && renderSortIcon('name')}
           </span>
         </th>
@@ -105,12 +105,12 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           onClick={() => handleSort('category')}
         >
           <span className="flex items-center justify-center">
-            Cat
+            category
             {!isEditable && renderSortIcon('category')}
           </span>
         </th>
         <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-12">
-          Qty
+          qty
         </th>
         <th className="px-2 py-2 text-center font-medium text-xs w-14">
           <button
@@ -123,27 +123,27 @@ const TableHeader: React.FC<TableHeaderProps> = ({
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ backgroundColor: getStatusFilterColor() }}
             />
-            <span className="text-[10px]">{getStatusFilterLabel()}</span>
+            <span className="text-xs">{getStatusFilterLabel()}</span>
           </button>
         </th>
         <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
-          WtCls
+          class
         </th>
         <th
           className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-20`}
           onClick={() => handleSort('weight')}
         >
           <span className="flex items-center justify-center">
-            Wt(g)
+            g
             {!isEditable && renderSortIcon('weight')}
           </span>
         </th>
         <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-12`}
+          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-16`}
           onClick={() => handleSort('priority')}
         >
           <span className="flex items-center justify-center">
-            Pri
+            priority
             {!isEditable && renderSortIcon('priority')}
           </span>
         </th>
@@ -152,7 +152,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           onClick={() => handleSort('price')}
         >
           <span className="inline-flex items-center justify-center">
-            Price
+            price
             {onCurrencyChange && (
               <button
                 type="button"
@@ -174,7 +174,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           onClick={() => handleSort('season')}
         >
           <span className="flex items-center justify-center">
-            Ssn
+            season
             {!isEditable && renderSortIcon('season')}
           </span>
         </th>
