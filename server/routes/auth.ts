@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { sendError, sendSuccess } from './shared/httpResponse';
 
 const router = Router();
 
@@ -18,26 +19,20 @@ router.post('/login', (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
+      return sendError(res, 'Email and password are required', undefined, 400);
     }
 
     // Find user
     const user = users.find(u => u.email === email && u.password === password);
     
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return sendError(res, 'Invalid credentials', undefined, 401);
     }
 
     // Return user data (excluding password)
     const { password: _, ...userData } = user;
     
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: {
         user: userData,
@@ -47,11 +42,7 @@ router.post('/login', (req, res) => {
       message: 'Login successful'
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Login failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Login failed', error);
   }
 });
 
@@ -59,16 +50,12 @@ router.post('/login', (req, res) => {
 router.post('/logout', (req, res) => {
   try {
     // In production, invalidate JWT token or session
-    res.json({
+    return sendSuccess(res, {
       success: true,
       message: 'Logout successful'
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Logout failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Logout failed', error);
   }
 });
 
@@ -78,18 +65,12 @@ router.post('/register', (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
+      return sendError(res, 'Email and password are required', undefined, 400);
     }
 
     // Check if user already exists
     if (users.find(u => u.email === email)) {
-      return res.status(409).json({
-        success: false,
-        message: 'User already exists'
-      });
+      return sendError(res, 'User already exists', undefined, 409);
     }
 
     // Create new user
@@ -105,20 +86,16 @@ router.post('/register', (req, res) => {
     // Return user data (excluding password)
     const { password: _, ...userData } = newUser;
     
-    res.status(201).json({
+    return sendSuccess(res, {
       success: true,
       data: {
         user: userData,
         token: 'mock-jwt-token'
       },
       message: 'Registration successful'
-    });
+    }, 201);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Registration failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Registration failed', error);
   }
 });
 
