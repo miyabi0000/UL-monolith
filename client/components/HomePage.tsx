@@ -1,13 +1,10 @@
 import React, { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
 import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
-import { COLORS, SPACING_SCALE } from '../utils/designSystem';
-import { ChartViewMode, QuantityDisplayMode, GearFieldValue } from '../utils/types';
-import GearTable from './GearTable';
-import GearView from './GearView';
+import { SPACING_SCALE } from '../utils/designSystem';
+import { ChartViewMode, GearFieldValue, QuantityDisplayMode } from '../utils/types';
 import GearChart from './GearChart';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
@@ -21,7 +18,6 @@ const UrlBulkImportModal = React.lazy(() => import('./gear-input/UrlBulkImportMo
 const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
 
 export default function HomePage() {
-  const { user, isAuthenticated, login, logout } = useAuth();
   const {
     // UI状態
     showForm, setShowForm,
@@ -29,12 +25,11 @@ export default function HomePage() {
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
-    showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
 
     // データ状態
     gearItems,
-    categories, setCategories,
+    categories,
     isLoading,
     weightBreakdown,
     ulStatus,
@@ -43,7 +38,6 @@ export default function HomePage() {
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    refreshGearItems,
 
     // カテゴリAPI操作関数
     handleCreateCategory,
@@ -63,7 +57,7 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
 
   // 数量表示モード（owned/need/all）
-  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned');
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
 
   // ギア表示モード（table/card/compare切り替え）
   const [gearViewMode, setGearViewMode] = useState<'table' | 'card' | 'compare'>(() => {
@@ -73,6 +67,9 @@ export default function HomePage() {
 
   // 選択中のカテゴリ（グラフフィルタ用）
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // チャート・カード・テーブルで共有する選択状態
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // URL一括追加用の状態
   const [showUrlImport, setShowUrlImport] = useState(false);
@@ -123,6 +120,21 @@ export default function HomePage() {
     setEditingGear(gear);
     setShowForm(true);
   };
+
+  const handleCategorySelect = useCallback((categories: string[]) => {
+    setSelectedCategories(categories);
+    if (categories.length !== 1) {
+      setSelectedItemId(null);
+    }
+  }, []);
+
+  const handleSelectedItemChange = useCallback((itemId: string | null) => {
+    setSelectedItemId(itemId);
+  }, []);
+
+  const handleSelectedIdsChange = useCallback((ids: string[]) => {
+    setSelectedIds(ids);
+  }, []);
 
   const handleUpdateItem = useCallback(async (id: string, field: string, value: GearFieldValue) => {
     try {
@@ -215,9 +227,13 @@ export default function HomePage() {
                 viewMode={viewMode}
                 quantityDisplayMode={quantityDisplayMode}
                 selectedCategories={selectedCategories}
-                onCategorySelect={setSelectedCategories}
+                onCategorySelect={handleCategorySelect}
                 onViewModeChange={setViewMode}
                 onQuantityDisplayModeChange={setQuantityDisplayMode}
+                selectedItemId={selectedItemId}
+                onSelectedItemChange={handleSelectedItemChange}
+                selectedIds={selectedIds}
+                onSelectedIdsChange={handleSelectedIdsChange}
                 items={gearItems}
                 categories={categories}
                 onEdit={handleEditGear}
