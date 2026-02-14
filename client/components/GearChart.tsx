@@ -315,7 +315,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
-    console.log('[DEBUG] handleCategoryClick', { categoryName, selectedCategories, selectedItem })
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
       setSelectedCategoryForPanel(null)
@@ -329,7 +328,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   }, [selectedCategories, onCategorySelect])
 
   const handleItemClick = useCallback((itemId: string) => {
-    console.log('[DEBUG] handleItemClick', { itemId, selectedItem, selectedCategoryForPanel })
     if (selectedItem === itemId) {
       setSelectedItem(null)
       // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
@@ -352,7 +350,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // アイテム詳細からカテゴリへナビゲート（トグルではなく常にカテゴリ選択）
   const handleCategoryNavigate = useCallback((categoryName: string) => {
-    console.log('[DEBUG] handleCategoryNavigate', { categoryName })
     setSelectedItem(null)
     onCategorySelect([categoryName])
     setSelectedCategoryForPanel(categoryName)
@@ -1014,12 +1011,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* パネルヘッダー */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-11">
             <div className="flex items-center gap-1 text-xs min-w-0">
-              {/* DEBUG: 状態表示 */}
-              <span className="text-[9px] text-red-500 font-mono mr-1">[{panelMode}{selectedItem ? '/item' : ''}{selectedCategoryFromChart ? `/${selectedCategoryFromChart}` : ''}]</span>
               {/* パンくずナビゲーション */}
               <button
                 onClick={() => {
-                  console.log('[DEBUG] Breadcrumb All clicked', { panelMode, selectedItem, selectedCategoryForPanel })
                   setSelectedItem(null)
                   setSelectedCategoryForPanel(null)
                   onCategorySelect([])

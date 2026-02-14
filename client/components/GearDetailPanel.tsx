@@ -236,7 +236,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
 
   // アイテム詳細モード（チャートからのアイテム選択時）
   // gearViewModeより優先して表示
-  console.log('[DEBUG] GearDetailPanel render', { mode, selectedItem: !!selectedItem, gearViewMode })
   if (mode === 'item' && selectedItem) {
     return (
       <div className="w-full h-full min-w-0 overflow-hidden">
