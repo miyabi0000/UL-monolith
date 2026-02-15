@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, RADIUS_SCALE, getCategoryBadgeStyle } from '../utils/designSystem';
+import { alpha } from '../styles/tokens';
 
 interface GearCardProps {
   item: GearItemWithCalculated;
@@ -63,9 +64,9 @@ const GearCard: React.FC<GearCardProps> = ({
       className="relative group cursor-pointer overflow-hidden bg-white"
       style={{
         borderRadius: `${RADIUS_SCALE.md}px`,
-        boxShadow: isHovered 
-          ? '0 10px 25px rgba(0,0,0,0.15)' 
-          : '0 1px 3px rgba(0,0,0,0.1)',
+        boxShadow: isHovered
+          ? `0 10px 25px ${alpha(COLORS.gray[900], 0.15)}`
+          : `0 1px 3px ${alpha(COLORS.gray[900], 0.1)}`,
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
         transition: 'all 200ms ease-out',
         aspectRatio: '1 / 1'
@@ -133,7 +134,7 @@ const GearCard: React.FC<GearCardProps> = ({
       <div
         className="absolute inset-0 flex flex-col items-center justify-center p-4"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backgroundColor: alpha(COLORS.gray[900], 0.85),
           opacity: isHovered ? 1 : 0,
           transition: 'opacity 200ms ease-out'
         }}
@@ -149,14 +150,14 @@ const GearCard: React.FC<GearCardProps> = ({
           {item.brand && (
             <p
               className="text-xs mb-1"
-              style={{ color: 'rgba(255, 255, 255, 0.8)' }}
+              style={{ color: alpha(COLORS.white, 0.8) }}
             >
               {item.brand}
             </p>
           )}
           <p
             className="text-xs"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: alpha(COLORS.white, 0.7) }}
           >
             {formatPrice(item.priceCents)}
           </p>
@@ -211,7 +212,7 @@ const GearCard: React.FC<GearCardProps> = ({
             }}
             onClick={handleDelete}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc2626';
+              e.currentTarget.style.backgroundColor = COLORS.error;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = COLORS.danger;

@@ -1,5 +1,5 @@
 import React from 'react'
-import { WeightBreakdown, ULStatus, UL_THRESHOLDS } from '../utils/types'
+import { WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS } from '../utils/types'
 import { STATUS_TONES } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
@@ -35,9 +35,9 @@ const UtensilsIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' 
 )
 
 const WEIGHT_CLASS_CONFIG = {
-  base: { Icon: BackpackIcon, label: 'BASE', color: '#6B7280' },
-  worn: { Icon: ShirtIcon, label: 'WORN', color: '#3B82F6' },
-  consumable: { Icon: UtensilsIcon, label: 'CONS', color: '#F97316' }
+  base: { Icon: BackpackIcon, label: 'BASE', color: WEIGHT_CLASS_COLORS.base },
+  worn: { Icon: ShirtIcon, label: 'WORN', color: WEIGHT_CLASS_COLORS.worn },
+  consumable: { Icon: UtensilsIcon, label: 'CONS', color: WEIGHT_CLASS_COLORS.consumable }
 } as const
 
 const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ulStatus }) => {

@@ -1,5 +1,6 @@
 import React from 'react'
 import type { QuantityDisplayMode } from '../../utils/types'
+import { COLORS } from '../../utils/designSystem'
 
 export type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price' | 'owned' | 'required' | 'season'
 export type SortDirection = 'asc' | 'desc'
@@ -57,10 +58,10 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   }
   const getStatusFilterColor = () => {
     switch (quantityDisplayMode) {
-      case 'owned': return '#10B981'
-      case 'need': return '#EF4444'
-      case 'all': return '#6B7280'
-      default: return '#6B7280'
+      case 'owned': return COLORS.success
+      case 'need': return COLORS.error
+      case 'all': return COLORS.gray[500]
+      default: return COLORS.gray[500]
     }
   }
   const renderSortIcon = (field: SortField) => {

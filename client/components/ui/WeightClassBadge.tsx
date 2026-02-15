@@ -1,5 +1,6 @@
 import React from 'react'
-import { WeightClass } from '../../utils/types'
+import { WeightClass, WEIGHT_CLASS_COLORS } from '../../utils/types'
+import { alpha } from '../../styles/tokens'
 
 interface WeightClassBadgeProps {
   weightClass: WeightClass
@@ -35,20 +36,20 @@ const UtensilsIcon: React.FC<{ className?: string }> = ({ className = 'w-3 h-3' 
 const WEIGHT_CLASS_CONFIG = {
   base: {
     Icon: BackpackIcon,
-    color: '#6B7280',
-    bgColor: '#F3F4F6',
+    color: WEIGHT_CLASS_COLORS.base,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.base, 0.1),
     label: 'Base'
   },
   worn: {
     Icon: ShirtIcon,
-    color: '#3B82F6',
-    bgColor: '#DBEAFE',
+    color: WEIGHT_CLASS_COLORS.worn,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.worn, 0.12),
     label: 'Worn'
   },
   consumable: {
     Icon: UtensilsIcon,
-    color: '#F97316',
-    bgColor: '#FED7AA',
+    color: WEIGHT_CLASS_COLORS.consumable,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.consumable, 0.15),
     label: 'Cons'
   }
 } as const

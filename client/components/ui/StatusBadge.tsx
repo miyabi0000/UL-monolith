@@ -1,5 +1,6 @@
 import React from 'react'
 import { ProcurementStatus } from '../../utils/types'
+import { STATUS_TONES } from '../../utils/designSystem'
 
 interface StatusBadgeProps {
   status: ProcurementStatus
@@ -7,9 +8,9 @@ interface StatusBadgeProps {
 }
 
 const STATUS_CONFIG = {
-  owned: { color: '#10B981', bgColor: '#D1FAE5', icon: '✓', label: 'Owned' },
-  partial: { color: '#F59E0B', bgColor: '#FEF3C7', icon: '◐', label: 'Partial' },
-  need: { color: '#EF4444', bgColor: '#FEE2E2', icon: '!', label: 'Need' }
+  owned: { color: STATUS_TONES.success.text, bgColor: STATUS_TONES.success.background, icon: '✓', label: 'Owned' },
+  partial: { color: STATUS_TONES.warning.text, bgColor: STATUS_TONES.warning.background, icon: '◐', label: 'Partial' },
+  need: { color: STATUS_TONES.error.text, bgColor: STATUS_TONES.error.background, icon: '!', label: 'Need' }
 } as const
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) => {

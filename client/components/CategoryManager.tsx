@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Category } from '../utils/types'
-import { STATUS_TONES } from '../utils/designSystem'
+import { STATUS_TONES, COLORS } from '../utils/designSystem'
 
 interface CategoryManagerProps {
   categories: Category[]
@@ -23,7 +23,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    color: '#404040'
+    color: COLORS.gray[800]
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +40,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         await onAddCategory?.(formData.name, formData.color)
       }
 
-      setFormData({ name: '', color: '#404040' })
+      setFormData({ name: '', color: COLORS.gray[800] })
       setIsAddingNew(false)
       setEditingCategory(null)
     } catch (err) {
@@ -61,7 +61,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: '#404040' })
+    setFormData({ name: '', color: COLORS.gray[800] })
     setIsAddingNew(false)
     setEditingCategory(null)
     setError(null)

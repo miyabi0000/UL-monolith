@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GearItemWithCalculated, ChartViewMode } from '../utils/types';
 import { COLORS, STATUS_TONES, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
+import { alpha } from '../styles/tokens';
 import SeasonBar from './SeasonBar';
 
 interface GearCardCompactProps {
@@ -84,7 +85,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         <div
           className="absolute inset-0 flex flex-col items-center justify-center p-4"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backgroundColor: alpha(COLORS.gray[900], 0.85),
             opacity: isHovered ? 1 : 0,
             transition: 'opacity 200ms ease-out'
           }}
@@ -139,7 +140,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
                 }}
                 onClick={handleDelete}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#dc2626';
+                  e.currentTarget.style.backgroundColor = COLORS.error;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = COLORS.danger;
