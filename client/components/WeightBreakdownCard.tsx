@@ -1,5 +1,6 @@
 import React from 'react'
 import { WeightBreakdown, ULStatus, UL_THRESHOLDS } from '../utils/types'
+import { STATUS_TONES } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
 
@@ -40,6 +41,10 @@ const WEIGHT_CLASS_CONFIG = {
 } as const
 
 const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ulStatus }) => {
+  const successTone = STATUS_TONES.success
+  const warningTone = STATUS_TONES.warning
+  const errorTone = STATUS_TONES.error
+
   const ulProgress = Math.min(100, (breakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
 
   return (
@@ -128,14 +133,15 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         </div>
         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-300 ${
-              ulProgress < 85
-                ? 'bg-green-500'
+            className="h-full transition-all duration-300"
+            style={{
+              backgroundColor: ulProgress < 85
+                ? successTone.solid
                 : ulProgress < 100
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500'
-            }`}
-            style={{ width: `${ulProgress}%` }}
+                  ? warningTone.solid
+                  : errorTone.solid,
+              width: `${ulProgress}%`
+            }}
           />
         </div>
         <div className="text-[9px] text-gray-400 mt-0.5 text-right">
