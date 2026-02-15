@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { COLORS, STATUS_TONES } from '../utils/designSystem';
 
 export interface NotificationMessage {
   id: string;
@@ -13,6 +14,9 @@ interface NotificationPopupProps {
 }
 
 const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemove }) => {
+  const errorTone = STATUS_TONES.error;
+  const successTone = STATUS_TONES.success;
+
   const [animatingOut, setAnimatingOut] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -43,18 +47,38 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
     }, 300);
   };
 
-  const getMessageClasses = (type: string) => {
+  const getMessageStyles = (type: string): React.CSSProperties => {
     switch (type) {
       case 'error':
-        return 'bg-red-50 text-red-600 border-red-500';
+        return {
+          backgroundColor: errorTone.background,
+          color: errorTone.text,
+          borderLeftColor: errorTone.solid
+        };
       case 'success':
-        return 'bg-green-50 text-green-700 border-green-500';
+        return {
+          backgroundColor: successTone.background,
+          color: successTone.text,
+          borderLeftColor: successTone.solid
+        };
       case 'info':
-        return 'bg-white text-gray-700 border-gray-500';
+        return {
+          backgroundColor: COLORS.white,
+          color: COLORS.gray[700],
+          borderLeftColor: COLORS.gray[500]
+        };
       case 'loading':
-        return 'bg-white text-gray-700 border-gray-500';
+        return {
+          backgroundColor: COLORS.white,
+          color: COLORS.gray[700],
+          borderLeftColor: COLORS.gray[500]
+        };
       default:
-        return 'bg-white text-gray-700 border-gray-500';
+        return {
+          backgroundColor: COLORS.white,
+          color: COLORS.gray[700],
+          borderLeftColor: COLORS.gray[500]
+        };
     }
   };
 
@@ -74,7 +98,8 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
                 : 'translate-x-0 opacity-100'
             } ${
               message.type === 'loading' ? 'animate-pulse' : ''
-            } ${getMessageClasses(message.type)}`}
+            }`}
+            style={getMessageStyles(message.type)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 flex-1">

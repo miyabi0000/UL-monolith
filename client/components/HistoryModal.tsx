@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GearService, HistoryEntry } from '../services/gearService';
+import { STATUS_TONES } from '../utils/designSystem';
 import Button from './ui/Button';
 
 interface HistoryModalProps {
@@ -17,6 +18,9 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
   onClose, 
   onRevert 
 }) => {
+  const errorTone = STATUS_TONES.error;
+  const successTone = STATUS_TONES.success;
+
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -66,15 +70,13 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
     });
   };
 
-  const getActionColor = (action: string) => {
+  const getActionStyle = (action: string): React.CSSProperties | undefined => {
     switch (action) {
-      case 'delete': return 'text-red-600 bg-red-50';
-      case 'bulk_delete': return 'text-red-600 bg-red-50';
-      case 'create':
-      case 'update':
-      case 'bulk_update':
-        return 'text-gray-700 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'delete':
+      case 'bulk_delete':
+        return { color: errorTone.text, backgroundColor: errorTone.background };
+      default:
+        return undefined;
     }
   };
 
@@ -108,8 +110,11 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
 
         <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div
+              className="mb-4 p-4 border rounded-md"
+              style={{ backgroundColor: errorTone.background, borderColor: errorTone.border }}
+            >
+              <p className="text-sm" style={{ color: errorTone.text }}>{error}</p>
             </div>
           )}
 
@@ -128,7 +133,14 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
                 <div key={entry.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(entry.action)}`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          entry.action === 'delete' || entry.action === 'bulk_delete'
+                            ? ''
+                            : 'text-gray-700 bg-gray-100'
+                        }`}
+                        style={getActionStyle(entry.action)}
+                      >
                         {getActionLabel(entry.action)}
                       </span>
                       <span className="text-sm text-gray-600">
@@ -157,11 +169,17 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
                           {change.field}
                         </div>
                         <div className="flex items-center space-x-2 text-sm">
-                          <span className="text-red-600 bg-red-50 px-2 py-1 rounded">
+                          <span
+                            className="px-2 py-1 rounded"
+                            style={{ color: errorTone.text, backgroundColor: errorTone.background }}
+                          >
                             {change.oldValue ?? 'null'}
                           </span>
                           <span className="text-gray-400">→</span>
-                          <span className="text-green-600 bg-green-50 px-2 py-1 rounded">
+                          <span
+                            className="px-2 py-1 rounded"
+                            style={{ color: successTone.text, backgroundColor: successTone.background }}
+                          >
                             {change.newValue ?? 'null'}
                           </span>
                         </div>

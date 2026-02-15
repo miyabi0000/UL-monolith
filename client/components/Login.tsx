@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { STATUS_TONES } from '../utils/designSystem'
 
 interface LoginProps {
   isOpen?: boolean
@@ -8,6 +9,8 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) {
+  const errorTone = STATUS_TONES.error
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -85,7 +88,14 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-2 rounded-md">
+            <div
+              className="text-sm p-2 rounded-md border"
+              style={{
+                backgroundColor: errorTone.background,
+                borderColor: errorTone.border,
+                color: errorTone.text
+              }}
+            >
               {error}
             </div>
           )}

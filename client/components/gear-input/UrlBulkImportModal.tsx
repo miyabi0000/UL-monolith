@@ -1,18 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractMultipleUrls } from '../../utils/urlHelpers'
 import { BULK_URL_MESSAGES } from '../../utils/messages'
+import { STATUS_TONES } from '../../utils/designSystem'
 
 // 定数定義
 const FOCUS_DELAY_MS = 100
 const PERCENTAGE_MULTIPLIER = 100
-
-// ステータスボックスのスタイル定数
-const STATUS_BOX_CLASSES = {
-  info: 'p-4 rounded-md bg-blue-50 border border-blue-200',
-  error: 'p-4 rounded-md bg-red-50 border border-red-200',
-  success: 'p-4 rounded-md bg-green-50 border border-green-200',
-  infoSmall: 'p-3 rounded-md bg-blue-50 border border-blue-200'
-}
 
 interface UrlBulkImportModalProps {
   isOpen: boolean
@@ -38,6 +31,10 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
   extractedCount = 0,
   failedCount = 0
 }) => {
+  const infoTone = STATUS_TONES.info
+  const errorTone = STATUS_TONES.error
+  const successTone = STATUS_TONES.success
+
   const [urlText, setUrlText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -125,26 +122,30 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
               onChange={(e) => setUrlText(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="https://example.com/product-1&#10;https://example.com/product-2&#10;https://example.com/product-3"
-              className="w-full h-48 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 font-mono text-sm resize-none"
+              className="w-full h-48 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-white text-gray-900 font-mono text-sm resize-none"
               style={{ lineHeight: '1.6' }}
             />
           </div>
 
           {/* 抽出進捗表示 */}
           {isExtracting && (
-            <div className={STATUS_BOX_CLASSES.info}>
+            <div
+              className="p-4 rounded-md border"
+              style={{ backgroundColor: infoTone.background, borderColor: infoTone.border }}
+            >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-blue-700 font-medium">
+                <span className="font-medium" style={{ color: infoTone.text }}>
                   {BULK_URL_MESSAGES.PROGRESS_ANALYZING(progress.total)}
                 </span>
-                <span className="text-sm text-blue-600">
+                <span className="text-sm" style={{ color: infoTone.text }}>
                   {BULK_URL_MESSAGES.PROGRESS_STATUS(progress.completed, progress.total)}
                 </span>
               </div>
-              <div className="w-full bg-blue-100 rounded-full h-2">
+              <div className="w-full rounded-full h-2" style={{ backgroundColor: infoTone.background }}>
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="h-2 rounded-full transition-all duration-300"
                   style={{
+                    backgroundColor: infoTone.solid,
                     width: `${
                       progress.total > 0
                         ? (progress.completed / progress.total) * PERCENTAGE_MULTIPLIER
@@ -158,12 +159,15 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
 
           {/* エラー表示 */}
           {hasError && (
-            <div className={STATUS_BOX_CLASSES.error}>
+            <div
+              className="p-4 rounded-md border"
+              style={{ backgroundColor: errorTone.background, borderColor: errorTone.border }}
+            >
               <div className="space-y-2">
-                <div className="font-medium text-red-800">
+                <div className="font-medium" style={{ color: errorTone.text }}>
                   {BULK_URL_MESSAGES.ERROR_TITLE}
                 </div>
-                <div className="text-sm text-red-700">
+                <div className="text-sm" style={{ color: errorTone.text }}>
                   {BULK_URL_MESSAGES.ERROR_DESCRIPTION(failedCount)}
                 </div>
               </div>
@@ -172,15 +176,18 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
 
           {/* 抽出完了結果表示（成功がある場合） */}
           {extractionComplete && !hasError && (
-            <div className={STATUS_BOX_CLASSES.success}>
+            <div
+              className="p-4 rounded-md border"
+              style={{ backgroundColor: successTone.background, borderColor: successTone.border }}
+            >
               <div className="space-y-2">
-                <div className="font-medium text-green-800">
+                <div className="font-medium" style={{ color: successTone.text }}>
                   {BULK_URL_MESSAGES.SUCCESS_TITLE}
                 </div>
-                <div className="text-sm text-green-700 space-y-1">
+                <div className="text-sm space-y-1" style={{ color: successTone.text }}>
                   <div>{BULK_URL_MESSAGES.SUCCESS_COUNT(extractedCount)}</div>
                   {failedCount > 0 && (
-                    <div className="text-red-600">
+                    <div style={{ color: errorTone.text }}>
                       {BULK_URL_MESSAGES.FAILED_COUNT(failedCount)}
                     </div>
                   )}
@@ -191,14 +198,17 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
 
           {/* URL検出状況 */}
           {!isExtracting && !extractionComplete && detectedUrls.length > 0 && (
-            <div className={STATUS_BOX_CLASSES.infoSmall}>
+            <div
+              className="p-3 rounded-md border"
+              style={{ backgroundColor: infoTone.background, borderColor: infoTone.border }}
+            >
               <div className="flex items-center space-x-2">
-                <span className="text-blue-600 font-medium">
+                <span className="font-medium" style={{ color: infoTone.text }}>
                   {BULK_URL_MESSAGES.URL_DETECTED(detectedUrls.length)}
                 </span>
               </div>
               {detectedUrls.length > 5 && (
-                <div className="text-xs text-blue-600 mt-2 space-y-1">
+                <div className="text-xs mt-2 space-y-1" style={{ color: infoTone.text }}>
                   {detectedUrls.slice(0, 3).map((url, idx) => (
                     <div key={idx} className="truncate">• {url}</div>
                   ))}
@@ -235,7 +245,8 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
                 type="button"
                 onClick={handleExtract}
                 disabled={detectedUrls.length === 0 || isExtracting}
-                className="px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                className="px-4 py-2 rounded-md text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                style={{ backgroundColor: infoTone.solid }}
               >
                 {isExtracting && BULK_URL_MESSAGES.BUTTON_EXTRACTING}
                 {!isExtracting && BULK_URL_MESSAGES.BUTTON_EXTRACT(detectedUrls.length)}
@@ -255,7 +266,8 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
             <button
               type="button"
               onClick={handleProceedClick}
-              className="px-4 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors font-medium"
+              className="px-4 py-2 rounded-md text-white transition-colors font-medium"
+              style={{ backgroundColor: successTone.solid }}
             >
               {BULK_URL_MESSAGES.BUTTON_PROCEED}
             </button>

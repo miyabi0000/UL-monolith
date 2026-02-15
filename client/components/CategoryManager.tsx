@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Category } from '../utils/types'
+import { STATUS_TONES } from '../utils/designSystem'
 
 interface CategoryManagerProps {
   categories: Category[]
@@ -16,6 +17,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   onDeleteCategory,
   onClose
 }) => {
+  const errorTone = STATUS_TONES.error
+
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
@@ -102,7 +105,14 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         <div className="p-6">
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            <div
+              className="mb-4 p-3 border rounded-md text-sm"
+              style={{
+                backgroundColor: errorTone.background,
+                borderColor: errorTone.border,
+                color: errorTone.text
+              }}
+            >
               {error}
             </div>
           )}
@@ -235,7 +245,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       </button>
                       <button
                         onClick={() => handleDelete(category.id, category.name)}
-                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
+                        className="px-3 py-1 rounded text-sm font-medium transition-colors"
+                        style={{ color: errorTone.text }}
                       >
                         Delete
                       </button>
