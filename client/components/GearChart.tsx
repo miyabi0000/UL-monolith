@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
-import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData, filterByScope, sumWeight } from '../utils/chartHelpers'
+import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ActiveCalloutShape from './charts/ActiveCalloutShape'
@@ -16,20 +16,6 @@ const BackpackIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' 
     <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
     <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
     <path d="M12 10V12" />
-  </svg>
-)
-
-const ShirtIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.38 3.46L16 2.79V2C16 1.45 15.55 1 15 1H9C8.45 1 8 1.45 8 2V2.79L3.62 3.46C3.24 3.52 3 3.86 3 4.24V8L8 10V22C8 22.55 8.45 23 9 23H15C15.55 23 16 22.55 16 22V10L21 8V4.24C21 3.86 20.76 3.52 20.38 3.46Z" />
-  </svg>
-)
-
-const UtensilsIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 2V11C3 12.1 3.9 13 5 13H6V22H8V13H9C10.1 13 11 12.1 11 11V2" />
-    <path d="M7 2V8" />
-    <path d="M17 2C17 2 21 3 21 8C21 13 17 14 17 14V22H15V14C15 14 11 13 11 8C11 3 15 2 15 2" />
   </svg>
 )
 
@@ -78,8 +64,6 @@ const CHART_CONFIG = {
 } as const
 
 const DEFAULT_COLOR = '#6B7280'
-const SELECTED_COLOR = '#404040' // Gray color for selection (gray.700)
-const SELECTED_STROKE_WIDTH = 3
 
 // UL分類カラートークン
 const UL_BADGE_COLORS = {
@@ -114,7 +98,349 @@ const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, qua
   return unitValue * quantity
 }
 
-type GearItemWithPercentages = GearItemWithCalculated & { systemPercentage: number; totalPercentage: number }
+type GearItemWithPercentages = GearItemWithCalculated & {
+  systemPercentage: number
+  totalPercentage: number
+  displayValue: number
+}
+
+const VIEW_MODE_OPTIONS = [
+  { mode: 'weight', label: 'Weight', icon: ScaleIcon },
+  { mode: 'cost', label: 'Cost', icon: YenIcon },
+  { mode: 'weight-class', label: 'Class', icon: BackpackIcon }
+] as const
+
+type OuterPieDataItem = {
+  id: string
+  name: string
+  value: number
+  color: string
+  brand?: string
+  percentage: number
+}
+
+type SelectedCategoryInfo = {
+  value: number
+  color: string
+  percentage: number
+}
+
+interface ChartCenterDisplayProps {
+  selectedItemData: OuterPieDataItem | null
+  selectedCategoryFromChart: string | null
+  selectedCategoryData: SelectedCategoryInfo | null
+  viewMode: ChartViewMode
+  screenSize: 'mobile' | 'tablet' | 'desktop'
+  centerMaxWidth: number
+  chartFocus: ChartFocus
+  weightBreakdown?: WeightBreakdown | null
+  ulStatus?: ULStatus | null
+  totalValue: number
+}
+
+const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
+  selectedItemData,
+  selectedCategoryFromChart,
+  selectedCategoryData,
+  viewMode,
+  screenSize,
+  centerMaxWidth,
+  chartFocus,
+  weightBreakdown,
+  ulStatus,
+  totalValue
+}) => {
+  if (selectedItemData) {
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5 text-gray-900"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+          }}
+        >
+          {formatValue(selectedItemData.value, viewMode)}
+        </div>
+        <div
+          className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
+            color: selectedItemData.color,
+            maxWidth: centerMaxWidth - 16,
+            lineHeight: '1.2',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis'
+          }}
+          title={selectedItemData.name}
+        >
+          {selectedItemData.name}
+        </div>
+        {selectedItemData.brand && (
+          <div
+            className="text-gray-500 mb-0.5 px-1 text-center overflow-hidden"
+            style={{
+              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
+              maxWidth: centerMaxWidth - 16,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis'
+            }}
+            title={selectedItemData.brand}
+          >
+            {selectedItemData.brand}
+          </div>
+        )}
+        <div
+          className="text-gray-500"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+          }}
+        >
+          {selectedItemData.percentage}% of total
+        </div>
+      </>
+    )
+  }
+
+  if (selectedCategoryFromChart && selectedCategoryData) {
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5 text-gray-900"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+          }}
+        >
+          {formatValue(selectedCategoryData.value, viewMode)}
+        </div>
+        <div
+          className="uppercase tracking-wide font-bold mb-1"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
+            color: selectedCategoryData.color
+          }}
+        >
+          {selectedCategoryFromChart}
+        </div>
+        <div
+          className="text-gray-500"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+          }}
+        >
+          {selectedCategoryData.percentage}% of total
+        </div>
+      </>
+    )
+  }
+
+  if (viewMode === 'weight-class' && weightBreakdown && ulStatus) {
+    const ulProgress = Math.min(100, (weightBreakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
+    const ulBadgeColor = UL_BADGE_COLORS[ulStatus.classification]
+    const ulBadgeLabel = ulStatus.classification === 'ultralight'
+      ? 'UL'
+      : ulStatus.classification === 'lightweight'
+        ? 'LW'
+        : 'Trad'
+
+    const otherWeight = weightBreakdown.baseWeight - weightBreakdown.big3
+    const displayWeight = chartFocus === 'big3'
+      ? weightBreakdown.big3
+      : chartFocus === 'other'
+        ? otherWeight
+        : weightBreakdown.baseWeight
+    const displayLabel = chartFocus === 'big3'
+      ? 'BIG3'
+      : chartFocus === 'other'
+        ? 'OTHER'
+        : 'BASE WEIGHT'
+    const displayColor = chartFocus === 'big3'
+      ? DUAL_RING_COLORS.big3
+      : chartFocus === 'other'
+        ? DUAL_RING_COLORS.other
+        : undefined
+
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop,
+            color: displayColor || 'inherit'
+          }}
+        >
+          {(displayWeight / 1000).toFixed(2)}kg
+        </div>
+        <div
+          className="uppercase tracking-wide font-bold mb-1"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
+            color: displayColor || '#6B7280'
+          }}
+        >
+          {displayLabel}
+        </div>
+        {chartFocus === 'all' && (
+          <>
+            <span
+              className="px-1.5 py-0.5 rounded-full text-white font-bold"
+              style={{
+                fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
+                backgroundColor: ulBadgeColor
+              }}
+            >
+              {ulBadgeLabel}
+            </span>
+            <div
+              className="text-gray-400 mt-0.5"
+              style={{
+                fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+              }}
+            >
+              {Math.round(ulProgress)}% of UL
+            </div>
+          </>
+        )}
+        {chartFocus !== 'all' && (
+          <div
+            className="text-gray-400 mt-0.5"
+            style={{
+              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+            }}
+          >
+            {weightBreakdown.baseWeight > 0
+              ? Math.round((displayWeight / weightBreakdown.baseWeight) * 100)
+              : 0}% of Base
+          </div>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div
+        className="font-bold mb-0.5 text-gray-900"
+        style={{
+          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+        }}
+      >
+        {formatValue(totalValue, viewMode)}
+      </div>
+      <div
+        className="uppercase tracking-wide font-bold text-gray-500"
+        style={{
+          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop
+        }}
+      >
+        {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
+      </div>
+    </>
+  )
+}
+
+interface ChartSummaryFooterProps {
+  viewMode: ChartViewMode
+  onViewModeChange: (mode: ChartViewMode) => void
+  weightBreakdown?: WeightBreakdown | null
+  weightClassSummaryCards: Array<{ key: string; label: string; value: number; focus: ChartFocus }>
+  chartFocus: ChartFocus
+  onToggleChartFocus: (focus: ChartFocus) => void
+  totalWeight: number
+  totalCost: number
+  itemCount: number
+}
+
+const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
+  viewMode,
+  onViewModeChange,
+  weightBreakdown,
+  weightClassSummaryCards,
+  chartFocus,
+  onToggleChartFocus,
+  totalWeight,
+  totalCost,
+  itemCount
+}) => {
+  const chartFocusCardClass = (isActive: boolean) =>
+    `flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
+      isActive ? 'bg-gray-200 ring-1 ring-gray-400' : 'bg-gray-100 hover:bg-gray-200'
+    }`
+
+  return (
+    <div className="px-2 py-1.5 border-t border-gray-200">
+      <div className="flex justify-center mb-1.5">
+        <div className="inline-flex rounded-lg p-0.5 bg-gray-100">
+          {VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => (
+            <button
+              key={mode}
+              onClick={() => onViewModeChange(mode)}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
+                viewMode === mode
+                  ? 'bg-white text-gray-700 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Icon className="w-3 h-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {viewMode === 'weight-class' && weightBreakdown ? (
+        <div className="grid grid-cols-4 gap-1">
+          {weightClassSummaryCards.map(card => (
+            <button
+              key={card.key}
+              onClick={() => onToggleChartFocus(card.focus)}
+              className={chartFocusCardClass(chartFocus === card.focus)}
+            >
+              <span className="text-[9px] font-medium text-gray-600">{card.label}</span>
+              <span className="text-[11px] font-bold text-gray-900">
+                {card.value.toLocaleString()}g
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+            viewMode === 'weight'
+              ? 'bg-gray-200 ring-2 ring-gray-400'
+              : 'bg-gray-100'
+          }`}>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <ScaleIcon className="w-3.5 h-3.5 text-gray-600" />
+              <span className="text-[11px] font-semibold text-gray-700">Weight</span>
+            </div>
+            <span className="text-sm font-bold text-gray-900">
+              {totalWeight.toLocaleString()}g
+            </span>
+            <span className="text-[9px] text-gray-500">
+              {(totalWeight / 1000).toFixed(2)}kg
+            </span>
+          </div>
+          <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
+            viewMode === 'cost'
+              ? 'bg-gray-200 ring-2 ring-gray-400'
+              : 'bg-gray-100'
+          }`}>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <YenIcon className="w-3.5 h-3.5 text-gray-600" />
+              <span className="text-[11px] font-semibold text-gray-700">Price</span>
+            </div>
+            <span className="text-sm font-bold text-gray-900">
+              ¥{Math.round(totalCost / 100).toLocaleString()}
+            </span>
+            <span className="text-[9px] text-gray-500">
+              {itemCount} items
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ==================== メインコンポーネント ====================
 interface GearChartProps {
@@ -236,13 +562,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
   }, [viewMode, items, chartScope, chartFocus, categories])
 
-  // スコープに応じた合計重量
-  const scopedTotalWeight = useMemo(() => {
-    if (viewMode !== 'weight-class') return totalWeight
-    const scopedItems = filterByScope(items, chartScope)
-    return sumWeight(scopedItems)
-  }, [viewMode, items, chartScope, totalWeight])
-
   const displayData = useMemo(() => {
     return data.map(category => ({
       ...category,
@@ -261,14 +580,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       label: category.name,
       unit,
       sortedItems: (category.items || [])
-        .filter(item => getItemValue(item, viewMode, quantityDisplayMode) > 0)
-        .sort((a, b) => getItemValue(b, viewMode, quantityDisplayMode) - getItemValue(a, viewMode, quantityDisplayMode))
-        .map(item => {
-          const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
+        .map(item => ({ item, itemValue: getItemValue(item, viewMode, quantityDisplayMode) }))
+        .filter(({ itemValue }) => itemValue > 0)
+        .sort((a, b) => b.itemValue - a.itemValue)
+        .map(({ item, itemValue }) => {
           return {
             ...item,
             systemPercentage: category.value > 0 ? Math.round((itemValue / category.value) * 100) : 0,
-            totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0
+            totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0,
+            displayValue: itemValue
           } satisfies GearItemWithPercentages
         }) as GearItemWithPercentages[]
     }))
@@ -283,10 +603,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   const outerPieData = useMemo(() => {
     const items = selectedData?.sortedItems || []
-    const categoryTotal = items.reduce((sum, item) => sum + getItemValue(item, viewMode, quantityDisplayMode), 0)
+    const categoryTotal = items.reduce((sum, item) => sum + item.displayValue, 0)
     const unit = viewMode === 'cost' ? '¥' : 'g'
     return items.map((item, index) => {
-      const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
+      const itemValue = item.displayValue
       const fillColor = generateItemColor(
         selectedData?.color || DEFAULT_COLOR,
         index,
@@ -309,7 +629,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         unit
       }
     })
-  }, [selectedData, viewMode, quantityDisplayMode])
+  }, [selectedData, viewMode])
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
@@ -363,6 +683,45 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     return item?.name || null
   }, [selectedItem, items])
 
+  const selectedItemData = useMemo(
+    () => (selectedItem ? outerPieData.find(item => item.id === selectedItem) || null : null),
+    [selectedItem, outerPieData]
+  )
+
+  const weightClassSummaryCards = useMemo(() => {
+    if (!weightBreakdown) return []
+    return [
+      {
+        key: 'pack',
+        label: 'Pack',
+        value: weightBreakdown.big3Pack ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'shelter',
+        label: 'Shelter',
+        value: weightBreakdown.big3Shelter ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'sleep',
+        label: 'Sleep',
+        value: weightBreakdown.big3Sleep ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'other',
+        label: 'Other',
+        value: weightBreakdown.baseWeight - weightBreakdown.big3,
+        focus: 'other' as ChartFocus
+      }
+    ]
+  }, [weightBreakdown])
+
+  const handleToggleChartFocus = useCallback((focus: ChartFocus) => {
+    setChartFocus(prev => prev === focus ? 'all' : focus)
+  }, [])
+
   // ==================== レンダリング ====================
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
@@ -371,16 +730,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* グラフエリア */}
         <Card className={`flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
-          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
+          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
                   onClick={() => setIsChartCollapsed(false)}
-                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors py-2"
+                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 rounded transition-colors py-2"
                   aria-label="Expand chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400 mb-2"
+                    className="w-4 h-4 text-gray-600 mb-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -388,21 +747,21 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
                   </svg>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 font-medium" style={{ writingMode: 'vertical-rl' }}>
+                  <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl' }}>
                     Chart
                   </span>
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Chart</h3>
+                <h3 className="text-sm font-semibold text-gray-700">Chart</h3>
                 <button
                   onClick={() => setIsChartCollapsed(true)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                   aria-label="Collapse chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                    className="w-4 h-4 text-gray-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -598,346 +957,41 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               }}
               onClick={handleCenterClick}
             >
-              {(() => {
-                // レベル3: ギアアイテム選択時
-                if (selectedItem && selectedData) {
-                  const itemData = outerPieData.find(item => item.id === selectedItem)
-                  if (itemData) {
-                    return (
-                      <>
-                        <div
-                          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-                          }}
-                        >
-                          {formatValue(itemData.value, viewMode)}
-                        </div>
-                        <div
-                          className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
-                            color: itemData.color,
-                            maxWidth: centerMaxWidth - 16,
-                            lineHeight: '1.2',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis'
-                          }}
-                          title={itemData.name}
-                        >
-                          {itemData.name}
-                        </div>
-                        {itemData.brand && (
-                          <div
-                            className="text-gray-500 dark:text-gray-400 mb-0.5 px-1 text-center overflow-hidden"
-                            style={{
-                              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
-                              maxWidth: centerMaxWidth - 16,
-                              whiteSpace: 'nowrap',
-                              textOverflow: 'ellipsis'
-                            }}
-                            title={itemData.brand}
-                          >
-                            {itemData.brand}
-                          </div>
-                        )}
-                        <div
-                          className="text-gray-500 dark:text-gray-400"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-                          }}
-                        >
-                          {itemData.percentage}% of total
-                        </div>
-                      </>
-                    )
-                  }
+              <ChartCenterDisplay
+                selectedItemData={selectedItemData}
+                selectedCategoryFromChart={selectedCategoryFromChart}
+                selectedCategoryData={
+                  selectedData
+                    ? {
+                      value: selectedData.value,
+                      color: selectedData.color,
+                      percentage: selectedData.percentage
+                    }
+                    : null
                 }
-
-                // レベル2: カテゴリ選択時
-                if (selectedCategoryFromChart && selectedData) {
-                  return (
-                    <>
-                      <div
-                        className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-                        }}
-                      >
-                        {formatValue(selectedData.value, viewMode)}
-                      </div>
-                      <div
-                        className="uppercase tracking-wide font-bold mb-1"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
-                          color: selectedData.color
-                        }}
-                      >
-                        {selectedCategoryFromChart}
-                      </div>
-                      <div
-                        className="text-gray-500 dark:text-gray-400"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-                        }}
-                      >
-                        {selectedData.percentage}% of total
-                      </div>
-                    </>
-                  )
-                }
-
-                // レベル1: 未選択時
-                // Weight-Classモード用中央表示（chartFocusに応じて表示切替）
-                if (viewMode === 'weight-class' && weightBreakdown && ulStatus) {
-                  const ulProgress = Math.min(100, (weightBreakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
-                  const ulBadgeColor = UL_BADGE_COLORS[ulStatus.classification]
-                  const ulBadgeLabel = ulStatus.classification === 'ultralight'
-                    ? 'UL'
-                    : ulStatus.classification === 'lightweight'
-                      ? 'LW'
-                      : 'Trad'
-
-                  // chartFocusに応じた値とラベル
-                  const otherWeight = weightBreakdown.baseWeight - weightBreakdown.big3
-                  const displayWeight = chartFocus === 'big3'
-                    ? weightBreakdown.big3
-                    : chartFocus === 'other'
-                      ? otherWeight
-                      : weightBreakdown.baseWeight
-                  const displayLabel = chartFocus === 'big3'
-                    ? 'BIG3'
-                    : chartFocus === 'other'
-                      ? 'OTHER'
-                      : 'BASE WEIGHT'
-                  const displayColor = chartFocus === 'big3'
-                    ? DUAL_RING_COLORS.big3
-                    : chartFocus === 'other'
-                      ? DUAL_RING_COLORS.other
-                      : undefined
-
-                  return (
-                    <>
-                      <div
-                        className="font-bold mb-0.5"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop,
-                          color: displayColor || 'inherit'
-                        }}
-                      >
-                        {(displayWeight / 1000).toFixed(2)}kg
-                      </div>
-                      <div
-                        className="uppercase tracking-wide font-bold mb-1"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
-                          color: displayColor || '#6B7280'
-                        }}
-                      >
-                        {displayLabel}
-                      </div>
-                      {chartFocus === 'all' && (
-                        <>
-                          <span
-                            className="px-1.5 py-0.5 rounded-full text-white font-bold"
-                            style={{
-                              fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
-                              backgroundColor: ulBadgeColor
-                            }}
-                          >
-                            {ulBadgeLabel}
-                          </span>
-                          <div
-                            className="text-gray-400 dark:text-gray-500 mt-0.5"
-                            style={{
-                              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-                            }}
-                          >
-                            {Math.round(ulProgress)}% of UL
-                          </div>
-                        </>
-                      )}
-                      {chartFocus !== 'all' && (
-                        <div
-                          className="text-gray-400 dark:text-gray-500 mt-0.5"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-                          }}
-                        >
-                          {weightBreakdown.baseWeight > 0
-                            ? Math.round((displayWeight / weightBreakdown.baseWeight) * 100)
-                            : 0}% of Base
-                        </div>
-                      )}
-                    </>
-                  )
-                }
-
-                return (
-                  <>
-                    <div
-                      className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-                      style={{
-                        fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-                      }}
-                    >
-                      {formatValue(totalValue, viewMode)}
-                    </div>
-                    <div
-                      className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                      style={{
-                        fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop
-                      }}
-                    >
-                      {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
-                    </div>
-                  </>
-                )
-              })()}
+                viewMode={viewMode}
+                screenSize={screenSize}
+                centerMaxWidth={centerMaxWidth}
+                chartFocus={chartFocus}
+                weightBreakdown={weightBreakdown}
+                ulStatus={ulStatus}
+                totalValue={totalValue}
+              />
             </div>
           </div>
         </div>
 
-        {/* ビューモード遷移バー + サマリーカード表示セクション */}
-        <div className="px-2 py-1.5 border-t border-gray-200 dark:border-gray-700">
-          {/* ビューモード遷移バー */}
-          <div className="flex justify-center mb-1.5">
-            <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
-              <button
-                onClick={() => onViewModeChange('weight')}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
-                  viewMode === 'weight'
-                    ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <ScaleIcon className="w-3 h-3" />
-                Weight
-              </button>
-              <button
-                onClick={() => onViewModeChange('cost')}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
-                  viewMode === 'cost'
-                    ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <YenIcon className="w-3 h-3" />
-                Cost
-              </button>
-              <button
-                onClick={() => onViewModeChange('weight-class')}
-                className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
-                  viewMode === 'weight-class'
-                    ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <BackpackIcon className="w-3 h-3" />
-                Class
-              </button>
-            </div>
-          </div>
-
-          {/* サマリーフッター */}
-          {viewMode === 'weight-class' && weightBreakdown ? (
-            <>
-              {/* Weight-Classモード: Pack/Shelter/Sleep/Other フラット4列 */}
-              <div className="grid grid-cols-4 gap-1">
-                <button
-                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
-                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-                    chartFocus === 'big3'
-                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
-                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                  }`}
-                >
-                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Pack</span>
-                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
-                    {weightBreakdown.big3Pack?.toLocaleString() ?? 0}g
-                  </span>
-                </button>
-                <button
-                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
-                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-                    chartFocus === 'big3'
-                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
-                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                  }`}
-                >
-                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Shelter</span>
-                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
-                    {weightBreakdown.big3Shelter?.toLocaleString() ?? 0}g
-                  </span>
-                </button>
-                <button
-                  onClick={() => setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')}
-                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-                    chartFocus === 'big3'
-                      ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-400'
-                      : 'bg-purple-50/50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                  }`}
-                >
-                  <span className="text-[9px] font-medium text-purple-600 dark:text-purple-400">Sleep</span>
-                  <span className="text-[11px] font-bold text-purple-800 dark:text-purple-200">
-                    {weightBreakdown.big3Sleep?.toLocaleString() ?? 0}g
-                  </span>
-                </button>
-                <button
-                  onClick={() => setChartFocus(chartFocus === 'other' ? 'all' : 'other')}
-                  className={`flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-                    chartFocus === 'other'
-                      ? 'bg-gray-200 dark:bg-gray-700 ring-1 ring-gray-400'
-                      : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <span className="text-[9px] font-medium text-gray-600 dark:text-gray-400">Other</span>
-                  <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">
-                    {(weightBreakdown.baseWeight - weightBreakdown.big3).toLocaleString()}g
-                  </span>
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Weight/Costモード: 2カード（Weight-Classモードと同じ高さに統一） */}
-              <div className="grid grid-cols-2 gap-1.5">
-                <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
-                  viewMode === 'weight'
-                    ? 'bg-gray-200 dark:bg-gray-700 ring-2 ring-gray-400 dark:ring-gray-500'
-                    : 'bg-gray-100 dark:bg-gray-800'
-                }`}>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <ScaleIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Weight</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                    {totalWeight.toLocaleString()}g
-                  </span>
-                  <span className="text-[9px] text-gray-500 dark:text-gray-400">
-                    {(totalWeight / 1000).toFixed(2)}kg
-                  </span>
-                </div>
-                <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
-                  viewMode === 'cost'
-                    ? 'bg-green-100 dark:bg-green-900/40 ring-2 ring-green-400 dark:ring-green-500'
-                    : 'bg-green-50 dark:bg-green-900/20'
-                }`}>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <YenIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                    <span className="text-[11px] font-semibold text-green-700 dark:text-green-300">Price</span>
-                  </div>
-                  <span className="text-sm font-bold text-green-800 dark:text-green-200">
-                    ¥{Math.round(totalCost / 100).toLocaleString()}
-                  </span>
-                  <span className="text-[9px] text-green-600 dark:text-green-400">
-                    {items.length} items
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        <ChartSummaryFooter
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          weightBreakdown={weightBreakdown}
+          weightClassSummaryCards={weightClassSummaryCards}
+          chartFocus={chartFocus}
+          onToggleChartFocus={handleToggleChartFocus}
+          totalWeight={totalWeight}
+          totalCost={totalCost}
+          itemCount={items.length}
+        />
             </>
           )}
       </Card>
@@ -945,7 +999,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-11">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11">
             <div className="flex items-center gap-1 text-xs min-w-0">
               {/* パンくずナビゲーション */}
               <button
@@ -955,21 +1009,21 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 }}
                 className={`flex-shrink-0 transition-colors ${
                   !selectedCategoryFromChart && !selectedItem
-                    ? 'text-gray-700 dark:text-gray-200 font-medium'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                    ? 'text-gray-700 font-medium'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 All
               </button>
               {selectedCategoryFromChart && (
                 <>
-                  <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
+                  <span className="text-gray-300 flex-shrink-0">/</span>
                   <button
                     onClick={() => setSelectedItem(null)}
                     className={`truncate max-w-[80px] transition-colors ${
                       !selectedItem
-                        ? 'text-gray-700 dark:text-gray-200 font-medium'
-                        : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                        ? 'text-gray-700 font-medium'
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                     title={selectedCategoryFromChart}
                   >
@@ -979,23 +1033,23 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               )}
               {selectedItem && selectedItemName && (
                 <>
-                  <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">/</span>
-                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                  <span className="text-gray-300 flex-shrink-0">/</span>
+                  <span className="text-gray-700 font-medium truncate max-w-[80px]" title={selectedItemName}>
                     {selectedItemName}
                   </span>
                 </>
               )}
               {/* ビュー切替（パンくず近く） */}
               {onGearViewModeChange && (
-                <div className="inline-flex rounded-md p-0.5 bg-gray-100 dark:bg-gray-800 ml-2">
+                <div className="inline-flex rounded-md p-0.5 bg-gray-100 ml-2">
                   <button
                     onClick={() => onGearViewModeChange('card')}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'card'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        ? 'bg-white text-gray-700 shadow-sm'
                         : gearViewMode === 'compare'
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-500 dark:text-gray-400'
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
                     }`}
                     aria-label="Card view"
                   >
@@ -1005,10 +1059,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     onClick={() => onGearViewModeChange('table')}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'table'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
+                        ? 'bg-white text-gray-700 shadow-sm'
                         : gearViewMode === 'compare'
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-500 dark:text-gray-400'
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
                     }`}
                     aria-label="Table view"
                   >
@@ -1028,10 +1082,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     disabled={showCheckboxes && gearViewMode !== 'compare'}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'compare'
-                        ? 'bg-blue-600 text-white shadow-sm'
+                        ? 'bg-gray-700 text-white shadow-sm'
                         : showCheckboxes
-                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                          ? 'text-gray-300 cursor-not-allowed'
+                          : 'text-gray-500 hover:text-gray-700'
                     }`}
                     aria-label="Compare view"
                     title={showCheckboxes ? 'Exit Edit mode first' : 'Compare items'}
@@ -1049,7 +1103,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <div className="relative add-menu-container">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+                    className="p-1.5 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -1060,9 +1114,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowForm()
                           setShowAddMenu(false)
@@ -1074,7 +1128,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                         Add Manually
                       </button>
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowUrlImport?.()
                           setShowAddMenu(false)
@@ -1087,9 +1141,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       </button>
                       {onShowCategoryManager && (
                         <>
-                          <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                          <div className="border-t border-gray-200 my-1"></div>
                           <button
-                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                             onClick={() => {
                               onShowCategoryManager()
                               setShowAddMenu(false)
@@ -1119,10 +1173,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 disabled={gearViewMode === 'compare'}
                 className={`p-1.5 rounded-md transition-all duration-200 ${
                   showCheckboxes
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-gray-700 text-white shadow-sm'
                     : gearViewMode === 'compare'
-                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
                 title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
