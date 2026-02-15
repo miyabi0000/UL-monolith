@@ -330,7 +330,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
             showEditColumn={!isEditable}
           />
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {processedItems.map((item) => (
               <TableRow
                 key={item.id}

@@ -86,7 +86,7 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
   if (seasons.length === 0 && !isEditing) {
     return (
       <div className="w-full text-center">
-        <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
+        <span className="text-xs text-gray-400">-</span>
       </div>
     )
   }
@@ -117,10 +117,10 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
                 ${isSmall ? 'w-6 h-6' : 'w-8 h-8'}
                 ${isEditing ? 'cursor-pointer' : 'cursor-default'}
                 ${selected
-                  ? 'bg-blue-500 text-white shadow-sm'
+                  ? 'bg-gray-700 text-white shadow-sm'
                   : isEditing
-                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    : 'bg-transparent text-gray-300 dark:text-gray-600'
+                    ? 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                    : 'bg-transparent text-gray-300'
                 }
               `}
               title={SEASON_LABELS[season]}

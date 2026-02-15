@@ -23,7 +23,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
   if (!item) {
     return (
       <div className="flex items-center justify-center h-full text-center p-6">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500">
           Select an item from the chart
         </p>
       </div>
@@ -51,7 +51,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
     <div className="p-3 space-y-3 overflow-y-auto h-full">
       {/* 画像 */}
       <div
-        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
+        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => onEdit?.(item)}
@@ -153,11 +153,11 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
       {/* 名前とブランド */}
       <div>
-        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words">
+        <h4 className="text-sm font-bold text-gray-900 mb-1 break-words">
           {item.name}
         </h4>
         {item.brand && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
+          <p className="text-xs text-gray-500 break-words">
             {item.brand}
           </p>
         )}
@@ -180,11 +180,11 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       <div className="space-y-2 text-xs">
         {/* 重量 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Weight:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Weight:</span>
+          <span className="font-semibold text-gray-900">
             {item.weightGrams}g
             {item.requiredQuantity > 1 && (
-              <span className="text-gray-500 dark:text-gray-400 ml-1">
+              <span className="text-gray-500 ml-1">
                 (Total: {item.totalWeight}g)
               </span>
             )}
@@ -193,19 +193,19 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* 価格 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Price:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Price:</span>
+          <span className="font-semibold text-gray-900">
             {formatPrice(item.priceCents)}
           </span>
         </div>
 
         {/* 所有数/必要数 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Own/Need:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Own/Need:</span>
+          <span className="font-semibold text-gray-900">
             {item.ownedQuantity} / {item.requiredQuantity}
             {item.shortage > 0 && (
-              <span className="text-red-600 dark:text-red-400 ml-1">
+              <span className="text-red-600 ml-1">
                 (Short: {item.shortage})
               </span>
             )}
@@ -214,7 +214,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* 優先度 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+          <span className="text-gray-600">Priority:</span>
           <span
             className="font-semibold"
             style={{ color: getPriorityColor(item.priority) }}
@@ -226,7 +226,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         {/* シーズン */}
         {item.seasons && item.seasons.length > 0 && (
           <div>
-            <div className="text-gray-600 dark:text-gray-400 mb-1">Season:</div>
+            <div className="text-gray-600 mb-1">Season:</div>
             <SeasonBar seasons={item.seasons} size="sm" />
           </div>
         )}

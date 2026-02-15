@@ -37,21 +37,18 @@ const WEIGHT_CLASS_CONFIG = {
     Icon: BackpackIcon,
     color: '#6B7280',
     bgColor: '#F3F4F6',
-    darkBgColor: 'rgba(107, 114, 128, 0.2)',
     label: 'Base'
   },
   worn: {
     Icon: ShirtIcon,
     color: '#3B82F6',
     bgColor: '#DBEAFE',
-    darkBgColor: 'rgba(59, 130, 246, 0.2)',
     label: 'Worn'
   },
   consumable: {
     Icon: UtensilsIcon,
     color: '#F97316',
     bgColor: '#FED7AA',
-    darkBgColor: 'rgba(249, 115, 22, 0.2)',
     label: 'Cons'
   }
 } as const
@@ -72,7 +69,7 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
         </span>
         {isBig3 && (
           <span
-            className="px-1 py-0.5 text-[9px] font-bold rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+            className="px-1 py-0.5 text-[9px] font-bold rounded bg-gray-200 text-gray-700"
             title="Big3: Backpack / Shelter / Sleep"
           >
             B3
@@ -93,7 +90,7 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
       </span>
       {isBig3 && (
         <span
-          className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+          className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-200 text-gray-700"
           title="Big3: Backpack / Shelter / Sleep"
         >
           Big3

@@ -29,7 +29,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
           e.stopPropagation()
           onToggle()
         }}
-        className="p-0.5 rounded-full transition-colors text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500"
+        className="p-0.5 rounded-full transition-colors text-xs hover:bg-gray-100 text-gray-400"
       >
         ⋮
       </button>
@@ -40,13 +40,13 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
             className="fixed inset-0 z-[9998]"
             onClick={onClose}
           />
-          <div className="absolute right-0 mt-1 shadow-lg min-w-[100px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md py-1 z-[9999]">
+          <div className="absolute right-0 mt-1 shadow-lg min-w-[100px] bg-white border border-gray-200 rounded-md py-1 z-[9999]">
             <button
               onClick={() => {
                 onEdit(item)
                 onClose()
               }}
-              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 text-gray-700"
             >
               Edit
             </button>
@@ -56,18 +56,18 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
                   onDuplicate(item)
                   onClose()
                 }}
-                className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100 text-gray-700"
               >
                 Duplicate
               </button>
             )}
-            <hr className="border-gray-200 dark:border-gray-700 my-1" />
+            <hr className="border-gray-200 my-1" />
             <button
               onClick={() => {
                 onDelete([item.id])
                 onClose()
               }}
-              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-red-50 text-red-600"
             >
               Delete
             </button>
@@ -79,4 +79,3 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
 }
 
 export default ActionMenu
-

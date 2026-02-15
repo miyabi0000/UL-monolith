@@ -26,12 +26,12 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
     <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* アイテムグリッド */}
       <div>
-        <div className="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
           <span>ITEMS</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{items.length}</span>
+          <span className="font-semibold text-gray-900">{items.length}</span>
         </div>
         {sortedItems.length === 0 ? (
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-xs text-gray-500 text-center py-4">
             No items
           </p>
         ) : (
@@ -45,9 +45,9 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
                   key={item.id}
                   className={`aspect-square relative overflow-hidden rounded-md border transition-all flex items-center justify-center ${
                     isHighlighted
-                      ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/50 dark:ring-blue-500/50 shadow-md'
-                      : 'border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
-                  } bg-white dark:bg-gray-900`}
+                      ? 'border-gray-500 ring-2 ring-gray-400/50 shadow-md'
+                      : 'border-gray-100 hover:border-gray-300 hover:shadow-sm'
+                  } bg-white`}
                 >
                   {imageUrl ? (
                     <img
@@ -58,7 +58,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center p-1">
-                      <span className="text-[9px] text-gray-400 dark:text-gray-500 text-center leading-tight line-clamp-2">
+                      <span className="text-[9px] text-gray-400 text-center leading-tight line-clamp-2">
                         {item.name}
                       </span>
                     </div>

@@ -31,7 +31,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
   return (
     <div className="relative inline-block">
       <span
-        className={`${className} transition-all duration-300 inline-block overflow-hidden whitespace-nowrap text-ellipsis cursor-pointer hover:text-gray-700 dark:hover:text-gray-300`}
+        className={`${className} transition-all duration-300 inline-block overflow-hidden whitespace-nowrap text-ellipsis cursor-pointer hover:text-gray-700`}
         style={{
           ...style,
           maxWidth: maxWidth
@@ -50,7 +50,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
       </span>
 
       {isExpanded && isHovered && (
-        <div className="absolute z-50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 p-2 rounded-md shadow-md top-full left-0 mt-1 max-w-xs break-words">
+        <div className="absolute z-50 bg-white text-gray-900 border border-gray-200 p-2 rounded-md shadow-md top-full left-0 mt-1 max-w-xs break-words">
           {text}
         </div>
       )}

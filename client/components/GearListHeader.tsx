@@ -28,23 +28,23 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
   onSort
 }) => {
   return (
-    <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex justify-between items-center p-3 border-b border-gray-200">
       <div className="flex items-center gap-3">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+        <h3 className="font-semibold text-sm text-gray-900">
           GEAR LIST
         </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500">
           {itemCount} items
         </span>
 
         {/* ViewSwitcher統合 */}
-        <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
+        <div className="inline-flex rounded-lg p-0.5 bg-gray-100">
           <button
             onClick={() => onViewChange('card')}
             className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
               currentView === 'card'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'bg-white text-gray-700 shadow-sm'
+                : 'text-gray-500'
             }`}
             aria-label="Card view"
           >
@@ -54,8 +54,8 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
             onClick={() => onViewChange('table')}
             className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
               currentView === 'table'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'bg-white text-gray-700 shadow-sm'
+                : 'text-gray-500'
             }`}
             aria-label="Table view"
           >
@@ -65,8 +65,8 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
             onClick={() => onViewChange('compare')}
             className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
               currentView === 'compare'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'bg-white text-gray-700 shadow-sm'
+                : 'text-gray-500'
             }`}
             aria-label="Comparison view"
           >
@@ -77,13 +77,13 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
         {/* ソート機能 */}
         {onSort && (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Sort by:</span>
+            <span className="text-xs text-gray-500">Sort by:</span>
             <button
               onClick={() => onSort('name')}
               className={`px-2.5 py-1 text-xs rounded transition-colors border ${
                 sortField === 'name'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 border-gray-200'
+                  : 'bg-transparent text-gray-500 border-gray-100'
               }`}
             >
               Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -92,8 +92,8 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
               onClick={() => onSort('weight')}
               className={`px-2.5 py-1 text-xs rounded transition-colors border ${
                 sortField === 'weight'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 border-gray-200'
+                  : 'bg-transparent text-gray-500 border-gray-100'
               }`}
             >
               Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -102,8 +102,8 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
               onClick={() => onSort('price')}
               className={`px-2.5 py-1 text-xs rounded transition-colors border ${
                 sortField === 'price'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 border-gray-200'
+                  : 'bg-transparent text-gray-500 border-gray-100'
               }`}
             >
               Price {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}

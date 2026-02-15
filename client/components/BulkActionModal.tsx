@@ -88,8 +88,8 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-content max-w-md w-full">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">
             Bulk Actions ({selectedCount} items)
           </h2>
         </div>
@@ -97,11 +97,11 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Action Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Action
             </label>
             <div className="space-y-2">
-              <label className="flex items-center text-gray-900 dark:text-gray-100">
+              <label className="flex items-center text-gray-900">
                 <input
                   type="radio"
                   name="action"
@@ -112,7 +112,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                 />
                 Bulk Update
               </label>
-              <label className="flex items-center text-gray-900 dark:text-gray-100">
+              <label className="flex items-center text-gray-900">
                 <input
                   type="radio"
                   name="action"
@@ -130,7 +130,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           {action === 'update' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Field to Update
                 </label>
                 <select
@@ -153,7 +153,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Value
                 </label>
                 {updateField === 'category' ? (
@@ -229,18 +229,18 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
 
           {/* Delete Warning */}
           {action === 'delete' && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+                  <h3 className="text-sm font-medium text-red-800">
                     Warning: Delete Operation
                   </h3>
-                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                  <div className="mt-2 text-sm text-red-700">
                     <p>Selected {selectedCount} items will be permanently deleted. This action cannot be undone.</p>
                   </div>
                 </div>
@@ -249,7 +249,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}

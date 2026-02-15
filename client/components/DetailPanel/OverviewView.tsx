@@ -77,28 +77,28 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode, onItemClic
       <div>
         <div className="space-y-2 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">Weight:</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</span>
+            <span className="text-gray-600">Weight:</span>
+            <span className="font-semibold text-gray-900">{stats.totalWeight}g</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">Price:</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
+            <span className="text-gray-600">Price:</span>
+            <span className="font-semibold text-gray-900">{formatPrice(stats.totalPrice)}</span>
           </div>
         </div>
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200 dark:border-gray-700" />
+      <div className="border-t border-gray-200" />
 
       {/* アイテムリスト */}
       <div>
-        <div className="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
           <span>ITEMS</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.itemCount}</span>
+          <span className="font-semibold text-gray-900">{stats.itemCount}</span>
         </div>
         <div className="space-y-1.5">
           {sortedItems.length === 0 ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+            <p className="text-xs text-gray-500 text-center py-4">
               No items
             </p>
           ) : (

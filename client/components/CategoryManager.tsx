@@ -89,11 +89,11 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-content max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Category Management</h2>
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">Category Management</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-gray-400 hover:text-gray-600"
           >
             ✕
           </button>
@@ -102,20 +102,20 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         <div className="p-6">
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-300 text-sm">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
               {error}
             </div>
           )}
 
           {/* Add/Edit Form */}
           {isAddingNew && (
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium mb-4 text-gray-900">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Name
                   </label>
                   <input
@@ -131,7 +131,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Color
                   </label>
                   <div className="flex items-center space-x-2 mb-2">
@@ -139,7 +139,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       type="color"
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
-                      className="w-12 h-8 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                      className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
                       disabled={isSubmitting}
                     />
                     <input
@@ -158,7 +158,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         key={color}
                         type="button"
                         onClick={() => setFormData({ ...formData, color })}
-                        className="w-6 h-6 rounded border-2 border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform disabled:opacity-50"
+                        className="w-6 h-6 rounded border-2 border-gray-300 hover:scale-110 transition-transform disabled:opacity-50"
                         style={{ backgroundColor: color }}
                         disabled={isSubmitting}
                         title={color}
@@ -193,7 +193,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             <div className="mb-6">
               <button
                 onClick={() => setIsAddingNew(true)}
-                className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+                className="btn-primary"
               >
                 + Add New Category
               </button>
@@ -202,17 +202,17 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
           {/* Categories List */}
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
               Existing Categories ({categories.length})
             </h3>
             {categories.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories yet. Add your first one!</p>
+              <p className="text-gray-500 text-center py-8">No categories yet. Add your first one!</p>
             ) : (
               <div className="grid gap-2">
                 {categories.map(category => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div
@@ -220,22 +220,22 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         style={{ backgroundColor: category.color }}
                       />
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                        <div className="font-medium text-gray-900">
                           {category.name}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{category.color}</div>
+                        <div className="text-xs text-gray-500 font-mono">{category.color}</div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded text-sm font-medium transition-colors"
+                        className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded text-sm font-medium transition-colors"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(category.id, category.name)}
-                        className="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded text-sm font-medium transition-colors"
+                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
                       >
                         Delete
                       </button>

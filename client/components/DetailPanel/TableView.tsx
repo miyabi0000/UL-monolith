@@ -67,28 +67,28 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
       <div>
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-500">Weight</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</span>
+            <span className="text-gray-500">Weight</span>
+            <span className="font-semibold text-gray-900">{stats.totalWeight}g</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-500">Price</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
+            <span className="text-gray-500">Price</span>
+            <span className="font-semibold text-gray-900">{formatPrice(stats.totalPrice)}</span>
           </div>
         </div>
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200 dark:border-gray-700" />
+      <div className="border-t border-gray-200" />
 
       {/* アイテムリスト */}
       <div>
-        <div className="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
           <span>ITEMS</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.itemCount}</span>
+          <span className="font-semibold text-gray-900">{stats.itemCount}</span>
         </div>
         <div className="space-y-1.5">
           {sortedItems.length === 0 ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+            <p className="text-xs text-gray-500 text-center py-4">
               No items
             </p>
           ) : (
@@ -101,15 +101,15 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
               return (
                 <div
                   key={item.id}
-                  className="w-full px-3 py-3 rounded border border-gray-200 dark:border-gray-700
-                    hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full px-3 py-3 rounded border border-gray-200
+                    hover:bg-gray-50 transition-colors"
                 >
                   {/* Grid layout: Image | Name+Brand | Weight+Meta | Edit */}
                   <div className="grid gap-3 items-center" style={{ gridTemplateColumns: '48px minmax(100px, 1fr) 80px 24px' }}>
                     {/* Image - clickable */}
                     <button
                       onClick={() => onItemClick?.(item.id)}
-                      className="relative w-12 h-12 rounded overflow-hidden bg-gray-100 dark:bg-gray-700"
+                      className="relative w-12 h-12 rounded overflow-hidden bg-gray-100"
                     >
                       <img
                         src={imageUrl}
@@ -127,10 +127,10 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
                       <TruncatedText
                         text={item.name}
                         maxLength={25}
-                        className="text-xs font-medium text-gray-900 dark:text-gray-100 leading-tight"
+                        className="text-xs font-medium text-gray-900 leading-tight"
                       />
                       {item.brand && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate leading-tight opacity-75">
+                        <div className="text-xs text-gray-500 mt-1 truncate leading-tight opacity-75">
                           {item.brand}
                         </div>
                       )}
@@ -138,10 +138,10 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
 
                     {/* Weight and meta */}
                     <div className="text-right flex flex-col justify-center">
-                      <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight whitespace-nowrap">
+                      <div className="text-xs font-semibold text-gray-900 leading-tight whitespace-nowrap">
                         {item.totalWeight}g
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-tight whitespace-nowrap">
+                      <div className="text-xs text-gray-500 mt-1 leading-tight whitespace-nowrap">
                         <span className="font-medium">{weightPercentage}%</span>
                         <span className="ml-1.5">P{item.priority}</span>
                       </div>
@@ -153,7 +153,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
                         e.stopPropagation();
                         onEdit(item);
                       }}
-                      className="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-blue-500 dark:text-gray-500 dark:hover:text-blue-400 transition-colors"
+                      className="flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-700 transition-colors"
                       title="Edit"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

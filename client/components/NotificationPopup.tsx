@@ -46,15 +46,15 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
   const getMessageClasses = (type: string) => {
     switch (type) {
       case 'error':
-        return 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 border-red-500';
+        return 'bg-red-50 text-red-600 border-red-500';
       case 'success':
-        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-green-500';
+        return 'bg-green-50 text-green-700 border-green-500';
       case 'info':
-        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-blue-500';
+        return 'bg-white text-gray-700 border-gray-500';
       case 'loading':
-        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-500';
+        return 'bg-white text-gray-700 border-gray-500';
       default:
-        return 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-500';
+        return 'bg-white text-gray-700 border-gray-500';
     }
   };
 
@@ -79,7 +79,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 flex-1">
                 {message.type === 'loading' && (
-                  <div className="w-4 h-4 border-2 border-gray-700 dark:border-gray-300 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
                 )}
                 <p className="text-sm font-medium flex-1">
                   {message.message}

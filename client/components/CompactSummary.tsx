@@ -38,7 +38,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
   return (
     <Card hover className="p-2">
       <div className="mb-2">
-        <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-xs font-semibold text-gray-900">
           Pack Summary
         </h3>
       </div>
@@ -54,8 +54,8 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
                 isClickable ? 'cursor-pointer hover:scale-105' : ''
               } ${
                 isSelected 
-                  ? 'bg-gray-200 dark:bg-gray-700 border-gray-600 dark:border-gray-400' 
-                  : 'bg-gray-50 dark:bg-gray-800 border-transparent'
+                  ? 'bg-gray-200 border-gray-600' 
+                  : 'bg-gray-50 border-transparent'
               }`}
               onClick={() => {
                 if (stat.mode && onViewModeChange) {
@@ -65,18 +65,18 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
             >
               <div className="flex items-center space-x-1 mb-0.5">
                 <span
-                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 dark:bg-gray-500 ${
+                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 ${
                     isClickable ? 'group-hover:scale-110' : ''
                   }`}
                 >
                   {stat.icon}
                 </span>
-                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] font-medium text-gray-500">
                   {stat.label}
                 </span>
               </div>
               <div
-                className={`text-sm font-bold transition-all duration-200 text-gray-700 dark:text-gray-200 ${
+                className={`text-sm font-bold transition-all duration-200 text-gray-700 ${
                   isClickable ? 'group-hover:scale-110' : ''
                 }`}
               >

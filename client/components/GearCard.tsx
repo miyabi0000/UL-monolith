@@ -60,7 +60,7 @@ const GearCard: React.FC<GearCardProps> = ({
 
   return (
     <div
-      className="relative group cursor-pointer overflow-hidden bg-white dark:bg-gray-800"
+      className="relative group cursor-pointer overflow-hidden bg-white"
       style={{
         borderRadius: `${RADIUS_SCALE.md}px`,
         boxShadow: isHovered 
@@ -226,4 +226,3 @@ const GearCard: React.FC<GearCardProps> = ({
 };
 
 export default React.memo(GearCard);
-
