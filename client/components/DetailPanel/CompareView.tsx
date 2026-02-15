@@ -158,7 +158,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                       {item.category ? (
                         <span
                           className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded"
-                          style={getCategoryBadgeStyle(item.category.color || '#6B7280')}
+                          style={getCategoryBadgeStyle(item.category.color || COLORS.gray[500])}
                         >
                           {item.category.name}
                         </span>

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { getCategoryBadgeStyle } from '../../utils/designSystem';
+import { COLORS, getCategoryBadgeStyle } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
 import ItemListCard from './ItemListCard';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
@@ -66,7 +66,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   }, [categoryItems, quantityDisplayMode]);
 
   // カテゴリの色を取得
-  const categoryColor = categoryItems[0]?.category?.color || '#6B7280';
+  const categoryColor = categoryItems[0]?.category?.color || COLORS.gray[500];
 
   return (
     <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
