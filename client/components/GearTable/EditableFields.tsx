@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Category, WeightClass } from '../../utils/types'
-import { getPriorityColor } from '../../utils/designSystem'
+import { COLORS, STATUS_TONES, getPriorityColor } from '../../utils/designSystem'
 import SeasonBar from '../SeasonBar'
 import WeightClassBadge from '../ui/WeightClassBadge'
+
+const ERROR_TONE = STATUS_TONES.error
+const SUCCESS_TONE = STATUS_TONES.success
 
 // ==================== デバウンス入力フック ====================
 interface UseDebouncedInputOptions<T> {
@@ -279,11 +282,8 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded border ${
-          isChanged
-            ? 'border-red-500 text-red-600'
-            : 'border-gray-300'
-        } bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 box-border`}
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 box-border`}
+        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
@@ -312,11 +312,8 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className={`text-xs px-2 py-1 rounded-md border ${
-          isChanged
-            ? 'border-red-500 text-red-600'
-            : 'border-gray-300'
-        } bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500`}
+        className="text-xs px-2 py-1 rounded-md border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="">No Category</option>
         {categories.map((cat) => (
@@ -332,9 +329,9 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
     <span
       className="text-xs px-2 py-1 rounded-full font-medium inline-block"
       style={{
-        backgroundColor: `${category?.color || '#9CA3AF'}20`,
-        color: category?.color || '#9CA3AF',
-        border: `1px solid ${category?.color || '#9CA3AF'}40`
+        backgroundColor: `${category?.color || COLORS.gray[400]}20`,
+        color: category?.color || COLORS.gray[400],
+        border: `1px solid ${category?.color || COLORS.gray[400]}40`
       }}
     >
       {category?.name || 'Other'}
@@ -376,11 +373,8 @@ export const EditablePriceField: React.FC<EditablePriceFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="0"
-        className={`w-16 text-xs px-1 py-0.5 rounded border ${
-          isChanged
-            ? 'border-red-500 text-red-600'
-            : 'border-gray-300'
-        } bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border`}
+        className="w-16 text-xs px-1 py-0.5 rounded border bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
+        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
@@ -427,11 +421,8 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="0"
-        className={`w-14 text-xs px-1 py-0.5 rounded border ${
-          isChanged
-            ? 'border-red-500 text-red-600'
-            : 'border-gray-300'
-        } bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border`}
+        className="w-14 text-xs px-1 py-0.5 rounded border bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
+        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
@@ -466,7 +457,8 @@ export const EditableSeasonField: React.FC<EditableSeasonFieldProps> = ({
 }) => {
   return (
     <div
-      className={`flex justify-center ${isChanged ? 'border-2 border-red-500 rounded p-1' : ''}`}
+      className={`flex justify-center ${isChanged ? 'border-2 rounded p-1' : ''}`}
+      style={isChanged ? { borderColor: ERROR_TONE.solid } : undefined}
       onClick={(e) => {
         e.stopPropagation()
         e.preventDefault()
@@ -510,9 +502,10 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         onChange={(e) => onOwnedChange(parseInt(e.target.value))}
         className={`w-7 text-xs font-semibold bg-transparent focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center ${
           ownedQuantity >= requiredQuantity
-            ? 'text-green-600'
+            ? ''
             : 'text-gray-900'
         }`}
+        style={ownedQuantity >= requiredQuantity ? { color: SUCCESS_TONE.text } : undefined}
       >
         {Array.from({ length: 11 }, (_, i) => (
           <option key={i} value={i}>{i}</option>
@@ -531,7 +524,10 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       </select>
       {/* 不足バッジ */}
       {shortage > 0 && (
-        <span className="ml-0.5 px-1 py-0.5 text-[10px] font-medium bg-red-100 text-red-600 rounded">
+        <span
+          className="ml-0.5 px-1 py-0.5 text-[10px] font-medium rounded"
+          style={{ backgroundColor: ERROR_TONE.background, color: ERROR_TONE.text }}
+        >
           -{shortage}
         </span>
       )}
@@ -589,11 +585,8 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className={`text-xs px-1 py-0.5 rounded border ${
-          isChanged
-            ? 'border-red-500 text-red-600'
-            : 'border-gray-300'
-        } bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500`}
+        className="text-xs px-1 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>
         <option value="worn">Worn</option>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GearItemWithCalculated, ChartViewMode } from '../utils/types';
-import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
+import { COLORS, STATUS_TONES, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
 import SeasonBar from './SeasonBar';
 
 interface GearCardCompactProps {
@@ -18,6 +18,7 @@ const formatPrice = (priceCents?: number) => {
 };
 
 const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete, onCategoryClick }) => {
+  const errorTone = STATUS_TONES.error;
   const [isHovered, setIsHovered] = useState(false);
 
   if (!item) {
@@ -205,7 +206,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
           <span className="font-semibold text-gray-900">
             {item.ownedQuantity} / {item.requiredQuantity}
             {item.shortage > 0 && (
-              <span className="text-red-600 ml-1">
+              <span className="ml-1" style={{ color: errorTone.text }}>
                 (Short: {item.shortage})
               </span>
             )}

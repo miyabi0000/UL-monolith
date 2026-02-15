@@ -1,6 +1,7 @@
 import React from 'react'
 import type { GearItemWithCalculated, Category, QuantityDisplayMode } from '../../utils/types'
 import { deriveStatus, isBig3Category } from '../../utils/types'
+import { STATUS_TONES } from '../../utils/designSystem'
 import StatusBadge from '../ui/StatusBadge'
 import {
   EditableImageField,
@@ -49,6 +50,9 @@ const TableRow: React.FC<TableRowProps> = ({
   onEdit,
   isEditable = false
 }) => {
+  const errorTone = STATUS_TONES.error
+  const warningTone = STATUS_TONES.warning
+
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
   const renderQuantityValue = () => {
@@ -68,7 +72,7 @@ const TableRow: React.FC<TableRowProps> = ({
             <span className="text-gray-400 mx-0.5">/</span>
             <span className="font-semibold text-gray-700">{item.requiredQuantity}</span>
             {item.shortage > 0 && (
-              <span className="ml-1 text-[10px] text-red-500">(-{item.shortage})</span>
+              <span className="ml-1 text-[10px]" style={{ color: errorTone.text }}>(-{item.shortage})</span>
             )}
           </span>
         )
@@ -90,9 +94,12 @@ const TableRow: React.FC<TableRowProps> = ({
         isSelected
           ? 'bg-gray-50 ring-2 ring-gray-400 ring-inset'
           : isHighlighted
-            ? 'bg-orange-50 border-l-2 border-l-orange-400'
+            ? 'border-l-2'
             : 'bg-white'
       }`}
+      style={isHighlighted && !isSelected
+        ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
+        : undefined}
     >
       {/* Checkbox */}
       {showCheckboxes && (

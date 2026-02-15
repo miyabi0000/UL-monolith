@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
-import { COLORS, getCategoryBadgeStyle } from '../../utils/designSystem';
+import { COLORS, STATUS_TONES, getCategoryBadgeStyle } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
 import TruncatedText from '../TruncatedText';
 
@@ -12,6 +12,9 @@ interface CompareViewProps {
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDelete }) => {
+  const successTone = STATUS_TONES.success;
+  const errorTone = STATUS_TONES.error;
+
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // Sort items by weight ascending
@@ -105,11 +108,10 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                     const isMax = analysis && weight === analysis.maxWeight;
                     return (
                       <td key={item.id} className="text-center px-2 py-1.5">
-                        <span className={`font-semibold ${
-                          isMin ? 'text-green-600' :
-                          isMax ? 'text-red-500' :
-                          'text-gray-900'
-                        }`}>
+                        <span
+                          className="font-semibold text-gray-900"
+                          style={isMin ? { color: successTone.text } : isMax ? { color: errorTone.text } : undefined}
+                        >
                           {weight}g
                           {isMin && <span className="ml-0.5 text-[9px]">★</span>}
                         </span>
@@ -126,11 +128,10 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                     const isMax = analysis && price === analysis.maxPrice;
                     return (
                       <td key={item.id} className="text-center px-2 py-1.5">
-                        <span className={`font-semibold ${
-                          isMin ? 'text-green-600' :
-                          isMax ? 'text-red-500' :
-                          'text-gray-900'
-                        }`}>
+                        <span
+                          className="font-semibold text-gray-900"
+                          style={isMin ? { color: successTone.text } : isMax ? { color: errorTone.text } : undefined}
+                        >
                           {formatPrice(price)}
                           {isMin && <span className="ml-0.5 text-[9px]">★</span>}
                         </span>

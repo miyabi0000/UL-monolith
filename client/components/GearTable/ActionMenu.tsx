@@ -1,5 +1,6 @@
 import React from 'react'
 import { GearItemWithCalculated } from '../../utils/types'
+import { STATUS_TONES } from '../../utils/designSystem'
 
 interface ActionMenuProps {
   item: GearItemWithCalculated
@@ -22,6 +23,8 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
   onDelete,
   onDuplicate
 }) => {
+  const errorTone = STATUS_TONES.error
+
   return (
     <div className="relative">
       <button
@@ -67,7 +70,8 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
                 onDelete([item.id])
                 onClose()
               }}
-              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-red-50 text-red-600"
+              className="w-full text-left text-xs transition-colors block px-3 py-2 hover:bg-gray-100"
+              style={{ color: errorTone.text }}
             >
               Delete
             </button>
