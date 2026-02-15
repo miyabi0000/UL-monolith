@@ -1,4 +1,8 @@
 /** @type {import('tailwindcss').Config} */
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const p = require('./client/styles/tokens/primitives.cjs');
+
 export default {
   content: [
     "./client/index.html",
@@ -11,23 +15,96 @@ export default {
         sans: ['Inter', 'sans-serif'],
       },
       colors: {
-        // カスタムグレースケール（既存のdesignSystemから）
+        // Tailwind 標準クラス（text-gray-900 など）をトークンへ一致させる
+        gray: {
+          50: p.gray[50],
+          100: p.gray[100],
+          200: p.gray[200],
+          300: p.gray[300],
+          400: p.gray[400],
+          500: p.gray[500],
+          600: p.gray[600],
+          700: p.gray[700],
+          800: p.gray[800],
+          900: p.gray[900],
+        },
+        red: {
+          50: p.red[50],
+          100: p.red[100],
+          200: p.red[200],
+          300: p.red[300],
+          400: p.red[400],
+          500: p.red[500],
+          600: p.red[600],
+          700: p.red[700],
+          800: p.red[800],
+          900: p.red[900],
+        },
+        green: {
+          50: p.green[50],
+          100: p.green[100],
+          200: p.green[200],
+          300: p.green[300],
+          400: p.green[400],
+          500: p.green[500],
+          600: p.green[600],
+          700: p.green[700],
+          800: p.green[800],
+          900: p.green[900],
+        },
+        orange: {
+          50: p.orange[50],
+          100: p.orange[100],
+          200: p.orange[200],
+          300: p.orange[300],
+          400: p.orange[400],
+          500: p.orange[500],
+          600: p.orange[600],
+          700: p.orange[700],
+          800: p.orange[800],
+          900: p.orange[900],
+        },
+        blue: {
+          50: p.blue[50],
+          100: p.blue[100],
+          200: p.blue[200],
+          300: p.blue[300],
+          400: p.blue[400],
+          500: p.blue[500],
+          600: p.blue[600],
+          700: p.blue[700],
+          800: p.blue[800],
+          900: p.blue[900],
+        },
+        purple: {
+          50: p.purple[50],
+          100: p.purple[100],
+          200: p.purple[200],
+          300: p.purple[300],
+          400: p.purple[400],
+          500: p.purple[500],
+          600: p.purple[600],
+          700: p.purple[700],
+          800: p.purple[800],
+          900: p.purple[900],
+        },
+        // トークンから取得（designSystem.ts の COLORS と整合）
         primary: {
-          DEFAULT: '#404040',
-          hover: '#262626',
+          DEFAULT: p.gray[700],
+          hover: p.gray[800],
         },
         // セマンティックカラー
         background: {
-          light: '#FAFAFA',
-          dark: '#0F0F0F',
+          light: p.gray[50],
+          dark: p.gray[900],
         },
         surface: {
-          light: '#FFFFFF',
-          dark: '#1A1A1A',
+          light: p.gray.white,
+          dark: p.gray[800],
         },
         border: {
-          light: '#E5E5E5',
-          dark: '#333333',
+          light: p.gray[200],
+          dark: p.gray[700],
         },
       },
       boxShadow: {

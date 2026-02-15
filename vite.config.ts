@@ -15,7 +15,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'client'),
       '@components': path.resolve(__dirname, 'client/components'),
       '@services': path.resolve(__dirname, 'client/services'),
-      '@utils': path.resolve(__dirname, 'client/utils')
+      '@utils': path.resolve(__dirname, 'client/utils'),
+      '@tokens': path.resolve(__dirname, 'client/styles/tokens')
     }
   },
   server: {
