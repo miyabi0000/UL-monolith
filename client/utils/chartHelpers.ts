@@ -9,6 +9,7 @@ import {
   isBig3Category,
   DUAL_RING_COLORS
 } from './types';
+import { COLORS } from './designSystem';
 
 export const getQuantityForDisplayMode = (
   item: GearItemWithCalculated,
@@ -27,7 +28,7 @@ export const getCategoryColor = (systemName: string): string => {
     'Electronics': '#4D96FF',
     'Hygiene': '#A66DFF'
   };
-  return colorMap[systemName] || '#6B7280';
+  return colorMap[systemName] || COLORS.gray[500];
 };
 
 export const calculateChartData = (
@@ -36,7 +37,7 @@ export const calculateChartData = (
 ): ChartData[] => {
   const categoryTotals = gearItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Other';
-    const categoryColor = item.category?.color || '#6B7280';
+    const categoryColor = item.category?.color || COLORS.gray[500];
     if (!acc[categoryName]) {
       acc[categoryName] = { weight: 0, price: 0, count: 0, items: [], color: categoryColor };
     }
@@ -207,7 +208,7 @@ export function calculateCategoryBreakdown(
   for (const item of items) {
     const categoryId = item.categoryId || 'uncategorized';
     const categoryName = item.category?.name || 'Other';
-    const categoryColor = item.category?.color || '#6B7280';
+    const categoryColor = item.category?.color || COLORS.gray[500];
     const isBig3 = isBig3Category(item.category);
 
     if (!categoryMap.has(categoryId)) {

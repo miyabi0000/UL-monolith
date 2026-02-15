@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
+import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
 import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
 import Card from './ui/Card'
@@ -63,13 +64,13 @@ const CHART_CONFIG = {
   }
 } as const
 
-const DEFAULT_COLOR = '#6B7280'
+const DEFAULT_COLOR = COLORS.gray[500]
 
 // UL分類カラートークン
 const UL_BADGE_COLORS = {
-  ultralight: '#10B981',  // green-500
-  lightweight: '#F59E0B', // amber-500
-  traditional: '#EF4444'  // red-500
+  ultralight: COLORS.success,
+  lightweight: COLORS.warning,
+  traditional: COLORS.error
 } as const
 
 // フォントサイズトークン
@@ -274,7 +275,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
           className="uppercase tracking-wide font-bold mb-1"
           style={{
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
-            color: displayColor || '#6B7280'
+            color: displayColor || DEFAULT_COLOR
           }}
         >
           {displayLabel}
@@ -951,9 +952,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 height: innerRadiusConfig.inner * 2,
                 borderRadius: '50%',
                 transition: 'all 0.3s ease',
-                backgroundColor: centerPulse ? 'rgba(64, 64, 64, 0.05)' : 'transparent',
+                backgroundColor: centerPulse ? alpha(COLORS.gray[800], 0.05) : 'transparent',
                 transform: centerPulse ? 'scale(1.05)' : 'scale(1)',
-                boxShadow: centerPulse ? '0 0 20px rgba(64, 64, 64, 0.3)' : 'none'
+                boxShadow: centerPulse ? `0 0 20px ${alpha(COLORS.gray[800], 0.3)}` : 'none'
               }}
               onClick={handleCenterClick}
             >
