@@ -60,6 +60,16 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root endpoint to avoid 404 on base URL
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'UL Gear Manager API',
+    health: '/api/health',
+    docs: '/docs/startup-guide.md'
+  });
+});
+
 // API routes
 app.use('/api/v1/gear', gearRoutes);
 app.use('/api/v1/categories', categoryRoutes);
@@ -94,4 +104,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-

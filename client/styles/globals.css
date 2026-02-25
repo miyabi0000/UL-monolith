@@ -3,16 +3,244 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --glass-ior: 1.06;
+    --glass-blur: calc(10px + (var(--glass-ior) - 1) * 70px);
+    --glass-sat: calc(118% + (var(--glass-ior) - 1) * 460%);
+    --glass-contrast: calc(102% + (var(--glass-ior) - 1) * 110%);
+    --glass-distort: calc(1.8px + (var(--glass-ior) - 1) * 28px);
+    --glass-coat-opacity: 0.5;
+    --glass-coat-angle: 18deg;
+    --glass-fresnel: 0.11;
+    --glass-noise-opacity: 0.035;
+    --glass-key-shadow: 0.14;
+    --glass-ambient-shadow: 0.08;
+  }
+
   body {
     font-family: Inter, sans-serif;
     @apply bg-background-light text-gray-900 transition-colors duration-200;
+    position: relative;
+    min-height: 100vh;
+    --body-noise-opacity: 0.04;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--body-noise-opacity);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.28) 0 1px, transparent 1px 4px);
+    mix-blend-mode: overlay;
+    z-index: 0;
   }
 }
 
 @layer components {
+  .glass-surface,
+  .card,
+  .modal-content {
+    @apply relative overflow-hidden border rounded-lg;
+    isolation: isolate;
+    border-color: rgba(255, 255, 255, 0.38);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.3));
+    box-shadow:
+      0 18px 44px rgba(20, 28, 40, var(--glass-key-shadow)),
+      0 3px 10px rgba(20, 28, 40, var(--glass-ambient-shadow)),
+      inset 0 1px 0 rgba(255, 255, 255, 0.44);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) contrast(var(--glass-contrast));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) contrast(var(--glass-contrast));
+  }
+
+  .glass-surface > *,
+  .card > *,
+  .modal-content > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .glass-surface::before,
+  .card::before,
+  .modal-content::before {
+    content: '';
+    position: absolute;
+    inset: -42%;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.14),
+      rgba(255, 255, 255, 0)
+    );
+    transform: rotate(var(--glass-coat-angle));
+    opacity: var(--glass-coat-opacity);
+    filter: blur(0.2px);
+    z-index: 1;
+  }
+
+  .glass-refract::after,
+  .card::after,
+  .modal-content::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 120% at 50% 35%, rgba(0, 0, 0, 0) 52%, rgba(255, 255, 255, calc(var(--glass-fresnel) * 0.95)) 100%),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, var(--glass-noise-opacity)) 0 1px, rgba(0, 0, 0, 0) 1px 2px),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, calc(var(--glass-noise-opacity) * 0.75)) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
+      radial-gradient(circle at 22% 28%, rgba(255, 255, 255, 0.2), transparent 45%),
+      radial-gradient(circle at 78% 72%, rgba(255, 255, 255, 0.12), transparent 42%);
+    filter: blur(calc(var(--glass-distort) * 0.32));
+    transform: translate3d(calc(var(--glass-distort) * -0.2), calc(var(--glass-distort) * 0.25), 0);
+    mix-blend-mode: screen;
+    opacity: 0.8;
+    z-index: 0;
+  }
+
+  .glass-strong,
+  .modal-content {
+    --glass-ior: 1.1;
+    --glass-coat-opacity: 0.62;
+    --glass-fresnel: 0.14;
+    --glass-noise-opacity: 0.028;
+    --glass-key-shadow: 0.2;
+    --glass-ambient-shadow: 0.1;
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.42));
+  }
+
+  .glass-header {
+    --glass-ior: 1.03;
+    --glass-coat-opacity: 0.35;
+    --glass-fresnel: 0.08;
+    --glass-noise-opacity: 0.02;
+    --glass-key-shadow: 0.1;
+    --glass-ambient-shadow: 0.06;
+  }
+
+  .glass-header-chip {
+    --glass-ior: 1.02;
+    @apply relative overflow-hidden border rounded-full shadow-glass-sm transition-all duration-150;
+    border-color: rgba(255, 255, 255, 0.42);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42));
+    backdrop-filter: blur(calc(var(--glass-blur) * 0.75)) saturate(calc(var(--glass-sat) * 0.9));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.75)) saturate(calc(var(--glass-sat) * 0.9));
+  }
+
+  .dark .glass-header-chip {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(140deg, rgba(55, 58, 64, 0.58), rgba(40, 43, 48, 0.36));
+  }
+
+  .dark .glass-surface,
+  .dark .card,
+  .dark .modal-content {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(140deg, rgba(46, 49, 54, 0.52), rgba(35, 38, 43, 0.34));
+    box-shadow:
+      0 20px 48px rgba(0, 0, 0, 0.38),
+      0 3px 10px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .dark .glass-surface::before,
+  .dark .card::before,
+  .dark .modal-content::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0)
+    );
+  }
+
+  /* Safari fallback: 一部バージョンでCSS変数付きbackdrop-filterが効かない場合の固定値 */
+  .safari-fallback {
+    -webkit-backdrop-filter: blur(14px) saturate(145%) contrast(108%);
+    backdrop-filter: blur(14px) saturate(145%) contrast(108%);
+  }
+
+  /* 透過を避けたいユーザー設定に配慮 */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-surface,
+    .card,
+    .modal-content,
+    .glass-header {
+      background: rgba(255, 255, 255, 0.98);
+      color: #111827;
+      box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      border-color: rgba(0, 0, 0, 0.08);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .dark .glass-surface,
+    .dark .card,
+    .dark .modal-content,
+    .dark .glass-header {
+      background: rgba(30, 32, 36, 0.95);
+      color: #f9fafb;
+      box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-surface::before,
+    .card::before,
+    .modal-content::before,
+    .glass-refract::after,
+    .card::after,
+    .modal-content::after,
+    body::before {
+      display: none;
+    }
+  }
+
+  /* モバイル縮退: blur/影を軽減してパフォーマンスを確保 */
+  @media (max-width: 640px) {
+    :root {
+      --glass-blur: calc((10px + (var(--glass-ior) - 1) * 70px) * 0.7);
+      --glass-key-shadow: 0.1;
+      --glass-ambient-shadow: 0.06;
+    }
+  }
+
+  /* コントラスト強調設定にあわせてノイズ弱める */
+  @media (prefers-contrast: more) {
+    :root {
+      --body-noise-opacity: 0.02;
+      --glass-noise-opacity: calc(var(--glass-noise-opacity) * 0.5);
+    }
+  }
+
+  /* テキストの視認性オプション */
+  .glass-text-contrast {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-surface,
+    .card,
+    .modal-content {
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .dark .glass-surface,
+    .dark .card,
+    .dark .modal-content {
+      background: rgba(38, 42, 47, 0.88);
+    }
+  }
+
   /* カード共通スタイル */
   .card {
-    @apply bg-surface-light shadow-sm rounded-lg;
+    --glass-ior: 1.06;
   }
 
   /* ボタン共通スタイル */
@@ -50,7 +278,7 @@
 
   /* モーダルコンテンツ */
   .modal-content {
-    @apply bg-white rounded-lg shadow-xl;
+    --glass-ior: 1.1;
   }
 }
 

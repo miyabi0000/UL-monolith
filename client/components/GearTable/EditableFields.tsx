@@ -327,7 +327,7 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
 
   return (
     <span
-      className="text-xs px-2 py-1 rounded-full font-medium inline-block"
+      className="text-[10px] px-1.5 py-0.5 rounded-full font-medium inline-block"
       style={{
         backgroundColor: `${category?.color || COLORS.gray[400]}20`,
         color: category?.color || COLORS.gray[400],
@@ -495,7 +495,7 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   const shortage = requiredQuantity - ownedQuantity
 
   return (
-    <div className="flex items-center justify-center gap-1">
+    <div className="flex items-center justify-end gap-1">
       {/* Owned数（強調表示） */}
       <select
         value={ownedQuantity}
@@ -545,7 +545,7 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
   onChange
 }) => {
   return (
-    <div className="flex items-center justify-center space-x-2">
+    <div className="flex items-center justify-end space-x-2">
       <div
         className="w-2 h-2 rounded-full"
         style={{ backgroundColor: getPriorityColor(priority) }}

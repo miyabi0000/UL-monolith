@@ -90,7 +90,7 @@ const TableRow: React.FC<TableRowProps> = ({
   }
   return (
     <tr
-      className={`transition-all duration-200 hover:opacity-90 ${
+      className={`transition-all duration-200 hover:opacity-90 border-b border-gray-100 [&>td]:border-r [&>td]:border-gray-100 [&>td]:last:border-r-0 ${
         isSelected
           ? 'bg-gray-50 ring-2 ring-gray-400 ring-inset'
           : isHighlighted
@@ -189,7 +189,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Own/Need */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 w-12">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-12">
         {isEditable ? (
           <QuantitySelector
             ownedQuantity={item.ownedQuantity}
@@ -219,7 +219,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Weight */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 w-20">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-20">
         <EditableWeightField
           weightGrams={item.weightGrams}
           totalWeight={item.totalWeight}
@@ -231,7 +231,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Priority */}
-      <td className="px-2 py-2 whitespace-nowrap text-center w-12">
+      <td className="px-2 py-2 whitespace-nowrap text-right w-12">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}
@@ -239,7 +239,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Price */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-center text-gray-900 w-16">
+      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-16">
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
