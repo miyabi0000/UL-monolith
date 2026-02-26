@@ -19,7 +19,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) =>
   if (compact) {
     return (
       <span
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+        className="status-priority-token"
         style={{ backgroundColor: config.bgColor, color: config.color }}
         title={config.label}
       >

@@ -95,7 +95,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content max-w-4xl w-full max-h-[80vh] overflow-hidden">
+      <div className="modal-panel-xl max-h-[80vh]">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
             変更履歴: {gearName}

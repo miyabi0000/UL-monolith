@@ -304,7 +304,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
 
   return (
     <div className="modal-overlay p-4">
-      <div className="modal-content max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="modal-panel-lg">
         <div className="p-6 border-b border-gray-300">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">

@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
   :root {
     --glass-ior: 1.06;
     --glass-blur: calc(10px + (var(--glass-ior) - 1) * 70px);
@@ -15,6 +22,12 @@
     --glass-noise-opacity: 0.035;
     --glass-key-shadow: 0.14;
     --glass-ambient-shadow: 0.08;
+    --gear-font-2xs: 10px;
+    --gear-font-xs: 11px;
+    --gear-font-sm: 12px;
+    --gear-font-md: 14px;
+    --gear-badge-size: 20px;
+    --gear-row-height: 66px;
   }
 
   body {
@@ -217,11 +230,215 @@
       --body-noise-opacity: 0.02;
       --glass-noise-opacity: calc(var(--glass-noise-opacity) * 0.5);
     }
+
+    .gear-table-head {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .gear-table-row {
+      background: rgba(255, 255, 255, 0.84);
+    }
+
+    .gear-th,
+    .gear-text-main,
+    .gear-text-num {
+      color: #111827;
+    }
+
+    .gear-text-sub,
+    .gear-text-micro {
+      color: #374151;
+    }
+
+    .dark .gear-table-head {
+      background: rgba(33, 37, 43, 0.92);
+    }
+
+    .dark .gear-table-row {
+      background: rgba(28, 32, 37, 0.9);
+    }
+
+    .dark .gear-th,
+    .dark .gear-text-main,
+    .dark .gear-text-num {
+      color: #f9fafb;
+    }
+
+    .dark .gear-text-sub,
+    .dark .gear-text-micro {
+      color: #d1d5db;
+    }
   }
 
   /* テキストの視認性オプション */
   .glass-text-contrast {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Gear table typography hierarchy */
+  .gear-th {
+    font-size: var(--gear-font-2xs);
+    @apply font-semibold tracking-[0.02em] text-gray-600;
+  }
+
+  .gear-text-main {
+    font-size: var(--gear-font-sm);
+    @apply font-semibold text-gray-900 leading-snug;
+  }
+
+  .gear-text-sub {
+    font-size: var(--gear-font-xs);
+    @apply text-gray-500;
+  }
+
+  .gear-text-num {
+    font-size: var(--gear-font-sm);
+    @apply font-medium text-gray-800 tabular-nums;
+  }
+
+  .gear-text-micro {
+    font-size: 11px;
+    @apply font-medium tracking-[0.03em] text-gray-500;
+  }
+
+  .gear-input-num {
+    font-size: var(--gear-font-sm);
+    @apply tabular-nums text-center;
+  }
+
+  .gear-priority-token {
+    width: var(--gear-badge-size);
+    height: var(--gear-badge-size);
+    font-size: var(--gear-font-2xs);
+    @apply rounded-full font-bold leading-none appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 text-center tabular-nums;
+  }
+
+  .status-priority-token {
+    width: var(--gear-badge-size);
+    height: var(--gear-badge-size);
+    font-size: var(--gear-font-2xs);
+    @apply inline-flex items-center justify-center rounded-full font-bold leading-none tabular-nums;
+  }
+
+  .gear-table-shell {
+    @apply rounded-lg border overflow-hidden;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: linear-gradient(155deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.26));
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+    backdrop-filter: blur(10px) saturate(120%);
+  }
+
+  .gear-table-head {
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow:
+      inset 0 -1px 0 rgba(148, 163, 184, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .gear-table-row > td {
+    height: var(--gear-row-height);
+    vertical-align: middle;
+  }
+
+  .gear-table-head th,
+  .gear-table-row td {
+    border-right: 1px solid rgba(148, 163, 184, 0.24);
+  }
+
+  .gear-table-head th:last-child,
+  .gear-table-row td:last-child {
+    border-right: none;
+  }
+
+  .gear-table-head th {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  }
+
+  .gear-table-row td {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  .gear-table-row {
+    background: rgba(255, 255, 255, 0.48);
+  }
+
+  .gear-table-row:nth-child(even) {
+    background: rgba(255, 255, 255, 0.38);
+  }
+
+  .gear-empty-value {
+    @apply gear-text-num text-gray-400;
+  }
+
+  .gear-anomaly-value {
+    @apply gear-text-num font-semibold;
+    color: #b91c1c;
+  }
+
+  .gear-glass-control {
+    background: rgba(255, 255, 255, 0.66);
+    border-color: rgba(148, 163, 184, 0.45);
+    -webkit-backdrop-filter: blur(6px) saturate(118%);
+    backdrop-filter: blur(6px) saturate(118%);
+  }
+
+  .gear-glass-chip {
+    background: rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    -webkit-backdrop-filter: blur(6px) saturate(116%);
+    backdrop-filter: blur(6px) saturate(116%);
+  }
+
+  .dark .gear-table-shell {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(155deg, rgba(46, 49, 54, 0.55), rgba(34, 38, 43, 0.35));
+  }
+
+  .dark .gear-table-head {
+    background: rgba(48, 52, 58, 0.7);
+    box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.2);
+  }
+
+  .dark .gear-table-row {
+    background: rgba(43, 47, 53, 0.46);
+  }
+
+  .dark .gear-table-head th,
+  .dark .gear-table-row td {
+    border-right-color: rgba(148, 163, 184, 0.18);
+  }
+
+  .dark .gear-table-head th {
+    border-bottom-color: rgba(148, 163, 184, 0.24);
+  }
+
+  .dark .gear-table-row td {
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+  }
+
+  .dark .gear-glass-control,
+  .dark .gear-glass-chip {
+    background: rgba(53, 58, 64, 0.6);
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+
+  .card.flat-panel {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(203, 213, 225, 0.6);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .card.flat-panel::before,
+  .card.flat-panel::after {
+    display: none;
+  }
+
+  .dark .card.flat-panel {
+    background: rgba(31, 41, 55, 0.82);
+    border-color: rgba(71, 85, 105, 0.55);
+    box-shadow: 0 6px 16px rgba(2, 6, 23, 0.35);
   }
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -279,6 +496,22 @@
   /* モーダルコンテンツ */
   .modal-content {
     --glass-ior: 1.1;
+  }
+
+  .modal-panel {
+    @apply modal-content w-full max-h-[90vh] overflow-y-auto m-4;
+  }
+
+  .modal-panel-md {
+    @apply modal-panel max-w-md;
+  }
+
+  .modal-panel-lg {
+    @apply modal-panel max-w-2xl;
+  }
+
+  .modal-panel-xl {
+    @apply modal-panel max-w-4xl overflow-hidden;
   }
 }
 

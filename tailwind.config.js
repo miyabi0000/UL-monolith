@@ -112,8 +112,8 @@ export default {
         'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
         'dark-sm': '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3)',
         'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4)',
-        'glass-sm': '0 8px 24px rgba(20, 28, 40, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.45)',
-        'glass-md': '0 16px 40px rgba(20, 28, 40, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+        'glass-sm': '0 4px 14px rgba(20, 28, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.42)',
+        'glass-md': '0 10px 28px rgba(20, 28, 40, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
       },
       backdropBlur: {
         glass: '14px',

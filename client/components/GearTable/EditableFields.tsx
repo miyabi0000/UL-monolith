@@ -3,6 +3,7 @@ import { Category, WeightClass } from '../../utils/types'
 import { COLORS, STATUS_TONES, getPriorityColor } from '../../utils/designSystem'
 import SeasonBar from '../SeasonBar'
 import WeightClassBadge from '../ui/WeightClassBadge'
+import CategoryBadge from '../ui/CategoryBadge'
 
 const ERROR_TONE = STATUS_TONES.error
 const SUCCESS_TONE = STATUS_TONES.success
@@ -155,11 +156,11 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
       {/* モーダル */}
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="modal-overlay"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 w-96 max-w-[90vw]"
+            className="modal-panel-md p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold mb-4 text-gray-900">Set Image</h3>
@@ -312,7 +313,7 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="text-xs px-2 py-1 rounded-md border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="">No Category</option>
@@ -326,16 +327,11 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
   }
 
   return (
-    <span
-      className="text-[10px] px-1.5 py-0.5 rounded-full font-medium inline-block"
-      style={{
-        backgroundColor: `${category?.color || COLORS.gray[400]}20`,
-        color: category?.color || COLORS.gray[400],
-        border: `1px solid ${category?.color || COLORS.gray[400]}40`
-      }}
-    >
-      {category?.name || 'Other'}
-    </span>
+    <CategoryBadge
+      name={category?.name || 'Other'}
+      color={category?.color || COLORS.gray[400]}
+      className="gear-text-micro"
+    />
   )
 }
 
@@ -373,19 +369,25 @@ export const EditablePriceField: React.FC<EditablePriceFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="0"
-        className="w-16 text-xs px-1 py-0.5 rounded border bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
+        className="w-16 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
 
-  if (!value) return <span className="text-xs">-</span>
+  if (value == null) {
+    return <span className="gear-empty-value">—</span>
+  }
+
+  if (value < 0) {
+    return <span className="gear-anomaly-value" title="Invalid price">!</span>
+  }
 
   const displayValue = currency === 'USD'
     ? (value / 100 / 150).toFixed(0)
     : Math.round(value / 100)
 
-  return <span className="text-xs">{Number(displayValue).toLocaleString()}</span>
+  return <span className="gear-text-num">{Number(displayValue).toLocaleString('ja-JP')}</span>
 }
 
 interface EditableWeightFieldProps extends BaseFieldProps {
@@ -421,24 +423,30 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="0"
-        className="w-14 text-xs px-1 py-0.5 rounded border bg-white text-center focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
+        className="w-14 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
 
-  if (!weightGrams) return <span className="text-xs">-</span>
+  if (weightGrams == null) {
+    return <span className="gear-empty-value">—</span>
+  }
+
+  if (weightGrams < 0 || requiredQuantity < 1) {
+    return <span className="gear-anomaly-value" title="Invalid weight">!</span>
+  }
 
   // 数量が1の場合は単位重量のみ表示
   if (requiredQuantity === 1) {
-    return <span className="text-xs font-semibold">{weightGrams.toLocaleString()}</span>
+    return <span className="gear-text-num font-semibold">{weightGrams.toLocaleString()}</span>
   }
 
   // 数量が2以上の場合は計算式を表示
   return (
-    <div className="text-xs">
-      <span className="text-gray-500">{weightGrams} × {requiredQuantity} = </span>
-      <span className="font-semibold">{totalWeight.toLocaleString()}</span>
+    <div className="gear-text-num">
+      <span className="gear-text-sub">{weightGrams} × {requiredQuantity} = </span>
+      <span className="font-semibold text-gray-800">{totalWeight.toLocaleString()}</span>
     </div>
   )
 }
@@ -495,12 +503,12 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   const shortage = requiredQuantity - ownedQuantity
 
   return (
-    <div className="flex items-center justify-end gap-1">
+    <div className="flex items-center justify-center gap-1">
       {/* Owned数（強調表示） */}
       <select
         value={ownedQuantity}
         onChange={(e) => onOwnedChange(parseInt(e.target.value))}
-        className={`w-7 text-xs font-semibold bg-transparent focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center ${
+        className={`w-7 gear-input-num font-semibold gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer ${
           ownedQuantity >= requiredQuantity
             ? ''
             : 'text-gray-900'
@@ -511,12 +519,12 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
           <option key={i} value={i}>{i}</option>
         ))}
       </select>
-      <span className="text-gray-300 text-xs">/</span>
+      <span className="gear-text-sub text-gray-300">/</span>
       {/* Required数 */}
       <select
         value={requiredQuantity}
         onChange={(e) => onRequiredChange(parseInt(e.target.value))}
-        className="w-7 text-xs text-gray-500 bg-transparent focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer text-center"
+        className="w-7 gear-input-num text-gray-500 gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer"
       >
         {Array.from({ length: 10 }, (_, i) => (
           <option key={i + 1} value={i + 1}>{i + 1}</option>
@@ -525,7 +533,7 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       {/* 不足バッジ */}
       {shortage > 0 && (
         <span
-          className="ml-0.5 px-1 py-0.5 text-[10px] font-medium rounded"
+          className="ml-0.5 px-1 py-0.5 gear-text-micro rounded"
           style={{ backgroundColor: ERROR_TONE.background, color: ERROR_TONE.text }}
         >
           -{shortage}
@@ -544,16 +552,28 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
   priority,
   onChange
 }) => {
+  const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
+    1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
+    2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
+    3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
+    4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
+    5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' }
+  }
+  const style = PRIORITY_STYLE[priority] ?? PRIORITY_STYLE[3]
+
   return (
-    <div className="flex items-center justify-end space-x-2">
-      <div
-        className="w-2 h-2 rounded-full"
-        style={{ backgroundColor: getPriorityColor(priority) }}
-      />
+    <div className="flex items-center justify-center">
       <select
         value={priority}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="text-xs bg-white text-gray-900 focus:outline-none focus:ring-0 border-none appearance-none cursor-pointer"
+        className="gear-priority-token status-priority-token"
+        style={{
+          color: style.color,
+          backgroundColor: style.bg,
+          border: `1px solid ${style.border}`
+        }}
+        aria-label="Priority"
+        title={`Priority ${priority}`}
       >
         <option value={1}>1</option>
         <option value={2}>2</option>
@@ -585,7 +605,7 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className="text-xs px-1 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        className="gear-text-num px-1 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>

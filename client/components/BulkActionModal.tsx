@@ -90,7 +90,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content max-w-md w-full">
+      <div className="modal-panel-md">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
             Bulk Actions ({selectedCount} items)

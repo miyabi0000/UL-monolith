@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { COLORS, getCategoryBadgeStyle } from '../../utils/designSystem';
+import { COLORS } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
 import ItemListCard from './ItemListCard';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
+import CategoryBadge from '../ui/CategoryBadge';
 
 interface CategorySummaryViewProps {
   categoryName: string;
@@ -72,12 +73,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
     <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* カテゴリバッジ */}
       <div>
-        <span
-          className="inline-block text-xs font-semibold px-2 py-1 rounded"
-          style={getCategoryBadgeStyle(categoryColor)}
-        >
-          {categoryName}
-        </span>
+        <CategoryBadge name={categoryName} color={categoryColor} className="text-xs font-semibold px-2 py-1" />
       </div>
 
       {/* 区切り線 */}

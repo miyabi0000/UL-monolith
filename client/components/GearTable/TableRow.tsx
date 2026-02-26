@@ -56,46 +56,54 @@ const TableRow: React.FC<TableRowProps> = ({
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
   const renderQuantityValue = () => {
+    if (item.ownedQuantity == null || item.requiredQuantity == null) {
+      return <span className="gear-empty-value">—</span>
+    }
+
+    if (item.ownedQuantity < 0 || item.requiredQuantity < 1) {
+      return <span className="gear-anomaly-value" title="Invalid quantity">!</span>
+    }
+
     switch (quantityDisplayMode) {
       case 'owned':
         return (
-          <span>
-            <span className="font-semibold text-gray-700">{item.ownedQuantity}</span>
+          <span className="gear-text-num">
+            <span className="font-semibold">{item.ownedQuantity}</span>
             <span className="text-gray-400 mx-0.5">/</span>
             <span className="text-gray-500">{item.requiredQuantity}</span>
           </span>
         )
       case 'need':
         return (
-          <span>
+          <span className="gear-text-num">
             <span className="text-gray-500">{item.ownedQuantity}</span>
             <span className="text-gray-400 mx-0.5">/</span>
-            <span className="font-semibold text-gray-700">{item.requiredQuantity}</span>
+            <span className="font-semibold">{item.requiredQuantity}</span>
             {item.shortage > 0 && (
-              <span className="ml-1 text-[10px]" style={{ color: errorTone.text }}>(-{item.shortage})</span>
+              <span className="ml-1 gear-text-micro" style={{ color: errorTone.text }}>(-{item.shortage})</span>
             )}
           </span>
         )
       case 'all':
         return (
-          <span>
+          <span className="gear-text-num">
             <span className="text-gray-500">{item.ownedQuantity}</span>
             <span className="text-gray-400 mx-0.5">/</span>
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
       default:
-        return item.ownedQuantity
+        return <span className="gear-text-num">{item.ownedQuantity}</span>
     }
   }
   return (
     <tr
-      className={`transition-all duration-200 hover:opacity-90 border-b border-gray-100 [&>td]:border-r [&>td]:border-gray-100 [&>td]:last:border-r-0 ${
+      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 ${
         isSelected
           ? 'bg-gray-50 ring-2 ring-gray-400 ring-inset'
           : isHighlighted
             ? 'border-l-2'
-            : 'bg-white'
+            : 'bg-transparent'
       }`}
       style={isHighlighted && !isSelected
         ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
@@ -114,7 +122,7 @@ const TableRow: React.FC<TableRowProps> = ({
       )}
 
       {/* Image */}
-      <td className="px-2 py-2 text-center w-16" style={{ height: '64px' }}>
+      <td className="px-2 py-2 text-center w-16">
         <EditableImageField
           value={item.imageUrl || null}
           onChange={(value) => onUpdateItem(item.id, 'imageUrl', value)}
@@ -129,36 +137,36 @@ const TableRow: React.FC<TableRowProps> = ({
           {isEditable ? (
             <>
               <div className="w-full">
-                <label className="block text-[9px] text-gray-500 mb-0.5">Name</label>
+                <label className="gear-text-micro block mb-0.5">Name</label>
                 <EditableTextField
                   value={item.name}
                   onChange={(value) => onUpdateItem(item.id, 'name', value)}
                   isEditing={true}
                   isChanged={isFieldChanged('name')}
-                  className="text-xs"
+                  className="gear-text-num"
                 />
               </div>
               <div className="w-full">
-                <label className="block text-[9px] text-gray-500 mb-0.5">Brand</label>
+                <label className="gear-text-micro block mb-0.5">Brand</label>
                 <EditableTextField
                   value={item.brand || ''}
                   onChange={(value) => onUpdateItem(item.id, 'brand', value || null)}
                   isEditing={true}
                   isChanged={isFieldChanged('brand')}
                   placeholder="Brand"
-                  className="text-xs"
+                  className="gear-text-num"
                 />
               </div>
             </>
           ) : (
             <>
-              <div className="text-xs font-medium break-words text-gray-900 line-clamp-2">
+              <div className="gear-text-main break-words line-clamp-2">
                 {item.productUrl ? (
                   <a
                     href={item.productUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline transition-colors text-gray-700"
+                    className="hover:underline transition-colors text-gray-800"
                   >
                     {item.name}
                   </a>
@@ -167,7 +175,7 @@ const TableRow: React.FC<TableRowProps> = ({
                 )}
               </div>
               {item.brand && (
-                <div className="text-xs break-words text-gray-500 line-clamp-1">
+                <div className="gear-text-sub break-words line-clamp-1">
                   {item.brand}
                 </div>
               )}
@@ -189,7 +197,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Own/Need */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-12">
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-16">
         {isEditable ? (
           <QuantitySelector
             ownedQuantity={item.ownedQuantity}
@@ -219,7 +227,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Weight */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-20">
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-20">
         <EditableWeightField
           weightGrams={item.weightGrams}
           totalWeight={item.totalWeight}
@@ -231,7 +239,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Priority */}
-      <td className="px-2 py-2 whitespace-nowrap text-right w-12">
+      <td className="px-2 py-2 whitespace-nowrap text-center w-12">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}
@@ -239,7 +247,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Price */}
-      <td className="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 w-16">
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-16">
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}

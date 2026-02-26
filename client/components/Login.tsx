@@ -47,7 +47,7 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content p-6 w-full max-w-md">
+      <div className="modal-panel-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Login</h2>
           <button

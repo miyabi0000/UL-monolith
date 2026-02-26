@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
-import { COLORS, STATUS_TONES, getCategoryBadgeStyle } from '../../utils/designSystem';
+import { COLORS, STATUS_TONES } from '../../utils/designSystem';
+import CategoryBadge from '../ui/CategoryBadge';
 import { formatPrice } from '../../utils/formatters';
 import TruncatedText from '../TruncatedText';
 
@@ -156,12 +157,11 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                   {comparedItems.map(item => (
                     <td key={item.id} className="text-center px-2 py-1.5">
                       {item.category ? (
-                        <span
-                          className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded"
-                          style={getCategoryBadgeStyle(item.category.color || COLORS.gray[500])}
-                        >
-                          {item.category.name}
-                        </span>
+                        <CategoryBadge
+                          name={item.category.name}
+                          color={item.category.color || COLORS.gray[500]}
+                          className="text-[10px] font-medium"
+                        />
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}

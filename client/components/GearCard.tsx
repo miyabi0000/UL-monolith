@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
-import { COLORS, RADIUS_SCALE, getCategoryBadgeStyle } from '../utils/designSystem';
+import { COLORS, RADIUS_SCALE } from '../utils/designSystem';
 import { alpha } from '../styles/tokens';
+import CategoryBadge from './ui/CategoryBadge';
 
 interface GearCardProps {
   item: GearItemWithCalculated;
@@ -97,12 +98,7 @@ const GearCard: React.FC<GearCardProps> = ({
           className="absolute top-2 z-10"
           style={{ left: showCheckbox ? '36px' : '8px' }}
         >
-          <span
-            className="text-xs font-semibold px-2 py-1 rounded"
-            style={getCategoryBadgeStyle(item.category.color)}
-          >
-            {item.category.name}
-          </span>
+          <CategoryBadge name={item.category.name} color={item.category.color} className="text-xs font-semibold px-2 py-1 rounded" />
         </div>
       )}
 

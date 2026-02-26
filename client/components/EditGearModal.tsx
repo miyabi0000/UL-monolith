@@ -86,10 +86,10 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+    <div className="modal-overlay">
+      <div className="modal-panel-lg">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900">
             Edit Gear Item
           </h2>

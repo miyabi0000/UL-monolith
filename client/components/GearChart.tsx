@@ -727,9 +727,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 flex gap-3 min-h-0 overflow-x-auto">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12' : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none border-gray-300' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
           <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
@@ -998,9 +998,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       </Card>
 
         {/* Gear Detail Panel（右側パネル） */}
-        <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11">
+          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11 overflow-visible">
             <div className="flex items-center gap-1 text-xs min-w-0">
               {/* パンくずナビゲーション */}
               <button
@@ -1040,9 +1040,12 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   </span>
                 </>
               )}
-              {/* ビュー切替（パンくず近く） */}
+            </div>
+
+            {/* 右側: 統合ツールバー */}
+            <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
               {onGearViewModeChange && (
-                <div className="inline-flex rounded-md p-0.5 bg-gray-100 ml-2">
+                <div className="inline-flex rounded-md p-0.5 bg-white/50 border border-gray-200">
                   <button
                     onClick={() => onGearViewModeChange('card')}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
@@ -1095,16 +1098,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                   </button>
                 </div>
               )}
-            </div>
 
-            {/* 右側: アクションのみ */}
-            <div className="flex items-center gap-1">
               {/* アクションメニュー（ADD + Manage Categories） */}
               {onShowForm && (
-                <div className="relative add-menu-container">
+                <div className="relative add-menu-container z-[200] isolate">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200"
+                    className="p-1.5 rounded-md bg-gray-200 text-gray-800 border border-gray-300 shadow-sm hover:bg-gray-300 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -1115,7 +1115,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-[1000]">
                       <button
                         className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                         onClick={() => {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { GearItemWithCalculated, ChartViewMode } from '../utils/types';
-import { COLORS, STATUS_TONES, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
+import { COLORS, STATUS_TONES, getPriorityColor } from '../utils/designSystem';
 import { alpha } from '../styles/tokens';
 import SeasonBar from './SeasonBar';
+import CategoryBadge from './ui/CategoryBadge';
 
 interface GearCardCompactProps {
   item: GearItemWithCalculated | null;
@@ -168,13 +169,12 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       {/* カテゴリ */}
       {item.category && (
         <div>
-          <button
+          <CategoryBadge
+            name={item.category.name}
+            color={item.category.color}
+            className="text-xs font-semibold px-2 py-1"
             onClick={() => onCategoryClick?.(item.category!.name)}
-            className="inline-block text-xs font-semibold px-2 py-1 rounded cursor-pointer hover:opacity-80 transition-opacity"
-            style={getCategoryBadgeStyle(item.category.color)}
-          >
-            {item.category.name}
-          </button>
+          />
         </div>
       )}
 
