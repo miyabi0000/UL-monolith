@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Category } from '../utils/types'
-import { STATUS_TONES, COLORS } from '../utils/designSystem'
+import { STATUS_TONES } from '../utils/designSystem'
+import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_HEX_SET, JAPANESE_COLOR_PALETTE } from '../utils/japaneseColors'
 
 interface CategoryManagerProps {
   categories: Category[]
@@ -23,7 +24,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    color: COLORS.gray[800]
+    color: DEFAULT_JAPANESE_COLOR
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,6 +33,13 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
+
+    const isAllowedColor = JAPANESE_COLOR_HEX_SET.has(formData.color)
+    if (!isAllowedColor) {
+      setError('Color must be selected from the Japanese color palette.')
+      setIsSubmitting(false)
+      return
+    }
     
     try {
       if (editingCategory) {
@@ -40,7 +48,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         await onAddCategory?.(formData.name, formData.color)
       }
 
-      setFormData({ name: '', color: COLORS.gray[800] })
+      setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
       setIsAddingNew(false)
       setEditingCategory(null)
     } catch (err) {
@@ -51,17 +59,21 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   }
 
   const handleEdit = (category: Category) => {
+    const fallbackColor = DEFAULT_JAPANESE_COLOR
+    const normalizedColor = JAPANESE_COLOR_HEX_SET.has(category.color)
+      ? category.color
+      : fallbackColor
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      color: category.color
+      color: normalizedColor
     })
     setIsAddingNew(true)
     setError(null)
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: COLORS.gray[800] })
+    setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
     setIsAddingNew(false)
     setEditingCategory(null)
     setError(null)
@@ -84,14 +96,9 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
   }
 
-  const predefinedColors = [
-    '#FF6B6B', '#4ECDC4', '#FFE66D', '#4D96FF', '#A66DFF',
-    '#FF8C42', '#6C5CE7', '#00B894', '#FDCB6E', '#E17055'
-  ]
-
   return (
     <div className="modal-overlay">
-      <div className="modal-content max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div className="modal-panel-lg max-h-[80vh]">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Category Management</h2>
           <button
@@ -142,38 +149,32 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Color
+                    Japanese Color Palette
                   </label>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
-                      className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
-                      disabled={isSubmitting}
-                    />
-                    <input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
-                      className="input text-sm font-mono"
-                      pattern="^#[0-9A-F]{6}$"
-                      placeholder="#404040"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {predefinedColors.map(color => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {JAPANESE_COLOR_PALETTE.map((color) => (
                       <button
-                        key={color}
+                        key={color.hex}
                         type="button"
-                        onClick={() => setFormData({ ...formData, color })}
-                        className="w-6 h-6 rounded border-2 border-gray-300 hover:scale-110 transition-transform disabled:opacity-50"
-                        style={{ backgroundColor: color }}
+                        onClick={() => setFormData({ ...formData, color: color.hex })}
+                        className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
+                          formData.color === color.hex
+                            ? 'border-gray-700 bg-gray-100'
+                            : 'border-gray-200 bg-white hover:border-gray-400'
+                        }`}
                         disabled={isSubmitting}
-                        title={color}
-                      />
+                        title={`${color.name} (${color.hex})`}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-white shadow-sm"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span className="text-xs text-gray-700">{color.name}</span>
+                      </button>
                     ))}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 font-mono">
+                    Selected: {formData.color}
                   </div>
                 </div>
 
