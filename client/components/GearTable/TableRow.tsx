@@ -1,5 +1,5 @@
 import React from 'react'
-import type { GearItemWithCalculated, Category, QuantityDisplayMode } from '../../utils/types'
+import type { GearItemWithCalculated, Category, QuantityDisplayMode, GearFieldValue } from '../../utils/types'
 import { deriveStatus, isBig3Category } from '../../utils/types'
 import { STATUS_TONES } from '../../utils/designSystem'
 import {
@@ -25,7 +25,7 @@ interface TableRowProps {
   quantityDisplayMode: QuantityDisplayMode
   currency?: Currency
   onSelectItem: (id: string, checked: boolean) => void
-  onUpdateItem: (id: string, field: string, value: any) => void
+  onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   onEdit?: (item: GearItemWithCalculated) => void
   /**
    * 編集可能かどうか
@@ -74,23 +74,23 @@ const TableRow: React.FC<TableRowProps> = ({
         return (
           <span className="gear-text-num">
             <span className="font-semibold">{item.ownedQuantity}</span>
-            <span className="text-gray-400 mx-0.5">/</span>
-            <span className="text-gray-500">{item.requiredQuantity}</span>
+            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
+            <span className="text-gray-500 dark:text-gray-300">{item.requiredQuantity}</span>
           </span>
         )
       case 'need':
         return (
           <span className="gear-text-num">
-            <span className="text-gray-500">{item.ownedQuantity}</span>
-            <span className="text-gray-400 mx-0.5">/</span>
+            <span className="text-gray-500 dark:text-gray-300">{item.ownedQuantity}</span>
+            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
       case 'all':
         return (
           <span className="gear-text-num">
-            <span className="text-gray-500">{item.ownedQuantity}</span>
-            <span className="text-gray-400 mx-0.5">/</span>
+            <span className="text-gray-500 dark:text-gray-300">{item.ownedQuantity}</span>
+            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
@@ -100,9 +100,9 @@ const TableRow: React.FC<TableRowProps> = ({
   }
   return (
     <tr
-      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 ${
+      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
         isSelected
-          ? 'bg-gray-50 ring-2 ring-gray-400 ring-inset'
+          ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'
           : isHighlighted
             ? 'border-l-2'
             : 'bg-transparent'
@@ -168,7 +168,7 @@ const TableRow: React.FC<TableRowProps> = ({
                     href={item.productUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline transition-colors text-gray-800"
+                    className="hover:underline transition-colors text-gray-800 dark:text-gray-100"
                   >
                     {item.name}
                   </a>
@@ -210,7 +210,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Own/Need */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[132px]">
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[112px]">
         <div className="inline-flex items-center justify-center gap-1.5">
           {isEditable ? (
             <QuantitySelector
@@ -285,7 +285,7 @@ const TableRow: React.FC<TableRowProps> = ({
               e.stopPropagation()
               onEdit(item)
             }}
-            className="p-1 text-gray-400 hover:text-gray-700 transition-colors"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
             title="Edit"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

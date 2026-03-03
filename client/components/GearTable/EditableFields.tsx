@@ -122,10 +122,10 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
     if (!value) {
       return (
         <div
-          className={`flex items-center justify-center h-[56px] ${clickable ? 'cursor-pointer hover:bg-gray-100 rounded' : ''}`}
+          className={`flex items-center justify-center h-[40px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded' : ''}`}
           onClick={clickable ? () => setShowModal(true) : undefined}
         >
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
@@ -134,13 +134,13 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
 
     return (
       <div
-        className={`flex items-center justify-center h-[56px] ${clickable ? 'cursor-pointer' : ''}`}
+        className={`flex items-center justify-center h-[40px] ${clickable ? 'cursor-pointer' : ''}`}
         onClick={clickable ? () => setShowModal(true) : undefined}
       >
         <img
           src={value}
           alt="Product"
-          className="max-w-[80px] max-h-[56px] w-auto h-auto object-contain rounded-md"
+          className="max-w-[40px] max-h-[40px] w-auto h-auto object-contain rounded-md"
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}
@@ -163,11 +163,11 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
             className="modal-panel-md p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Set Image</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Set Image</h3>
 
             {/* URL入力 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Image URL
               </label>
               <input
@@ -175,13 +175,13 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 rounded border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
               />
             </div>
 
             {/* ファイルアップロード */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Or upload an image
               </label>
               <input
@@ -193,7 +193,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -205,10 +205,10 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
             {/* プレビュー */}
             {urlInput && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preview
                 </label>
-                <div className="flex items-center justify-center h-40 border border-gray-200 rounded bg-gray-50">
+                <div className="flex items-center justify-center h-40 border border-gray-200 dark:border-slate-600 rounded bg-gray-50 dark:bg-slate-800">
                   <img
                     src={urlInput}
                     alt="Preview"
@@ -229,13 +229,13 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                   onChange(null)
                   setShowModal(false)
                 }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
               >
                 Clear
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded"
+                className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded"
               >
                 Cancel
               </button>
@@ -283,13 +283,13 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 box-border`}
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded border bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400 box-border`}
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
 
-  return <span className={`${className} text-gray-900`}>{value}</span>
+  return <span className={`${className} text-gray-900 dark:text-gray-100`}>{value}</span>
 }
 
 interface EditableCategoryFieldProps extends BaseFieldProps {
@@ -313,7 +313,7 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="">No Category</option>
@@ -489,8 +489,6 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   onOwnedChange,
   onRequiredChange
 }) => {
-  const shortage = requiredQuantity - ownedQuantity
-
   return (
     <div className="flex items-center justify-center gap-1">
       {/* Owned数（強調表示） */}
@@ -500,7 +498,7 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
         className={`w-7 gear-input-num font-semibold gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer ${
           ownedQuantity >= requiredQuantity
             ? ''
-            : 'text-gray-900'
+            : 'text-gray-900 dark:text-gray-100'
         }`}
         style={ownedQuantity >= requiredQuantity ? { color: SUCCESS_TONE.text } : undefined}
       >
@@ -508,26 +506,17 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
           <option key={i} value={i}>{i}</option>
         ))}
       </select>
-      <span className="gear-text-sub text-gray-300">/</span>
+      <span className="gear-text-sub text-gray-300 dark:text-gray-500">/</span>
       {/* Required数 */}
       <select
         value={requiredQuantity}
         onChange={(e) => onRequiredChange(parseInt(e.target.value))}
-        className="w-7 gear-input-num text-gray-500 gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer"
+        className="w-7 gear-input-num text-gray-500 dark:text-gray-300 gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer"
       >
         {Array.from({ length: 10 }, (_, i) => (
           <option key={i + 1} value={i + 1}>{i + 1}</option>
         ))}
       </select>
-      {/* 不足バッジ */}
-      {shortage > 0 && (
-        <span
-          className="ml-0.5 px-1 py-0.5 gear-text-micro rounded"
-          style={{ backgroundColor: ERROR_TONE.background, color: ERROR_TONE.text }}
-        >
-          -{shortage}
-        </span>
-      )}
     </div>
   )
 }
@@ -594,7 +583,7 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className="gear-text-num px-1 py-0.5 rounded border bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        className="gear-text-num px-1 py-0.5 rounded border bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>

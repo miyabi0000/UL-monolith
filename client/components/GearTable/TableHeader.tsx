@@ -46,8 +46,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({
 
   // ソート可能なヘッダーのスタイル
   const sortableHeaderClass = isEditable
-    ? 'text-gray-400 cursor-default'
-    : 'text-gray-600 cursor-pointer hover:bg-white/55'
+    ? 'text-gray-400 dark:text-gray-500 cursor-default'
+    : 'text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-white/55 dark:hover:bg-slate-700/40'
   const headerBase = 'gear-th px-2 py-2'
   const getStatusFilterLabel = () => {
     switch (quantityDisplayMode) {
@@ -68,7 +68,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   const renderSortIcon = (field: SortField) => {
     const isActive = sortField === field
     return (
-      <span className={`gear-text-micro ml-1.5 ${isActive ? 'text-gray-700' : 'text-gray-400 group-hover:text-gray-600'}`}>
+      <span className={`gear-text-micro ml-1.5 ${isActive ? 'text-gray-700 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
         {isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
       </span>
     )
@@ -89,11 +89,11 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                 if (input) input.indeterminate = isPartiallySelected
               }}
               onChange={(e) => onSelectAll(e.target.checked)}
-              className="rounded border-gray-300 text-gray-700 focus:ring-gray-500 w-3 h-3"
+              className="rounded border-gray-300 dark:border-slate-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 focus:ring-gray-500 dark:focus:ring-slate-400 w-3 h-3"
             />
           </th>
         )}
-        <th className={`${headerBase} text-left text-gray-600 w-16`}>
+        <th className={`${headerBase} text-left text-gray-600 dark:text-gray-300 w-16`}>
           <span className={headerLabelClass}>image</span>
         </th>
         <th
@@ -106,7 +106,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-28`}
+          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-24`}
           onClick={() => handleSort('category')}
         >
           <span className={headerLabelClass}>
@@ -114,12 +114,12 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             {renderSortIcon('category')}
           </span>
         </th>
-        <th className={`${headerBase} text-center text-gray-600 w-[132px]`}>
+        <th className={`${headerBase} text-center text-gray-600 dark:text-gray-300 w-[112px]`}>
           <div className="inline-flex items-center justify-center">
             <button
               type="button"
               onClick={onQuantityDisplayModeChange}
-              className="gear-glass-chip inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
+              className="gear-glass-chip inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
               title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
             >
               <span
@@ -140,7 +140,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-14`}
+          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-10`}
           onClick={() => handleSort('priority')}
         >
           <span className={headerLabelNumericClass}>
@@ -161,7 +161,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                   e.stopPropagation()
                   onCurrencyChange()
                 }}
-                className="gear-text-micro hover:text-gray-700"
+                className="gear-text-micro hover:text-gray-700 dark:hover:text-gray-100"
                 title="Toggle currency"
               >
                 {currency === 'JPY' ? '¥' : '$'}
