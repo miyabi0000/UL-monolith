@@ -15,7 +15,8 @@ export type {
   CommonColors,
   GradientColors,
   SemanticColors,
+  ThemeColors,
 } from './types';
 
 // カラートークン
-export { primitiveColors, semanticColors, colors, alpha } from './colors';
+export { primitiveColors, semanticColors, colors, alpha, theme, themeCssVariables } from './colors';

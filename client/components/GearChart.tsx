@@ -155,7 +155,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
     return (
       <>
         <div
-          className="font-bold mb-0.5 text-gray-900"
+          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
           style={{
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
@@ -178,7 +178,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
         </div>
         {selectedItemData.brand && (
           <div
-            className="text-gray-500 mb-0.5 px-1 text-center overflow-hidden"
+            className="text-gray-500 dark:text-gray-400 mb-0.5 px-1 text-center overflow-hidden"
             style={{
               fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
               maxWidth: centerMaxWidth - 16,
@@ -191,7 +191,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
           </div>
         )}
         <div
-          className="text-gray-500"
+          className="text-gray-500 dark:text-gray-400"
           style={{
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
           }}
@@ -206,7 +206,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
     return (
       <>
         <div
-          className="font-bold mb-0.5 text-gray-900"
+          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
           style={{
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
@@ -223,7 +223,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
           {selectedCategoryFromChart}
         </div>
         <div
-          className="text-gray-500"
+          className="text-gray-500 dark:text-gray-400"
           style={{
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
           }}
@@ -292,7 +292,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
               {ulBadgeLabel}
             </span>
             <div
-              className="text-gray-400 mt-0.5"
+              className="text-gray-400 dark:text-gray-500 mt-0.5"
               style={{
                 fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
               }}
@@ -303,7 +303,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
         )}
         {chartFocus !== 'all' && (
           <div
-            className="text-gray-400 mt-0.5"
+            className="text-gray-400 dark:text-gray-500 mt-0.5"
             style={{
               fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
             }}
@@ -320,7 +320,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
   return (
     <>
       <div
-        className="font-bold mb-0.5 text-gray-900"
+        className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
         style={{
           fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
         }}
@@ -328,7 +328,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
         {formatValue(totalValue, viewMode)}
       </div>
       <div
-        className="uppercase tracking-wide font-bold text-gray-500"
+        className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
         style={{
           fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop
         }}
@@ -364,21 +364,21 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
 }) => {
   const chartFocusCardClass = (isActive: boolean) =>
     `flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-      isActive ? 'bg-gray-200 ring-1 ring-gray-400' : 'bg-gray-100 hover:bg-gray-200'
+      isActive ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500' : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
     }`
 
   return (
-    <div className="px-2 py-1.5 border-t border-gray-200">
+    <div className="px-2 py-1.5 border-t border-gray-200 dark:border-slate-600">
       <div className="flex justify-center mb-1.5">
-        <div className="inline-flex rounded-lg p-0.5 bg-gray-100">
+        <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-slate-700">
           {VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => (
             <button
               key={mode}
               onClick={() => onViewModeChange(mode)}
               className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
                 viewMode === mode
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
               }`}
             >
               <Icon className="w-3 h-3" />
@@ -396,8 +396,8 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
               onClick={() => onToggleChartFocus(card.focus)}
               className={chartFocusCardClass(chartFocus === card.focus)}
             >
-              <span className="text-[9px] font-medium text-gray-600">{card.label}</span>
-              <span className="text-[11px] font-bold text-gray-900">
+              <span className="text-[9px] font-medium text-gray-600 dark:text-gray-300">{card.label}</span>
+              <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">
                 {card.value.toLocaleString()}g
               </span>
             </button>
@@ -407,33 +407,33 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
         <div className="grid grid-cols-2 gap-1.5">
           <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
             viewMode === 'weight'
-              ? 'bg-gray-200 ring-2 ring-gray-400'
-              : 'bg-gray-100'
+              ? 'bg-gray-200 dark:bg-slate-600 ring-2 ring-gray-400'
+              : 'bg-gray-100 dark:bg-slate-700'
           }`}>
             <div className="flex items-center gap-1.5 mb-0.5">
-              <ScaleIcon className="w-3.5 h-3.5 text-gray-600" />
-              <span className="text-[11px] font-semibold text-gray-700">Weight</span>
+              <ScaleIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">Weight</span>
             </div>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
               {totalWeight.toLocaleString()}g
             </span>
-            <span className="text-[9px] text-gray-500">
+            <span className="text-[9px] text-gray-500 dark:text-gray-400">
               {(totalWeight / 1000).toFixed(2)}kg
             </span>
           </div>
           <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
             viewMode === 'cost'
-              ? 'bg-gray-200 ring-2 ring-gray-400'
-              : 'bg-gray-100'
+              ? 'bg-gray-200 dark:bg-slate-600 ring-2 ring-gray-400'
+              : 'bg-gray-100 dark:bg-slate-700'
           }`}>
             <div className="flex items-center gap-1.5 mb-0.5">
-              <YenIcon className="w-3.5 h-3.5 text-gray-600" />
-              <span className="text-[11px] font-semibold text-gray-700">Price</span>
+              <YenIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">Price</span>
             </div>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
               ¥{Math.round(totalCost / 100).toLocaleString()}
             </span>
-            <span className="text-[9px] text-gray-500">
+            <span className="text-[9px] text-gray-500 dark:text-gray-400">
               {itemCount} items
             </span>
           </div>
@@ -729,18 +729,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none border-gray-300' : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none border-gray-300 dark:border-slate-500' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
-          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
+          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
                   onClick={() => setIsChartCollapsed(false)}
-                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 rounded transition-colors py-2"
+                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors py-2"
                   aria-label="Expand chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 mb-2"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-300 mb-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -748,21 +748,21 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
                   </svg>
-                  <span className="text-xs text-gray-600 font-medium" style={{ writingMode: 'vertical-rl' }}>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium" style={{ writingMode: 'vertical-rl' }}>
                     Chart
                   </span>
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="text-sm font-semibold text-gray-700">Chart</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
                 <button
                   onClick={() => setIsChartCollapsed(true)}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
                   aria-label="Collapse chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-300"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1000,7 +1000,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
-          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11 overflow-visible">
+          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 h-11 overflow-visible">
             <div className="flex items-center gap-1 text-xs min-w-0">
               {/* パンくずナビゲーション */}
               <button
@@ -1010,21 +1010,21 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 }}
                 className={`flex-shrink-0 transition-colors ${
                   !selectedCategoryFromChart && !selectedItem
-                    ? 'text-gray-700 font-medium'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'text-gray-700 dark:text-gray-200 font-medium'
+                    : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                 }`}
               >
                 All
               </button>
               {selectedCategoryFromChart && (
                 <>
-                  <span className="text-gray-300 flex-shrink-0">/</span>
+                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
                   <button
                     onClick={() => setSelectedItem(null)}
                     className={`truncate max-w-[80px] transition-colors ${
                       !selectedItem
-                        ? 'text-gray-700 font-medium'
-                        : 'text-gray-400 hover:text-gray-600'
+                        ? 'text-gray-700 dark:text-gray-200 font-medium'
+                        : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                     }`}
                     title={selectedCategoryFromChart}
                   >
@@ -1034,8 +1034,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               )}
               {selectedItem && selectedItemName && (
                 <>
-                  <span className="text-gray-300 flex-shrink-0">/</span>
-                  <span className="text-gray-700 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
                     {selectedItemName}
                   </span>
                 </>
@@ -1045,15 +1045,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             {/* 右側: 統合ツールバー */}
             <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
               {onGearViewModeChange && (
-                <div className="inline-flex rounded-md p-0.5 bg-white/50 border border-gray-200">
+                <div className="inline-flex rounded-md p-0.5 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600">
                   <button
                     onClick={() => onGearViewModeChange('card')}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'card'
-                        ? 'bg-white text-gray-700 shadow-sm'
+                        ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
                         : gearViewMode === 'compare'
-                          ? 'text-gray-400'
-                          : 'text-gray-500'
+                          ? 'text-gray-400 dark:text-gray-500'
+                          : 'text-gray-500 dark:text-gray-400'
                     }`}
                     aria-label="Card view"
                   >
@@ -1063,10 +1063,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     onClick={() => onGearViewModeChange('table')}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'table'
-                        ? 'bg-white text-gray-700 shadow-sm'
+                        ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
                         : gearViewMode === 'compare'
-                          ? 'text-gray-400'
-                          : 'text-gray-500'
+                          ? 'text-gray-400 dark:text-gray-500'
+                          : 'text-gray-500 dark:text-gray-400'
                     }`}
                     aria-label="Table view"
                   >
@@ -1086,10 +1086,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     disabled={showCheckboxes && gearViewMode !== 'compare'}
                     className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
                       gearViewMode === 'compare'
-                        ? 'bg-gray-700 text-white shadow-sm'
+                        ? 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
                         : showCheckboxes
-                          ? 'text-gray-300 cursor-not-allowed'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'text-gray-300 dark:text-gray-500 cursor-not-allowed'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
                     }`}
                     aria-label="Compare view"
                     title={showCheckboxes ? 'Exit Edit mode first' : 'Compare items'}
@@ -1104,7 +1104,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <div className="relative add-menu-container z-[200] isolate">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-200 text-gray-800 border border-gray-300 shadow-sm hover:bg-gray-300 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-slate-500 shadow-sm hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -1115,9 +1115,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-[1000]">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 py-1 z-[1000]">
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowForm()
                           setShowAddMenu(false)
@@ -1129,7 +1129,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                         Add Manually
                       </button>
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowUrlImport?.()
                           setShowAddMenu(false)
@@ -1142,9 +1142,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       </button>
                       {onShowCategoryManager && (
                         <>
-                          <div className="border-t border-gray-200 my-1"></div>
+                          <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
                           <button
-                            className="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                             onClick={() => {
                               onShowCategoryManager()
                               setShowAddMenu(false)
@@ -1174,10 +1174,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 disabled={gearViewMode === 'compare'}
                 className={`p-1.5 rounded-md transition-all duration-200 ${
                   showCheckboxes
-                    ? 'bg-gray-700 text-white shadow-sm'
+                    ? 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
                     : gearViewMode === 'compare'
-                      ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
                 title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}

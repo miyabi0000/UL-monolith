@@ -122,7 +122,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
     if (!value) {
       return (
         <div
-          className={`flex items-center justify-center h-[40px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded' : ''}`}
+          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded' : ''}`}
           onClick={clickable ? () => setShowModal(true) : undefined}
         >
           <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,13 +134,13 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
 
     return (
       <div
-        className={`flex items-center justify-center h-[40px] ${clickable ? 'cursor-pointer' : ''}`}
+        className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer' : ''}`}
         onClick={clickable ? () => setShowModal(true) : undefined}
       >
         <img
           src={value}
           alt="Product"
-          className="max-w-[40px] max-h-[40px] w-auto h-auto object-contain rounded-md"
+          className="max-w-[48px] max-h-[48px] w-auto h-auto object-contain"
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}

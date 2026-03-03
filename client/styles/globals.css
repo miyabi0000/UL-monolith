@@ -27,7 +27,7 @@
     --gear-font-sm: 12px;
     --gear-font-md: 14px;
     --gear-badge-size: 20px;
-    --gear-row-height: 56px;
+    --gear-row-height: 60px;
     --page-bg: #f8fafc;
     --body-noise-opacity: 0.04;
     --noise-blend-mode: overlay;
@@ -130,7 +130,7 @@
     --glass-noise-opacity: 0.028;
     --glass-key-shadow: 0.2;
     --glass-ambient-shadow: 0.1;
-    background: linear-gradient(140deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.42));
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.3));
   }
 
   .glass-header {

@@ -1,6 +1,6 @@
 import React from 'react'
 import type { GearItemWithCalculated, Category, QuantityDisplayMode, GearFieldValue } from '../../utils/types'
-import { deriveStatus, isBig3Category } from '../../utils/types'
+import { isBig3Category } from '../../utils/types'
 import { STATUS_TONES } from '../../utils/designSystem'
 import {
   EditableImageField,
@@ -50,13 +50,6 @@ const TableRow: React.FC<TableRowProps> = ({
   isEditable = false
 }) => {
   const warningTone = STATUS_TONES.warning
-  const status = deriveStatus(item.requiredQuantity, item.ownedQuantity)
-  const statusChipTone = status === 'owned'
-    ? STATUS_TONES.success
-    : status === 'need'
-      ? STATUS_TONES.error
-      : STATUS_TONES.warning
-  const statusChipLabel = status === 'owned' ? 'OWNED' : status === 'need' ? 'NEED' : 'PARTIAL'
 
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
@@ -124,7 +117,7 @@ const TableRow: React.FC<TableRowProps> = ({
       )}
 
       {/* Image */}
-      <td className="px-2 py-2 text-center w-16">
+      <td className="px-2 py-2 text-center w-20">
         <EditableImageField
           value={item.imageUrl || null}
           onChange={(value) => onUpdateItem(item.id, 'imageUrl', value)}
@@ -134,7 +127,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Name & Brand */}
-      <td className="px-2 py-2 w-[160px] min-w-[120px] max-w-[200px]">
+      <td className="px-1.5 py-2 w-[148px] min-w-[112px] max-w-[188px]">
         <div className="text-left space-y-0.5 overflow-hidden">
           {isEditable ? (
             <>
@@ -187,8 +180,8 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Category */}
-      <td className="px-2 py-2 whitespace-nowrap text-left w-24">
-        <div className={`inline-flex items-center gap-1 ${isEditable ? '' : 'max-w-[128px] overflow-hidden'}`}>
+      <td className="px-1.5 py-2 whitespace-nowrap text-left w-20">
+        <div className={`inline-flex items-center gap-1 ${isEditable ? '' : 'max-w-[112px] overflow-hidden'}`}>
           <EditableCategoryField
             value={item.categoryId}
             onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
@@ -210,8 +203,8 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Own/Need */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[112px]">
-        <div className="inline-flex items-center justify-center gap-1.5">
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[88px]">
+        <div className="flex items-center justify-center">
           {isEditable ? (
             <QuantitySelector
               ownedQuantity={item.ownedQuantity}
@@ -222,18 +215,11 @@ const TableRow: React.FC<TableRowProps> = ({
           ) : (
             renderQuantityValue()
           )}
-          <span
-            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none tracking-[0.03em]"
-            style={{ backgroundColor: statusChipTone.background, color: statusChipTone.text }}
-            title={statusChipLabel}
-          >
-            {statusChipLabel}
-          </span>
         </div>
       </td>
 
       {/* Weight */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-20">
+      <td className="gear-text-num px-1.5 py-2 whitespace-nowrap text-center w-[72px]">
         <EditableWeightField
           weightGrams={item.weightGrams}
           totalWeight={item.totalWeight}
@@ -245,7 +231,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Priority */}
-      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10">
+      <td className="px-1.5 py-2 whitespace-nowrap text-center w-8">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}
@@ -253,7 +239,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Price */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-16">
+      <td className="gear-text-num px-1.5 py-2 whitespace-nowrap text-center w-14">
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
@@ -265,7 +251,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Season */}
       <td
-        className="px-2 py-2 text-center w-16"
+        className="px-1.5 py-2 text-center w-14"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => isEditable && e.stopPropagation()}
       >

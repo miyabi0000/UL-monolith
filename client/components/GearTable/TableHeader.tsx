@@ -93,11 +93,11 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             />
           </th>
         )}
-        <th className={`${headerBase} text-left text-gray-600 dark:text-gray-300 w-16`}>
+        <th className={`${headerBase} text-left text-gray-600 dark:text-gray-300 w-20`}>
           <span className={headerLabelClass}>image</span>
         </th>
         <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors min-w-[120px] max-w-[200px]`}
+          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors min-w-[112px] max-w-[188px]`}
           onClick={() => handleSort('name')}
         >
           <span className={headerLabelClass}>
@@ -106,7 +106,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-24`}
+          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-20`}
           onClick={() => handleSort('category')}
         >
           <span className={headerLabelClass}>
@@ -114,7 +114,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             {renderSortIcon('category')}
           </span>
         </th>
-        <th className={`${headerBase} text-center text-gray-600 dark:text-gray-300 w-[112px]`}>
+        <th className={`${headerBase} text-center text-gray-600 dark:text-gray-300 w-[88px]`}>
           <div className="inline-flex items-center justify-center">
             <button
               type="button"
@@ -131,7 +131,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </div>
         </th>
         <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-20`}
+          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-[72px]`}
           onClick={() => handleSort('weight')}
         >
           <span className={headerLabelNumericClass}>
@@ -140,7 +140,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-10`}
+          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-8`}
           onClick={() => handleSort('priority')}
         >
           <span className={headerLabelNumericClass}>
@@ -149,7 +149,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-16`}
+          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-14`}
           onClick={() => handleSort('price')}
         >
           <span className={headerLabelNumericClass}>
@@ -171,7 +171,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-16`}
+          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-14`}
           onClick={() => handleSort('season')}
         >
           <span className={headerLabelClass}>

@@ -3,7 +3,7 @@
  * カラートークンの定義（Single Source of Truth）
  */
 
-import type { PrimitiveColors, SemanticColors } from './types';
+import type { PrimitiveColors, SemanticColors, ThemeColors } from './types';
 
 import { gray, lightBlue, orange, purple, green, red, blue, blueGray } from './primitives';
 
@@ -207,4 +207,153 @@ export const semanticColors: SemanticColors = {
 export const colors = {
   primitive: primitiveColors,
   semantic: semanticColors,
+};
+
+/**
+ * UI Theme Tokens
+ * CSS変数へ投影する色定義（light/dark）
+ */
+export const theme: { light: ThemeColors; dark: ThemeColors } = {
+  light: {
+    page: {
+      bg: `linear-gradient(180deg, ${gray[50]} 0%, ${gray[100]} 100%)`,
+      noiseOpacity: '0.025',
+      noiseBlendMode: 'overlay',
+    },
+    surface: {
+      border: 'rgba(255, 255, 255, 0.42)',
+      bgStart: 'rgba(255, 255, 255, 0.44)',
+      bgEnd: 'rgba(255, 255, 255, 0.22)',
+      beforeGloss: 'rgba(255, 255, 255, 0.1)',
+      fallbackBg: 'rgba(255, 255, 255, 0.84)',
+    },
+    headerChip: {
+      border: 'rgba(255, 255, 255, 0.46)',
+      bgStart: 'rgba(255, 255, 255, 0.58)',
+      bgEnd: 'rgba(255, 255, 255, 0.3)',
+    },
+    table: {
+      shellBorder: 'rgba(255, 255, 255, 0.42)',
+      shellBgStart: 'rgba(255, 255, 255, 0.44)',
+      shellBgEnd: 'rgba(255, 255, 255, 0.18)',
+      headBg: 'rgba(255, 255, 255, 0.68)',
+      headShadowBottom: 'rgba(148, 163, 184, 0.3)',
+      headShadowTop: 'rgba(255, 255, 255, 0.35)',
+      rowBg: 'rgba(255, 255, 255, 0.36)',
+      rowEvenBg: 'rgba(255, 255, 255, 0.28)',
+      borderVert: 'rgba(148, 163, 184, 0.24)',
+      borderHead: 'rgba(148, 163, 184, 0.3)',
+      borderRow: 'rgba(148, 163, 184, 0.18)',
+    },
+    control: {
+      glassBg: 'rgba(255, 255, 255, 0.54)',
+      glassBorder: 'rgba(148, 163, 184, 0.45)',
+      chipBg: 'rgba(255, 255, 255, 0.46)',
+      chipBorder: 'rgba(148, 163, 184, 0.35)',
+    },
+    panel: {
+      flatBg: 'rgba(255, 255, 255, 0.74)',
+      flatBorder: 'rgba(203, 213, 225, 0.6)',
+      flatShadow: 'rgba(15, 23, 42, 0.08)',
+    },
+    text: {
+      tableHead: gray[600],
+      tableMain: gray[900],
+      tableSub: gray[500],
+      tableNum: gray[800],
+      tableMicro: gray[500],
+    },
+  },
+  dark: {
+    page: {
+      bg: 'linear-gradient(180deg, #0b1017 0%, #111827 55%, #0b1017 100%)',
+      noiseOpacity: '0.03',
+      noiseBlendMode: 'soft-light',
+    },
+    surface: {
+      border: 'rgba(148, 163, 184, 0.24)',
+      bgStart: 'rgba(30, 41, 59, 0.74)',
+      bgEnd: 'rgba(15, 23, 42, 0.66)',
+      beforeGloss: 'rgba(255, 255, 255, 0.08)',
+      fallbackBg: 'rgba(17, 24, 39, 0.92)',
+    },
+    headerChip: {
+      border: 'rgba(148, 163, 184, 0.32)',
+      bgStart: 'rgba(51, 65, 85, 0.86)',
+      bgEnd: 'rgba(30, 41, 59, 0.74)',
+    },
+    table: {
+      shellBorder: 'rgba(148, 163, 184, 0.26)',
+      shellBgStart: 'rgba(30, 41, 59, 0.74)',
+      shellBgEnd: 'rgba(15, 23, 42, 0.64)',
+      headBg: 'rgba(30, 41, 59, 0.86)',
+      headShadowBottom: 'rgba(148, 163, 184, 0.24)',
+      headShadowTop: 'rgba(255, 255, 255, 0.06)',
+      rowBg: 'rgba(30, 41, 59, 0.5)',
+      rowEvenBg: 'rgba(30, 41, 59, 0.34)',
+      borderVert: 'rgba(148, 163, 184, 0.2)',
+      borderHead: 'rgba(148, 163, 184, 0.24)',
+      borderRow: 'rgba(148, 163, 184, 0.14)',
+    },
+    control: {
+      glassBg: 'rgba(30, 41, 59, 0.66)',
+      glassBorder: 'rgba(148, 163, 184, 0.32)',
+      chipBg: 'rgba(30, 41, 59, 0.58)',
+      chipBorder: 'rgba(148, 163, 184, 0.28)',
+    },
+    panel: {
+      flatBg: 'rgba(15, 23, 42, 0.82)',
+      flatBorder: 'rgba(71, 85, 105, 0.55)',
+      flatShadow: 'rgba(2, 6, 23, 0.35)',
+    },
+    text: {
+      tableHead: gray[300],
+      tableMain: gray[50],
+      tableSub: gray[400],
+      tableNum: gray[100],
+      tableMicro: gray[400],
+    },
+  },
+};
+
+const toThemeCssVariables = (tokens: ThemeColors): Record<string, string> => ({
+  '--page-bg': tokens.page.bg,
+  '--body-noise-opacity': tokens.page.noiseOpacity,
+  '--noise-blend-mode': tokens.page.noiseBlendMode,
+  '--surface-border': tokens.surface.border,
+  '--surface-bg-start': tokens.surface.bgStart,
+  '--surface-bg-end': tokens.surface.bgEnd,
+  '--surface-before-gloss': tokens.surface.beforeGloss,
+  '--surface-fallback-bg': tokens.surface.fallbackBg,
+  '--header-chip-border': tokens.headerChip.border,
+  '--header-chip-bg-start': tokens.headerChip.bgStart,
+  '--header-chip-bg-end': tokens.headerChip.bgEnd,
+  '--table-shell-border': tokens.table.shellBorder,
+  '--table-shell-bg-start': tokens.table.shellBgStart,
+  '--table-shell-bg-end': tokens.table.shellBgEnd,
+  '--table-head-bg': tokens.table.headBg,
+  '--table-head-shadow-bottom': tokens.table.headShadowBottom,
+  '--table-head-shadow-top': tokens.table.headShadowTop,
+  '--table-row-bg': tokens.table.rowBg,
+  '--table-row-even-bg': tokens.table.rowEvenBg,
+  '--table-border-vert': tokens.table.borderVert,
+  '--table-border-head': tokens.table.borderHead,
+  '--table-border-row': tokens.table.borderRow,
+  '--glass-control-bg': tokens.control.glassBg,
+  '--glass-control-border': tokens.control.glassBorder,
+  '--glass-chip-bg': tokens.control.chipBg,
+  '--glass-chip-border': tokens.control.chipBorder,
+  '--flat-panel-bg': tokens.panel.flatBg,
+  '--flat-panel-border': tokens.panel.flatBorder,
+  '--flat-panel-shadow': tokens.panel.flatShadow,
+  '--text-table-head': tokens.text.tableHead,
+  '--text-table-main': tokens.text.tableMain,
+  '--text-table-sub': tokens.text.tableSub,
+  '--text-table-num': tokens.text.tableNum,
+  '--text-table-micro': tokens.text.tableMicro,
+});
+
+export const themeCssVariables = {
+  light: toThemeCssVariables(theme.light),
+  dark: toThemeCssVariables(theme.dark),
 };

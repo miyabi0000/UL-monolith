@@ -155,3 +155,55 @@ export type SemanticColors = AlertColors &
     text: TextColors;
     common: CommonColors;
   } & GradientColors;
+
+/** UIテーマ色トークン（CSS変数に投影） */
+export type ThemeColors = {
+  page: {
+    bg: string;
+    noiseOpacity: string;
+    noiseBlendMode: string;
+  };
+  surface: {
+    border: string;
+    bgStart: string;
+    bgEnd: string;
+    beforeGloss: string;
+    fallbackBg: string;
+  };
+  headerChip: {
+    border: string;
+    bgStart: string;
+    bgEnd: string;
+  };
+  table: {
+    shellBorder: string;
+    shellBgStart: string;
+    shellBgEnd: string;
+    headBg: string;
+    headShadowBottom: string;
+    headShadowTop: string;
+    rowBg: string;
+    rowEvenBg: string;
+    borderVert: string;
+    borderHead: string;
+    borderRow: string;
+  };
+  control: {
+    glassBg: string;
+    glassBorder: string;
+    chipBg: string;
+    chipBorder: string;
+  };
+  panel: {
+    flatBg: string;
+    flatBorder: string;
+    flatShadow: string;
+  };
+  text: {
+    tableHead: string;
+    tableMain: string;
+    tableSub: string;
+    tableNum: string;
+    tableMicro: string;
+  };
+};

@@ -40,7 +40,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     }
 
     if (action === 'update') {
-      let data: any = {};
+      const data: Record<string, unknown> = {};
 
       switch (updateField) {
         case 'category':
