@@ -28,6 +28,10 @@
     --gear-font-md: 14px;
     --gear-badge-size: 20px;
     --gear-row-height: 60px;
+    /* 角丸階層: 3層ルール */
+    --radius-surface: 12px;   /* L1: カード・モーダル・パネル・テーブルシェル */
+    --radius-control: 8px;    /* L2: ボタン・入力・チップ・ドロップダウン */
+    --radius-badge:   9999px; /* L3: バッジ・優先度トークン・ピル形状 */
     --page-bg: #f8fafc;
     --body-noise-opacity: 0.04;
     --noise-blend-mode: overlay;
@@ -61,10 +65,25 @@
 }
 
 @layer components {
+  .zen-garden-bg {
+    opacity: 0.95;
+  }
+
+  .dark .zen-garden-bg {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zen-garden-bg {
+      opacity: 0.95;
+    }
+  }
+
   .glass-surface,
   .card,
   .modal-content {
-    @apply relative overflow-hidden border rounded-lg;
+    @apply relative overflow-hidden border;
+    border-radius: var(--radius-surface);
     isolation: isolate;
     border-color: var(--surface-border, rgba(255, 255, 255, 0.38));
     background: linear-gradient(140deg, var(--surface-bg-start, rgba(255, 255, 255, 0.55)), var(--surface-bg-end, rgba(255, 255, 255, 0.3)));
@@ -144,7 +163,8 @@
 
   .glass-header-chip {
     --glass-ior: 1.02;
-    @apply relative overflow-hidden border rounded-full shadow-glass-sm transition-all duration-150;
+    @apply relative overflow-hidden border shadow-glass-sm transition-all duration-150;
+    border-radius: var(--radius-badge);
     border-color: var(--header-chip-border, rgba(255, 255, 255, 0.42));
     background: linear-gradient(140deg, var(--header-chip-bg-start, rgba(255, 255, 255, 0.7)), var(--header-chip-bg-end, rgba(255, 255, 255, 0.42)));
     backdrop-filter: blur(calc(var(--glass-blur) * 0.75)) saturate(calc(var(--glass-sat) * 0.9));
@@ -279,18 +299,21 @@
     width: calc(var(--gear-badge-size) - 4px);
     height: calc(var(--gear-badge-size) - 4px);
     font-size: 9px;
-    @apply rounded-full font-bold leading-none appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 text-center tabular-nums;
+    @apply font-bold leading-none appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 text-center tabular-nums;
+    border-radius: var(--radius-badge);
   }
 
   .status-priority-token {
     width: var(--gear-badge-size);
     height: var(--gear-badge-size);
     font-size: var(--gear-font-2xs);
-    @apply inline-flex items-center justify-center rounded-full font-bold leading-none tabular-nums;
+    @apply inline-flex items-center justify-center font-bold leading-none tabular-nums;
+    border-radius: var(--radius-badge);
   }
 
   .gear-table-shell {
-    @apply rounded-lg border overflow-hidden;
+    @apply border overflow-hidden;
+    border-radius: var(--radius-surface);
     border-color: var(--table-shell-border, rgba(255, 255, 255, 0.4));
     background: linear-gradient(155deg, var(--table-shell-bg-start, rgba(255, 255, 255, 0.52)), var(--table-shell-bg-end, rgba(255, 255, 255, 0.26)));
     -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -354,6 +377,7 @@
   .gear-glass-chip {
     background: var(--glass-chip-bg, rgba(255, 255, 255, 0.58));
     border: 1px solid var(--glass-chip-border, rgba(148, 163, 184, 0.35));
+    border-radius: var(--radius-control);
     -webkit-backdrop-filter: blur(6px) saturate(116%);
     backdrop-filter: blur(6px) saturate(116%);
   }
@@ -387,11 +411,13 @@
 
   /* ボタン共通スタイル */
   .btn-primary {
-    @apply bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
+    border-radius: var(--radius-control);
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-900 text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply bg-white hover:bg-gray-50 text-gray-900 text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
+    border-radius: var(--radius-control);
   }
 
   .dark .btn-secondary {
@@ -399,7 +425,8 @@
   }
 
   .btn-danger {
-    @apply text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200;
+    @apply text-white text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
+    border-radius: var(--radius-control);
     background-color: theme('colors.red.500');
   }
 
@@ -409,12 +436,14 @@
 
   /* 小さいボタン（ヘッダーなど） */
   .btn-xs {
-    @apply text-xs font-semibold px-2.5 py-1.5 rounded shadow-sm transition-all duration-200;
+    @apply text-xs font-semibold px-2.5 py-1.5 shadow-sm transition-all duration-200;
+    border-radius: var(--radius-control);
   }
 
   /* 入力フィールド共通スタイル */
   .input {
     @apply bg-white text-gray-900 border border-gray-300 shadow-sm focus:ring-2 focus:ring-gray-500 transition-all duration-200;
+    border-radius: var(--radius-control);
   }
 
   .dark .input {

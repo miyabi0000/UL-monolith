@@ -58,6 +58,17 @@ export const RADIUS_SCALE = {
   full: 9999, // 完全な円
 } as const;
 
+// コンポーネント角丸: 3層階層ルール
+// CSS変数: --radius-surface / --radius-control / --radius-badge
+export const COMPONENT_RADIUS = {
+  /** L1 Surface: カード・モーダル・パネル・テーブルシェル (12px = rounded-lg) */
+  surface: RADIUS_SCALE.lg,
+  /** L2 Control: ボタン・入力・チップ・ドロップダウン・メニュー (8px = rounded-md) */
+  control: RADIUS_SCALE.md,
+  /** L3 Badge: 優先度トークン・カテゴリバッジ・ピル形状 (9999px = rounded-pill) */
+  badge:   RADIUS_SCALE.full,
+} as const;
+
 // カラーパレット — トークンから取得（API 形状は維持）
 export const COLORS = {
   // Base Colors
