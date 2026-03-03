@@ -8,9 +8,8 @@ interface ComparisonTableProps {
   currency?: Currency;
   onCurrencyChange?: () => void;
   onClose: () => void;
-  onAdopt: (itemId: string) => void;
-  onPreviewAdopt?: (itemId: string | null) => void;
-  previewItemId?: string | null;
+  onDelete: (itemId: string) => void;
+  onRaisePriority: (itemId: string) => Promise<void>;
   onRemove?: (itemId: string) => void;
 }
 
@@ -26,13 +25,11 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
   currency = 'JPY',
   onCurrencyChange,
   onClose,
-  onAdopt,
-  onPreviewAdopt,
-  previewItemId,
+  onDelete,
+  onRaisePriority,
   onRemove
 }) => {
   const successTone = STATUS_TONES.success;
-  const warningTone = STATUS_TONES.warning;
 
   // 最良値を計算
   const bestValues = React.useMemo(() => {
@@ -267,77 +264,34 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
               ))}
             </tr>
 
-            {/* 採用時の影響 */}
-            <tr style={{ backgroundColor: warningTone.background }}>
-              <td className="px-2 py-2 text-xs font-medium text-gray-900">
-                Impact
-              </td>
-              {items.map(item => (
-                <td key={item.id} className="px-2 py-2 text-center">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-[10px] text-gray-500">Weight:</span>
-                      <span
-                        className={`text-xs font-medium ${item.weightGrams ? '' : 'text-gray-400'}`}
-                        style={{ color: item.weightGrams ? warningTone.text : undefined }}
-                      >
-                        {item.weightGrams ? `+${item.weightGrams}g` : '-'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="text-[10px] text-gray-500">Cost:</span>
-                      <span
-                        className={`text-xs font-medium ${item.priceCents ? '' : 'text-gray-400'}`}
-                        style={{ color: item.priceCents ? warningTone.text : undefined }}
-                      >
-                        {item.priceCents ? `+${formatPriceWithCurrency(item.priceCents, currency)}` : '-'}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-              ))}
-            </tr>
-
-            {/* アクション */}
+            {/* アクション: 削除 / 優先度を上げる */}
             <tr className="bg-gray-50">
               <td className="px-2 py-2 text-xs font-medium text-gray-900">
                 Action
               </td>
-              {items.map(item => {
-                const isPreviewing = previewItemId === item.id;
-                return (
-                  <td key={item.id} className="px-2 py-2 text-center">
-                    {isPreviewing ? (
-                      <div className="flex flex-col gap-1">
-                        <button
-                          onClick={() => onAdopt(item.id)}
-                          className="px-3 py-1.5 text-xs font-semibold rounded-md bg-gray-700 hover:bg-gray-800 text-white transition-colors shadow-sm"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => onPreviewAdopt?.(null)}
-                          className="px-3 py-1 text-[10px] font-medium rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => onPreviewAdopt?.(item.id)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-sm ${
-                          previewItemId
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gray-700 hover:bg-gray-800 text-white'
-                        }`}
-                        disabled={!!previewItemId}
-                      >
-                        Adopt
-                      </button>
-                    )}
-                  </td>
-                );
-              })}
+              {items.map(item => (
+                <td key={item.id} className="px-2 py-2 text-center">
+                  <div className="flex flex-col gap-1.5 items-center">
+                    {/* 優先度を最高に上げる */}
+                    <button
+                      onClick={() => onRaisePriority(item.id)}
+                      disabled={item.priority === 1}
+                      className="w-full px-2 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-sm bg-gray-700 hover:bg-gray-800 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="優先度を最高(P1)に設定"
+                    >
+                      {item.priority === 1 ? 'P1 ✓' : '↑ Priority'}
+                    </button>
+                    {/* ギアリストから削除 */}
+                    <button
+                      onClick={() => onDelete(item.id)}
+                      className="w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors bg-white border border-gray-300 text-gray-600 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                      title="ギアリストから削除"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              ))}
             </tr>
           </tbody>
         </table>

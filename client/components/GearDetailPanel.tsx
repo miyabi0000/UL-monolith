@@ -153,9 +153,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     openComparison: handleCompare,
     closeComparison: handleCloseComparisonModal,
     removeFromComparison: handleRemoveFromComparison,
-    adoptItem: handleAdoptItem,
-    previewItemId,
-    previewAdopt: handlePreviewAdopt,
+    deleteItem: handleDeleteFromComparison,
+    raisePriority: handleRaisePriority,
   } = useComparisonMode({
     selectedItems,
     onUpdateItem,
@@ -163,6 +162,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onRemoveItem: (itemId) => {
       setSelectedIds(prev => prev.filter(id => id !== itemId));
     },
+    onDeleteItem: onDelete,
   });
 
   const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
@@ -206,9 +206,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         currency={currency}
         onCurrencyChange={handleCurrencyChange}
         onClose={handleCloseComparisonModal}
-        onAdopt={handleAdoptItem}
-        onPreviewAdopt={handlePreviewAdopt}
-        previewItemId={previewItemId}
+        onDelete={handleDeleteFromComparison}
+        onRaisePriority={handleRaisePriority}
         onRemove={handleRemoveFromComparison}
       />
     );
