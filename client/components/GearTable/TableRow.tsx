@@ -2,7 +2,6 @@ import React from 'react'
 import type { GearItemWithCalculated, Category, QuantityDisplayMode } from '../../utils/types'
 import { deriveStatus, isBig3Category } from '../../utils/types'
 import { STATUS_TONES } from '../../utils/designSystem'
-import StatusBadge from '../ui/StatusBadge'
 import {
   EditableImageField,
   EditableTextField,
@@ -50,8 +49,14 @@ const TableRow: React.FC<TableRowProps> = ({
   onEdit,
   isEditable = false
 }) => {
-  const errorTone = STATUS_TONES.error
   const warningTone = STATUS_TONES.warning
+  const status = deriveStatus(item.requiredQuantity, item.ownedQuantity)
+  const statusChipTone = status === 'owned'
+    ? STATUS_TONES.success
+    : status === 'need'
+      ? STATUS_TONES.error
+      : STATUS_TONES.warning
+  const statusChipLabel = status === 'owned' ? 'OWNED' : status === 'need' ? 'NEED' : 'PARTIAL'
 
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
@@ -79,9 +84,6 @@ const TableRow: React.FC<TableRowProps> = ({
             <span className="text-gray-500">{item.ownedQuantity}</span>
             <span className="text-gray-400 mx-0.5">/</span>
             <span className="font-semibold">{item.requiredQuantity}</span>
-            {item.shortage > 0 && (
-              <span className="ml-1 gear-text-micro" style={{ color: errorTone.text }}>(-{item.shortage})</span>
-            )}
           </span>
         )
       case 'all':
@@ -185,45 +187,49 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Category */}
-      <td className="px-2 py-2 whitespace-nowrap text-center w-20">
-        <EditableCategoryField
-          value={item.categoryId}
-          onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
-          isEditing={isEditable}
-          isChanged={isFieldChanged('categoryId')}
-          categories={categories}
-          category={item.category}
-        />
+      <td className="px-2 py-2 whitespace-nowrap text-left w-24">
+        <div className={`inline-flex items-center gap-1 ${isEditable ? '' : 'max-w-[128px] overflow-hidden'}`}>
+          <EditableCategoryField
+            value={item.categoryId}
+            onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
+            isEditing={isEditable}
+            isChanged={isFieldChanged('categoryId')}
+            categories={categories}
+            category={item.category}
+          />
+          <span className="flex-shrink-0">
+            <EditableWeightClassField
+              value={item.weightClass || 'base'}
+              onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
+              isEditing={isEditable}
+              isChanged={isFieldChanged('weightClass')}
+              isBig3={isBig3Category(item.category)}
+            />
+          </span>
+        </div>
       </td>
 
       {/* Own/Need */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-16">
-        {isEditable ? (
-          <QuantitySelector
-            ownedQuantity={item.ownedQuantity}
-            requiredQuantity={item.requiredQuantity}
-            onOwnedChange={(value) => onUpdateItem(item.id, 'ownedQuantity', value)}
-            onRequiredChange={(value) => onUpdateItem(item.id, 'requiredQuantity', value)}
-          />
-        ) : (
-          renderQuantityValue()
-        )}
-      </td>
-
-      {/* Status */}
-      <td className="px-2 py-2 whitespace-nowrap text-center w-14">
-        <StatusBadge status={deriveStatus(item.requiredQuantity, item.ownedQuantity)} compact />
-      </td>
-
-      {/* Weight Class */}
-      <td className="px-2 py-2 whitespace-nowrap text-center w-16">
-        <EditableWeightClassField
-          value={item.weightClass || 'base'}
-          onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
-          isEditing={isEditable}
-          isChanged={isFieldChanged('weightClass')}
-          isBig3={isBig3Category(item.category)}
-        />
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[132px]">
+        <div className="inline-flex items-center justify-center gap-1.5">
+          {isEditable ? (
+            <QuantitySelector
+              ownedQuantity={item.ownedQuantity}
+              requiredQuantity={item.requiredQuantity}
+              onOwnedChange={(value) => onUpdateItem(item.id, 'ownedQuantity', value)}
+              onRequiredChange={(value) => onUpdateItem(item.id, 'requiredQuantity', value)}
+            />
+          ) : (
+            renderQuantityValue()
+          )}
+          <span
+            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold leading-none tracking-[0.03em]"
+            style={{ backgroundColor: statusChipTone.background, color: statusChipTone.text }}
+            title={statusChipLabel}
+          >
+            {statusChipLabel}
+          </span>
+        </div>
       </td>
 
       {/* Weight */}
@@ -239,7 +245,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Priority */}
-      <td className="px-2 py-2 whitespace-nowrap text-center w-12">
+      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}

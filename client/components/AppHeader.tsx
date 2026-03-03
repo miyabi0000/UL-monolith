@@ -60,7 +60,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Dark mode toggle */}
             <button
-              className="glass-header-chip p-1.5 text-gray-600 hover:bg-white/70 dark:hover:bg-gray-700/40"
+              className="glass-header-chip p-1.5 text-gray-600 hover:bg-white/70"
               onClick={toggleDarkMode}
               aria-label="Toggle dark mode"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -79,7 +79,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {/* User menu */}
             <div className="relative user-menu-container">
               <button
-                className="glass-header-chip p-1.5 text-gray-600 hover:bg-white/70 dark:hover:bg-gray-700/40"
+                className="glass-header-chip p-1.5 text-gray-600 hover:bg-white/70"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 aria-label="User menu"
               >

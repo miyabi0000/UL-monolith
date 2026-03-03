@@ -437,18 +437,7 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
     return <span className="gear-anomaly-value" title="Invalid weight">!</span>
   }
 
-  // 数量が1の場合は単位重量のみ表示
-  if (requiredQuantity === 1) {
-    return <span className="gear-text-num font-semibold">{weightGrams.toLocaleString()}</span>
-  }
-
-  // 数量が2以上の場合は計算式を表示
-  return (
-    <div className="gear-text-num">
-      <span className="gear-text-sub">{weightGrams} × {requiredQuantity} = </span>
-      <span className="font-semibold text-gray-800">{totalWeight.toLocaleString()}</span>
-    </div>
-  )
+  return <span className="gear-text-num font-semibold">{totalWeight.toLocaleString()}</span>
 }
 
 interface EditableSeasonFieldProps extends BaseFieldProps {
@@ -566,7 +555,7 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
       <select
         value={priority}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="gear-priority-token status-priority-token"
+        className="gear-priority-token"
         style={{
           color: style.color,
           backgroundColor: style.bg,

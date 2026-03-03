@@ -106,7 +106,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-20`}
+          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-28`}
           onClick={() => handleSort('category')}
         >
           <span className={headerLabelClass}>
@@ -114,25 +114,21 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             {renderSortIcon('category')}
           </span>
         </th>
-        <th className={`${headerBase} text-center text-gray-600 w-16`}>
-          <span className={headerLabelNumericClass}>quantity</span>
-        </th>
-        <th className={`${headerBase} text-left w-[74px]`}>
-          <button
-            type="button"
-            onClick={onQuantityDisplayModeChange}
-            className="gear-glass-chip inline-flex items-center justify-start gap-1 rounded-md px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
-            title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: getStatusFilterColor() }}
-            />
-            <span className="gear-text-micro">{getStatusFilterLabel()}</span>
-          </button>
-        </th>
-        <th className={`${headerBase} text-left text-gray-600 w-16`}>
-          <span className={headerLabelClass}>class</span>
+        <th className={`${headerBase} text-center text-gray-600 w-[132px]`}>
+          <div className="inline-flex items-center justify-center">
+            <button
+              type="button"
+              onClick={onQuantityDisplayModeChange}
+              className="gear-glass-chip inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-gray-500 hover:text-gray-700 transition-colors"
+              title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: getStatusFilterColor() }}
+              />
+              <span className="gear-text-micro">{getStatusFilterLabel()}</span>
+            </button>
+          </div>
         </th>
         <th
           className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-20`}
@@ -144,7 +140,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           </span>
         </th>
         <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-16`}
+          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-14`}
           onClick={() => handleSort('priority')}
         >
           <span className={headerLabelNumericClass}>

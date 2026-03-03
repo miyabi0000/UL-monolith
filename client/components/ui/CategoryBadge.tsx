@@ -16,7 +16,7 @@ const CategoryBadge: React.FC<CategoryBadgeProps> = ({ name, color, className = 
     border: `1px solid ${baseColor}40`
   };
 
-  const classes = `inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${className}`.trim();
+  const classes = `inline-flex max-w-full items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium ${className}`.trim();
 
   if (onClick) {
     return (
