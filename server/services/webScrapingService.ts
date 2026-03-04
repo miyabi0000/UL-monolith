@@ -201,7 +201,7 @@ export class WebScrapingService {
       const priceText = element.attr('content') || element.text().trim();
       
       // 価格パターン: ¥3,850 / $38.50 / 3850円
-      const match = priceText.match(/[¥\$]?\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
+      const match = priceText.match(/[¥$]?\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
       if (match) {
         const value = parseFloat(match[1].replace(/,/g, ''));
         return Math.round(value * 100);

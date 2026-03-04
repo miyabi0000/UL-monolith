@@ -7,7 +7,7 @@
  * 重量抽出パターン（日本語・英語対応）
  */
 const WEIGHT_PATTERNS = [
-  /重量[:\s\/]*(?:ポール[無込み・]*[\/\s])?(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i,
+  /重量[:\s/]*(?:ポール[無込み・]*[/\s])?(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)/i,
   /weight[:\s]*(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,
   /weighs\s+(\d+(?:\.\d+)?)\s*(kg|g|lbs|lb|pounds|oz|ounce)/i,  // "weighs 1lb"
   /(\d+(?:\.\d+)?)\s*(kg|g|グラム|キログラム)(?!\d)/i,
@@ -55,4 +55,3 @@ export function cleanBrandText(brand: string): string {
     .replace(/\(.*?\)$/, '') // 括弧内の日本語読みを削除
     .trim();
 }
-
