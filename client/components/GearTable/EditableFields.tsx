@@ -369,25 +369,25 @@ export const EditablePriceField: React.FC<EditablePriceFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="0"
-        className="w-16 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
+        className="w-16 h-6 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
   }
 
   if (value == null) {
-    return <span className="gear-empty-value">—</span>
+    return <span className="gear-empty-value inline-flex h-6 items-center justify-center">—</span>
   }
 
   if (value < 0) {
-    return <span className="gear-anomaly-value" title="Invalid price">!</span>
+    return <span className="gear-anomaly-value inline-flex h-6 items-center justify-center" title="Invalid price">!</span>
   }
 
   const displayValue = currency === 'USD'
     ? (value / 100 / 150).toFixed(0)
     : Math.round(value / 100)
 
-  return <span className="gear-text-num">{Number(displayValue).toLocaleString('ja-JP')}</span>
+  return <span className="gear-text-num inline-flex h-6 items-center justify-center">{Number(displayValue).toLocaleString('ja-JP')}</span>
 }
 
 interface EditableWeightFieldProps extends BaseFieldProps {
@@ -490,12 +490,12 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   onRequiredChange
 }) => {
   return (
-    <div className="flex items-center justify-center gap-1">
+    <div className="flex h-6 items-center justify-center gap-1">
       {/* Owned数（強調表示） */}
       <select
         value={ownedQuantity}
         onChange={(e) => onOwnedChange(parseInt(e.target.value))}
-        className={`w-7 gear-input-num font-semibold gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer ${
+        className={`w-7 h-6 gear-input-num font-semibold gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer ${
           ownedQuantity >= requiredQuantity
             ? ''
             : 'text-gray-900 dark:text-gray-100'
@@ -511,7 +511,7 @@ export const QuantitySelector: React.FC<QuantitySelectorProps> = ({
       <select
         value={requiredQuantity}
         onChange={(e) => onRequiredChange(parseInt(e.target.value))}
-        className="w-7 gear-input-num text-gray-500 dark:text-gray-300 gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer"
+        className="w-7 h-6 gear-input-num text-gray-500 dark:text-gray-300 gear-glass-control rounded border focus:outline-none focus:ring-0 appearance-none cursor-pointer"
       >
         {Array.from({ length: 10 }, (_, i) => (
           <option key={i + 1} value={i + 1}>{i + 1}</option>
@@ -540,11 +540,11 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
   const style = PRIORITY_STYLE[priority] ?? PRIORITY_STYLE[3]
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex h-6 items-center justify-center">
       <select
         value={priority}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="gear-priority-token"
+        className="gear-priority-token h-6 w-6"
         style={{
           color: style.color,
           backgroundColor: style.bg,

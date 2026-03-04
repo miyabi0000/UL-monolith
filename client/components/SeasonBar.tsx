@@ -23,6 +23,13 @@ const SEASON_LABELS_SHORT: Record<string, string> = {
   winter: 'Wi'
 }
 
+const SEASON_COLORS: Record<string, { icon: string; bg: string; border: string; selectedText: string }> = {
+  spring: { icon: '#16a34a', bg: '#dcfce7', border: '#86efac', selectedText: '#14532d' },
+  summer: { icon: '#f59e0b', bg: '#fef3c7', border: '#fcd34d', selectedText: '#78350f' },
+  fall: { icon: '#ea580c', bg: '#ffedd5', border: '#fdba74', selectedText: '#7c2d12' },
+  winter: { icon: '#2563eb', bg: '#dbeafe', border: '#93c5fd', selectedText: '#1e3a8a' }
+}
+
 // シーズンアイコン
 const SeasonIcon: React.FC<{ season: string; size?: 'sm' | 'md' }> = ({ season, size = 'md' }) => {
   const iconClass = size === 'sm' ? 'w-2 h-2' : 'w-2.5 h-2.5'
@@ -110,6 +117,17 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
       <div className={`flex ${isSmall ? 'gap-0.5' : 'gap-1'} justify-center`}>
         {SEASONS.map(season => {
           const selected = isSelected(season)
+          const seasonColor = SEASON_COLORS[season]
+          const selectedStyle = {
+            backgroundColor: seasonColor.bg,
+            color: seasonColor.selectedText,
+            borderColor: seasonColor.border
+          }
+          const unselectedStyle = {
+            color: seasonColor.icon,
+            borderColor: isEditing ? 'rgba(148, 163, 184, 0.42)' : 'transparent',
+            backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.45)' : 'transparent'
+          }
 
           return (
             <button
@@ -124,16 +142,17 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
               }}
               disabled={!isEditing}
               className={`
-                flex items-center justify-center rounded-md transition-all duration-150
+                flex items-center justify-center rounded-md transition-all duration-150 border
                 ${isSmall ? 'w-5 h-5' : 'w-7 h-7'}
                 ${isEditing ? 'cursor-pointer' : 'cursor-default'}
                 ${selected
-                  ? 'bg-gray-700 text-white shadow-sm'
+                  ? 'shadow-sm'
                   : isEditing
-                    ? 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                    : 'bg-transparent text-gray-300'
+                    ? 'hover:brightness-95'
+                    : 'opacity-75'
                 }
               `}
+              style={selected ? selectedStyle : unselectedStyle}
               title={SEASON_LABELS[season]}
             >
               <SeasonIcon season={season} size={size} />

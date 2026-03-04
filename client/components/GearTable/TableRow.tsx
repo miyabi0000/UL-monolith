@@ -204,7 +204,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       {/* Own/Need */}
       <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[88px]">
-        <div className="flex items-center justify-center">
+        <div className="flex h-6 items-center justify-center">
           {isEditable ? (
             <QuantitySelector
               ownedQuantity={item.ownedQuantity}

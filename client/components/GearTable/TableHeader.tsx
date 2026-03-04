@@ -23,6 +23,81 @@ interface TableHeaderProps {
   isEditable?: boolean
 }
 
+interface HeaderChipProps {
+  align?: 'left' | 'center'
+  className?: string
+  as?: 'span' | 'button'
+  onClick?: () => void
+  title?: string
+  children: React.ReactNode
+}
+
+const HeaderChip: React.FC<HeaderChipProps> = ({
+  align = 'left',
+  className = '',
+  as = 'span',
+  onClick,
+  title,
+  children,
+}) => {
+  const baseClass = [
+    'gear-glass-chip inline-flex items-center gap-1 rounded-md px-1.5',
+    'h-6 w-full text-[11px] leading-none',
+    align === 'center' ? 'justify-center text-center' : 'justify-start text-left',
+    className,
+  ].join(' ')
+
+  if (as === 'button') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        className={`${baseClass} text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 transition-colors`}
+      >
+        {children}
+      </button>
+    )
+  }
+
+  return <span className={baseClass}>{children}</span>
+}
+
+interface HeaderCellProps {
+  widthClass: string
+  align?: 'left' | 'center'
+  sortable?: boolean
+  isEditable: boolean
+  sortField?: SortField
+  onSort?: (field: SortField) => void
+  children: React.ReactNode
+}
+
+const HeaderCell: React.FC<HeaderCellProps> = ({
+  widthClass,
+  align = 'left',
+  sortable = false,
+  isEditable,
+  sortField,
+  onSort,
+  children,
+}) => {
+  const headerBase = 'gear-th px-2 py-2'
+  const sortableHeaderClass = isEditable
+    ? 'text-gray-400 dark:text-gray-500 cursor-default'
+    : 'text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-white/55 dark:hover:bg-slate-700/40'
+
+  const className = sortable
+    ? `group ${headerBase} ${align === 'center' ? 'text-center' : 'text-left'} ${sortableHeaderClass} transition-colors ${widthClass}`
+    : `${headerBase} ${align === 'center' ? 'text-center' : 'text-left'} text-gray-600 dark:text-gray-300 ${widthClass}`
+
+  return (
+    <th className={className} onClick={sortable && sortField && onSort ? () => onSort(sortField) : undefined}>
+      {children}
+    </th>
+  )
+}
+
 const TableHeader: React.FC<TableHeaderProps> = ({
   showCheckboxes,
   isAllSelected,
@@ -38,16 +113,11 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   showEditColumn = false,
   isEditable = false
 }) => {
-  // 編集モード中はソートを無効化
   const handleSort = (field: SortField) => {
     if (isEditable) return
     onSort(field)
   }
 
-  // ソート可能なヘッダーのスタイル
-  const sortableHeaderClass = isEditable
-    ? 'text-gray-400 dark:text-gray-500 cursor-default'
-    : 'text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-white/55 dark:hover:bg-slate-700/40'
   const headerBase = 'gear-th px-2 py-2'
   const getStatusFilterLabel = () => {
     switch (quantityDisplayMode) {
@@ -74,9 +144,6 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     )
   }
 
-  const headerLabelClass = 'gear-glass-chip inline-flex items-center justify-start gap-1 rounded-md px-1.5 py-0.5 text-left'
-  const headerLabelNumericClass = 'gear-glass-chip inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-center w-full'
-
   return (
     <thead className="gear-table-head">
       <tr>
@@ -93,33 +160,27 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             />
           </th>
         )}
-        <th className={`${headerBase} text-left text-gray-600 dark:text-gray-300 w-20`}>
-          <span className={headerLabelClass}>image</span>
-        </th>
-        <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors min-w-[112px] max-w-[188px]`}
-          onClick={() => handleSort('name')}
-        >
-          <span className={headerLabelClass}>
+        <HeaderCell widthClass="w-20" isEditable={isEditable}>
+          <HeaderChip>image</HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="min-w-[112px] max-w-[188px]" sortable isEditable={isEditable} sortField="name" onSort={handleSort}>
+          <HeaderChip>
             name
             {renderSortIcon('name')}
-          </span>
-        </th>
-        <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-20`}
-          onClick={() => handleSort('category')}
-        >
-          <span className={headerLabelClass}>
+          </HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="w-20" sortable isEditable={isEditable} sortField="category" onSort={handleSort}>
+          <HeaderChip>
             category
             {renderSortIcon('category')}
-          </span>
-        </th>
-        <th className={`${headerBase} text-center text-gray-600 dark:text-gray-300 w-[88px]`}>
+          </HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="w-[88px]" align="center" isEditable={isEditable}>
           <div className="inline-flex items-center justify-center">
-            <button
-              type="button"
+            <HeaderChip
+              as="button"
+              align="center"
               onClick={onQuantityDisplayModeChange}
-              className="gear-glass-chip inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
               title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
             >
               <span
@@ -127,32 +188,23 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                 style={{ backgroundColor: getStatusFilterColor() }}
               />
               <span className="gear-text-micro">{getStatusFilterLabel()}</span>
-            </button>
+            </HeaderChip>
           </div>
-        </th>
-        <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-[72px]`}
-          onClick={() => handleSort('weight')}
-        >
-          <span className={headerLabelNumericClass}>
+        </HeaderCell>
+        <HeaderCell widthClass="w-[72px]" align="center" sortable isEditable={isEditable} sortField="weight" onSort={handleSort}>
+          <HeaderChip align="center">
             g
             {renderSortIcon('weight')}
-          </span>
-        </th>
-        <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-8`}
-          onClick={() => handleSort('priority')}
-        >
-          <span className={headerLabelNumericClass}>
+          </HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="w-8" align="center" sortable isEditable={isEditable} sortField="priority" onSort={handleSort}>
+          <HeaderChip align="center">
             priority
             {renderSortIcon('priority')}
-          </span>
-        </th>
-        <th
-          className={`group ${headerBase} text-center ${sortableHeaderClass} transition-colors w-14`}
-          onClick={() => handleSort('price')}
-        >
-          <span className={headerLabelNumericClass}>
+          </HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="w-14" align="center" sortable isEditable={isEditable} sortField="price" onSort={handleSort}>
+          <HeaderChip align="center">
             price
             {onCurrencyChange && (
               <button
@@ -168,17 +220,14 @@ const TableHeader: React.FC<TableHeaderProps> = ({
               </button>
             )}
             {renderSortIcon('price')}
-          </span>
-        </th>
-        <th
-          className={`group ${headerBase} text-left ${sortableHeaderClass} transition-colors w-14`}
-          onClick={() => handleSort('season')}
-        >
-          <span className={headerLabelClass}>
+          </HeaderChip>
+        </HeaderCell>
+        <HeaderCell widthClass="w-14" sortable isEditable={isEditable} sortField="season" onSort={handleSort}>
+          <HeaderChip>
             season
             {renderSortIcon('season')}
-          </span>
-        </th>
+          </HeaderChip>
+        </HeaderCell>
         {showEditColumn && (
           <th className="px-2 py-2 text-center w-8"></th>
         )}

@@ -22,20 +22,20 @@ const BackpackIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' 
 
 const ScaleIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3V21" />
-    <path d="M3 12H21" />
-    <path d="M6 8L12 3L18 8" />
-    <path d="M4 16H8L6 21H10" />
-    <path d="M14 16H20L18 21H22" />
+    <path d="M12 4V19" />
+    <path d="M6.5 7.5H17.5" />
+    <path d="M4.5 20H19.5" />
+    <path d="M7.5 7.5L4.5 12.5H10.5L7.5 7.5Z" />
+    <path d="M16.5 7.5L13.5 12.5H19.5L16.5 7.5Z" />
   </svg>
 )
 
 const YenIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L6 12H18L12 2Z" />
-    <path d="M6 15H18" />
-    <path d="M6 18H18" />
-    <path d="M12 12V22" />
+    <path d="M7 4L12 10L17 4" />
+    <path d="M8 12H16" />
+    <path d="M8 15H16" />
+    <path d="M12 10V21" />
   </svg>
 )
 
@@ -110,6 +110,48 @@ const VIEW_MODE_OPTIONS = [
   { mode: 'cost', label: 'Cost', icon: YenIcon },
   { mode: 'weight-class', label: 'Class', icon: BackpackIcon }
 ] as const
+
+interface SegmentedOption {
+  key: string
+  label: React.ReactNode
+  onClick: () => void
+  isActive: boolean
+  isDisabled?: boolean
+  title?: string
+  ariaLabel?: string
+  activeClassName?: string
+  inactiveClassName?: string
+  disabledClassName?: string
+}
+
+interface SegmentedControlProps {
+  options: SegmentedOption[]
+  className?: string
+}
+
+const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, className = '' }) => (
+  <div className={`inline-flex items-center gap-1 ${className}`}>
+    {options.map((option) => {
+      const activeClass = option.activeClassName ?? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
+      const inactiveClass = option.inactiveClassName ?? 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
+      const disabledClass = option.disabledClassName ?? 'text-gray-300 dark:text-gray-500 cursor-not-allowed'
+      const stateClass = option.isDisabled ? disabledClass : option.isActive ? activeClass : inactiveClass
+
+      return (
+        <button
+          key={option.key}
+          onClick={option.onClick}
+          disabled={option.isDisabled}
+          title={option.title}
+          aria-label={option.ariaLabel}
+          className={`gear-glass-chip h-6 px-2 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${stateClass}`}
+        >
+          {option.label}
+        </button>
+      )
+    })}
+  </div>
+)
 
 type OuterPieDataItem = {
   id: string
@@ -351,6 +393,51 @@ interface ChartSummaryFooterProps {
   itemCount: number
 }
 
+interface SummaryStatCardProps {
+  label: string
+  value: string
+  subValue?: string
+  icon?: React.ReactNode
+  isActive?: boolean
+  onClick?: () => void
+}
+
+const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
+  label,
+  value,
+  subValue,
+  icon,
+  isActive = false,
+  onClick,
+}) => {
+  const cardClass = `flex flex-col items-center justify-center px-1 h-[72px] rounded-md transition-all duration-200 ${
+    isActive
+      ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500'
+      : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
+  }`
+
+  const content = (
+    <>
+      <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+        {icon}
+        <span className="text-[10px] leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
+      </div>
+      <span className="text-[11px] leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
+      {subValue && <span className="text-[9px] leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={cardClass}>
+        {content}
+      </button>
+    )
+  }
+
+  return <div className={cardClass}>{content}</div>
+}
+
 const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   viewMode,
   onViewModeChange,
@@ -362,83 +449,57 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   totalCost,
   itemCount
 }) => {
-  const chartFocusCardClass = (isActive: boolean) =>
-    `flex flex-col items-center py-1.5 px-1 rounded transition-all duration-200 ${
-      isActive ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500' : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
-    }`
-
   return (
     <div className="px-2 py-1.5 border-t border-gray-200 dark:border-slate-600">
       <div className="flex justify-center mb-1.5">
-        <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-slate-700">
-          {VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => (
-            <button
-              key={mode}
-              onClick={() => onViewModeChange(mode)}
-              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${
-                viewMode === mode
-                  ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
-              }`}
-            >
-              <Icon className="w-3 h-3" />
-              {label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
+            key: mode,
+            onClick: () => onViewModeChange(mode),
+            isActive: viewMode === mode,
+            ariaLabel: `${label} mode`,
+            label: (
+              <>
+                <Icon className="w-3 h-3" />
+                {label}
+              </>
+            ),
+          }))}
+        />
       </div>
 
-      {viewMode === 'weight-class' && weightBreakdown ? (
-        <div className="grid grid-cols-4 gap-1">
-          {weightClassSummaryCards.map(card => (
-            <button
-              key={card.key}
-              onClick={() => onToggleChartFocus(card.focus)}
-              className={chartFocusCardClass(chartFocus === card.focus)}
-            >
-              <span className="text-[9px] font-medium text-gray-600 dark:text-gray-300">{card.label}</span>
-              <span className="text-[11px] font-bold text-gray-900 dark:text-gray-100">
-                {card.value.toLocaleString()}g
-              </span>
-            </button>
-          ))}
-        </div>
+      <div className="min-h-[72px]">
+        {viewMode === 'weight-class' && weightBreakdown ? (
+          <div className="grid grid-cols-4 gap-1 h-[72px]">
+            {weightClassSummaryCards.map(card => (
+              <SummaryStatCard
+                key={card.key}
+                label={card.label}
+                value={`${card.value.toLocaleString()}g`}
+                isActive={chartFocus === card.focus}
+                onClick={() => onToggleChartFocus(card.focus)}
+              />
+            ))}
+          </div>
       ) : (
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
-            viewMode === 'weight'
-              ? 'bg-gray-200 dark:bg-slate-600 ring-2 ring-gray-400'
-              : 'bg-gray-100 dark:bg-slate-700'
-          }`}>
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <ScaleIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
-              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">Weight</span>
-            </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-              {totalWeight.toLocaleString()}g
-            </span>
-            <span className="text-[9px] text-gray-500 dark:text-gray-400">
-              {(totalWeight / 1000).toFixed(2)}kg
-            </span>
+          <div className="grid grid-cols-2 gap-1.5 h-[72px]">
+            <SummaryStatCard
+              label="Weight"
+              value={`${totalWeight.toLocaleString()}g`}
+              subValue={`${(totalWeight / 1000).toFixed(2)}kg`}
+              isActive={viewMode === 'weight'}
+              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+            />
+            <SummaryStatCard
+              label="Price"
+              value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
+              subValue={`${itemCount} items`}
+              isActive={viewMode === 'cost'}
+              icon={<YenIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+            />
           </div>
-          <div className={`flex flex-col items-center p-2 rounded transition-all duration-200 ${
-            viewMode === 'cost'
-              ? 'bg-gray-200 dark:bg-slate-600 ring-2 ring-gray-400'
-              : 'bg-gray-100 dark:bg-slate-700'
-          }`}>
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <YenIcon className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
-              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">Price</span>
-            </div>
-            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-              ¥{Math.round(totalCost / 100).toLocaleString()}
-            </span>
-            <span className="text-[9px] text-gray-500 dark:text-gray-400">
-              {itemCount} items
-            </span>
-          </div>
-        </div>
       )}
+      </div>
     </div>
   )
 }
@@ -1043,60 +1104,47 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             </div>
 
             {/* 右側: 統合ツールバー */}
-            <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
+            <div className="inline-flex items-center gap-1">
               {onGearViewModeChange && (
-                <div className="inline-flex rounded-md p-0.5 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600">
-                  <button
-                    onClick={() => onGearViewModeChange('card')}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
-                      gearViewMode === 'card'
-                        ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : gearViewMode === 'compare'
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Card view"
-                  >
-                    Card
-                  </button>
-                  <button
-                    onClick={() => onGearViewModeChange('table')}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
-                      gearViewMode === 'table'
-                        ? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : gearViewMode === 'compare'
-                          ? 'text-gray-400 dark:text-gray-500'
-                          : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Table view"
-                  >
-                    Table
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (gearViewMode === 'compare') {
-                        onGearViewModeChange('table')
-                      } else {
-                        if (showCheckboxes) {
-                          onToggleCheckboxes()
+                <SegmentedControl
+                  options={[
+                    {
+                      key: 'card',
+                      label: 'Card',
+                      onClick: () => onGearViewModeChange('card'),
+                      isActive: gearViewMode === 'card',
+                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
+                      ariaLabel: 'Card view',
+                    },
+                    {
+                      key: 'table',
+                      label: 'Table',
+                      onClick: () => onGearViewModeChange('table'),
+                      isActive: gearViewMode === 'table',
+                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
+                      ariaLabel: 'Table view',
+                    },
+                    {
+                      key: 'compare',
+                      label: 'A|B',
+                      onClick: () => {
+                        if (gearViewMode === 'compare') {
+                          onGearViewModeChange('table')
+                        } else {
+                          if (showCheckboxes) {
+                            onToggleCheckboxes()
+                          }
+                          onGearViewModeChange('compare')
                         }
-                        onGearViewModeChange('compare')
-                      }
-                    }}
-                    disabled={showCheckboxes && gearViewMode !== 'compare'}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
-                      gearViewMode === 'compare'
-                        ? 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
-                        : showCheckboxes
-                          ? 'text-gray-300 dark:text-gray-500 cursor-not-allowed'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
-                    }`}
-                    aria-label="Compare view"
-                    title={showCheckboxes ? 'Exit Edit mode first' : 'Compare items'}
-                  >
-                    A|B
-                  </button>
-                </div>
+                      },
+                      isActive: gearViewMode === 'compare',
+                      isDisabled: showCheckboxes && gearViewMode !== 'compare',
+                      activeClassName: 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm',
+                      ariaLabel: 'Compare view',
+                      title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
+                    },
+                  ]}
+                />
               )}
 
               {/* アクションメニュー（ADD + Manage Categories） */}
