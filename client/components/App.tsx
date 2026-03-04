@@ -6,6 +6,8 @@ import { useNotifications } from '../hooks/useNotifications';
 import AppHeader from './AppHeader';
 import HomePage from './HomePage';
 import NotificationPopup from './NotificationPopup';
+import PacksPage from './PacksPage';
+import PackDetailPage from './PackDetailPage';
 
 // 遅延インポート（コード分割）
 const Login = React.lazy(() => import('./Login'));
@@ -47,6 +49,8 @@ export default function App() {
       {/* ルーティング */}
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/packs" element={<PacksPage />} />
+        <Route path="/p/:packId" element={<PackDetailPage />} />
       </Routes>
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>

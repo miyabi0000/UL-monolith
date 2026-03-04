@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
 
 interface AppHeaderProps {
   onShowLogin: () => void;
@@ -51,10 +52,41 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-4 py-2">
         {/* Compact island container */}
         <div className="glass-surface glass-refract glass-header flex items-center justify-between gap-2 rounded-full px-3 py-1.5 sm:px-4 sm:py-1.5 transition-colors duration-200">
-          {/* Left: Logo */}
-          <h1 className="font-normal lowercase text-xs sm:text-sm text-gray-900 dark:text-gray-100 tracking-wide whitespace-nowrap">
-            minimal gear manager
-          </h1>
+          {/* Left: Logo + Primary Tabs */}
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="font-normal lowercase text-xs sm:text-sm text-gray-900 dark:text-gray-100 tracking-wide whitespace-nowrap">
+              minimal gear manager
+            </h1>
+            <nav className="flex items-center gap-1">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  [
+                    'h-7 px-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center',
+                    isActive
+                      ? 'bg-white/75 dark:bg-slate-700/70 text-gray-900 dark:text-gray-100'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/40'
+                  ].join(' ')
+                }
+              >
+                ALL
+              </NavLink>
+              <NavLink
+                to="/packs"
+                className={({ isActive }) =>
+                  [
+                    'h-7 px-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center',
+                    isActive
+                      ? 'bg-white/75 dark:bg-slate-700/70 text-gray-900 dark:text-gray-100'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/40'
+                  ].join(' ')
+                }
+              >
+                Packs
+              </NavLink>
+            </nav>
+          </div>
 
           {/* Right: Main actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
