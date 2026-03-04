@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import type { ChartViewMode } from '../../utils/types'
 import { darkenColor } from '../../utils/colorHelpers'
+import { formatChartAxisValue } from '../../utils/chartHelpers'
 
 export interface BarItem {
   id?: string
@@ -79,17 +80,6 @@ const BAR_GAP = 8
 const MIN_CHART_HEIGHT = 120
 const HEIGHT_PADDING = 32
 
-const formatWeightAxisValue = (value: number): string =>
-  value >= 1000 ? `${(value / 1000).toFixed(1)}kg` : `${value}g`
-
-const formatCostAxisValue = (value: number): string => {
-  const yen = Math.round(value / 100)
-  return yen >= 10000 ? `¥${(yen / 10000).toFixed(1)}万` : `¥${yen.toLocaleString()}`
-}
-
-const formatAxisValueByMode = (value: number, mode: ChartViewMode): string =>
-  mode === 'cost' ? formatCostAxisValue(value) : formatWeightAxisValue(value)
-
 const calcBarOpacity = (hasSelection: boolean, isSelected: boolean, hasItemId: boolean): number =>
   hasSelection && !isSelected && !hasItemId ? 0.35 : 1
 
@@ -115,7 +105,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         >
           <XAxis
             type="number"
-            tickFormatter={(value: number) => formatAxisValueByMode(value, viewMode)}
+            tickFormatter={(value: number) => formatChartAxisValue(value, viewMode)}
             tick={{ fontSize: 9, fill: '#9ca3af' }}
             axisLine={false}
             tickLine={false}
