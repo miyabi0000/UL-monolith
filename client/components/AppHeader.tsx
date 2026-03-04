@@ -59,16 +59,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <h1 className="font-normal lowercase text-xs sm:text-sm text-gray-900 dark:text-gray-100 tracking-wide whitespace-nowrap">
               minimal gear manager
             </h1>
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-end gap-1 overflow-x-auto max-w-[45vw] sm:max-w-none pb-0.5">
               <NavLink
                 to="/"
                 end
                 className={({ isActive }) =>
                   [
-                    'h-7 px-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center',
+                    'h-7 px-2.5 rounded-t-md text-xs font-medium transition-colors inline-flex items-center border',
                     isActive
-                      ? 'bg-white/75 dark:bg-slate-700/70 text-gray-900 dark:text-gray-100'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/40'
+                      ? 'bg-white/82 dark:bg-slate-700/78 text-gray-900 dark:text-gray-100 border-gray-300/70 dark:border-slate-500/80 border-b-transparent'
+                      : 'text-gray-600 dark:text-gray-300 border-transparent hover:border-gray-300/50 dark:hover:border-slate-500/50 hover:bg-white/50 dark:hover:bg-slate-700/40'
                   ].join(' ')
                 }
               >
@@ -78,10 +78,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 to="/packs"
                 className={({ isActive }) =>
                   [
-                    'h-7 px-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center',
+                    'h-7 px-2.5 rounded-t-md text-xs font-medium transition-colors inline-flex items-center border',
                     isActive
-                      ? 'bg-white/75 dark:bg-slate-700/70 text-gray-900 dark:text-gray-100'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-slate-700/40'
+                      ? 'bg-white/82 dark:bg-slate-700/78 text-gray-900 dark:text-gray-100 border-gray-300/70 dark:border-slate-500/80 border-b-transparent'
+                      : 'text-gray-600 dark:text-gray-300 border-transparent hover:border-gray-300/50 dark:hover:border-slate-500/50 hover:bg-white/50 dark:hover:bg-slate-700/40'
                   ].join(' ')
                 }
               >

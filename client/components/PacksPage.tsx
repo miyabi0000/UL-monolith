@@ -1,21 +1,60 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { formatPrice } from '../utils/formatters';
 import CategoryBadge from './ui/CategoryBadge';
+import CardGridView from './DetailPanel/CardGridView';
 
 const fallbackUserId = 'local-user';
+const PROFILE_STORAGE_KEY = 'ul_profile_settings_v1';
+
+interface ProfileSettings {
+  headerTitle: string;
+  displayName: string;
+  handle: string;
+  bio: string;
+}
+
+const readProfile = (fallbackName?: string): ProfileSettings => {
+  const defaultProfile: ProfileSettings = {
+    headerTitle: 'Packboard',
+    displayName: fallbackName || 'Guest',
+    handle: fallbackName ? `@${fallbackName.toLowerCase().replace(/\s+/g, '')}` : '@guest',
+    bio: 'Inventory / Packs を切り替えて山行ごとの装備をまとめる。'
+  };
+
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return defaultProfile;
+    const parsed = JSON.parse(raw) as Partial<ProfileSettings>;
+    return {
+      headerTitle: parsed.headerTitle?.trim() || defaultProfile.headerTitle,
+      displayName: parsed.displayName?.trim() || defaultProfile.displayName,
+      handle: parsed.handle?.trim() || defaultProfile.handle,
+      bio: parsed.bio?.trim() || defaultProfile.bio
+    };
+  } catch {
+    return defaultProfile;
+  }
+};
 
 export default function PacksPage() {
   const { user } = useAuth();
   const { gearItems, isLoading } = useAppState();
   const { packs, createPack, deletePack, toggleItemInPack } = usePacks(user?.id ?? fallbackUserId);
 
+  const [profile, setProfile] = useState<ProfileSettings>(() => readProfile(user?.name));
+  const [showPackEditor, setShowPackEditor] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [expandedPackId, setExpandedPackId] = useState<string | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  }, [profile]);
 
   const packSummaries = useMemo(
     () =>
@@ -35,6 +74,7 @@ export default function PacksPage() {
     createPack(trimmed, description);
     setName('');
     setDescription('');
+    setShowPackEditor(false);
   };
 
   const copyPublicLink = async (packId: string) => {
@@ -46,38 +86,47 @@ export default function PacksPage() {
     }
   };
 
+  const userInitial = (profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase();
+
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-[16px] py-4">
-      <section className="glass-surface p-4 mb-4">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Create Pack</h2>
-        <form onSubmit={handleCreatePack} className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
-          <input
-            className="h-9 rounded-md border border-gray-300/70 dark:border-slate-600 bg-white/70 dark:bg-slate-800/70 px-3 text-sm"
-            placeholder="Pack name (e.g. Alps 2D1N)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            className="h-9 rounded-md border border-gray-300/70 dark:border-slate-600 bg-white/70 dark:bg-slate-800/70 px-3 text-sm"
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <button type="submit" className="h-9 px-4 rounded-md btn-primary text-sm">
-            Add Pack
+    <main className="max-w-6xl mx-auto px-3 sm:px-6 md:px-8 lg:px-[16px] py-4">
+      <section className="glass-surface p-4 sm:p-5 mb-4">
+        <p className="text-[11px] tracking-wide uppercase text-gray-500 dark:text-gray-400 text-center">{profile.headerTitle}</p>
+        <div className="mt-2 flex flex-col items-center text-center">
+          <span className="h-14 w-14 rounded-full bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-lg font-semibold inline-flex items-center justify-center shadow-sm">
+            {userInitial}
+          </span>
+          <h2 className="mt-2 text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">{profile.displayName}</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{profile.handle}</p>
+          <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 max-w-xl">{profile.bio}</p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            className="h-8 px-3 rounded-md btn-secondary text-xs"
+            onClick={() => setShowPackEditor(true)}
+          >
+            EDIT PACKS
           </button>
-        </form>
+          <button
+            type="button"
+            className="h-8 px-3 rounded-md btn-secondary text-xs"
+            onClick={() => setShowProfileEditor(true)}
+          >
+            EDIT PROFILE
+          </button>
+        </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         {packSummaries.map(({ pack, items, totalWeight, totalPrice }) => (
-          <article key={pack.id} className="glass-surface p-4">
+          <article key={pack.id} className="glass-surface p-3 sm:p-4">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{pack.name}</h3>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{pack.name}</h3>
                 {pack.description && (
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{pack.description}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{pack.description}</p>
                 )}
               </div>
               <button
@@ -104,9 +153,17 @@ export default function PacksPage() {
               </div>
             </div>
 
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 rounded-md border border-gray-200/70 dark:border-slate-600 bg-white/35 dark:bg-slate-800/35 max-h-[220px] overflow-auto">
+              <CardGridView
+                items={items}
+                viewMode="weight"
+                quantityDisplayMode="all"
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link to={`/p/${pack.id}`} className="h-8 px-3 rounded-md btn-secondary text-xs inline-flex items-center">
-                Open Public Page
+                Open
               </Link>
               <button
                 type="button"
@@ -120,28 +177,9 @@ export default function PacksPage() {
                 className="h-8 px-3 rounded-md btn-secondary text-xs"
                 onClick={() => setExpandedPackId((prev) => (prev === pack.id ? null : pack.id))}
               >
-                {expandedPackId === pack.id ? 'Close Items' : 'Edit Items'}
+                {expandedPackId === pack.id ? 'Close Edit' : 'Edit Items'}
               </button>
             </div>
-
-            {items.length > 0 && (
-              <div className="mt-3 flex -space-x-2 overflow-hidden">
-                {items.slice(0, 5).map((item) => (
-                  <img
-                    key={item.id}
-                    src={item.imageUrl || 'https://via.placeholder.com/80x80?text=No+Image'}
-                    alt={item.name}
-                    className="h-8 w-8 rounded-full object-cover ring-2 ring-white/80 dark:ring-slate-800/80"
-                    loading="lazy"
-                  />
-                ))}
-                {items.length > 5 && (
-                  <span className="h-8 min-w-[32px] px-2 rounded-full bg-white/70 dark:bg-slate-700/70 ring-2 ring-white/80 dark:ring-slate-800/80 text-[11px] font-medium flex items-center justify-center text-gray-700 dark:text-gray-200">
-                    +{items.length - 5}
-                  </span>
-                )}
-              </div>
-            )}
 
             {expandedPackId === pack.id && (
               <div className="mt-3 max-h-64 overflow-auto rounded-md border border-gray-200/70 dark:border-slate-600 p-2">
@@ -183,10 +221,80 @@ export default function PacksPage() {
 
         {packSummaries.length === 0 && (
           <div className="glass-surface p-8 text-center text-sm text-gray-600 dark:text-gray-300">
-            Packs are empty. Create your first trip pack above.
+            Packs are empty. Press EDIT PACKS to create your first pack.
           </div>
         )}
       </section>
+
+      {showPackEditor && (
+        <div className="modal-overlay" onClick={() => setShowPackEditor(false)}>
+          <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200 dark:border-slate-600 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create Pack</h3>
+              <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setShowPackEditor(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreatePack} className="p-6 space-y-3">
+              <input
+                className="input w-full"
+                placeholder="Pack name (e.g. Alps 2D1N)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <textarea
+                className="input w-full min-h-[84px]"
+                placeholder="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button type="button" className="btn-secondary" onClick={() => setShowPackEditor(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showProfileEditor && (
+        <div className="modal-overlay" onClick={() => setShowProfileEditor(false)}>
+          <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200 dark:border-slate-600 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Profile</h3>
+              <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setShowProfileEditor(false)}>✕</button>
+            </div>
+            <div className="p-6 space-y-3">
+              <input
+                className="input w-full"
+                placeholder="Header title"
+                value={profile.headerTitle}
+                onChange={(e) => setProfile((prev) => ({ ...prev, headerTitle: e.target.value }))}
+              />
+              <input
+                className="input w-full"
+                placeholder="Display name"
+                value={profile.displayName}
+                onChange={(e) => setProfile((prev) => ({ ...prev, displayName: e.target.value }))}
+              />
+              <input
+                className="input w-full"
+                placeholder="@handle"
+                value={profile.handle}
+                onChange={(e) => setProfile((prev) => ({ ...prev, handle: e.target.value }))}
+              />
+              <textarea
+                className="input w-full min-h-[84px]"
+                placeholder="Bio"
+                value={profile.bio}
+                onChange={(e) => setProfile((prev) => ({ ...prev, bio: e.target.value }))}
+              />
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button type="button" className="btn-primary" onClick={() => setShowProfileEditor(false)}>Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
