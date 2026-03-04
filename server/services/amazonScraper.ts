@@ -2,11 +2,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { normalizeBrand } from '../utils/brandUtils.js';
-import { 
-  extractJsonLd, 
-  extractWeight, 
-  cleanBrandText
-} from '../utils/scrapingHelpers.js';
+import { extractJsonLd } from './scraping/headParsers.js';
+import { extractWeight, cleanBrandText } from '../utils/scrapingHelpers.js';
 import { CategoryMatcher } from './categoryMatcher.js';
 
 /**
@@ -32,23 +29,22 @@ export class AmazonScraper {
   /**
    * Amazon商品ページから情報を抽出
    */
-  async scrapeAmazonProduct(url: string): Promise<LLMExtractionResult> {
+  async scrapeAmazonProduct(url: string): Promise<{ data: LLMExtractionResult; html: string }> {
     try {
       const html = await this.fetchAmazonHTML(url);
       const $ = cheerio.load(html);
 
       const result = this.extractAmazonData($, url);
 
-      // Validate we extracted at least some useful data
       if (result.extractedFields.length === 0) {
         console.warn(`[Amazon] No data extracted from ${url}, using fallback`);
-        return this.createAmazonFallback(url);
+        return { data: this.createAmazonFallback(url), html };
       }
 
-      return result;
+      return { data: result, html };
     } catch (error) {
       console.error(`[Amazon] Scraping failed for ${url}:`, error);
-      return this.createAmazonFallback(url);
+      return { data: this.createAmazonFallback(url), html: '' };
     }
   }
 
@@ -112,7 +108,7 @@ export class AmazonScraper {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields,
       source: 'web_scraping'
     };
@@ -328,7 +324,7 @@ export class AmazonScraper {
       requiredQuantity: 1,
       ownedQuantity: 0,
       priority: 3,
-      season: 'all',
+
       extractedFields: [],
       source: 'fallback',
       confidence: 0.2

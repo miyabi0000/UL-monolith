@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { Category } from '../utils/types'
+import { STATUS_TONES } from '../utils/designSystem'
+import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_HEX_SET, JAPANESE_COLOR_PALETTE } from '../utils/japaneseColors'
 
 interface CategoryManagerProps {
   categories: Category[]
@@ -16,11 +18,13 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   onDeleteCategory,
   onClose
 }) => {
+  const errorTone = STATUS_TONES.error
+
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    color: '#404040'
+    color: DEFAULT_JAPANESE_COLOR
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +33,13 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
+
+    const isAllowedColor = JAPANESE_COLOR_HEX_SET.has(formData.color)
+    if (!isAllowedColor) {
+      setError('Color must be selected from the Japanese color palette.')
+      setIsSubmitting(false)
+      return
+    }
     
     try {
       if (editingCategory) {
@@ -37,7 +48,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         await onAddCategory?.(formData.name, formData.color)
       }
 
-      setFormData({ name: '', color: '#404040' })
+      setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
       setIsAddingNew(false)
       setEditingCategory(null)
     } catch (err) {
@@ -48,17 +59,21 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   }
 
   const handleEdit = (category: Category) => {
+    const fallbackColor = DEFAULT_JAPANESE_COLOR
+    const normalizedColor = JAPANESE_COLOR_HEX_SET.has(category.color)
+      ? category.color
+      : fallbackColor
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      color: category.color
+      color: normalizedColor
     })
     setIsAddingNew(true)
     setError(null)
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: '#404040' })
+    setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
     setIsAddingNew(false)
     setEditingCategory(null)
     setError(null)
@@ -81,19 +96,14 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
   }
 
-  const predefinedColors = [
-    '#FF6B6B', '#4ECDC4', '#FFE66D', '#4D96FF', '#A66DFF',
-    '#FF8C42', '#6C5CE7', '#00B894', '#FDCB6E', '#E17055'
-  ]
-
   return (
     <div className="modal-overlay">
-      <div className="modal-content max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Category Management</h2>
+      <div className="modal-panel-lg max-h-[80vh]">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">Category Management</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-gray-400 hover:text-gray-600"
           >
             ✕
           </button>
@@ -102,20 +112,27 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         <div className="p-6">
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-300 text-sm">
+            <div
+              className="mb-4 p-3 border rounded-md text-sm"
+              style={{
+                backgroundColor: errorTone.background,
+                borderColor: errorTone.border,
+                color: errorTone.text
+              }}
+            >
               {error}
             </div>
           )}
 
           {/* Add/Edit Form */}
           {isAddingNew && (
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium mb-4 text-gray-900">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Name
                   </label>
                   <input
@@ -131,39 +148,33 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Color
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Japanese Color Palette
                   </label>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <input
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
-                      className="w-12 h-8 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
-                      disabled={isSubmitting}
-                    />
-                    <input
-                      type="text"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value.toUpperCase() })}
-                      className="input text-sm font-mono"
-                      pattern="^#[0-9A-F]{6}$"
-                      placeholder="#404040"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {predefinedColors.map(color => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {JAPANESE_COLOR_PALETTE.map((color) => (
                       <button
-                        key={color}
+                        key={color.hex}
                         type="button"
-                        onClick={() => setFormData({ ...formData, color })}
-                        className="w-6 h-6 rounded border-2 border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform disabled:opacity-50"
-                        style={{ backgroundColor: color }}
+                        onClick={() => setFormData({ ...formData, color: color.hex })}
+                        className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
+                          formData.color === color.hex
+                            ? 'border-gray-700 bg-gray-100'
+                            : 'border-gray-200 bg-white hover:border-gray-400'
+                        }`}
                         disabled={isSubmitting}
-                        title={color}
-                      />
+                        title={`${color.name} (${color.hex})`}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-white shadow-sm"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span className="text-xs text-gray-700">{color.name}</span>
+                      </button>
                     ))}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 font-mono">
+                    Selected: {formData.color}
                   </div>
                 </div>
 
@@ -193,7 +204,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             <div className="mb-6">
               <button
                 onClick={() => setIsAddingNew(true)}
-                className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+                className="btn-primary"
               >
                 + Add New Category
               </button>
@@ -202,17 +213,17 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
           {/* Categories List */}
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
               Existing Categories ({categories.length})
             </h3>
             {categories.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No categories yet. Add your first one!</p>
+              <p className="text-gray-500 text-center py-8">No categories yet. Add your first one!</p>
             ) : (
               <div className="grid gap-2">
                 {categories.map(category => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div
@@ -220,22 +231,23 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         style={{ backgroundColor: category.color }}
                       />
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                        <div className="font-medium text-gray-900">
                           {category.name}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{category.color}</div>
+                        <div className="text-xs text-gray-500 font-mono">{category.color}</div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="px-3 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded text-sm font-medium transition-colors"
+                        className="px-3 py-1 text-gray-700 hover:bg-gray-100 rounded text-sm font-medium transition-colors"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDelete(category.id, category.name)}
-                        className="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded text-sm font-medium transition-colors"
+                        className="px-3 py-1 rounded text-sm font-medium transition-colors"
+                        style={{ color: errorTone.text }}
                       >
                         Delete
                       </button>

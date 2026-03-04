@@ -16,7 +16,7 @@ const Card: React.FC<CardProps> = ({
   const classes = `
     card
     transition-shadow
-    ${hover ? 'hover:shadow-md dark:hover:shadow-dark-md' : ''}
+    ${hover ? 'hover:shadow-md' : ''}
     ${className}
   `.trim().replace(/\s+/g, ' ');
 

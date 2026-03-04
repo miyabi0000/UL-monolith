@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { GearItemWithCalculated, Category } from '../utils/types';
+import { GearItemWithCalculated, Category, WeightBreakdown, ULStatus } from '../utils/types';
 import { GearApiService } from '../services/gearApiService';
+import { GearService } from '../services/gearService';
 import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
@@ -20,6 +21,10 @@ export const useAppState = () => {
   
   // カテゴリをAPIから取得
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // Weight Breakdown（データモデル仕様準拠）
+  const [weightBreakdown, setWeightBreakdown] = useState<WeightBreakdown | null>(null);
+  const [ulStatus, setULStatus] = useState<ULStatus | null>(null);
 
   // カテゴリ情報を結合したギアアイテム（useMemoで計算）
   const gearItems = useMemo(() => {
@@ -54,19 +59,33 @@ export const useAppState = () => {
     }
   }, []);
 
+  // Weight Breakdownを取得
+  const fetchWeightBreakdown = useCallback(async () => {
+    try {
+      const result = await GearService.getWeightBreakdown();
+      setWeightBreakdown(result.breakdown);
+      setULStatus(result.ulStatus);
+    } catch (err) {
+      console.error('Error fetching weight breakdown:', err);
+      // Weight Breakdownはオプショナルなのでエラーは無視
+    }
+  }, []);
+
   // 初回ロード
   useEffect(() => {
     const loadInitialData = async () => {
       await fetchCategories();
       await fetchGearItems();
+      await fetchWeightBreakdown();
     };
     loadInitialData();
-  }, [fetchCategories, fetchGearItems]);
+  }, [fetchCategories, fetchGearItems, fetchWeightBreakdown]);
 
   // ギアAPI操作関数
   const handleCreateGear = async (gearData: any) => {
     await GearApiService.createGear(gearData);
     await fetchGearItems(); // データを再取得
+    await fetchWeightBreakdown(); // Weight Breakdown更新
   };
 
   const handleUpdateGear = async (id: string, gearData: any) => {
@@ -94,7 +113,8 @@ export const useAppState = () => {
 
     try {
       await GearApiService.deleteGear(id);
-      // 成功時は再取得しない（既にローカル状態を更新済み）
+      // 成功時はWeight Breakdownのみ更新
+      await fetchWeightBreakdown();
     } catch (err) {
       // エラー時のみロールバック
       setRawGearItems(previousItems);
@@ -132,12 +152,15 @@ export const useAppState = () => {
     gearItems,
     categories, setCategories,
     isLoading,
+    weightBreakdown,
+    ulStatus,
 
     // ギアAPI操作関数
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
     refreshGearItems: fetchGearItems,
+    refreshWeightBreakdown: fetchWeightBreakdown,
 
     // カテゴリAPI操作関数
     handleCreateCategory,

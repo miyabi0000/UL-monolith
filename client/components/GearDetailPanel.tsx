@@ -1,8 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode } from '../utils/types';
-import GearCardCompact from './GearCardCompact';
-import OverviewView from './DetailPanel/OverviewView';
-import CategorySummaryView from './DetailPanel/CategorySummaryView';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, isBig3Category } from '../utils/types';
 import CardGridView from './DetailPanel/CardGridView';
 import ComparisonTable from './ComparisonTable';
 import TableHeader, { SortField, SortDirection, Currency } from './GearTable/TableHeader';
@@ -13,31 +10,24 @@ import { filterByCategories, sortItems } from '../utils/sortHelpers';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { useComparisonMode } from '../hooks/useComparisonMode';
 
-export type PanelMode = 'item' | 'category' | 'overview';
-
 interface GearDetailPanelProps {
-  mode: PanelMode;
-  selectedItem: GearItemWithCalculated | null;
-  selectedCategory: string | null;
   items: GearItemWithCalculated[];
   categories: Category[];
-  viewMode: 'weight' | 'cost';
+  viewMode: ChartViewMode;
   gearViewMode?: 'table' | 'card' | 'compare';
   quantityDisplayMode: QuantityDisplayMode;
   onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void;
   onEdit: (item: GearItemWithCalculated) => void;
   onDelete: (id: string) => void;
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void;
-  onItemClick: (itemId: string) => void;
   showCheckboxes: boolean;
   onToggleCheckboxes: () => void;
   filteredByCategory?: string[];
+  chartFocusFilter?: ChartFocus;
+  selectedItemId?: string | null;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
-  mode,
-  selectedItem,
-  selectedCategory,
   items,
   categories,
   viewMode,
@@ -47,10 +37,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   onEdit,
   onDelete,
   onUpdateItem,
-  onItemClick,
   showCheckboxes,
   onToggleCheckboxes,
   filteredByCategory = [],
+  chartFocusFilter = 'all',
+  selectedItemId,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -83,21 +74,26 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return items;
   }, [items, quantityDisplayMode]);
 
-  const chartFilteredItems = useMemo(() => {
-    return filterByCategories(quantityFilteredItems, filteredByCategory);
-  }, [quantityFilteredItems, filteredByCategory]);
-
-  const panelItems = useMemo(() => {
-    if (mode === 'category' && selectedCategory) {
-      return chartFilteredItems.filter(item => item.category?.name === selectedCategory);
+  // Big3/Otherフィルタ（Weight-Classモードのチャートと連動）
+  const big3FilteredItems = useMemo(() => {
+    if (chartFocusFilter === 'all') {
+      return quantityFilteredItems;
     }
-    return chartFilteredItems;
-  }, [chartFilteredItems, mode, selectedCategory]);
+    if (chartFocusFilter === 'big3') {
+      return quantityFilteredItems.filter(item => isBig3Category(item.category));
+    }
+    // chartFocusFilter === 'other'
+    return quantityFilteredItems.filter(item => !isBig3Category(item.category));
+  }, [quantityFilteredItems, chartFocusFilter]);
+
+  const chartFilteredItems = useMemo(() => {
+    return filterByCategories(big3FilteredItems, filteredByCategory);
+  }, [big3FilteredItems, filteredByCategory]);
 
   // ソート処理（sortHelpers を使用）
   const processedItems = useMemo(
-    () => sortItems(panelItems, sortField, sortDirection),
-    [panelItems, sortField, sortDirection]
+    () => sortItems(chartFilteredItems, sortField, sortDirection),
+    [chartFilteredItems, sortField, sortDirection]
   );
 
   const handleSort = (field: SortField) => {
@@ -157,9 +153,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     openComparison: handleCompare,
     closeComparison: handleCloseComparisonModal,
     removeFromComparison: handleRemoveFromComparison,
-    adoptItem: handleAdoptItem,
-    previewItemId,
-    previewAdopt: handlePreviewAdopt,
+    deleteItem: handleDeleteFromComparison,
+    raisePriority: handleRaisePriority,
   } = useComparisonMode({
     selectedItems,
     onUpdateItem,
@@ -167,9 +162,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onRemoveItem: (itemId) => {
       setSelectedIds(prev => prev.filter(id => id !== itemId));
     },
+    onDeleteItem: onDelete,
   });
 
   const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
+    // 変更中フィールドをマーク
     setChangedFields(prev => {
       const updated = { ...prev };
       if (!updated[id]) {
@@ -183,7 +180,10 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
 
     try {
       await onUpdateItem(id, field, value);
-
+    } catch (err) {
+      console.error('Failed to update field:', err);
+    } finally {
+      // 成功・失敗に関わらずフィールドをクリア
       setChangedFields(prev => {
         const updated = { ...prev };
         if (updated[id]) {
@@ -195,8 +195,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         }
         return updated;
       });
-    } catch (err) {
-      console.error('Failed to update field:', err);
     }
   }, [onUpdateItem]);
 
@@ -208,9 +206,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         currency={currency}
         onCurrencyChange={handleCurrencyChange}
         onClose={handleCloseComparisonModal}
-        onAdopt={handleAdoptItem}
-        onPreviewAdopt={handlePreviewAdopt}
-        previewItemId={previewItemId}
+        onDelete={handleDeleteFromComparison}
+        onRaisePriority={handleRaisePriority}
         onRemove={handleRemoveFromComparison}
       />
     );
@@ -221,10 +218,10 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     return (
       <div className="w-full h-full min-w-0 overflow-hidden">
         <CardGridView
-          items={panelItems}
+          items={chartFilteredItems}
           viewMode={viewMode}
-          onItemClick={onItemClick}
           quantityDisplayMode={quantityDisplayMode}
+          selectedItemId={selectedItemId}
         />
       </div>
     );
@@ -268,6 +265,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
               currency={currency}
               onCurrencyChange={handleCurrencyChange}
+              isEditable={isEditable}
             />
             <tbody>
               {processedItems.map((item) => (
@@ -277,6 +275,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   categories={categories}
                   showCheckboxes={shouldShowCheckboxes}
                   isSelected={selectedIds.includes(item.id)}
+                  isHighlighted={selectedItemId === item.id}
                   changedFields={changedFields[item.id]}
                   quantityDisplayMode={quantityDisplayMode}
                   isEditable={isEditable}
@@ -292,39 +291,15 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     );
   }
 
-  // アイテム詳細モードの場合は常にGearCardCompactを表示
-  if (mode === 'item') {
-    return (
-      <div className="w-full h-full min-w-0 overflow-hidden">
-        <GearCardCompact
-          item={selectedItem}
-          viewMode={viewMode}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      </div>
-    );
-  }
-
-  // デフォルト（overview/categoryモード）
+  // デフォルト
   return (
     <div className="w-full h-full min-w-0 overflow-hidden">
-      {mode === 'category' && selectedCategory ? (
-        <CategorySummaryView
-          categoryName={selectedCategory}
-          items={chartFilteredItems}
-          viewMode={viewMode}
-          onItemClick={onItemClick}
-          quantityDisplayMode={quantityDisplayMode}
-        />
-      ) : (
-        <OverviewView
-          items={chartFilteredItems}
-          viewMode={viewMode}
-          onItemClick={onItemClick}
-          quantityDisplayMode={quantityDisplayMode}
-        />
-      )}
+      <CardGridView
+        items={chartFilteredItems}
+        viewMode={viewMode}
+        quantityDisplayMode={quantityDisplayMode}
+        selectedItemId={selectedItemId}
+      />
     </div>
   );
 };

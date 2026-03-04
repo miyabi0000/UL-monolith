@@ -147,7 +147,7 @@ const GearView: React.FC<GearViewProps> = React.memo(({
       {/* カードグリッド */}
       <div className="mt-3">
         {processedItems.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-gray-500">
             <p className="text-lg mb-2">No gear items found</p>
             <p className="text-sm">Click the "+ ADD" button to add gear</p>
           </div>

@@ -1,3 +1,5 @@
+import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_SET } from './japaneseColors';
+
 /**
  * カテゴリバリデーションユーティリティ
  */
@@ -41,6 +43,13 @@ export function validateCategoryColor(color: unknown): CategoryValidationError |
     };
   }
 
+  if (!JAPANESE_COLOR_SET.has(color.toUpperCase())) {
+    return {
+      field: 'color',
+      message: 'Color must be selected from the Japanese color palette'
+    };
+  }
+
   return null;
 }
 
@@ -72,5 +81,4 @@ export function normalizeCategoryName(name: string): string {
 /**
  * デフォルト色
  */
-export const DEFAULT_CATEGORY_COLOR = '#6B7280';
-
+export const DEFAULT_CATEGORY_COLOR = DEFAULT_JAPANESE_COLOR;

@@ -36,6 +36,8 @@ export default function HomePage() {
     gearItems,
     categories, setCategories,
     isLoading,
+    weightBreakdown,
+    ulStatus,
 
     // API操作関数
     handleCreateGear,
@@ -61,7 +63,7 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
 
   // 数量表示モード（owned/need/all）
-  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('owned');
+  const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
 
   // ギア表示モード（table/card/compare切り替え）
   const [gearViewMode, setGearViewMode] = useState<'table' | 'card' | 'compare'>(() => {
@@ -228,6 +230,8 @@ export default function HomePage() {
                 onGearViewModeChange={setGearViewMode}
                 showCheckboxes={showCheckboxes}
                 onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
+                weightBreakdown={weightBreakdown}
+                ulStatus={ulStatus}
               />
             </div>
           )}

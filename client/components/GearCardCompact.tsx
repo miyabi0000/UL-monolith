@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { GearItemWithCalculated } from '../utils/types';
-import { COLORS, getCategoryBadgeStyle, getPriorityColor } from '../utils/designSystem';
+import { GearItemWithCalculated, ChartViewMode } from '../utils/types';
+import { COLORS, STATUS_TONES, getPriorityColor } from '../utils/designSystem';
+import { alpha } from '../styles/tokens';
 import SeasonBar from './SeasonBar';
+import CategoryBadge from './ui/CategoryBadge';
 
 interface GearCardCompactProps {
   item: GearItemWithCalculated | null;
-  viewMode: 'weight' | 'cost';
+  viewMode: ChartViewMode;
   onEdit?: (item: GearItemWithCalculated) => void;
   onDelete?: (id: string) => void;
+  onCategoryClick?: (categoryName: string) => void;
 }
 
 const formatPrice = (priceCents?: number) => {
@@ -16,13 +19,14 @@ const formatPrice = (priceCents?: number) => {
   return `¥${Math.round(price).toLocaleString()}`;
 };
 
-const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete }) => {
+const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdit, onDelete, onCategoryClick }) => {
+  const errorTone = STATUS_TONES.error;
   const [isHovered, setIsHovered] = useState(false);
 
   if (!item) {
     return (
       <div className="flex items-center justify-center h-full text-center p-6">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500">
           Select an item from the chart
         </p>
       </div>
@@ -50,7 +54,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
     <div className="p-3 space-y-3 overflow-y-auto h-full">
       {/* 画像 */}
       <div
-        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 cursor-pointer group"
+        className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => onEdit?.(item)}
@@ -82,7 +86,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         <div
           className="absolute inset-0 flex flex-col items-center justify-center p-4"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backgroundColor: alpha(COLORS.gray[900], 0.85),
             opacity: isHovered ? 1 : 0,
             transition: 'opacity 200ms ease-out'
           }}
@@ -137,7 +141,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
                 }}
                 onClick={handleDelete}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#dc2626';
+                  e.currentTarget.style.backgroundColor = COLORS.error;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = COLORS.danger;
@@ -152,11 +156,11 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
       {/* 名前とブランド */}
       <div>
-        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1 break-words">
+        <h4 className="text-sm font-bold text-gray-900 mb-1 break-words">
           {item.name}
         </h4>
         {item.brand && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
+          <p className="text-xs text-gray-500 break-words">
             {item.brand}
           </p>
         )}
@@ -165,12 +169,12 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       {/* カテゴリ */}
       {item.category && (
         <div>
-          <span
-            className="inline-block text-xs font-semibold px-2 py-1 rounded"
-            style={getCategoryBadgeStyle(item.category.color)}
-          >
-            {item.category.name}
-          </span>
+          <CategoryBadge
+            name={item.category.name}
+            color={item.category.color}
+            className="text-xs font-semibold px-2 py-1"
+            onClick={() => onCategoryClick?.(item.category!.name)}
+          />
         </div>
       )}
 
@@ -178,11 +182,11 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
       <div className="space-y-2 text-xs">
         {/* 重量 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Weight:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Weight:</span>
+          <span className="font-semibold text-gray-900">
             {item.weightGrams}g
             {item.requiredQuantity > 1 && (
-              <span className="text-gray-500 dark:text-gray-400 ml-1">
+              <span className="text-gray-500 ml-1">
                 (Total: {item.totalWeight}g)
               </span>
             )}
@@ -191,19 +195,19 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* 価格 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Price:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Price:</span>
+          <span className="font-semibold text-gray-900">
             {formatPrice(item.priceCents)}
           </span>
         </div>
 
         {/* 所有数/必要数 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Own/Need:</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+          <span className="text-gray-600">Own/Need:</span>
+          <span className="font-semibold text-gray-900">
             {item.ownedQuantity} / {item.requiredQuantity}
             {item.shortage > 0 && (
-              <span className="text-red-600 dark:text-red-400 ml-1">
+              <span className="ml-1" style={{ color: errorTone.text }}>
                 (Short: {item.shortage})
               </span>
             )}
@@ -212,7 +216,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
 
         {/* 優先度 */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Priority:</span>
+          <span className="text-gray-600">Priority:</span>
           <span
             className="font-semibold"
             style={{ color: getPriorityColor(item.priority) }}
@@ -224,7 +228,7 @@ const GearCardCompact: React.FC<GearCardCompactProps> = ({ item, viewMode, onEdi
         {/* シーズン */}
         {item.seasons && item.seasons.length > 0 && (
           <div>
-            <div className="text-gray-600 dark:text-gray-400 mb-1">Season:</div>
+            <div className="text-gray-600 mb-1">Season:</div>
             <SeasonBar seasons={item.seasons} size="sm" />
           </div>
         )}

@@ -1,40 +1,87 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
+import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
-import { getQuantityForDisplayMode } from '../utils/chartHelpers'
+import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
 import Card from './ui/Card'
-import GearDetailPanel, { PanelMode } from './GearDetailPanel'
+import GearDetailPanel from './GearDetailPanel'
+import ActiveCalloutShape from './charts/ActiveCalloutShape'
+
+// ==================== SVGアイコン ====================
+const BackpackIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
+    <path d="M9 20V14H15V20" />
+    <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
+    <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
+    <path d="M12 10V12" />
+  </svg>
+)
+
+const ScaleIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 4V19" />
+    <path d="M6.5 7.5H17.5" />
+    <path d="M4.5 20H19.5" />
+    <path d="M7.5 7.5L4.5 12.5H10.5L7.5 7.5Z" />
+    <path d="M16.5 7.5L13.5 12.5H19.5L16.5 7.5Z" />
+  </svg>
+)
+
+const YenIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 4L12 10L17 4" />
+    <path d="M8 12H16" />
+    <path d="M8 15H16" />
+    <path d="M12 10V21" />
+  </svg>
+)
 
 // ==================== 定数 ====================
-// デザインシステムに基づいたチャート設定
+// デザインシステムに基づいたチャート設定（コンパクト化）
 const CHART_CONFIG = {
   height: {
-    mobile: 350,
-    tablet: 450,
-    desktop: 500
+    mobile: 240,
+    tablet: 300,
+    desktop: 340
   },
   outerRadius: {
-    mobile: { outer: 120, inner: 85 },
-    tablet: { outer: 160, inner: 115 },
-    desktop: { outer: 200, inner: 140 }
+    mobile: { outer: 96, inner: 68 },
+    tablet: { outer: 128, inner: 92 },
+    desktop: { outer: 160, inner: 112 }
   },
   innerRadius: {
-    mobile: { outer: 85, inner: 55 },
-    tablet: { outer: 115, inner: 75 },
-    desktop: { outer: 140, inner: 95 }
+    mobile: { outer: 68, inner: 44 },
+    tablet: { outer: 92, inner: 60 },
+    desktop: { outer: 112, inner: 76 }
   },
   centerMaxWidth: {
-    mobile: 100,
-    tablet: 140,
-    desktop: 180
+    mobile: 80,
+    tablet: 112,
+    desktop: 144
   }
 } as const
 
-const DEFAULT_COLOR = '#6B7280'
-const SELECTED_COLOR = '#404040' // Gray color for selection (gray.700)
-const SELECTED_STROKE_WIDTH = 3
+const DEFAULT_COLOR = COLORS.gray[500]
+
+// UL分類カラートークン
+const UL_BADGE_COLORS = {
+  ultralight: COLORS.success,
+  lightweight: COLORS.warning,
+  traditional: COLORS.error
+} as const
+
+// フォントサイズトークン
+const FONT_SIZES = {
+  center: {
+    primary: { mobile: '1.1rem', desktop: '1.4rem' },      // 値表示
+    secondary: { mobile: '0.65rem', desktop: '0.75rem' },   // ラベル
+    tertiary: { mobile: '0.55rem', desktop: '0.65rem' }     // サブ情報
+  },
+  badge: { mobile: '0.5rem', desktop: '0.55rem' }
+} as const
 
 // ==================== ヘルパー関数 ====================
 // Color utilities moved to /client/utils/colorHelpers.ts
@@ -52,7 +99,410 @@ const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, qua
   return unitValue * quantity
 }
 
-type GearItemWithPercentages = GearItemWithCalculated & { systemPercentage: number; totalPercentage: number }
+type GearItemWithPercentages = GearItemWithCalculated & {
+  systemPercentage: number
+  totalPercentage: number
+  displayValue: number
+}
+
+const VIEW_MODE_OPTIONS = [
+  { mode: 'weight', label: 'Weight', icon: ScaleIcon },
+  { mode: 'cost', label: 'Cost', icon: YenIcon },
+  { mode: 'weight-class', label: 'Class', icon: BackpackIcon }
+] as const
+
+interface SegmentedOption {
+  key: string
+  label: React.ReactNode
+  onClick: () => void
+  isActive: boolean
+  isDisabled?: boolean
+  title?: string
+  ariaLabel?: string
+  activeClassName?: string
+  inactiveClassName?: string
+  disabledClassName?: string
+}
+
+interface SegmentedControlProps {
+  options: SegmentedOption[]
+  className?: string
+}
+
+const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, className = '' }) => (
+  <div className={`inline-flex items-center gap-1 ${className}`}>
+    {options.map((option) => {
+      const activeClass = option.activeClassName ?? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
+      const inactiveClass = option.inactiveClassName ?? 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
+      const disabledClass = option.disabledClassName ?? 'text-gray-300 dark:text-gray-500 cursor-not-allowed'
+      const stateClass = option.isDisabled ? disabledClass : option.isActive ? activeClass : inactiveClass
+
+      return (
+        <button
+          key={option.key}
+          onClick={option.onClick}
+          disabled={option.isDisabled}
+          title={option.title}
+          aria-label={option.ariaLabel}
+          className={`gear-glass-chip h-6 px-2 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${stateClass}`}
+        >
+          {option.label}
+        </button>
+      )
+    })}
+  </div>
+)
+
+type OuterPieDataItem = {
+  id: string
+  name: string
+  value: number
+  color: string
+  brand?: string
+  percentage: number
+}
+
+type SelectedCategoryInfo = {
+  value: number
+  color: string
+  percentage: number
+}
+
+interface ChartCenterDisplayProps {
+  selectedItemData: OuterPieDataItem | null
+  selectedCategoryFromChart: string | null
+  selectedCategoryData: SelectedCategoryInfo | null
+  viewMode: ChartViewMode
+  screenSize: 'mobile' | 'tablet' | 'desktop'
+  centerMaxWidth: number
+  chartFocus: ChartFocus
+  weightBreakdown?: WeightBreakdown | null
+  ulStatus?: ULStatus | null
+  totalValue: number
+}
+
+const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
+  selectedItemData,
+  selectedCategoryFromChart,
+  selectedCategoryData,
+  viewMode,
+  screenSize,
+  centerMaxWidth,
+  chartFocus,
+  weightBreakdown,
+  ulStatus,
+  totalValue
+}) => {
+  if (selectedItemData) {
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+          }}
+        >
+          {formatValue(selectedItemData.value, viewMode)}
+        </div>
+        <div
+          className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
+            color: selectedItemData.color,
+            maxWidth: centerMaxWidth - 16,
+            lineHeight: '1.2',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis'
+          }}
+          title={selectedItemData.name}
+        >
+          {selectedItemData.name}
+        </div>
+        {selectedItemData.brand && (
+          <div
+            className="text-gray-500 dark:text-gray-400 mb-0.5 px-1 text-center overflow-hidden"
+            style={{
+              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
+              maxWidth: centerMaxWidth - 16,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis'
+            }}
+            title={selectedItemData.brand}
+          >
+            {selectedItemData.brand}
+          </div>
+        )}
+        <div
+          className="text-gray-500 dark:text-gray-400"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+          }}
+        >
+          {selectedItemData.percentage}% of total
+        </div>
+      </>
+    )
+  }
+
+  if (selectedCategoryFromChart && selectedCategoryData) {
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+          }}
+        >
+          {formatValue(selectedCategoryData.value, viewMode)}
+        </div>
+        <div
+          className="uppercase tracking-wide font-bold mb-1"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
+            color: selectedCategoryData.color
+          }}
+        >
+          {selectedCategoryFromChart}
+        </div>
+        <div
+          className="text-gray-500 dark:text-gray-400"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+          }}
+        >
+          {selectedCategoryData.percentage}% of total
+        </div>
+      </>
+    )
+  }
+
+  if (viewMode === 'weight-class' && weightBreakdown && ulStatus) {
+    const ulProgress = Math.min(100, (weightBreakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
+    const ulBadgeColor = UL_BADGE_COLORS[ulStatus.classification]
+    const ulBadgeLabel = ulStatus.classification === 'ultralight'
+      ? 'UL'
+      : ulStatus.classification === 'lightweight'
+        ? 'LW'
+        : 'Trad'
+
+    const otherWeight = weightBreakdown.baseWeight - weightBreakdown.big3
+    const displayWeight = chartFocus === 'big3'
+      ? weightBreakdown.big3
+      : chartFocus === 'other'
+        ? otherWeight
+        : weightBreakdown.baseWeight
+    const displayLabel = chartFocus === 'big3'
+      ? 'BIG3'
+      : chartFocus === 'other'
+        ? 'OTHER'
+        : 'BASE WEIGHT'
+    const displayColor = chartFocus === 'big3'
+      ? DUAL_RING_COLORS.big3
+      : chartFocus === 'other'
+        ? DUAL_RING_COLORS.other
+        : undefined
+
+    return (
+      <>
+        <div
+          className="font-bold mb-0.5"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop,
+            color: displayColor || 'inherit'
+          }}
+        >
+          {(displayWeight / 1000).toFixed(2)}kg
+        </div>
+        <div
+          className="uppercase tracking-wide font-bold mb-1"
+          style={{
+            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
+            color: displayColor || DEFAULT_COLOR
+          }}
+        >
+          {displayLabel}
+        </div>
+        {chartFocus === 'all' && (
+          <>
+            <span
+              className="px-1.5 py-0.5 rounded-full text-white font-bold"
+              style={{
+                fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
+                backgroundColor: ulBadgeColor
+              }}
+            >
+              {ulBadgeLabel}
+            </span>
+            <div
+              className="text-gray-400 dark:text-gray-500 mt-0.5"
+              style={{
+                fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+              }}
+            >
+              {Math.round(ulProgress)}% of UL
+            </div>
+          </>
+        )}
+        {chartFocus !== 'all' && (
+          <div
+            className="text-gray-400 dark:text-gray-500 mt-0.5"
+            style={{
+              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
+            }}
+          >
+            {weightBreakdown.baseWeight > 0
+              ? Math.round((displayWeight / weightBreakdown.baseWeight) * 100)
+              : 0}% of Base
+          </div>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div
+        className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
+        style={{
+          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
+        }}
+      >
+        {formatValue(totalValue, viewMode)}
+      </div>
+      <div
+        className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
+        style={{
+          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop
+        }}
+      >
+        {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
+      </div>
+    </>
+  )
+}
+
+interface ChartSummaryFooterProps {
+  viewMode: ChartViewMode
+  onViewModeChange: (mode: ChartViewMode) => void
+  weightBreakdown?: WeightBreakdown | null
+  weightClassSummaryCards: Array<{ key: string; label: string; value: number; focus: ChartFocus }>
+  chartFocus: ChartFocus
+  onToggleChartFocus: (focus: ChartFocus) => void
+  totalWeight: number
+  totalCost: number
+  itemCount: number
+}
+
+interface SummaryStatCardProps {
+  label: string
+  value: string
+  subValue?: string
+  icon?: React.ReactNode
+  isActive?: boolean
+  onClick?: () => void
+}
+
+const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
+  label,
+  value,
+  subValue,
+  icon,
+  isActive = false,
+  onClick,
+}) => {
+  const cardClass = `flex flex-col items-center justify-center px-1 h-[72px] rounded-md transition-all duration-200 ${
+    isActive
+      ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500'
+      : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
+  }`
+
+  const content = (
+    <>
+      <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+        {icon}
+        <span className="text-[10px] leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
+      </div>
+      <span className="text-[11px] leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
+      {subValue && <span className="text-[9px] leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={cardClass}>
+        {content}
+      </button>
+    )
+  }
+
+  return <div className={cardClass}>{content}</div>
+}
+
+const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
+  viewMode,
+  onViewModeChange,
+  weightBreakdown,
+  weightClassSummaryCards,
+  chartFocus,
+  onToggleChartFocus,
+  totalWeight,
+  totalCost,
+  itemCount
+}) => {
+  return (
+    <div className="px-2 py-1.5 border-t border-gray-200 dark:border-slate-600">
+      <div className="flex justify-center mb-1.5">
+        <SegmentedControl
+          options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
+            key: mode,
+            onClick: () => onViewModeChange(mode),
+            isActive: viewMode === mode,
+            ariaLabel: `${label} mode`,
+            label: (
+              <>
+                <Icon className="w-3 h-3" />
+                {label}
+              </>
+            ),
+          }))}
+        />
+      </div>
+
+      <div className="min-h-[72px]">
+        {viewMode === 'weight-class' && weightBreakdown ? (
+          <div className="grid grid-cols-4 gap-1 h-[72px]">
+            {weightClassSummaryCards.map(card => (
+              <SummaryStatCard
+                key={card.key}
+                label={card.label}
+                value={`${card.value.toLocaleString()}g`}
+                isActive={chartFocus === card.focus}
+                onClick={() => onToggleChartFocus(card.focus)}
+              />
+            ))}
+          </div>
+      ) : (
+          <div className="grid grid-cols-2 gap-1.5 h-[72px]">
+            <SummaryStatCard
+              label="Weight"
+              value={`${totalWeight.toLocaleString()}g`}
+              subValue={`${(totalWeight / 1000).toFixed(2)}kg`}
+              isActive={viewMode === 'weight'}
+              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+            />
+            <SummaryStatCard
+              label="Price"
+              value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
+              subValue={`${itemCount} items`}
+              isActive={viewMode === 'cost'}
+              icon={<YenIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+            />
+          </div>
+      )}
+      </div>
+    </div>
+  )
+}
 
 // ==================== メインコンポーネント ====================
 interface GearChartProps {
@@ -77,6 +527,9 @@ interface GearChartProps {
   onGearViewModeChange?: (mode: 'table' | 'card' | 'compare') => void // モード変更ハンドラ
   showCheckboxes: boolean // チェックボックス表示状態
   onToggleCheckboxes: () => void // チェックボックス切り替え
+  // Weight-Class用
+  weightBreakdown?: WeightBreakdown | null
+  ulStatus?: ULStatus | null
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -100,15 +553,22 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   gearViewMode,
   onGearViewModeChange,
   showCheckboxes,
-  onToggleCheckboxes
+  onToggleCheckboxes,
+  weightBreakdown,
+  ulStatus
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
-  const [selectedCategoryForPanel, setSelectedCategoryForPanel] = useState<string | null>(null)
-  const [panelMode, setPanelMode] = useState<PanelMode>('overview')
   const [centerPulse, setCenterPulse] = useState(false)
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
+  // 二重ドーナツ用状態
+  const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
+  // Scopeは'base'固定（将来的にトグル復活の可能性あり）
+  const chartScope: ChartScope = 'base'
+  // hover callout用activeIndex
+  const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
+  const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
 
   // レスポンシブ対応
   useEffect(() => {
@@ -147,6 +607,23 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const centerMaxWidth = CHART_CONFIG.centerMaxWidth[screenSize]
 
   // ==================== データ処理 ====================
+
+  // 二重ドーナツ: Inner ring (Big3 vs Other) - ratioを含む
+  const dualRingInnerData = useMemo(() => {
+    if (viewMode !== 'weight-class') return null
+    const data = calculateInnerRingData(items, chartScope)
+    const total = data.reduce((sum, d) => sum + d.value, 0)
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
+  }, [viewMode, items, chartScope])
+
+  // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
+  const dualRingOuterData = useMemo(() => {
+    if (viewMode !== 'weight-class') return null
+    const data = calculateOuterRingData(items, chartScope, chartFocus, categories)
+    const total = data.reduce((sum, d) => sum + d.value, 0)
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
+  }, [viewMode, items, chartScope, chartFocus, categories])
+
   const displayData = useMemo(() => {
     return data.map(category => ({
       ...category,
@@ -157,18 +634,23 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const totalValue = viewMode === 'cost' ? totalCost : totalWeight
 
   const sortedData = useMemo(() => {
+    const unit = viewMode === 'cost' ? '¥' : 'g'
     return [...displayData].sort((a, b) => b.value - a.value).map(category => ({
       ...category,
       percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
+      ratio: totalValue > 0 ? category.value / totalValue : 0,
+      label: category.name,
+      unit,
       sortedItems: (category.items || [])
-        .filter(item => getItemValue(item, viewMode, quantityDisplayMode) > 0)
-        .sort((a, b) => getItemValue(b, viewMode, quantityDisplayMode) - getItemValue(a, viewMode, quantityDisplayMode))
-        .map(item => {
-          const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
+        .map(item => ({ item, itemValue: getItemValue(item, viewMode, quantityDisplayMode) }))
+        .filter(({ itemValue }) => itemValue > 0)
+        .sort((a, b) => b.itemValue - a.itemValue)
+        .map(({ item, itemValue }) => {
           return {
             ...item,
             systemPercentage: category.value > 0 ? Math.round((itemValue / category.value) * 100) : 0,
-            totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0
+            totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0,
+            displayValue: itemValue
           } satisfies GearItemWithPercentages
         }) as GearItemWithPercentages[]
     }))
@@ -182,8 +664,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   )
 
   const outerPieData = useMemo(() => {
-    return (selectedData?.sortedItems || []).map((item, index) => {
-      const itemValue = getItemValue(item, viewMode, quantityDisplayMode)
+    const items = selectedData?.sortedItems || []
+    const categoryTotal = items.reduce((sum, item) => sum + item.displayValue, 0)
+    const unit = viewMode === 'cost' ? '¥' : 'g'
+    return items.map((item, index) => {
+      const itemValue = item.displayValue
       const fillColor = generateItemColor(
         selectedData?.color || DEFAULT_COLOR,
         index,
@@ -200,60 +685,58 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         shortage: item.shortage,
         priority: item.priority,
         percentage: item.totalPercentage,
-        systemPercentage: item.systemPercentage
+        systemPercentage: item.systemPercentage,
+        ratio: categoryTotal > 0 ? itemValue / categoryTotal : 0,
+        label: item.name,
+        unit
       }
     })
-  }, [selectedData, viewMode, quantityDisplayMode])
+  }, [selectedData, viewMode])
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
     if (selectedCategories.includes(categoryName)) {
       onCategorySelect([])
-      setSelectedCategoryForPanel(null)
-      setPanelMode('overview')
     } else {
       onCategorySelect([categoryName])
-      setSelectedCategoryForPanel(categoryName)
-      setPanelMode('category')
     }
     setSelectedItem(null)
   }, [selectedCategories, onCategorySelect])
 
   const handleItemClick = useCallback((itemId: string) => {
-    if (selectedItem === itemId) {
-      setSelectedItem(null)
-      // カテゴリ選択中ならcategoryモードへ、未選択ならoverviewモードへ
-      if (selectedCategoryForPanel) {
-        setPanelMode('category')
-      } else {
-        setPanelMode('overview')
-      }
-    } else {
-      setSelectedItem(itemId)
-      setPanelMode('item')
-    }
-  }, [selectedItem, selectedCategoryForPanel])
-
-  // CategorySummaryViewからのアイテムクリック
-  const handlePanelItemClick = useCallback((itemId: string) => {
-    setSelectedItem(itemId)
-    setPanelMode('item')
+    setSelectedItem(prev => prev === itemId ? null : itemId)
   }, [])
 
-  // 選択されたアイテムオブジェクトを取得
-  const selectedItemData = useMemo(() => {
-    if (!selectedItem || !items) return null
-    return items.find(item => item.id === selectedItem) || null
-  }, [selectedItem, items])
-
   const handleCenterClick = useCallback(() => {
-    // 常にWeight/Cost切り替え（カテゴリ選択状態に関係なく）
-    onViewModeChange(viewMode === 'weight' ? 'cost' : 'weight')
+    const nextMode: ChartViewMode = viewMode === 'weight' ? 'cost' : 'weight'
+    onViewModeChange(nextMode)
 
     // パルスアニメーション
     setCenterPulse(true)
     setTimeout(() => setCenterPulse(false), 600)
   }, [viewMode, onViewModeChange])
+
+  // 二重ドーナツ: Inner ringクリック（Big3 vs Other 切替）
+  const handleInnerRingClick = useCallback((segmentId: string) => {
+    if (segmentId === 'big3') {
+      setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')
+    } else if (segmentId === 'other') {
+      setChartFocus(chartFocus === 'other' ? 'all' : 'other')
+    }
+  }, [chartFocus])
+
+  // 二重ドーナツ: Outer ringクリック（カテゴリ選択）
+  const handleDualRingOuterClick = useCallback((segmentId: string) => {
+    const segment = dualRingOuterData?.find(s => s.id === segmentId)
+    if (segment) {
+      if (selectedCategories.includes(segment.label)) {
+        onCategorySelect([])
+      } else {
+        onCategorySelect([segment.label])
+      }
+    }
+    setSelectedItem(null)
+  }, [dualRingOuterData, selectedCategories, onCategorySelect])
 
   // パンくずリスト用の選択中アイテム名を取得
   const selectedItemName = useMemo(() => {
@@ -262,24 +745,63 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     return item?.name || null
   }, [selectedItem, items])
 
+  const selectedItemData = useMemo(
+    () => (selectedItem ? outerPieData.find(item => item.id === selectedItem) || null : null),
+    [selectedItem, outerPieData]
+  )
+
+  const weightClassSummaryCards = useMemo(() => {
+    if (!weightBreakdown) return []
+    return [
+      {
+        key: 'pack',
+        label: 'Pack',
+        value: weightBreakdown.big3Pack ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'shelter',
+        label: 'Shelter',
+        value: weightBreakdown.big3Shelter ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'sleep',
+        label: 'Sleep',
+        value: weightBreakdown.big3Sleep ?? 0,
+        focus: 'big3' as ChartFocus
+      },
+      {
+        key: 'other',
+        label: 'Other',
+        value: weightBreakdown.baseWeight - weightBreakdown.big3,
+        focus: 'other' as ChartFocus
+      }
+    ]
+  }, [weightBreakdown])
+
+  const handleToggleChartFocus = useCallback((focus: ChartFocus) => {
+    setChartFocus(prev => prev === focus ? 'all' : focus)
+  }, [])
+
   // ==================== レンダリング ====================
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 flex gap-3 min-h-0 overflow-x-auto">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12' : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none border-gray-300 dark:border-slate-500' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
                   onClick={() => setIsChartCollapsed(false)}
-                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors py-2"
+                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors py-2"
                   aria-label="Expand chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400 mb-2"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-300 mb-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -287,21 +809,21 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
                   </svg>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 font-medium" style={{ writingMode: 'vertical-rl' }}>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium" style={{ writingMode: 'vertical-rl' }}>
                     Chart
                   </span>
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Chart</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
                 <button
                   onClick={() => setIsChartCollapsed(true)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
                   aria-label="Collapse chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-400"
+                    className="w-4 h-4 text-gray-600 dark:text-gray-300"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -316,82 +838,169 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {!isChartCollapsed && (
             <>
         {/* チャートエリア */}
-        <div className="relative flex items-center justify-center flex-1 p-3" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
+        <div className="relative flex items-center justify-center p-2 flex-1" style={{ minHeight: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              {/* 外側円 - アイテム（先に描画） */}
-              {selectedCategoryFromChart && (
-                <Pie
-                  data={outerPieData}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={outerRadiusConfig.outer}
-                  innerRadius={outerRadiusConfig.inner}
-                  onClick={(entry) => handleItemClick(entry.id)}
-                  className="cursor-pointer"
-                >
-                  {outerPieData.map((item, index) => {
-                    const fillColor = generateItemColor(
-                      selectedData?.color || DEFAULT_COLOR,
-                      index,
-                      selectedData?.sortedItems?.length || 1
-                    )
-                    const isSelected = selectedItem === item.id
-                    const darkenedFillColor = darkenHslColor(fillColor, 0.2)
-                    const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.2)
-                    return (
-                      <Cell
-                        key={`item-${index}`}
-                        fill={isSelected ? darkenedFillColor : fillColor}
-                        opacity={isSelected ? 1 : 0.85}
-                        stroke={isSelected ? darkenedStrokeColor : COLORS.white}
-                        strokeWidth={isSelected ? 2 : 1}
-                        style={{
-                          filter: isSelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
-                          transition: 'all 0.2s ease',
-                          outline: 'none'
-                        }}
-                      />
-                    )
-                  })}
-                </Pie>
-              )}
+              {/* Weight-Classモード: 二重ドーナツ */}
+              {viewMode === 'weight-class' && dualRingInnerData && dualRingOuterData ? (
+                <>
+                  {/* Outer ring: カテゴリ or Big3内訳 */}
+                  <Pie
+                    data={dualRingOuterData}
+                    dataKey="value"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={outerRadiusConfig.outer}
+                    innerRadius={outerRadiusConfig.inner}
+                    onClick={(entry) => handleDualRingOuterClick(entry.id)}
+                    activeIndex={outerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
+                    onMouseLeave={() => setOuterActiveIndex(null)}
+                    className="cursor-pointer"
+                  >
+                    {dualRingOuterData.map((entry, index) => {
+                      const isSelected = selectedCategories.includes(entry.label)
+                      const darkenedFill = darkenColor(entry.color, 0.15)
+                      // Outer ringは薄めに表示してInner ringを強調
+                      const baseOpacity = chartFocus !== 'all' ? 0.5 : 0.7
+                      return (
+                        <Cell
+                          key={`dual-outer-${index}`}
+                          fill={isSelected ? darkenedFill : entry.color}
+                          stroke={COLORS.white}
+                          strokeWidth={isSelected ? 2 : 1}
+                          opacity={isSelected ? 0.95 : baseOpacity}
+                          style={{
+                            transition: 'all 0.2s ease',
+                            outline: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      )
+                    })}
+                  </Pie>
+                  {/* Inner ring: Big3 vs Other */}
+                  <Pie
+                    data={dualRingInnerData}
+                    dataKey="value"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={innerRadiusConfig.outer}
+                    innerRadius={innerRadiusConfig.inner}
+                    onClick={(entry) => handleInnerRingClick(entry.id)}
+                    activeIndex={innerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
+                    onMouseLeave={() => setInnerActiveIndex(null)}
+                    className="cursor-pointer"
+                  >
+                    {dualRingInnerData.map((entry, index) => {
+                      const isFocused = chartFocus === entry.id || chartFocus === 'all'
+                      const darkenedFill = darkenColor(entry.color, 0.25)
+                      return (
+                        <Cell
+                          key={`dual-inner-${index}`}
+                          fill={chartFocus === entry.id ? darkenedFill : entry.color}
+                          stroke={chartFocus === entry.id ? darkenedFill : COLORS.white}
+                          strokeWidth={chartFocus === entry.id ? 3 : 2}
+                          opacity={isFocused ? 1 : 0.35}
+                          style={{
+                            filter: chartFocus === entry.id ? `drop-shadow(0 0 8px ${entry.color}aa)` : 'none',
+                            transition: 'all 0.2s ease',
+                            outline: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      )
+                    })}
+                  </Pie>
+                </>
+              ) : (
+                <>
+                  {/* 外側円 - アイテム（先に描画） */}
+                  {selectedCategoryFromChart && (
+                    <Pie
+                      data={outerPieData}
+                      dataKey="value"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={outerRadiusConfig.outer}
+                      innerRadius={outerRadiusConfig.inner}
+                      onClick={(entry) => handleItemClick(entry.id)}
+                      activeIndex={outerActiveIndex ?? undefined}
+                      activeShape={ActiveCalloutShape}
+                      onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
+                      onMouseLeave={() => setOuterActiveIndex(null)}
+                      className="cursor-pointer"
+                    >
+                      {outerPieData.map((item, index) => {
+                        const fillColor = generateItemColor(
+                          selectedData?.color || DEFAULT_COLOR,
+                          index,
+                          selectedData?.sortedItems?.length || 1
+                        )
+                        const isSelected = selectedItem === item.id
+                        const darkenedFillColor = darkenHslColor(fillColor, 0.2)
+                        const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.2)
+                        return (
+                          <Cell
+                            key={`item-${index}`}
+                            fill={isSelected ? darkenedFillColor : fillColor}
+                            opacity={isSelected ? 1 : 0.85}
+                            stroke={isSelected ? darkenedStrokeColor : COLORS.white}
+                            strokeWidth={isSelected ? 2 : 1}
+                            style={{
+                              filter: isSelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
+                              transition: 'all 0.2s ease',
+                              outline: 'none'
+                            }}
+                          />
+                        )
+                      })}
+                    </Pie>
+                  )}
 
-              {/* 内側円 - カテゴリ（最後に描画して最上面に） */}
-              <Pie
-                data={sortedData.map(d => ({ ...d, color: d.color }))}
-                dataKey="value"
-                cx="50%"
-                cy="50%"
-                outerRadius={innerRadiusConfig.outer}
-                innerRadius={innerRadiusConfig.inner}
-                onClick={(entry) => handleCategoryClick(entry.name)}
-                className="cursor-pointer"
-              >
-                {sortedData.map((entry, index) => {
-                  const isCategorySelected = selectedCategoryFromChart === entry.name
-                  const hasSelection = selectedCategoryFromChart !== null
-                  const darkenedFillColor = darkenColor(entry.color, 0.15)
-                  const darkenedStrokeColor = darkenColor(entry.color, 0.2)
-                  return (
-                    <Cell
-                      key={`category-${entry.name}`}
-                      fill={isCategorySelected ? darkenedFillColor : entry.color}
-                      stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
-                      strokeWidth={isCategorySelected ? 2 : 1}
-                      opacity={hasSelection && !isCategorySelected ? 0.4 : 1}
-                      className={hasSelection && !isCategorySelected ? 'hover:opacity-60' : ''}
-                      style={{
-                        filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
-                        transition: 'all 0.2s ease',
-                        outline: 'none',
-                        cursor: 'pointer'
-                      }}
-                    />
-                  )
-                })}
-              </Pie>
+                  {/* 内側円 - カテゴリ（最後に描画して最上面に） */}
+                  <Pie
+                    data={sortedData.map(d => ({ ...d, color: d.color }))}
+                    dataKey="value"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={innerRadiusConfig.outer}
+                    innerRadius={innerRadiusConfig.inner}
+                    onClick={(entry) => handleCategoryClick(entry.name)}
+                    activeIndex={innerActiveIndex ?? undefined}
+                    activeShape={ActiveCalloutShape}
+                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
+                    onMouseLeave={() => setInnerActiveIndex(null)}
+                    className="cursor-pointer"
+                  >
+                    {sortedData.map((entry, index) => {
+                      const isCategorySelected = selectedCategoryFromChart === entry.name
+                      const hasSelection = selectedCategoryFromChart !== null
+                      const darkenedFillColor = darkenColor(entry.color, 0.15)
+                      const darkenedStrokeColor = darkenColor(entry.color, 0.2)
+                      return (
+                        <Cell
+                          key={`category-${entry.name}`}
+                          fill={isCategorySelected ? darkenedFillColor : entry.color}
+                          stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
+                          strokeWidth={isCategorySelected ? 2 : 1}
+                          opacity={hasSelection && !isCategorySelected ? 0.4 : 1}
+                          className={hasSelection && !isCategorySelected ? 'hover:opacity-60' : ''}
+                          style={{
+                            filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
+                            transition: 'all 0.2s ease',
+                            outline: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      )
+                    })}
+                  </Pie>
+                </>
+              )}
             </PieChart>
           </ResponsiveContainer>
 
@@ -404,258 +1013,146 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 height: innerRadiusConfig.inner * 2,
                 borderRadius: '50%',
                 transition: 'all 0.3s ease',
-                backgroundColor: centerPulse ? 'rgba(64, 64, 64, 0.05)' : 'transparent',
+                backgroundColor: centerPulse ? alpha(COLORS.gray[800], 0.05) : 'transparent',
                 transform: centerPulse ? 'scale(1.05)' : 'scale(1)',
-                boxShadow: centerPulse ? '0 0 20px rgba(64, 64, 64, 0.3)' : 'none'
+                boxShadow: centerPulse ? `0 0 20px ${alpha(COLORS.gray[800], 0.3)}` : 'none'
               }}
               onClick={handleCenterClick}
             >
-              {(() => {
-                // レベル3: ギアアイテム選択時
-                if (selectedItem && selectedData) {
-                  const itemData = outerPieData.find(item => item.id === selectedItem)
-                  if (itemData) {
-                    return (
-                      <>
-                        <div
-                          className="font-bold mb-1 text-gray-900 dark:text-gray-100"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? '1rem' : '1.2rem'
-                          }}
-                        >
-                          {formatValue(itemData.value, viewMode)}
-                        </div>
-                        <div
-                          className="font-semibold mb-0.5 px-2 text-center overflow-hidden"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? '0.65rem' : '0.75rem',
-                            color: itemData.color,
-                            maxWidth: centerMaxWidth - 20,
-                            lineHeight: '1.2',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis'
-                          }}
-                          title={itemData.name}
-                        >
-                          {itemData.name}
-                        </div>
-                        {itemData.brand && (
-                          <div
-                            className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-2 text-center overflow-hidden"
-                            style={{
-                              fontSize: screenSize === 'mobile' ? '0.5rem' : '0.6rem',
-                              maxWidth: centerMaxWidth - 20,
-                              whiteSpace: 'nowrap',
-                              textOverflow: 'ellipsis'
-                            }}
-                            title={itemData.brand}
-                          >
-                            {itemData.brand}
-                          </div>
-                        )}
-                        <div
-                          className="text-xs text-gray-500 dark:text-gray-400"
-                          style={{
-                            fontSize: screenSize === 'mobile' ? '0.55rem' : '0.6rem'
-                          }}
-                        >
-                          {itemData.percentage}% of total
-                        </div>
-                      </>
-                    )
-                  }
+              <ChartCenterDisplay
+                selectedItemData={selectedItemData}
+                selectedCategoryFromChart={selectedCategoryFromChart}
+                selectedCategoryData={
+                  selectedData
+                    ? {
+                      value: selectedData.value,
+                      color: selectedData.color,
+                      percentage: selectedData.percentage
+                    }
+                    : null
                 }
-
-                // レベル2: カテゴリ選択時
-                if (selectedCategoryFromChart && selectedData) {
-                  return (
-                    <>
-                      <div
-                        className="font-bold mb-1 text-gray-900 dark:text-gray-100"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? '1.1rem' : '1.3rem'
-                        }}
-                      >
-                        {formatValue(selectedData.value, viewMode)}
-                      </div>
-                      <div
-                        className="uppercase tracking-wide font-bold mb-2"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? '0.6rem' : '0.7rem',
-                          color: selectedData.color
-                        }}
-                      >
-                        {selectedCategoryFromChart}
-                      </div>
-                      <div
-                        className="text-xs text-gray-500 dark:text-gray-400"
-                        style={{
-                          fontSize: screenSize === 'mobile' ? '0.55rem' : '0.65rem'
-                        }}
-                      >
-                        {selectedData.percentage}% of total
-                      </div>
-                    </>
-                  )
-                }
-
-                // レベル1: 未選択時
-                return (
-                  <>
-                    <div
-                      className="font-bold mb-1 text-gray-900 dark:text-gray-100"
-                      style={{
-                        fontSize: screenSize === 'mobile' ? '1.1rem' : '1.3rem'
-                      }}
-                    >
-                      {formatValue(totalValue, viewMode)}
-                    </div>
-                    <div
-                      className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                      style={{
-                        fontSize: screenSize === 'mobile' ? '0.6rem' : '0.7rem'
-                      }}
-                    >
-                      {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
-                    </div>
-                  </>
-                )
-              })()}
+                viewMode={viewMode}
+                screenSize={screenSize}
+                centerMaxWidth={centerMaxWidth}
+                chartFocus={chartFocus}
+                weightBreakdown={weightBreakdown}
+                ulStatus={ulStatus}
+                totalValue={totalValue}
+              />
             </div>
           </div>
         </div>
 
-        {/* Weight/Price表示セクション */}
-        <div className="px-3 py-1.5 flex justify-center gap-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 uppercase">Weight:</span>
-            <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">{totalWeight.toLocaleString()}g</span>
-          </div>
-          <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 uppercase">Price:</span>
-            <span className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">¥{Math.round(totalCost / 100).toLocaleString()}</span>
-          </div>
-        </div>
+        <ChartSummaryFooter
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          weightBreakdown={weightBreakdown}
+          weightClassSummaryCards={weightClassSummaryCards}
+          chartFocus={chartFocus}
+          onToggleChartFocus={handleToggleChartFocus}
+          totalWeight={totalWeight}
+          totalCost={totalCost}
+          itemCount={items.length}
+        />
             </>
           )}
       </Card>
 
         {/* Gear Detail Panel（右側パネル） */}
-        <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
-          <div className="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              {/* Owned/Need/All切り替え + トグルアイコン */}
-              <div className="inline-flex items-center rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800 gap-0.5">
-                <button
-                  onClick={() => onQuantityDisplayModeChange('owned')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'owned'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  Owned
-                </button>
-                <button
-                  onClick={() => onQuantityDisplayModeChange('need')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'need'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  Need
-                </button>
-                <button
-                  onClick={() => onQuantityDisplayModeChange('all')}
-                  className={`w-14 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center justify-center ${
-                    quantityDisplayMode === 'all'
-                      ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  ALL
-                </button>
-                {/* サイクルトグルアイコン */}
-                <button
-                  onClick={() => {
-                    const next = quantityDisplayMode === 'owned' ? 'need' : quantityDisplayMode === 'need' ? 'all' : 'owned'
-                    onQuantityDisplayModeChange(next)
-                  }}
-                  className="px-1.5 py-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                  aria-label="Cycle quantity display mode"
-                  title="Toggle quantity mode"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* 現在の状態表示 */}
-              {(selectedCategoryFromChart || selectedItem) && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 max-w-[120px] truncate">
-                  {selectedItem && selectedItemName ? selectedItemName : selectedCategoryFromChart}
-                </div>
+          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 h-11 overflow-visible">
+            <div className="flex items-center gap-1 text-xs min-w-0">
+              {/* パンくずナビゲーション */}
+              <button
+                onClick={() => {
+                  setSelectedItem(null)
+                  onCategorySelect([])
+                }}
+                className={`flex-shrink-0 transition-colors ${
+                  !selectedCategoryFromChart && !selectedItem
+                    ? 'text-gray-700 dark:text-gray-200 font-medium'
+                    : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                }`}
+              >
+                All
+              </button>
+              {selectedCategoryFromChart && (
+                <>
+                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className={`truncate max-w-[80px] transition-colors ${
+                      !selectedItem
+                        ? 'text-gray-700 dark:text-gray-200 font-medium'
+                        : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                    }`}
+                    title={selectedCategoryFromChart}
+                  >
+                    {selectedCategoryFromChart}
+                  </button>
+                </>
+              )}
+              {selectedItem && selectedItemName && (
+                <>
+                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                    {selectedItemName}
+                  </span>
+                </>
               )}
             </div>
 
-            {/* 右側ボタン群 */}
-            <div className="flex items-center gap-2">
-              {/* ビュー切り替え (Card/Table) */}
+            {/* 右側: 統合ツールバー */}
+            <div className="inline-flex items-center gap-1">
               {onGearViewModeChange && (
-                <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
-                  <button
-                    onClick={() => onGearViewModeChange('card')}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      gearViewMode === 'card'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Card view"
-                  >
-                    Card
-                  </button>
-                  <button
-                    onClick={() => onGearViewModeChange('table')}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      gearViewMode === 'table'
-                        ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                    aria-label="Table view"
-                  >
-                    Table
-                  </button>
-                </div>
-              )}
-
-              {/* Compare(A/B)ボタン */}
-              {onGearViewModeChange && (
-                <button
-                  onClick={() => onGearViewModeChange('compare')}
-                  className={`px-2 py-1.5 rounded-md transition-all duration-200 inline-flex items-center gap-1 ${
-                    gearViewMode === 'compare'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                  aria-label="Compare view"
-                  title="Compare items"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  <span className="text-[10px] font-medium">A/B</span>
-                </button>
+                <SegmentedControl
+                  options={[
+                    {
+                      key: 'card',
+                      label: 'Card',
+                      onClick: () => onGearViewModeChange('card'),
+                      isActive: gearViewMode === 'card',
+                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
+                      ariaLabel: 'Card view',
+                    },
+                    {
+                      key: 'table',
+                      label: 'Table',
+                      onClick: () => onGearViewModeChange('table'),
+                      isActive: gearViewMode === 'table',
+                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
+                      ariaLabel: 'Table view',
+                    },
+                    {
+                      key: 'compare',
+                      label: 'A|B',
+                      onClick: () => {
+                        if (gearViewMode === 'compare') {
+                          onGearViewModeChange('table')
+                        } else {
+                          if (showCheckboxes) {
+                            onToggleCheckboxes()
+                          }
+                          onGearViewModeChange('compare')
+                        }
+                      },
+                      isActive: gearViewMode === 'compare',
+                      isDisabled: showCheckboxes && gearViewMode !== 'compare',
+                      activeClassName: 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm',
+                      ariaLabel: 'Compare view',
+                      title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
+                    },
+                  ]}
+                />
               )}
 
               {/* アクションメニュー（ADD + Manage Categories） */}
               {onShowForm && (
-                <div className="relative add-menu-container">
+                <div className="relative add-menu-container z-[200] isolate">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-slate-500 shadow-sm hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -666,9 +1163,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 py-1 z-[1000]">
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowForm()
                           setShowAddMenu(false)
@@ -680,7 +1177,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                         Add Manually
                       </button>
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowUrlImport?.()
                           setShowAddMenu(false)
@@ -693,9 +1190,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       </button>
                       {onShowCategoryManager && (
                         <>
-                          <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                          <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
                           <button
-                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                             onClick={() => {
                               onShowCategoryManager()
                               setShowAddMenu(false)
@@ -713,16 +1210,25 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 </div>
               )}
 
-              {/* Edit(✏️)ボタン */}
+              {/* Edit(✏️)ボタン - Compareモード中は無効 */}
               <button
-                onClick={onToggleCheckboxes}
+                onClick={() => {
+                  if (gearViewMode === 'compare') {
+                    // Compareモード中は編集モードに入れない
+                    return
+                  }
+                  onToggleCheckboxes()
+                }}
+                disabled={gearViewMode === 'compare'}
                 className={`p-1.5 rounded-md transition-all duration-200 ${
                   showCheckboxes
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
+                    : gearViewMode === 'compare'
+                      ? 'bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
-                title={showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
+                title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -734,9 +1240,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {/* パネルコンテンツ */}
           <div className="flex-1 min-h-0 overflow-hidden">
               <GearDetailPanel
-                mode={panelMode}
-                selectedItem={selectedItemData}
-                selectedCategory={selectedCategoryForPanel}
                 items={items}
                 categories={categories}
                 viewMode={viewMode}
@@ -746,10 +1249,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onUpdateItem={onUpdateItem}
-                onItemClick={handlePanelItemClick}
                 showCheckboxes={showCheckboxes}
                 onToggleCheckboxes={onToggleCheckboxes}
                 filteredByCategory={selectedCategories}
+                chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
+                selectedItemId={selectedItem}
               />
           </div>
         </Card>

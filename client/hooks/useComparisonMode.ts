@@ -15,9 +15,13 @@ interface UseComparisonModeOptions {
    */
   onClearSelection?: () => void;
   /**
-   * アイテムを削除するコールバック
+   * 比較リストからアイテムを除外するコールバック（選択解除）
    */
   onRemoveItem?: (id: string) => void;
+  /**
+   * アイテムをギアリストから削除するコールバック
+   */
+  onDeleteItem?: (id: string) => void;
   /**
    * 比較モーダルを閉じた時のコールバック
    */
@@ -31,6 +35,47 @@ interface ComparisonValidation {
   errorMessage?: string;
 }
 
+const MIN_COMPARISON_ITEMS = 2;
+
+const VALIDATION_MESSAGES = {
+  TOO_FEW_ITEMS: '比較するには2件以上のアイテムを選択してください',
+  MISSING_CATEGORY: 'カテゴリが設定されていないアイテムは比較できません',
+  MIXED_CATEGORIES: '同一カテゴリ内のアイテムのみ比較できます',
+} as const;
+
+function validateComparisonItems(
+  selectedItems: GearItemWithCalculated[]
+): ComparisonValidation {
+  if (selectedItems.length < MIN_COMPARISON_ITEMS) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.TOO_FEW_ITEMS,
+    };
+  }
+
+  const categorySet = new Set(
+    selectedItems
+      .map(item => item.category?.id)
+      .filter(Boolean)
+  );
+
+  if (categorySet.size === 0) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.MISSING_CATEGORY,
+    };
+  }
+
+  if (categorySet.size > 1) {
+    return {
+      isValid: false,
+      errorMessage: VALIDATION_MESSAGES.MIXED_CATEGORIES,
+    };
+  }
+
+  return { isValid: true };
+}
+
 interface UseComparisonModeReturn {
   /** 比較モーダルの表示状態 */
   showComparisonModal: boolean;
@@ -40,14 +85,12 @@ interface UseComparisonModeReturn {
   openComparison: () => void;
   /** 比較モーダルを閉じる */
   closeComparison: () => void;
-  /** 比較から削除 */
+  /** 比較リストから除外（選択解除のみ） */
   removeFromComparison: (itemId: string) => void;
-  /** アイテムを採用（ownedQuantity +1） */
-  adoptItem: (itemId: string) => Promise<void>;
-  /** プレビュー中のアイテムID */
-  previewItemId: string | null;
-  /** プレビュー採用（グラフに影響を表示） */
-  previewAdopt: (itemId: string | null) => void;
+  /** アイテムをギアリストから削除 */
+  deleteItem: (itemId: string) => void;
+  /** アイテムの優先度を最高（1）に設定 */
+  raisePriority: (itemId: string) => Promise<void>;
 }
 
 /**
@@ -64,11 +107,19 @@ export function useComparisonMode(
     onUpdateItem,
     onClearSelection,
     onRemoveItem,
+    onDeleteItem,
     onComparisonClose,
   } = options;
 
   const [showComparisonModal, setShowComparisonModal] = useState(false);
-  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
+
+  const finalizeComparison = useCallback((clearSelection = false) => {
+    setShowComparisonModal(false);
+    if (clearSelection) {
+      onClearSelection?.();
+    }
+    onComparisonClose?.();
+  }, [onClearSelection, onComparisonClose]);
 
   /**
    * 比較可能かどうかを検証
@@ -76,34 +127,7 @@ export function useComparisonMode(
    * - すべて同一カテゴリである
    */
   const validationResult = useMemo((): ComparisonValidation => {
-    if (selectedItems.length < 2) {
-      return {
-        isValid: false,
-        errorMessage: '比較するには2件以上のアイテムを選択してください',
-      };
-    }
-
-    const categorySet = new Set(
-      selectedItems
-        .map(item => item.category?.id)
-        .filter(Boolean)
-    );
-
-    if (categorySet.size === 0) {
-      return {
-        isValid: false,
-        errorMessage: 'カテゴリが設定されていないアイテムは比較できません',
-      };
-    }
-
-    if (categorySet.size > 1) {
-      return {
-        isValid: false,
-        errorMessage: '同一カテゴリ内のアイテムのみ比較できます',
-      };
-    }
-
-    return { isValid: true };
+    return validateComparisonItems(selectedItems);
   }, [selectedItems]);
 
   /**
@@ -121,61 +145,53 @@ export function useComparisonMode(
    * 比較モーダルを閉じる
    */
   const closeComparison = useCallback(() => {
-    setShowComparisonModal(false);
-    setPreviewItemId(null);
-    onComparisonClose?.();
-  }, [onComparisonClose]);
+    finalizeComparison();
+  }, [finalizeComparison]);
 
   /**
-   * プレビュー採用（グラフに影響を表示）
-   * nullを渡すとプレビューをクリア
-   */
-  const previewAdopt = useCallback((itemId: string | null) => {
-    setPreviewItemId(itemId);
-  }, []);
-
-  /**
-   * 比較から削除
+   * 比較リストから除外（選択解除のみ、ギアリストからは削除しない）
    * 2件以下になった場合は自動的にモーダルを閉じる
    */
   const removeFromComparison = useCallback((itemId: string) => {
     onRemoveItem?.(itemId);
 
-    // 削除後のアイテム数をチェック
     const remainingCount = selectedItems.length - 1;
-    if (remainingCount < 2) {
-      setShowComparisonModal(false);
-      onComparisonClose?.();
+    if (remainingCount < MIN_COMPARISON_ITEMS) {
+      finalizeComparison();
     }
-  }, [selectedItems.length, onRemoveItem, onComparisonClose]);
+  }, [selectedItems.length, onRemoveItem, finalizeComparison]);
 
   /**
-   * アイテムを採用（ownedQuantity を +1）
-   * 採用後は比較モーダルを閉じて選択をクリア
+   * アイテムをギアリストから削除し、比較リストからも除外
+   * 2件以下になった場合はモーダルを閉じる
    */
-  const adoptItem = useCallback(async (itemId: string) => {
-    const item = selectedItems.find(i => i.id === itemId);
-    if (!item) {
-      console.error('Item not found:', itemId);
-      return;
-    }
+  const deleteItem = useCallback((itemId: string) => {
+    onDeleteItem?.(itemId);
+    onRemoveItem?.(itemId);
 
+    const remainingCount = selectedItems.length - 1;
+    if (remainingCount < MIN_COMPARISON_ITEMS) {
+      finalizeComparison(true);
+    }
+  }, [selectedItems.length, onDeleteItem, onRemoveItem, finalizeComparison]);
+
+  /**
+   * アイテムの優先度を最高（1）に設定する
+   * 「このギアを買う」という意思表示として使う
+   */
+  const raisePriority = useCallback(async (itemId: string) => {
     if (!onUpdateItem) {
       console.error('onUpdateItem callback is not provided');
       return;
     }
 
     try {
-      await onUpdateItem(itemId, 'ownedQuantity', (item.ownedQuantity || 0) + 1);
-      setShowComparisonModal(false);
-      setPreviewItemId(null);
-      onClearSelection?.();
-      onComparisonClose?.();
+      await onUpdateItem(itemId, 'priority', 1);
     } catch (err) {
-      console.error('Failed to adopt item:', err);
+      console.error('Failed to raise priority:', err);
       throw err;
     }
-  }, [selectedItems, onUpdateItem, onClearSelection, onComparisonClose]);
+  }, [onUpdateItem]);
 
   return {
     showComparisonModal,
@@ -183,8 +199,7 @@ export function useComparisonMode(
     openComparison,
     closeComparison,
     removeFromComparison,
-    adoptItem,
-    previewItemId,
-    previewAdopt,
+    deleteItem,
+    raisePriority,
   };
 }

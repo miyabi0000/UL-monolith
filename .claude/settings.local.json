@@ -7,11 +7,14 @@
       "Bash(git reset:*)",
       "Bash(pkill:*)",
       "Bash(curl:*)",
-      "Bash(lsof:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(PGPASSWORD=password psql:*)",
       "Bash(git add:*)",
-      "Bash(npm run server:dev:*)",
-      "Bash(xargs kill -9)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)",
+      "Bash(lsof:*)",
+      "Bash(npm run server:dev:*)"
     ],
     "deny": []
   }

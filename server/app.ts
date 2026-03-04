@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 
 // Import routes
@@ -18,10 +19,34 @@ config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Rate Limiting設定
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分
+  max: 100, // 1IPあたり15分で100リクエストまで
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests, please try again later.'
+  }
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1分
+  max: 10, // LLM APIは1分で10リクエストまで
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many AI requests, please try again later.'
+  }
+});
+
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
+app.use('/api/', limiter); // 全APIにRate Limiting適用
 app.use(express.json({ limit: '10mb' })); // 画像データを含むリクエストのためにリミットを増やす
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -35,11 +60,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root endpoint to avoid 404 on base URL
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'UL Gear Manager API',
+    health: '/api/health',
+    docs: '/docs/startup-guide.md'
+  });
+});
+
 // API routes
 app.use('/api/v1/gear', gearRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
-app.use('/api/v1/llm', llmRoutes);
+app.use('/api/v1/llm', strictLimiter, llmRoutes); // LLM APIには厳格なRate Limiting
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/image', imageProxyRoutes);
 
@@ -69,4 +104,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-

@@ -1,4 +1,15 @@
-import { GearItemWithCalculated, ChartData, QuantityDisplayMode } from './types';
+import {
+  GearItemWithCalculated,
+  ChartData,
+  QuantityDisplayMode,
+  ChartScope,
+  ChartFocus,
+  DonutSegment,
+  Category,
+  isBig3Category,
+  DUAL_RING_COLORS
+} from './types';
+import { COLORS } from './designSystem';
 
 export const getQuantityForDisplayMode = (
   item: GearItemWithCalculated,
@@ -17,7 +28,7 @@ export const getCategoryColor = (systemName: string): string => {
     'Electronics': '#4D96FF',
     'Hygiene': '#A66DFF'
   };
-  return colorMap[systemName] || '#6B7280';
+  return colorMap[systemName] || COLORS.gray[500];
 };
 
 export const calculateChartData = (
@@ -26,7 +37,7 @@ export const calculateChartData = (
 ): ChartData[] => {
   const categoryTotals = gearItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Other';
-    const categoryColor = item.category?.color || '#6B7280';
+    const categoryColor = item.category?.color || COLORS.gray[500];
     if (!acc[categoryName]) {
       acc[categoryName] = { weight: 0, price: 0, count: 0, items: [], color: categoryColor };
     }
@@ -76,3 +87,176 @@ export const calculateTotals = (
     { weight: 0, price: 0, items: 0, missing: 0 }
   );
 };
+
+// ==================== 二重ドーナツチャート用ヘルパー ====================
+
+/**
+ * スコープに基づいてアイテムをフィルタ
+ * @param items 全アイテム
+ * @param scope 'base' | 'packed' | 'skinout'
+ */
+export function filterByScope(
+  items: GearItemWithCalculated[],
+  scope: ChartScope
+): GearItemWithCalculated[] {
+  switch (scope) {
+    case 'base':
+      return items.filter(i => i.weightClass === 'base' || !i.weightClass);
+    case 'packed':
+      return items.filter(i =>
+        i.weightClass === 'base' ||
+        i.weightClass === 'consumable' ||
+        !i.weightClass
+      );
+    case 'skinout':
+      return items; // 全て
+  }
+}
+
+/**
+ * アイテムの重量合計を計算
+ */
+export function sumWeight(items: GearItemWithCalculated[]): number {
+  return items.reduce((sum, i) => sum + (i.weightGrams || 0) * i.requiredQuantity, 0);
+}
+
+/**
+ * Inner ring用データを計算（Big3 vs Other）
+ */
+export function calculateInnerRingData(
+  items: GearItemWithCalculated[],
+  scope: ChartScope
+): DonutSegment[] {
+  const scopedItems = filterByScope(items, scope);
+
+  const big3Items = scopedItems.filter(i => isBig3Category(i.category));
+  const otherItems = scopedItems.filter(i => !isBig3Category(i.category));
+
+  const big3Weight = sumWeight(big3Items);
+  const otherWeight = sumWeight(otherItems);
+
+  return [
+    {
+      id: 'big3',
+      label: 'Big3',
+      value: big3Weight,
+      color: DUAL_RING_COLORS.big3,
+      isBig3: true,
+      items: big3Items
+    },
+    {
+      id: 'other',
+      label: 'Other',
+      value: otherWeight,
+      color: DUAL_RING_COLORS.other,
+      isBig3: false,
+      items: otherItems
+    }
+  ].filter(s => s.value > 0);
+}
+
+/**
+ * Big3内訳を計算（Pack/Shelter/Sleep）
+ */
+export function calculateBig3Breakdown(
+  items: GearItemWithCalculated[],
+  _categories: Category[]
+): DonutSegment[] {
+  const big3Items = items.filter(i => isBig3Category(i.category));
+
+  const packItems = big3Items.filter(i => i.category?.tags?.includes('big3_pack'));
+  const shelterItems = big3Items.filter(i => i.category?.tags?.includes('big3_shelter'));
+  const sleepItems = big3Items.filter(i => i.category?.tags?.includes('big3_sleep'));
+
+  return [
+    {
+      id: 'big3_pack',
+      label: 'Pack',
+      value: sumWeight(packItems),
+      color: DUAL_RING_COLORS.big3_pack,
+      isBig3: true,
+      items: packItems
+    },
+    {
+      id: 'big3_shelter',
+      label: 'Shelter',
+      value: sumWeight(shelterItems),
+      color: DUAL_RING_COLORS.big3_shelter,
+      isBig3: true,
+      items: shelterItems
+    },
+    {
+      id: 'big3_sleep',
+      label: 'Sleep',
+      value: sumWeight(sleepItems),
+      color: DUAL_RING_COLORS.big3_sleep,
+      isBig3: true,
+      items: sleepItems
+    }
+  ].filter(s => s.value > 0);
+}
+
+/**
+ * カテゴリ内訳を計算
+ */
+export function calculateCategoryBreakdown(
+  items: GearItemWithCalculated[],
+  _categories: Category[]
+): DonutSegment[] {
+  const categoryMap = new Map<string, { items: GearItemWithCalculated[]; color: string; name: string; isBig3: boolean }>();
+
+  for (const item of items) {
+    const categoryId = item.categoryId || 'uncategorized';
+    const categoryName = item.category?.name || 'Other';
+    const categoryColor = item.category?.color || COLORS.gray[500];
+    const isBig3 = isBig3Category(item.category);
+
+    if (!categoryMap.has(categoryId)) {
+      categoryMap.set(categoryId, {
+        items: [],
+        color: categoryColor,
+        name: categoryName,
+        isBig3
+      });
+    }
+    categoryMap.get(categoryId)!.items.push(item);
+  }
+
+  return Array.from(categoryMap.entries())
+    .map(([id, data]) => ({
+      id,
+      label: data.name,
+      value: sumWeight(data.items),
+      color: data.color,
+      isBig3: data.isBig3,
+      items: data.items
+    }))
+    .filter(s => s.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+
+/**
+ * Outer ring用データを計算（Focus依存）
+ */
+export function calculateOuterRingData(
+  items: GearItemWithCalculated[],
+  scope: ChartScope,
+  focus: ChartFocus,
+  categories: Category[]
+): DonutSegment[] {
+  const scopedItems = filterByScope(items, scope);
+
+  if (focus === 'big3') {
+    // Big3カテゴリの内訳（Pack/Shelter/Sleep）
+    return calculateBig3Breakdown(scopedItems, categories);
+  }
+
+  if (focus === 'other') {
+    // 非Big3カテゴリの内訳
+    const nonBig3Items = scopedItems.filter(i => !isBig3Category(i.category));
+    return calculateCategoryBreakdown(nonBig3Items, categories);
+  }
+
+  // focus === 'all': 全カテゴリ内訳
+  return calculateCategoryBreakdown(scopedItems, categories);
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { STATUS_TONES } from '../utils/designSystem'
 
 interface LoginProps {
   isOpen?: boolean
@@ -8,6 +9,8 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) {
+  const errorTone = STATUS_TONES.error
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -44,12 +47,12 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content p-6 w-full max-w-md">
+      <div className="modal-panel-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Login</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Login</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             ✕
           </button>
@@ -57,7 +60,7 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
@@ -71,7 +74,7 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
@@ -85,7 +88,14 @@ export default function Login({ onLogin, onLoginSuccess, onClose }: LoginProps) 
           </div>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm p-2 rounded-md">
+            <div
+              className="text-sm p-2 rounded-md border"
+              style={{
+                backgroundColor: errorTone.background,
+                borderColor: errorTone.border,
+                color: errorTone.text
+              }}
+            >
               {error}
             </div>
           )}

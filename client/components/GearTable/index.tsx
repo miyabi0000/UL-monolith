@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { Suspense, useState, useMemo, useEffect, useCallback } from 'react'
 import { GearItemWithCalculated, Category, GearFieldValue, QuantityDisplayMode, ViewMode } from '../../utils/types'
 import { SPACING_SCALE } from '../../utils/designSystem'
 import Card from '../ui/Card'
@@ -6,7 +6,7 @@ import GearListHeader from '../GearListHeader'
 import BulkActionBar from '../BulkActionBar'
 import TableHeader, { SortField, SortDirection } from './TableHeader'
 import TableRow from './TableRow'
-import ComparisonTable from '../ComparisonTable'
+const ComparisonTable = React.lazy(() => import('../ComparisonTable'))
 import { useComparisonMode } from '../../hooks/useComparisonMode'
 
 interface GearTableProps {
@@ -267,21 +267,23 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
   // Compareモード時の比較表示（縦型テーブル）
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
     return (
-      <ComparisonTable
-        items={selectedItems}
-        onClose={handleCloseComparisonModal}
-        onAdopt={handleAdoptItem}
-        onPreviewAdopt={handlePreviewAdopt}
-        previewItemId={previewItemId}
-        onRemove={handleRemoveFromComparison}
-      />
+      <Suspense fallback={<Card variant="default"><div className="p-6 gear-text-sub">Loading comparison...</div></Card>}>
+        <ComparisonTable
+          items={selectedItems}
+          onClose={handleCloseComparisonModal}
+          onAdopt={handleAdoptItem}
+          onPreviewAdopt={handlePreviewAdopt}
+          previewItemId={previewItemId}
+          onRemove={handleRemoveFromComparison}
+        />
+      </Suspense>
     )
   }
 
   // 通常のテーブル表示
   return (
     <>
-      <Card variant="default">
+      <Card variant="default" className="flat-panel">
         {/* ヘッダー */}
         <GearListHeader
           itemCount={processedItems.length}
@@ -316,8 +318,8 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
       )}
 
       {/* テーブル表示 */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="gear-table-shell">
+        <table className="w-full table-fixed">
           <TableHeader
             showCheckboxes={shouldShowCheckboxes}
             isAllSelected={isAllSelected}
@@ -330,7 +332,7 @@ const GearTable: React.FC<GearTableProps> = React.memo(({
             onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
             showEditColumn={!isEditable}
           />
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+          <tbody className="bg-transparent">
             {processedItems.map((item) => (
               <TableRow
                 key={item.id}

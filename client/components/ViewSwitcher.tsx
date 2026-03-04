@@ -8,13 +8,13 @@ interface ViewSwitcherProps {
 
 const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }) => {
   return (
-    <div className="inline-flex rounded-lg p-1 bg-gray-100 dark:bg-gray-800">
+    <div className="inline-flex rounded-lg p-1 bg-gray-100">
       <button
         onClick={() => onViewChange('card')}
         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
           currentView === 'card'
-            ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400'
+            ? 'bg-white text-gray-700 shadow-sm'
+            : 'text-gray-500'
         }`}
         aria-label="カードビュー"
       >
@@ -24,8 +24,8 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
         onClick={() => onViewChange('table')}
         className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
           currentView === 'table'
-            ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400'
+            ? 'bg-white text-gray-700 shadow-sm'
+            : 'text-gray-500'
         }`}
         aria-label="テーブルビュー"
       >
@@ -36,4 +36,3 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }
 };
 
 export default ViewSwitcher;
-

@@ -6,6 +6,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import AppHeader from './AppHeader';
 import HomePage from './HomePage';
 import NotificationPopup from './NotificationPopup';
+import ZenGardenBackground from './ui/ZenGardenBackground';
 
 // 遅延インポート（コード分割）
 const Login = React.lazy(() => import('./Login'));
@@ -36,12 +37,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen relative">
+      <ZenGardenBackground />
+
+      <div className="relative z-10 min-h-screen">
       <AppHeader
         onShowLogin={() => setShowLogin(true)}
         onLogout={logout}
-        onToggleChat={() => setShowChat(!showChat)}
-        onShowCategoryManager={() => setShowCategoryManager(true)}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
       />
@@ -89,6 +91,7 @@ export default function App() {
         messages={messages}
         onRemove={removeNotification}
       />
+      </div>
     </div>
   );
 }

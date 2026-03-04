@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { getCategoryBadgeStyle } from '../../utils/designSystem';
+import { COLORS } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
 import ItemListCard from './ItemListCard';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
+import CategoryBadge from '../ui/CategoryBadge';
 
 interface CategorySummaryViewProps {
   categoryName: string;
@@ -66,49 +67,44 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   }, [categoryItems, quantityDisplayMode]);
 
   // カテゴリの色を取得
-  const categoryColor = categoryItems[0]?.category?.color || '#6B7280';
+  const categoryColor = categoryItems[0]?.category?.color || COLORS.gray[500];
 
   return (
     <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
       {/* カテゴリバッジ */}
       <div>
-        <span
-          className="inline-block text-xs font-semibold px-2 py-1 rounded"
-          style={getCategoryBadgeStyle(categoryColor)}
-        >
-          {categoryName}
-        </span>
+        <CategoryBadge name={categoryName} color={categoryColor} className="text-xs font-semibold px-2 py-1" />
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200 dark:border-gray-700" />
+      <div className="border-t border-gray-200" />
 
       {/* 統計 */}
       <div>
         <div className="space-y-2 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">Weight:</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.totalWeight}g</span>
+            <span className="text-gray-600">Weight:</span>
+            <span className="font-semibold text-gray-900">{stats.totalWeight}g</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">Price:</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(stats.totalPrice)}</span>
+            <span className="text-gray-600">Price:</span>
+            <span className="font-semibold text-gray-900">{formatPrice(stats.totalPrice)}</span>
           </div>
         </div>
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200 dark:border-gray-700" />
+      <div className="border-t border-gray-200" />
 
       {/* アイテムリスト */}
       <div>
-        <div className="flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+        <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
           <span>ITEMS</span>
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{stats.itemCount}</span>
+          <span className="font-semibold text-gray-900">{stats.itemCount}</span>
         </div>
         <div className="space-y-1.5">
           {categoryItems.length === 0 ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+            <p className="text-xs text-gray-500 text-center py-4">
               No items in this category
             </p>
           ) : (

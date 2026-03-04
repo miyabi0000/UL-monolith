@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
 import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
+import { alpha } from '../styles/tokens'
 
 interface ChatMessage {
   id: string
@@ -390,7 +391,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         className="w-96 lg:w-[420px] flex flex-col animate-in slide-in-from-right duration-200 ease-out"
         style={{
           backgroundColor: COLORS.white,
-          boxShadow: `-4px 0 6px -1px rgba(0, 0, 0, 0.1)`,
+          boxShadow: `-4px 0 6px -1px ${alpha(COLORS.gray[900], 0.1)}`,
         }}
       >
         {/* Header */}
@@ -452,7 +453,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 <div
                   className={`text-xs mt-2 opacity-70`}
                   style={{
-                    color: message.role === 'user' ? 'rgba(255, 255, 255, 0.8)' : COLORS.text.secondary
+                    color: message.role === 'user' ? alpha(COLORS.white, 0.8) : COLORS.text.secondary
                   }}
                 >
                   {message.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
