@@ -46,6 +46,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
 
+  const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
+
   return (
     <header className="bg-gray-50/60 dark:bg-slate-900/40 transition-colors duration-200">
       {/* Wrapper with reduced padding */}
@@ -111,13 +113,19 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {/* User menu */}
             <div className="relative user-menu-container">
               <button
-                className="glass-header-chip p-1.5 text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/50"
+                className="glass-header-chip h-8 min-w-[32px] px-1.5 text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/50 inline-flex items-center justify-center"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 aria-label="User menu"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                {isAuthenticated ? (
+                  <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-[10px] font-semibold inline-flex items-center justify-center">
+                    {userInitial}
+                  </span>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
               </button>
 
               {/* User dropdown menu */}
