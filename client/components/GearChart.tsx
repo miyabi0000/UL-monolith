@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import HorizontalBarChart from './charts/HorizontalBarChart'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
@@ -562,6 +563,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
+  const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
@@ -662,6 +664,28 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     () => (selectedCategoryFromChart ? sortedData.find(d => d.name === selectedCategoryFromChart) : null),
     [sortedData, selectedCategoryFromChart]
   )
+
+  // バーチャート用データ: カテゴリ選択時はそのアイテム一覧、未選択時はカテゴリ一覧
+  const barData = useMemo(() => {
+    const unit = viewMode === 'cost' ? '¥' : 'g'
+    if (selectedData && selectedData.sortedItems.length > 0) {
+      return selectedData.sortedItems.map((item, index) => ({
+        id: item.id,
+        name: item.name,
+        value: item.displayValue,
+        color: generateItemColor(selectedData.color, index, selectedData.sortedItems.length),
+        percentage: item.systemPercentage,
+        unit,
+      }))
+    }
+    return sortedData.map(cat => ({
+      name: cat.name,
+      value: cat.value,
+      color: cat.color,
+      percentage: cat.percentage,
+      unit,
+    }))
+  }, [selectedData, sortedData, viewMode])
 
   const outerPieData = useMemo(() => {
     const items = selectedData?.sortedItems || []
@@ -816,7 +840,43 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               </div>
             ) : (
               <>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
+                  <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-slate-700 rounded-md p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setChartDisplayMode('pie')}
+                      className={`h-5 px-1.5 rounded text-[10px] font-medium transition-all duration-150 inline-flex items-center gap-1 ${
+                        chartDisplayMode === 'pie'
+                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      }`}
+                      aria-label="Pie chart"
+                      title="Donut chart"
+                    >
+                      <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 1a7 7 0 1 0 7 7A7 7 0 0 0 8 1zm0 12A5 5 0 1 1 13 8 5 5 0 0 1 8 13zm0-8a3 3 0 1 0 3 3A3 3 0 0 0 8 5z"/>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChartDisplayMode('bar')}
+                      className={`h-5 px-1.5 rounded text-[10px] font-medium transition-all duration-150 inline-flex items-center gap-1 ${
+                        chartDisplayMode === 'bar'
+                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      }`}
+                      aria-label="Bar chart"
+                      title="Horizontal bar chart"
+                    >
+                      <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                        <rect x="1" y="2" width="10" height="3" rx="1"/>
+                        <rect x="1" y="6.5" width="14" height="3" rx="1"/>
+                        <rect x="1" y="11" width="7" height="3" rx="1"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
                 <button
                   onClick={() => setIsChartCollapsed(true)}
                   className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
@@ -838,7 +898,41 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           {!isChartCollapsed && (
             <>
         {/* チャートエリア */}
+        {chartDisplayMode === 'bar' ? (
+          <div className="flex-1 flex flex-col overflow-y-auto">
+            {/* ドリルダウン時のブレッドクラム */}
+            {selectedData && (
+              <div className="flex items-center gap-1.5 px-3 pt-2 pb-0">
+                <button
+                  type="button"
+                  onClick={() => handleCategoryClick(selectedData.name)}
+                  className="flex items-center gap-0.5 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 12L6 8l4-4"/>
+                  </svg>
+                  All
+                </button>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">/</span>
+                <span className="text-[10px] font-medium truncate" style={{ color: selectedData.color }}>
+                  {selectedData.name}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 w-full px-3 py-2 flex flex-col justify-center">
+              <HorizontalBarChart
+                data={barData}
+                totalValue={totalValue}
+                viewMode={viewMode}
+                selectedCategories={selectedCategories}
+                onCategoryClick={handleCategoryClick}
+                onItemClick={handleItemClick}
+              />
+            </div>
+          </div>
+        ) : (
         <div className="relative flex items-center justify-center p-2 flex-1" style={{ minHeight: chartHeight }}>
+          <>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* Weight-Classモード: 二重ドーナツ */}
@@ -1041,7 +1135,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               />
             </div>
           </div>
+          </>
         </div>
+        )}
 
         <ChartSummaryFooter
           viewMode={viewMode}

@@ -65,20 +65,6 @@
 }
 
 @layer components {
-  .zen-garden-bg {
-    opacity: 0.95;
-  }
-
-  .dark .zen-garden-bg {
-    display: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .zen-garden-bg {
-      opacity: 0.95;
-    }
-  }
-
   .glass-surface,
   .card,
   .modal-content {
@@ -121,9 +107,14 @@
     z-index: 1;
   }
 
+  /* Refract layer is opt-in only. Default is off to avoid unnatural artifacts. */
   .glass-refract::after,
   .card::after,
   .modal-content::after {
+    display: none;
+  }
+
+  .glass-refract-enhanced::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -165,7 +156,7 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.34);
   }
 
-  .glass-header.glass-refract::after {
+  .glass-header.glass-refract-enhanced::after {
     opacity: 0.32;
     filter: blur(calc(var(--glass-distort) * 0.2));
   }
@@ -217,6 +208,7 @@
     .glass-surface::before,
     .card::before,
     .modal-content::before,
+    .glass-refract-enhanced::after,
     .glass-refract::after,
     .card::after,
     .modal-content::after,
