@@ -8,9 +8,21 @@ interface CardGridViewProps {
   quantityDisplayMode: QuantityDisplayMode;
   selectedItemId?: string | null;
   disableSort?: boolean;
+  activePackName?: string;
+  activePackItemIds?: string[];
+  onTogglePackItem?: (itemId: string) => void;
 }
 
-const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDisplayMode, selectedItemId, disableSort }) => {
+const CardGridView: React.FC<CardGridViewProps> = ({
+  items,
+  viewMode,
+  quantityDisplayMode,
+  selectedItemId,
+  disableSort,
+  activePackName,
+  activePackItemIds = [],
+  onTogglePackItem
+}) => {
   const getItemValue = (item: GearItemWithCalculated) => {
     const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
     return viewMode === 'cost'
@@ -41,6 +53,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
             {sortedItems.map(item => {
               const imageUrl = item.imageUrl || null;
               const isHighlighted = selectedItemId === item.id;
+              const isInActivePack = activePackItemIds.includes(item.id);
 
               return (
                 <div
@@ -51,6 +64,21 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
                       : ''
                   }`}
                 >
+                  {activePackName && onTogglePackItem && (
+                    <button
+                      type="button"
+                      onClick={() => onTogglePackItem(item.id)}
+                      className={[
+                        'absolute top-1 right-1 z-10 h-5 min-w-[34px] rounded-md px-1.5 text-[9px] font-semibold transition-colors',
+                        isInActivePack
+                          ? 'bg-gray-800 text-white dark:bg-slate-100 dark:text-slate-900'
+                          : 'bg-white/90 text-gray-600 dark:bg-slate-700/90 dark:text-gray-300'
+                      ].join(' ')}
+                      title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
+                    >
+                      {isInActivePack ? 'IN' : 'OUT'}
+                    </button>
+                  )}
                   {imageUrl ? (
                     <img
                       src={imageUrl}

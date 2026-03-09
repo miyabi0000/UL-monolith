@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { formatPrice } from '../utils/formatters';
+import { getQuantityForDisplayMode } from '../utils/chartHelpers';
 import CategoryBadge from './ui/CategoryBadge';
 
 const fallbackUserId = 'local-user';
@@ -19,11 +20,11 @@ export default function PackDetailPage() {
   );
 
   const totalWeight = useMemo(
-    () => items.reduce((sum, item) => sum + (item.totalWeight || 0), 0),
+    () => items.reduce((sum, item) => sum + (item.weightGrams || 0) * getQuantityForDisplayMode(item, 'all'), 0),
     [items]
   );
   const totalPrice = useMemo(
-    () => items.reduce((sum, item) => sum + (item.totalPrice || 0), 0),
+    () => items.reduce((sum, item) => sum + (item.priceCents || 0) * getQuantityForDisplayMode(item, 'all'), 0),
     [items]
   );
 
@@ -35,7 +36,7 @@ export default function PackDetailPage() {
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
             This pack may have been removed from local storage.
           </p>
-          <Link to="/packs" className="inline-flex mt-4 h-9 items-center px-4 rounded-md btn-secondary text-sm">
+          <Link to="/" className="inline-flex mt-4 h-9 items-center px-4 rounded-md btn-secondary text-sm">
             Back to Packs
           </Link>
         </div>
@@ -100,8 +101,8 @@ export default function PackDetailPage() {
                   )}
                 </span>
               </span>
-              <span className="text-gray-700 dark:text-gray-200">{(item.totalWeight || 0).toLocaleString()}g</span>
-              <span className="text-gray-700 dark:text-gray-200">{formatPrice(item.totalPrice)}</span>
+              <span className="text-gray-700 dark:text-gray-200">{((item.weightGrams || 0) * getQuantityForDisplayMode(item, 'all')).toLocaleString()}g</span>
+              <span className="text-gray-700 dark:text-gray-200">{formatPrice((item.priceCents || 0) * getQuantityForDisplayMode(item, 'all'))}</span>
             </div>
           ))}
       </section>

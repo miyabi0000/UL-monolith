@@ -28,12 +28,13 @@ export const usePacks = (userId: string) => {
   );
 
   const createPack = useCallback(
-    (name: string, description?: string) => {
+    (name: string, description?: string, routeName?: string) => {
       const now = new Date().toISOString();
       const next: Pack = {
         id: crypto.randomUUID(),
         userId,
         name,
+        routeName: routeName?.trim() || undefined,
         description: description?.trim() || undefined,
         itemIds: [],
         isPublic: true,
@@ -57,6 +58,7 @@ export const usePacks = (userId: string) => {
           ? {
               ...pack,
               ...updates,
+              routeName: updates.routeName?.trim() || undefined,
               description: updates.description?.trim() || undefined,
               updatedAt: new Date().toISOString()
             }

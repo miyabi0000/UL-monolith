@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import HorizontalBarChart from './charts/HorizontalBarChart'
-import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
@@ -531,6 +531,9 @@ interface GearChartProps {
   // Weight-Class用
   weightBreakdown?: WeightBreakdown | null
   ulStatus?: ULStatus | null
+  activePack?: Pack | null
+  activePackItemIds?: string[]
+  onTogglePackItem?: (itemId: string) => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -556,7 +559,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   showCheckboxes,
   onToggleCheckboxes,
   weightBreakdown,
-  ulStatus
+  ulStatus,
+  activePack,
+  activePackItemIds = [],
+  onTogglePackItem
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [centerPulse, setCenterPulse] = useState(false)
@@ -1350,6 +1356,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
                 selectedItemId={selectedItem}
+                activePack={activePack}
+                activePackItemIds={activePackItemIds}
+                onTogglePackItem={onTogglePackItem}
               />
           </div>
         </Card>

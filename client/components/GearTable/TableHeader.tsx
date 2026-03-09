@@ -20,6 +20,7 @@ interface TableHeaderProps {
   onCurrencyChange?: () => void
   showEditColumn?: boolean
   isEditable?: boolean
+  activePackName?: string
 }
 
 type HeaderColumn = {
@@ -59,8 +60,9 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   onCurrencyChange,
   showEditColumn = false,
   isEditable = false,
+  activePackName,
 }) => {
-  const thBase = 'gear-th px-1.5 py-1'
+  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
   const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-[11px] leading-none font-medium'
   const inactiveText = 'text-gray-500 dark:text-gray-300'
   const hoverText = 'hover:text-gray-700 dark:hover:text-gray-100'
@@ -210,6 +212,14 @@ const TableHeader: React.FC<TableHeaderProps> = ({
 
           return renderStandardColumn(column)
         })}
+
+        {activePackName && (
+          <th className={`${thBase} text-center w-[72px]`}>
+            <span className={`${labelBase} justify-center ${inactiveText}`}>
+              <span className="truncate max-w-[56px]" title={activePackName}>Pack</span>
+            </span>
+          </th>
+        )}
 
         {showEditColumn && <th className="px-1.5 py-1 text-center w-8"></th>}
       </tr>

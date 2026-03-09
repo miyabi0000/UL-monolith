@@ -33,6 +33,9 @@ interface TableRowProps {
    * - false: 読み取り専用表示（通常表示モード、Compareモード）
    */
   isEditable?: boolean
+  activePackName?: string
+  isInActivePack?: boolean
+  onTogglePackItem?: (itemId: string) => void
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -47,7 +50,10 @@ const TableRow: React.FC<TableRowProps> = ({
   onSelectItem,
   onUpdateItem,
   onEdit,
-  isEditable = false
+  isEditable = false,
+  activePackName,
+  isInActivePack = false,
+  onTogglePackItem
 }) => {
   const warningTone = STATUS_TONES.warning
 
@@ -262,6 +268,24 @@ const TableRow: React.FC<TableRowProps> = ({
           isChanged={isFieldChanged('seasons')}
         />
       </td>
+
+      {activePackName && onTogglePackItem && (
+        <td className="px-1.5 py-2 whitespace-nowrap text-center w-[72px]">
+          <button
+            type="button"
+            onClick={() => onTogglePackItem(item.id)}
+            className={[
+              'h-6 min-w-[52px] rounded-md px-2 text-[10px] font-semibold transition-colors',
+              isInActivePack
+                ? 'bg-gray-800 text-white dark:bg-slate-100 dark:text-slate-900'
+                : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
+            ].join(' ')}
+            title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
+          >
+            {isInActivePack ? 'IN' : 'OUT'}
+          </button>
+        </td>
+      )}
 
       {/* Edit button */}
       {onEdit && !isEditable && (

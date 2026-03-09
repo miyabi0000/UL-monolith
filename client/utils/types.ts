@@ -174,6 +174,7 @@ export interface Pack {
   id: string;
   userId: string;
   name: string;
+  routeName?: string;
   description?: string;
   itemIds: string[];
   isPublic: boolean;
