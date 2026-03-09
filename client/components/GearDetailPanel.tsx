@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, isBig3Category } from '../utils/types';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, Pack, isBig3Category } from '../utils/types';
 import CardGridView from './DetailPanel/CardGridView';
 import ComparisonTable from './ComparisonTable';
 import TableHeader, { SortField, SortDirection, Currency } from './GearTable/TableHeader';
@@ -25,6 +25,9 @@ interface GearDetailPanelProps {
   filteredByCategory?: string[];
   chartFocusFilter?: ChartFocus;
   selectedItemId?: string | null;
+  activePack?: Pack | null;
+  activePackItemIds?: string[];
+  onTogglePackItem?: (itemId: string) => void;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -42,6 +45,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   filteredByCategory = [],
   chartFocusFilter = 'all',
   selectedItemId,
+  activePack = null,
+  activePackItemIds = [],
+  onTogglePackItem,
 }) => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -222,6 +228,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           viewMode={viewMode}
           quantityDisplayMode={quantityDisplayMode}
           selectedItemId={selectedItemId}
+          activePackName={activePack?.name}
+          activePackItemIds={activePackItemIds}
+          onTogglePackItem={onTogglePackItem}
         />
       </div>
     );
@@ -266,6 +275,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               currency={currency}
               onCurrencyChange={handleCurrencyChange}
               isEditable={isEditable}
+              activePackName={activePack?.name}
             />
             <tbody>
               {processedItems.map((item) => (
@@ -282,6 +292,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   currency={currency}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}
+                  activePackName={activePack?.name}
+                  isInActivePack={activePackItemIds.includes(item.id)}
+                  onTogglePackItem={onTogglePackItem}
                 />
               ))}
             </tbody>
@@ -299,6 +312,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         viewMode={viewMode}
         quantityDisplayMode={quantityDisplayMode}
         selectedItemId={selectedItemId}
+        activePackName={activePack?.name}
+        activePackItemIds={activePackItemIds}
+        onTogglePackItem={onTogglePackItem}
       />
     </div>
   );

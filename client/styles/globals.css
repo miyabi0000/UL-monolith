@@ -6,8 +6,12 @@
   html,
   body,
   #root {
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
   }
 
   :root {
@@ -40,6 +44,36 @@
     --text-table-sub: #6b7280;
     --text-table-num: #1f2937;
     --text-table-micro: #6b7280;
+    --surface-level-0: #ffffff;
+    --surface-level-1: #f9fafb;
+    --surface-level-2: #f3f4f6;
+    --ink-primary: #111827;
+    --ink-secondary: #374151;
+    --ink-muted: #6b7280;
+    --ink-inverse: #ffffff;
+    --icon-default: #374151;
+    --icon-muted: #6b7280;
+    --stroke-subtle: rgba(203, 213, 225, 0.48);
+    --stroke-default: rgba(148, 163, 184, 0.7);
+    --stroke-strong: #64748b;
+    --stroke-divider: rgba(203, 213, 225, 0.62);
+    --focus-ring: #2563eb;
+    --focus-ring-offset: #ffffff;
+    --overlay-hover: rgba(17, 24, 39, 0.04);
+    --overlay-active: rgba(17, 24, 39, 0.08);
+    --overlay-scrim: rgba(0, 0, 0, 0.46);
+    --state-success-fg: #15803d;
+    --state-success-bg: rgba(34, 197, 94, 0.12);
+    --state-success-border: rgba(22, 163, 74, 0.45);
+    --state-warning-fg: #b45309;
+    --state-warning-bg: rgba(249, 115, 22, 0.14);
+    --state-warning-border: rgba(234, 88, 12, 0.5);
+    --state-danger-fg: #b91c1c;
+    --state-danger-bg: rgba(239, 68, 68, 0.12);
+    --state-danger-border: rgba(220, 38, 38, 0.45);
+    --state-info-fg: #1d4ed8;
+    --state-info-bg: rgba(59, 130, 246, 0.12);
+    --state-info-border: rgba(37, 99, 235, 0.45);
   }
 
   body {
@@ -48,6 +82,7 @@
     background: var(--page-bg, #f8fafc);
     position: relative;
     min-height: 100vh;
+    overflow-y: auto;
   }
 
   body::before {
@@ -412,13 +447,26 @@
 
   /* ボタン共通スタイル */
   .btn-primary {
-    @apply bg-gray-700 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
+    @apply text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
     border-radius: var(--radius-control);
+    color: var(--ink-inverse, #ffffff);
+    background: var(--ink-secondary, #374151);
+  }
+
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--ink-secondary, #374151) 88%, black 12%);
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-900 text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
+    @apply text-sm font-medium px-4 py-2 shadow-sm transition-all duration-200;
     border-radius: var(--radius-control);
+    color: var(--ink-primary, #111827);
+    background: var(--surface-level-0, #ffffff);
+    border: 1px solid var(--stroke-subtle, rgba(203, 213, 225, 0.48));
+  }
+
+  .btn-secondary:hover {
+    background: color-mix(in srgb, var(--surface-level-0, #ffffff) 94%, var(--overlay-hover, rgba(17, 24, 39, 0.04)) 6%);
   }
 
   .dark .btn-secondary {
@@ -443,8 +491,17 @@
 
   /* 入力フィールド共通スタイル */
   .input {
-    @apply bg-white text-gray-900 border border-gray-300 shadow-sm focus:ring-2 focus:ring-gray-500 transition-all duration-200;
+    @apply shadow-sm transition-all duration-200;
     border-radius: var(--radius-control);
+    color: var(--ink-primary, #111827);
+    background: var(--surface-level-0, #ffffff);
+    border: 1px solid var(--stroke-default, rgba(148, 163, 184, 0.7));
+  }
+
+  .input:focus-visible {
+    outline: 2px solid var(--focus-ring, #2563eb);
+    outline-offset: 1px;
+    border-color: var(--focus-ring, #2563eb);
   }
 
   .dark .input {
@@ -453,7 +510,8 @@
 
   /* モーダル背景 */
   .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+    @apply fixed inset-0 flex items-center justify-center z-50;
+    background: var(--overlay-scrim, rgba(0, 0, 0, 0.46));
   }
 
   /* モーダルコンテンツ */

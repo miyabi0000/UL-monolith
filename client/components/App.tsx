@@ -1,29 +1,21 @@
-import React, { Suspense, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
-import AppHeader from './AppHeader';
-import HomePage from './HomePage';
 import NotificationPopup from './NotificationPopup';
-import ZenGardenBackground from './ui/ZenGardenBackground';
+import PacksPage from './PacksPage';
+import PackDetailPage from './PackDetailPage';
+import AppDock from './AppDock';
 
 // 遅延インポート（コード分割）
 const Login = React.lazy(() => import('./Login'));
-const ChatPopup = React.lazy(() => import('./ChatPopup'));
-const CategoryManager = React.lazy(() => import('./CategoryManager'));
 
 export default function App() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const {
-    showLogin, setShowLogin,
-    showCategoryManager, setShowCategoryManager,
-    showChat, setShowChat,
-    categories,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory
-  } = useAppState();
+  const location = useLocation();
+  const { user, isAuthenticated, logout, login } = useAuth();
+  const appState = useAppState();
+  const { showLogin, setShowLogin } = appState;
 
   const {
     messages,
@@ -36,52 +28,40 @@ export default function App() {
     setShowLogin(false);
   };
 
-  return (
-    <div className="min-h-screen relative">
-      <ZenGardenBackground />
+  React.useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace('#', '');
+    const element = document.getElementById(id);
+    if (!element) return;
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [location.hash]);
 
-      <div className="relative z-10 min-h-screen">
-      <AppHeader
+  return (
+    <div className="min-h-screen">
+      {/* ルーティング */}
+      <Routes>
+        <Route path="/" element={<PacksPage appState={appState} />} />
+        <Route path="/all" element={<Navigate to="/" replace />} />
+        <Route path="/packs" element={<Navigate to="/" replace />} />
+        <Route path="/p/:packId" element={<PackDetailPage />} />
+      </Routes>
+
+      <AppDock
         onShowLogin={() => setShowLogin(true)}
         onLogout={logout}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
       />
 
-      {/* ルーティング */}
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-      </Routes>
-
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {showCategoryManager && (
-          <CategoryManager
-            onClose={() => setShowCategoryManager(false)}
-            categories={categories}
-            onAddCategory={handleCreateCategory}
-            onEditCategory={handleUpdateCategory}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-
         {showLogin && (
           <Login
             isOpen={showLogin}
+            onLogin={login}
             onClose={() => setShowLogin(false)}
             onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-
-        {showChat && (
-          <ChatPopup
-            isOpen={showChat}
-            onClose={() => setShowChat(false)}
-            categories={categories}
-            onGearExtracted={(gearItem) => {
-              // ChatPopupからのギア抽出はHomePageで処理する必要があるため
-              // 将来的にはコンテキストAPIで管理するか、状態を上位に引き上げる
-              console.log('Gear extracted from chat:', gearItem);
-            }}
           />
         )}
       </Suspense>
@@ -91,7 +71,6 @@ export default function App() {
         messages={messages}
         onRemove={removeNotification}
       />
-      </div>
     </div>
   );
 }

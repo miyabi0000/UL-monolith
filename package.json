@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "server:dev": "tsx watch server/app.ts",
     "server:build": "tsc --project server/tsconfig.json",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project server/tsconfig.json"
   },
   "dependencies": {
     "@types/axios": "^0.9.36",
