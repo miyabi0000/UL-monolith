@@ -199,6 +199,56 @@ export type ThemeColors = {
     flatBorder: string;
     flatShadow: string;
   };
+  surfaceLevel: {
+    0: string;
+    1: string;
+    2: string;
+  };
+  ink: {
+    primary: string;
+    secondary: string;
+    muted: string;
+    inverse: string;
+    icon: string;
+    iconMuted: string;
+  };
+  stroke: {
+    subtle: string;
+    default: string;
+    strong: string;
+    divider: string;
+  };
+  focus: {
+    ring: string;
+    ringOffset: string;
+  };
+  overlay: {
+    hover: string;
+    active: string;
+    scrim: string;
+  };
+  state: {
+    success: {
+      fg: string;
+      bg: string;
+      border: string;
+    };
+    warning: {
+      fg: string;
+      bg: string;
+      border: string;
+    };
+    danger: {
+      fg: string;
+      bg: string;
+      border: string;
+    };
+    info: {
+      fg: string;
+      bg: string;
+      border: string;
+    };
+  };
   text: {
     tableHead: string;
     tableMain: string;
