@@ -239,7 +239,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   // Tableモードまたはcompareモード（テーブル表示）
   if (gearViewMode === 'table' || gearViewMode === 'compare') {
     return (
-      <div className="w-full h-full min-w-0 overflow-y-auto">
+      <div className="w-full h-full min-w-0 overflow-auto">
         {/* 一括操作バー（チェックボックス表示時のみ） */}
         {shouldShowCheckboxes && (
           <div style={{ padding: `${SPACING_SCALE.base}px` }}>
@@ -260,7 +260,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
         )}
 
         {/* テーブル表示 */}
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full" style={{ minWidth: '600px' }}>
             <TableHeader
               showCheckboxes={shouldShowCheckboxes}
