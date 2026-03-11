@@ -89,7 +89,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
     <div className="modal-overlay">
       <div className="modal-panel-lg">
         {/* Header */}
-        <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
+        <div className="sticky top-0 bg-white/80 backdrop-blur-sm neu-divider px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900">
             Edit Gear Item
           </h2>
@@ -174,7 +174,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
                 <img
                   src={formData.imageUrl}
                   alt="Preview"
-                  className="max-w-[200px] max-h-[150px] rounded border border-gray-300"
+                  className="max-w-[200px] max-h-[150px] rounded neu-raised"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               </div>
@@ -279,7 +279,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-between pt-4 border-t border-gray-200">
+          <div className="flex justify-between pt-4 neu-divider">
             <button
               type="button"
               onClick={handleDelete}

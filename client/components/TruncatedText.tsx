@@ -50,7 +50,7 @@ const TruncatedText: React.FC<TruncatedTextProps> = ({
       </span>
 
       {isExpanded && isHovered && (
-        <div className="absolute z-50 bg-white text-gray-900 border border-gray-200 p-2 rounded-md shadow-md top-full left-0 mt-1 max-w-xs break-words">
+        <div className="absolute z-50 bg-white text-gray-900 neu-raised p-2 rounded-md top-full left-0 mt-1 max-w-xs break-words">
           {text}
         </div>
       )}

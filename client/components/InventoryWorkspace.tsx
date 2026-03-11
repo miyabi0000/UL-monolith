@@ -179,6 +179,26 @@ export default function InventoryWorkspace({
     }
   }, [handleUpdateGear, showError]);
 
+  const handleAddItemToActivePack = useCallback((itemId: string) => {
+    if (!activePack || !onTogglePackItem) return;
+    if (activePackItemIds.includes(itemId)) return;
+
+    onTogglePackItem(itemId);
+    showSuccess(`${activePack.name} に追加しました`);
+
+    // First drop on an empty pack transitions to pack-focused analysis.
+    if (workspaceScope !== 'pack' && activePackItemIds.length === 0) {
+      onWorkspaceScopeChange?.('pack');
+    }
+  }, [
+    activePack,
+    onTogglePackItem,
+    activePackItemIds,
+    showSuccess,
+    workspaceScope,
+    onWorkspaceScopeChange
+  ]);
+
   const handleLoginSuccess = () => {
     showSuccess('Login successful');
     setShowLogin(false);
@@ -233,7 +253,7 @@ export default function InventoryWorkspace({
           </>
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
-            <div className="sticky top-0 z-20 mb-3 rounded-xl border border-gray-200/80 bg-white/88 p-3 backdrop-blur dark:border-slate-600/80 dark:bg-slate-800/88">
+            <div className="sticky top-0 z-20 mb-3 rounded-xl bg-white/88 p-3 backdrop-blur dark:bg-slate-800/88 neu-raised">
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -259,7 +279,7 @@ export default function InventoryWorkspace({
                       ].join(' ')}
                       onClick={() => onWorkspaceScopeChange?.('pack')}
                     >
-                      {`Pack: ${activePack.name}`}
+                      {`Pack: ${activePack.name} (${activePackItemIds.length})`}
                     </button>
                   )}
                   {packManager && (
@@ -274,7 +294,7 @@ export default function InventoryWorkspace({
                 </div>
 
                 {packManager && showPackMenu && (
-                  <div className="rounded-lg border border-gray-200/70 dark:border-slate-600/70 bg-white/90 dark:bg-slate-800/90 p-3 shadow-sm">
+                  <div className="rounded-lg bg-white/90 dark:bg-slate-800/90 p-3 neu-inset">
                     {packManager.packs.length > 0 ? (
                       <div className="flex flex-wrap items-center gap-2">
                         {packManager.packs.map((pack) => {
@@ -313,7 +333,7 @@ export default function InventoryWorkspace({
                     </div>
 
                     {packManager.showCreator && (
-                      <form onSubmit={packManager.onCreatePack} className="mt-3 grid gap-2 rounded-lg border border-gray-200/80 dark:border-slate-600/80 bg-white/55 dark:bg-slate-800/55 p-3">
+                      <form onSubmit={packManager.onCreatePack} className="mt-3 grid gap-2 rounded-lg bg-white/55 dark:bg-slate-800/55 p-3 neu-inset">
                         <input
                           className="input w-full"
                           placeholder="Pack name"
@@ -348,7 +368,7 @@ export default function InventoryWorkspace({
 
                 {workspaceScope === 'pack' && activePack && packEditor && (
                   <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
-                    <div className="rounded-lg border border-gray-200/70 dark:border-slate-600/70 bg-white/45 dark:bg-slate-800/35 p-3">
+                    <div className="rounded-lg bg-white/45 dark:bg-slate-800/35 p-3 neu-inset">
                       <div className="grid gap-2">
                         <input
                           className="input h-9 w-full text-sm"
@@ -371,7 +391,7 @@ export default function InventoryWorkspace({
                           <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={packEditor.onCopyLink}>
                             Copy Link
                           </button>
-                          <button type="button" className="h-8 px-3 rounded-md text-xs text-red-600 dark:text-red-400 border border-red-200/70 dark:border-red-500/30" onClick={packEditor.onDelete}>
+                          <button type="button" className="h-8 px-3 rounded-md text-xs text-red-600 dark:text-red-400 neu-raised" onClick={packEditor.onDelete}>
                             Delete
                           </button>
                         </div>
@@ -398,15 +418,15 @@ export default function InventoryWorkspace({
 
                     {packStats && (
                       <div className="grid grid-cols-3 gap-2 text-xs lg:grid-cols-1">
-                        <div className="rounded-md bg-white/70 dark:bg-slate-700/70 px-3 py-2">
+                        <div className="rounded-md px-3 py-2 neu-inset">
                           <p className="text-gray-500 dark:text-gray-400">Items</p>
                           <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.itemCount}</p>
                         </div>
-                        <div className="rounded-md bg-white/70 dark:bg-slate-700/70 px-3 py-2">
+                        <div className="rounded-md px-3 py-2 neu-inset">
                           <p className="text-gray-500 dark:text-gray-400">Weight</p>
                           <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.totalWeight.toLocaleString()}g</p>
                         </div>
-                        <div className="rounded-md bg-white/70 dark:bg-slate-700/70 px-3 py-2">
+                        <div className="rounded-md px-3 py-2 neu-inset">
                           <p className="text-gray-500 dark:text-gray-400">Cost</p>
                           <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.totalPriceLabel}</p>
                         </div>
@@ -445,6 +465,7 @@ export default function InventoryWorkspace({
                 activePack={activePack}
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
+                onAddItemToPack={handleAddItemToActivePack}
               />
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import type { GearItemWithCalculated, Category, QuantityDisplayMode, GearFieldValue } from '../../utils/types'
+import type { GearItemWithCalculated, Category, GearFieldValue } from '../../utils/types'
 import { isBig3Category } from '../../utils/types'
 import { STATUS_TONES } from '../../utils/designSystem'
 import {
@@ -12,62 +12,52 @@ import {
   EditableWeightClassField,
   QuantitySelector,
   PrioritySelector,
-  Currency
 } from './EditableFields'
+import WeightClassBadge from '../ui/WeightClassBadge'
+import { useGearListContext } from '../../hooks/useGearListContext'
 
 interface TableRowProps {
   item: GearItemWithCalculated
   categories: Category[]
-  showCheckboxes: boolean
   isSelected: boolean
   isHighlighted?: boolean
   changedFields?: Set<string>
-  quantityDisplayMode: QuantityDisplayMode
-  currency?: Currency
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   onEdit?: (item: GearItemWithCalculated) => void
-  /**
-   * 編集可能かどうか
-   * - true: 編集可能フィールドを表示（通常の編集モード）
-   * - false: 読み取り専用表示（通常表示モード、Compareモード）
-   */
-  isEditable?: boolean
-  activePackName?: string
-  isInActivePack?: boolean
-  onTogglePackItem?: (itemId: string) => void
+  onGearDragStart?: (itemId: string) => void
+  onGearDragEnd?: () => void
 }
 
 const TableRow: React.FC<TableRowProps> = ({
   item,
   categories,
-  showCheckboxes,
   isSelected,
   isHighlighted,
   changedFields,
-  quantityDisplayMode,
-  currency = 'JPY',
   onSelectItem,
   onUpdateItem,
   onEdit,
-  isEditable = false,
-  activePackName,
-  isInActivePack = false,
-  onTogglePackItem
+  onGearDragStart,
+  onGearDragEnd,
 }) => {
-  const warningTone = STATUS_TONES.warning
+  const {
+    showCheckboxes,
+    quantityDisplayMode,
+    currency,
+    isEditable,
+  } = useGearListContext()
 
+  const warningTone = STATUS_TONES.warning
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
   const renderQuantityValue = () => {
     if (item.ownedQuantity == null || item.requiredQuantity == null) {
       return <span className="gear-empty-value">—</span>
     }
-
     if (item.ownedQuantity < 0 || item.requiredQuantity < 1) {
       return <span className="gear-anomaly-value" title="Invalid quantity">!</span>
     }
-
     switch (quantityDisplayMode) {
       case 'owned':
         return (
@@ -85,7 +75,7 @@ const TableRow: React.FC<TableRowProps> = ({
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
-      case 'all':
+      default:
         return (
           <span className="gear-text-num">
             <span className="text-gray-500 dark:text-gray-300">{item.ownedQuantity}</span>
@@ -93,19 +83,27 @@ const TableRow: React.FC<TableRowProps> = ({
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
-      default:
-        return <span className="gear-text-num">{item.ownedQuantity}</span>
     }
   }
+
   return (
     <tr
+      draggable={Boolean(onGearDragStart) && !isEditable}
+      onDragStart={(event) => {
+        if (!onGearDragStart || isEditable) return;
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('application/x-gear-id', item.id);
+        event.dataTransfer.setData('text/plain', item.id);
+        onGearDragStart(item.id);
+      }}
+      onDragEnd={onGearDragEnd}
       className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
         isSelected
           ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'
           : isHighlighted
             ? 'border-l-2'
             : 'bg-transparent'
-      }`}
+      } ${Boolean(onGearDragStart) && !isEditable ? 'cursor-grab active:cursor-grabbing' : ''}`}
       style={isHighlighted && !isSelected
         ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
         : undefined}
@@ -186,8 +184,8 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Category */}
-      <td className="px-1.5 py-2 whitespace-nowrap text-left w-20">
-        <div className={`inline-flex items-center gap-1 ${isEditable ? '' : 'max-w-[112px] overflow-hidden'}`}>
+      <td className="px-1.5 py-2 whitespace-nowrap text-left w-28">
+        <div className={`inline-flex items-center ${isEditable ? '' : 'max-w-[112px] overflow-hidden'}`}>
           <EditableCategoryField
             value={item.categoryId}
             onChange={(value) => onUpdateItem(item.id, 'categoryId', value)}
@@ -196,16 +194,26 @@ const TableRow: React.FC<TableRowProps> = ({
             categories={categories}
             category={item.category}
           />
-          <span className="flex-shrink-0">
-            <EditableWeightClassField
-              value={item.weightClass || 'base'}
-              onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
-              isEditing={isEditable}
-              isChanged={isFieldChanged('weightClass')}
-              isBig3={isBig3Category(item.category)}
-            />
-          </span>
         </div>
+      </td>
+
+      {/* Weight Class */}
+      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10">
+        {isEditable ? (
+          <EditableWeightClassField
+            value={item.weightClass || 'base'}
+            onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
+            isEditing={true}
+            isChanged={isFieldChanged('weightClass')}
+            isBig3={isBig3Category(item.category)}
+          />
+        ) : (
+          <WeightClassBadge
+            weightClass={item.weightClass || 'base'}
+            isBig3={isBig3Category(item.category)}
+            compact
+          />
+        )}
       </td>
 
       {/* Own/Need */}
@@ -268,24 +276,6 @@ const TableRow: React.FC<TableRowProps> = ({
           isChanged={isFieldChanged('seasons')}
         />
       </td>
-
-      {activePackName && onTogglePackItem && (
-        <td className="px-1.5 py-2 whitespace-nowrap text-center w-[72px]">
-          <button
-            type="button"
-            onClick={() => onTogglePackItem(item.id)}
-            className={[
-              'h-6 min-w-[52px] rounded-md px-2 text-[10px] font-semibold transition-colors',
-              isInActivePack
-                ? 'bg-gray-800 text-white dark:bg-slate-100 dark:text-slate-900'
-                : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
-            ].join(' ')}
-            title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
-          >
-            {isInActivePack ? 'IN' : 'OUT'}
-          </button>
-        </td>
-      )}
 
       {/* Edit button */}
       {onEdit && !isEditable && (

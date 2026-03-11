@@ -94,7 +94,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
       </div>
 
       {/* Divider */}
-      <div className="border-t border-gray-200 my-2" />
+      <div className="neu-divider my-2" />
 
       {/* Summary Stats */}
       <div className="space-y-1.5 text-xs">

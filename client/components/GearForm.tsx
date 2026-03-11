@@ -175,7 +175,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   return (
     <div className="modal-overlay p-4">
       <div className="modal-panel-lg">
-        <div className="px-6 py-3 border-b border-gray-300 flex items-center justify-between">
+        <div className="px-6 py-3 neu-divider flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">
             {(editingGear || gear) ? 'Edit Gear' : 'Add New Gear'}
           </h2>

@@ -77,7 +77,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200" />
+      <div className="neu-divider" />
 
       {/* 統計 */}
       <div>
@@ -94,7 +94,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200" />
+      <div className="neu-divider" />
 
       {/* アイテムリスト */}
       <div>

@@ -88,7 +88,7 @@ const OverviewView: React.FC<OverviewViewProps> = ({ items, viewMode, onItemClic
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200" />
+      <div className="neu-divider" />
 
       {/* アイテムリスト */}
       <div>

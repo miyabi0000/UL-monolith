@@ -50,7 +50,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 bg-white">
+      <div className="flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 bg-white">
         <div className="flex items-center gap-2">
           <button
             onClick={onClose}
@@ -74,13 +74,13 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
         <table className="w-full border-collapse table-fixed">
           <thead>
             <tr className="bg-gray-50">
-              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 border-b border-gray-200 w-20">
+              <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900 neu-divider w-20">
                 Item
               </th>
               {items.map((item, index) => (
                 <th
                   key={item.id}
-                  className="px-2 py-2 text-center text-xs font-semibold text-gray-900 border-b border-gray-200"
+                  className="px-2 py-2 text-center text-xs font-semibold text-gray-900 neu-divider"
                 >
                   <div className="flex items-start justify-between gap-1">
                     {/* A/B/C/D ラベル */}
@@ -110,7 +110,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {/* 画像 */}
             {items.some(item => item.imageUrl) && (
               <tr className="hover:bg-gray-50">
@@ -284,7 +284,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
                     {/* ギアリストから削除 */}
                     <button
                       onClick={() => onDelete(item.id)}
-                      className="w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors bg-white border border-gray-300 text-gray-600 hover:bg-red-50 hover:border-red-300 hover:text-red-600"
+                      className="w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors bg-white neu-raised text-gray-600 hover:bg-red-50 hover:text-red-600"
                       title="ギアリストから削除"
                     >
                       Delete

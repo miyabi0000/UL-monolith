@@ -22,7 +22,7 @@ export default function ComparisonPage() {
             ギアアイテムを比較して最適な選択をサポートします。
           </p>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+          <div className="bg-gray-50 neu-raised rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-700">
               🚧 このページは現在開発中です（Phase 1実装予定）
             </p>

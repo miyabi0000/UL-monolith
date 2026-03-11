@@ -99,7 +99,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-panel-lg max-h-[80vh]">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-6 neu-divider flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Category Management</h2>
           <button
             onClick={onClose}
@@ -157,10 +157,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         key={color.hex}
                         type="button"
                         onClick={() => setFormData({ ...formData, color: color.hex })}
-                        className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
+                        className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
                           formData.color === color.hex
-                            ? 'border-gray-700 bg-gray-100'
-                            : 'border-gray-200 bg-white hover:border-gray-400'
+                            ? 'border-2 border-gray-700 bg-gray-100'
+                            : 'neu-raised bg-white'
                         }`}
                         disabled={isSubmitting}
                         title={`${color.name} (${color.hex})`}
@@ -223,7 +223,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                 {categories.map(category => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between p-3 neu-raised rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
                       <div

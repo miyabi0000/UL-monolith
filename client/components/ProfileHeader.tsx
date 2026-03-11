@@ -7,7 +7,7 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, onEditProfile }) => (
-  <section className="rounded-2xl border border-gray-200/70 bg-white/75 shadow-sm backdrop-blur dark:border-slate-600/80 dark:bg-slate-800/70 overflow-hidden">
+  <section className="rounded-2xl neu-raised bg-white/75 backdrop-blur dark:bg-slate-800/70 overflow-hidden">
     {profile.headerImageUrl && (
       <div className="h-24 sm:h-32 w-full bg-gray-100 dark:bg-slate-700">
         <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
@@ -32,7 +32,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, onEditProfile })
       <button
         type="button"
         onClick={onEditProfile}
-        className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-slate-500 shadow-sm hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
+        className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
         aria-label="Edit Profile"
         title="Edit Profile"
       >

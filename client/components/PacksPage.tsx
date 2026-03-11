@@ -85,7 +85,8 @@ export default function PacksPage({ appState }: PacksPageProps) {
     setNewPackRouteName('');
     setNewPackDescription('');
     setShowPackCreator(false);
-    setWorkspaceScope('pack');
+    // Keep All scope so users can immediately drag gear into the new empty pack.
+    setWorkspaceScope('all');
   };
 
   const handleCreateSamplePack = () => {
