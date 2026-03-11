@@ -21,6 +21,8 @@ interface TableRowProps {
   categories: Category[]
   isSelected: boolean
   isHighlighted?: boolean
+  activePackName?: string
+  isInActivePack?: boolean
   changedFields?: Set<string>
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
@@ -34,6 +36,8 @@ const TableRow: React.FC<TableRowProps> = ({
   categories,
   isSelected,
   isHighlighted,
+  activePackName,
+  isInActivePack = false,
   changedFields,
   onSelectItem,
   onUpdateItem,
@@ -100,6 +104,8 @@ const TableRow: React.FC<TableRowProps> = ({
       className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
         isSelected
           ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'
+          : activePackName && isInActivePack
+            ? 'bg-emerald-50/55 dark:bg-emerald-900/20'
           : isHighlighted
             ? 'border-l-2'
             : 'bg-transparent'
@@ -176,6 +182,21 @@ const TableRow: React.FC<TableRowProps> = ({
               {item.brand && (
                 <div className="gear-text-sub break-words line-clamp-1">
                   {item.brand}
+                </div>
+              )}
+              {activePackName && (
+                <div className="mt-0.5">
+                  <span
+                    className={[
+                      'inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold tracking-wide',
+                      isInActivePack
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/45 dark:text-emerald-200'
+                        : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-300'
+                    ].join(' ')}
+                    title={`${activePackName} ${isInActivePack ? 'に追加済み' : '未追加'}`}
+                  >
+                    {isInActivePack ? 'IN PACK' : 'NOT IN PACK'}
+                  </span>
                 </div>
               )}
             </>

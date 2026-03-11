@@ -129,18 +129,23 @@ export default function InventoryWorkspace({
   }, [gearViewMode]);
 
   const scopedItems = items ?? gearItems;
+  const activePackItems = useMemo(() => {
+    if (!activePack) return [];
+    return gearItems.filter((item) => activePackItemIds.includes(item.id));
+  }, [activePack, gearItems, activePackItemIds]);
+  const analysisItems = activePack ? activePackItems : scopedItems;
 
   useEffect(() => {
     setSelectedCategories([]);
-  }, [scopedItems]);
+  }, [analysisItems]);
 
   const chartData = useMemo(
-    () => calculateChartData(scopedItems, quantityDisplayMode),
-    [scopedItems, quantityDisplayMode]
+    () => calculateChartData(analysisItems, quantityDisplayMode),
+    [analysisItems, quantityDisplayMode]
   );
   const totals = useMemo(
-    () => calculateTotals(scopedItems, quantityDisplayMode),
-    [scopedItems, quantityDisplayMode]
+    () => calculateTotals(analysisItems, quantityDisplayMode),
+    [analysisItems, quantityDisplayMode]
   );
 
   const handleSaveGear = async (gearItem: any) => {
@@ -185,18 +190,11 @@ export default function InventoryWorkspace({
 
     onTogglePackItem(itemId);
     showSuccess(`${activePack.name} に追加しました`);
-
-    // First drop on an empty pack transitions to pack-focused analysis.
-    if (workspaceScope !== 'pack' && activePackItemIds.length === 0) {
-      onWorkspaceScopeChange?.('pack');
-    }
   }, [
     activePack,
     onTogglePackItem,
     activePackItemIds,
-    showSuccess,
-    workspaceScope,
-    onWorkspaceScopeChange
+    showSuccess
   ]);
 
   const handleLoginSuccess = () => {
@@ -449,6 +447,7 @@ export default function InventoryWorkspace({
                 onViewModeChange={setViewMode}
                 onQuantityDisplayModeChange={setQuantityDisplayMode}
                 items={scopedItems}
+                analysisItems={analysisItems}
                 categories={categories}
                 onEdit={handleEditGear}
                 onDelete={handleDeleteGear}

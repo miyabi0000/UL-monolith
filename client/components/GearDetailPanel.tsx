@@ -232,6 +232,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   categories={categories}
                   isSelected={selectedIds.includes(item.id)}
                   isHighlighted={selectedItemId === item.id}
+                  activePackName={activePack?.name}
+                  isInActivePack={activePackItemIds.includes(item.id)}
                   changedFields={changedFields[item.id]}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}

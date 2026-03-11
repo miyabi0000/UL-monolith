@@ -164,7 +164,6 @@ export default function PacksPage({ appState }: PacksPageProps) {
               newPackDescription,
               onSelectPack: (packId: string) => {
                 setSelectedPackId(packId);
-                setWorkspaceScope('pack');
               },
               onToggleCreator: () => setShowPackCreator((prev) => !prev),
               onCreatePack: handleCreatePack,
