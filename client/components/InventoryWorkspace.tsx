@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
@@ -22,45 +22,17 @@ interface InventoryWorkspaceProps {
   embedded?: boolean;
   renderLoginModal?: boolean;
   items?: GearItemWithCalculated[];
-  workspaceScope?: 'all' | 'pack';
-  onWorkspaceScopeChange?: (scope: 'all' | 'pack') => void;
+  // Pack integration
   activePack?: Pack | null;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
   onAddItemsToPack?: (itemIds: string[]) => number;
-  packStats?: {
-    itemCount: number;
-    totalWeight: number;
-    totalPriceLabel: string;
-  } | null;
-  packEditor?: {
-    routeDraft: string;
-    descriptionDraft: string;
-    hasChanges: boolean;
-    onRouteChange: (value: string) => void;
-    onDescriptionChange: (value: string) => void;
-    onReset: () => void;
-    onSave: () => void;
-    onDelete: () => void;
-    onCopyLink: () => void;
-    onOpen: () => void;
-  } | null;
-  onOpenPackBuilder?: () => void;
-  packManager?: {
-    packs: Array<{ id: string; name: string }>;
-    selectedPackId: string | null;
-    showCreator: boolean;
-    newPackName: string;
-    newPackRouteName: string;
-    newPackDescription: string;
-    onSelectPack: (packId: string) => void;
-    onToggleCreator: () => void;
-    onCreatePack: (event: React.FormEvent) => void;
-    onCreateSamplePack: () => void;
-    onNewPackNameChange: (value: string) => void;
-    onNewPackRouteNameChange: (value: string) => void;
-    onNewPackDescriptionChange: (value: string) => void;
-  } | null;
+  // Pack selector UI
+  packList?: Array<{ id: string; name: string }>;
+  selectedPackId?: string | null;
+  onSelectPack?: (packId: string) => void;
+  onCreatePack?: (name: string) => void;
+  onOpenPackSettings?: () => void;
 }
 
 export default function InventoryWorkspace({
@@ -68,16 +40,15 @@ export default function InventoryWorkspace({
   embedded = false,
   renderLoginModal = true,
   items,
-  workspaceScope = 'all',
-  onWorkspaceScopeChange,
   activePack = null,
   activePackItemIds = [],
   onTogglePackItem,
   onAddItemsToPack,
-  packStats = null,
-  packEditor = null,
-  onOpenPackBuilder,
-  packManager = null
+  packList,
+  selectedPackId,
+  onSelectPack,
+  onCreatePack,
+  onOpenPackSettings,
 }: InventoryWorkspaceProps) {
   const { login } = useAuth();
   const {
@@ -115,9 +86,12 @@ export default function InventoryWorkspace({
     return saved === 'table' || saved === 'card' || saved === 'compare' ? saved : 'table';
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [showPackMenu, setShowPackMenu] = useState(false);
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [showBulkReview, setShowBulkReview] = useState(false);
+  // 新規パック作成インライン入力
+  const [showNewPackInput, setShowNewPackInput] = useState(false);
+  const [newPackName, setNewPackName] = useState('');
+  const newPackInputRef = useRef<HTMLInputElement>(null);
 
   const {
     extractGears,
@@ -131,6 +105,12 @@ export default function InventoryWorkspace({
   useEffect(() => {
     localStorage.setItem('gearViewMode', gearViewMode);
   }, [gearViewMode]);
+
+  useEffect(() => {
+    if (showNewPackInput) {
+      newPackInputRef.current?.focus();
+    }
+  }, [showNewPackInput]);
 
   const scopedItems = items ?? gearItems;
   const activePackItems = useMemo(() => {
@@ -188,19 +168,6 @@ export default function InventoryWorkspace({
     }
   }, [handleUpdateGear, showError]);
 
-  const handleAddItemToActivePack = useCallback((itemId: string) => {
-    if (!activePack || !onTogglePackItem) return;
-    if (activePackItemIds.includes(itemId)) return;
-
-    onTogglePackItem(itemId);
-    showSuccess(`${activePack.name} に追加しました`);
-  }, [
-    activePack,
-    onTogglePackItem,
-    activePackItemIds,
-    showSuccess
-  ]);
-
   const handleAddItemsToActivePack = useCallback((itemIds: string[]) => {
     if (!activePack || !onAddItemsToPack) return;
     const addedCount = onAddItemsToPack(itemIds);
@@ -240,6 +207,15 @@ export default function InventoryWorkspace({
     showSuccess(`${savedCount} items added, ${skippedCount} skipped`);
   };
 
+  const handleCreateNewPack = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newPackName.trim();
+    if (!trimmed || !onCreatePack) return;
+    onCreatePack(trimmed);
+    setNewPackName('');
+    setShowNewPackInput(false);
+  };
+
   const containerClassName = embedded
     ? 'w-full'
     : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]';
@@ -251,6 +227,8 @@ export default function InventoryWorkspace({
         paddingBottom: `${SPACING_SCALE.md}px`,
         paddingRight: showChat ? '400px' : undefined
       };
+
+  const hasPacks = packList && packList.length > 0;
 
   return (
     <>
@@ -266,197 +244,74 @@ export default function InventoryWorkspace({
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
             <div className="sticky top-0 z-20 mb-3 rounded-xl bg-white/88 p-3 backdrop-blur dark:bg-slate-800/88 neu-raised">
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    className={[
-                      'h-8 px-3 rounded-lg text-xs font-medium transition-colors',
-                      workspaceScope === 'all'
-                        ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                        : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300'
-                    ].join(' ')}
-                    onClick={() => onWorkspaceScopeChange?.('all')}
-                  >
-                    All Gear
-                  </button>
-                  {activePack && (
-                    <>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Pack セレクター */}
+                {packList !== undefined && (
+                  <>
+                    {hasPacks ? (
+                      <select
+                        value={selectedPackId ?? ''}
+                        onChange={(e) => onSelectPack?.(e.target.value)}
+                        className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 cursor-pointer"
+                      >
+                        {packList.map((pack) => (
+                          <option key={pack.id} value={pack.id}>
+                            {pack.name} ({activePackItemIds.length > 0 && pack.id === selectedPackId ? activePackItemIds.length : ''})
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 px-1">Packs なし</span>
+                    )}
+
+                    {/* ⚙ 設定ボタン */}
+                    {activePack && onOpenPackSettings && (
                       <button
                         type="button"
-                        className={[
-                          'h-8 px-3 rounded-lg text-xs font-medium transition-colors',
-                          workspaceScope === 'pack'
-                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                            : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300'
-                        ].join(' ')}
-                        onClick={() => onWorkspaceScopeChange?.('pack')}
+                        onClick={onOpenPackSettings}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100/80 dark:bg-slate-800/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+                        title="Pack settings"
+                        aria-label="Pack settings"
                       >
-                        {`Pack: ${activePack.name} (${activePackItemIds.length})`}
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                       </button>
-                      {onOpenPackBuilder && (
-                        <button
-                          type="button"
-                          className="h-8 px-3 rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                          onClick={onOpenPackBuilder}
-                          title="Edit pack contents"
-                        >
-                          Edit Contents
-                        </button>
-                      )}
-                    </>
-                  )}
-                  {packManager && (
-                    <button
-                      type="button"
-                      className="h-8 px-3 rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                      onClick={() => setShowPackMenu((prev) => !prev)}
-                    >
-                      + Packs
-                    </button>
-                  )}
-                </div>
-
-                {packManager && showPackMenu && (
-                  <div className="rounded-lg bg-white/90 dark:bg-slate-800/90 p-3 neu-inset">
-                    {packManager.packs.length > 0 ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        {packManager.packs.map((pack) => {
-                          const isActive = packManager.selectedPackId === pack.id;
-                          return (
-                            <button
-                              key={pack.id}
-                              type="button"
-                              className={[
-                                'h-8 px-3 rounded-lg text-xs font-medium transition-colors',
-                                isActive
-                                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                                  : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
-                              ].join(' ')}
-                              onClick={() => {
-                                packManager.onSelectPack(pack.id);
-                                setShowPackMenu(false);
-                              }}
-                            >
-                              {pack.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Packs がまだありません</p>
                     )}
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={packManager.onToggleCreator}>
-                        New Pack
-                      </button>
-                      <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={packManager.onCreateSamplePack}>
-                        Sample
-                      </button>
-                    </div>
-
-                    {packManager.showCreator && (
-                      <form onSubmit={packManager.onCreatePack} className="mt-3 grid gap-2 rounded-lg bg-white/55 dark:bg-slate-800/55 p-3 neu-inset">
+                    {/* + New Pack */}
+                    {showNewPackInput ? (
+                      <form onSubmit={handleCreateNewPack} className="flex items-center gap-1.5">
                         <input
-                          className="input w-full"
+                          ref={newPackInputRef}
+                          className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-36"
                           placeholder="Pack name"
-                          value={packManager.newPackName}
-                          onChange={(e) => packManager.onNewPackNameChange(e.target.value)}
+                          value={newPackName}
+                          onChange={(e) => setNewPackName(e.target.value)}
                           required
                         />
-                        <input
-                          className="input w-full"
-                          placeholder="Route"
-                          value={packManager.newPackRouteName}
-                          onChange={(e) => packManager.onNewPackRouteNameChange(e.target.value)}
-                        />
-                        <textarea
-                          className="input w-full min-h-[72px]"
-                          placeholder="Description"
-                          value={packManager.newPackDescription}
-                          onChange={(e) => packManager.onNewPackDescriptionChange(e.target.value)}
-                        />
-                        <div className="flex items-center justify-end gap-2">
-                          <button type="button" className="btn-secondary" onClick={packManager.onToggleCreator}>
-                            Cancel
-                          </button>
-                          <button type="submit" className="btn-primary">
-                            Create
-                          </button>
-                        </div>
+                        <button type="submit" className="btn-primary h-8 px-2 text-xs">
+                          Create
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary h-8 px-2 text-xs"
+                          onClick={() => { setShowNewPackInput(false); setNewPackName(''); }}
+                        >
+                          ✕
+                        </button>
                       </form>
+                    ) : (
+                      <button
+                        type="button"
+                        className="h-8 px-3 rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                        onClick={() => setShowNewPackInput(true)}
+                      >
+                        + New
+                      </button>
                     )}
-                  </div>
-                )}
-
-                {workspaceScope === 'pack' && activePack && packEditor && (
-                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
-                    <div className="rounded-lg bg-white/45 dark:bg-slate-800/35 p-3 neu-inset">
-                      <div className="grid gap-2">
-                        <input
-                          className="input h-9 w-full text-sm"
-                          placeholder="Route not set"
-                          value={packEditor.routeDraft}
-                          onChange={(e) => packEditor.onRouteChange(e.target.value)}
-                        />
-                        <textarea
-                          className="input w-full min-h-[72px] text-xs"
-                          placeholder="Description"
-                          value={packEditor.descriptionDraft}
-                          onChange={(e) => packEditor.onDescriptionChange(e.target.value)}
-                        />
-                      </div>
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={packEditor.onOpen}>
-                            Open
-                          </button>
-                          <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={packEditor.onCopyLink}>
-                            Copy Link
-                          </button>
-                          <button type="button" className="h-8 px-3 rounded-md text-xs text-red-600 dark:text-red-400 neu-raised" onClick={packEditor.onDelete}>
-                            Delete
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="btn-secondary h-8 px-3 text-xs"
-                            onClick={packEditor.onReset}
-                            disabled={!packEditor.hasChanges}
-                          >
-                            Reset
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-primary h-8 px-3 text-xs"
-                            onClick={packEditor.onSave}
-                            disabled={!packEditor.hasChanges}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {packStats && (
-                      <div className="grid grid-cols-3 gap-2 text-xs lg:grid-cols-1">
-                        <div className="rounded-md px-3 py-2 neu-inset">
-                          <p className="text-gray-500 dark:text-gray-400">Items</p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.itemCount}</p>
-                        </div>
-                        <div className="rounded-md px-3 py-2 neu-inset">
-                          <p className="text-gray-500 dark:text-gray-400">Weight</p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.totalWeight.toLocaleString()}g</p>
-                        </div>
-                        <div className="rounded-md px-3 py-2 neu-inset">
-                          <p className="text-gray-500 dark:text-gray-400">Cost</p>
-                          <p className="font-semibold text-gray-900 dark:text-gray-100">{packStats.totalPriceLabel}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
             </div>
@@ -490,7 +345,6 @@ export default function InventoryWorkspace({
                 activePack={activePack}
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
-                onAddItemToPack={handleAddItemToActivePack}
                 onAddItemsToPack={handleAddItemsToActivePack}
               />
             </div>

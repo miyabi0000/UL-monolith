@@ -12,9 +12,6 @@ interface BulkActionBarProps {
   maxCompareItems?: number;
   canCompare?: boolean;
   compareDisabledReason?: string;
-  onAddToPack?: () => void;
-  addToPackLabel?: string;
-  addableCount?: number;
 }
 
 const BulkActionBar: React.FC<BulkActionBarProps> = ({
@@ -30,9 +27,6 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
   maxCompareItems = 3,
   canCompare: canCompareFromProps,
   compareDisabledReason,
-  onAddToPack,
-  addToPackLabel = 'Add to Pack',
-  addableCount
 }) => {
   // 比較ボタンの有効状態判定
   // - canCompareFromProps が渡されている場合はそれを優先（バリデーション済み）
@@ -134,16 +128,6 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
                 className="btn-primary btn-xs px-3"
               >
                 Bulk Update ({selectedCount})
-              </button>
-            )}
-            {!isCompareMode && onAddToPack && (
-              <button
-                onClick={onAddToPack}
-                className={`btn-primary btn-xs px-3 ${addableCount === 0 ? 'opacity-70' : ''}`}
-                disabled={addableCount === 0}
-                title={addableCount === 0 ? '選択したアイテムはすべて追加済みです' : undefined}
-              >
-                {addToPackLabel} ({addableCount ?? selectedCount}/{selectedCount})
               </button>
             )}
             {!isCompareMode && (

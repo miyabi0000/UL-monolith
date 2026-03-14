@@ -121,22 +121,6 @@ export const usePacks = (userId: string) => {
     return addedCount;
   }, []);
 
-  // アトミックにパックのアイテムリストを置き換える（PackBuilderモーダル用）
-  const setPackItems = useCallback((packId: string, itemIds: string[]) => {
-    setPacks((prev) => {
-      const updated = prev.map((pack) => {
-        if (pack.id !== packId) return pack;
-        return {
-          ...pack,
-          itemIds: [...itemIds],
-          updatedAt: new Date().toISOString()
-        };
-      });
-      writePacks(updated);
-      return updated;
-    });
-  }, []);
-
   const getPackById = useCallback(
     (packId: string) => packs.find((pack) => pack.id === packId),
     [packs]
@@ -151,6 +135,5 @@ export const usePacks = (userId: string) => {
     deletePack,
     toggleItemInPack,
     addItemsToPack,
-    setPackItems
   };
 };

@@ -535,7 +535,6 @@ interface GearChartProps {
   activePack?: Pack | null
   activePackItemIds?: string[]
   onTogglePackItem?: (itemId: string) => void
-  onAddItemToPack?: (itemId: string) => void
   onAddItemsToPack?: (itemIds: string[]) => void
 }
 
@@ -567,7 +566,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   activePack,
   activePackItemIds = [],
   onTogglePackItem,
-  onAddItemToPack,
   onAddItemsToPack
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
@@ -576,9 +574,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
-  const [draggedGearId, setDraggedGearId] = useState<string | null>(null)
-  const [isDropTargetActive, setIsDropTargetActive] = useState(false)
-  const [dropFlash, setDropFlash] = useState(false)
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
@@ -823,32 +818,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setChartFocus(prev => prev === focus ? 'all' : focus)
   }, [])
 
-  const handlePackDropDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!onAddItemToPack || !activePack) return
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'copy'
-    if (!isDropTargetActive) {
-      setIsDropTargetActive(true)
-    }
-  }, [onAddItemToPack, activePack, isDropTargetActive])
-
-  const handlePackDropLeave = useCallback(() => {
-    setIsDropTargetActive(false)
-  }, [])
-
-  const handlePackDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!onAddItemToPack || !activePack) return
-    event.preventDefault()
-    const gearId = event.dataTransfer.getData('application/x-gear-id') || event.dataTransfer.getData('text/plain')
-    if (!gearId) return
-
-    onAddItemToPack(gearId)
-    setDraggedGearId(null)
-    setIsDropTargetActive(false)
-    setDropFlash(true)
-    window.setTimeout(() => setDropFlash(false), 400)
-  }, [onAddItemToPack, activePack])
-
   // ==================== レンダリング ====================
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
@@ -936,60 +905,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             )}
           </div>
 
-          {activePack && onAddItemToPack && (activePackItemIds.length === 0 || draggedGearId !== null) && (
-            <div className={`${isChartCollapsed ? 'px-1 pt-1' : 'px-2 pt-2'}`}>
-              <div
-                onDragOver={handlePackDropDragOver}
-                onDragEnter={handlePackDropDragOver}
-                onDragLeave={handlePackDropLeave}
-                onDrop={handlePackDrop}
-                className={[
-                  'rounded-lg border border-dashed transition-all duration-150',
-                  isChartCollapsed ? 'px-1 py-2' : 'px-3 py-2',
-                  (isDropTargetActive || dropFlash)
-                    ? 'border-gray-500 bg-gray-100/85 dark:border-slate-300 dark:bg-slate-700/80'
-                    : 'border-gray-300 bg-white/70 dark:border-slate-600 dark:bg-slate-800/45'
-                ].join(' ')}
-                title={isDropTargetActive ? 'Drop to add into pack' : `${activePack.name} へドロップ`}
-              >
-                {isChartCollapsed ? (
-                  <div className="flex justify-center">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
-                        <path d="M9 20V14H15V20" />
-                        <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
-                        <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
-                      </svg>
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
-                        <path d="M9 20V14H15V20" />
-                        <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
-                        <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
-                      </svg>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
-                        {activePack.name}
-                      </p>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                        {isDropTargetActive
-                          ? 'ドロップしてPackに追加'
-                          : activePackItemIds.length === 0
-                            ? '空のPackです。Gearをドラッグして追加'
-                            : 'ドラッグ中: ここにドロップ'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {!isChartCollapsed && (
             <>
@@ -1450,11 +1365,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
                 onAddItemsToPack={onAddItemsToPack}
-                onGearDragStart={setDraggedGearId}
-                onGearDragEnd={() => {
-                  setDraggedGearId(null)
-                  setIsDropTargetActive(false)
-                }}
               />
           </div>
         </Card>

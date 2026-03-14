@@ -28,8 +28,6 @@ interface TableRowProps {
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   onEdit?: (item: GearItemWithCalculated) => void
   onTogglePackItem?: (itemId: string) => void
-  onGearDragStart?: (itemId: string) => void
-  onGearDragEnd?: () => void
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -44,8 +42,6 @@ const TableRow: React.FC<TableRowProps> = ({
   onUpdateItem,
   onEdit,
   onTogglePackItem,
-  onGearDragStart,
-  onGearDragEnd,
 }) => {
   const {
     showCheckboxes,
@@ -94,15 +90,6 @@ const TableRow: React.FC<TableRowProps> = ({
 
   return (
     <tr
-      draggable={Boolean(onGearDragStart) && !isEditable}
-      onDragStart={(event) => {
-        if (!onGearDragStart || isEditable) return;
-        event.dataTransfer.effectAllowed = 'copy';
-        event.dataTransfer.setData('application/x-gear-id', item.id);
-        event.dataTransfer.setData('text/plain', item.id);
-        onGearDragStart(item.id);
-      }}
-      onDragEnd={onGearDragEnd}
       className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
         isSelected
           ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'
@@ -111,7 +98,7 @@ const TableRow: React.FC<TableRowProps> = ({
           : isHighlighted
             ? 'border-l-2'
             : 'bg-transparent'
-      } ${Boolean(onGearDragStart) && !isEditable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      }`}
       style={isHighlighted && !isSelected
         ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
         : undefined}
