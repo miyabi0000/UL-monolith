@@ -27,6 +27,7 @@ interface InventoryWorkspaceProps {
   activePack?: Pack | null;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
+  onAddItemsToPack?: (itemIds: string[]) => number;
   packStats?: {
     itemCount: number;
     totalWeight: number;
@@ -44,6 +45,7 @@ interface InventoryWorkspaceProps {
     onCopyLink: () => void;
     onOpen: () => void;
   } | null;
+  onOpenPackBuilder?: () => void;
   packManager?: {
     packs: Array<{ id: string; name: string }>;
     selectedPackId: string | null;
@@ -71,8 +73,10 @@ export default function InventoryWorkspace({
   activePack = null,
   activePackItemIds = [],
   onTogglePackItem,
+  onAddItemsToPack,
   packStats = null,
   packEditor = null,
+  onOpenPackBuilder,
   packManager = null
 }: InventoryWorkspaceProps) {
   const { login } = useAuth();
@@ -197,6 +201,16 @@ export default function InventoryWorkspace({
     showSuccess
   ]);
 
+  const handleAddItemsToActivePack = useCallback((itemIds: string[]) => {
+    if (!activePack || !onAddItemsToPack) return;
+    const addedCount = onAddItemsToPack(itemIds);
+    if (addedCount > 0) {
+      showSuccess(`${activePack.name} に ${addedCount} 件追加しました`);
+      return;
+    }
+    showError('追加対象がありません（すでにPackに入っています）');
+  }, [activePack, onAddItemsToPack, showSuccess, showError]);
+
   const handleLoginSuccess = () => {
     showSuccess('Login successful');
     setShowLogin(false);
@@ -267,18 +281,30 @@ export default function InventoryWorkspace({
                     All Gear
                   </button>
                   {activePack && (
-                    <button
-                      type="button"
-                      className={[
-                        'h-8 px-3 rounded-lg text-xs font-medium transition-colors',
-                        workspaceScope === 'pack'
-                          ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                          : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300'
-                      ].join(' ')}
-                      onClick={() => onWorkspaceScopeChange?.('pack')}
-                    >
-                      {`Pack: ${activePack.name} (${activePackItemIds.length})`}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className={[
+                          'h-8 px-3 rounded-lg text-xs font-medium transition-colors',
+                          workspaceScope === 'pack'
+                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                            : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300'
+                        ].join(' ')}
+                        onClick={() => onWorkspaceScopeChange?.('pack')}
+                      >
+                        {`Pack: ${activePack.name} (${activePackItemIds.length})`}
+                      </button>
+                      {onOpenPackBuilder && (
+                        <button
+                          type="button"
+                          className="h-8 px-3 rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                          onClick={onOpenPackBuilder}
+                          title="Edit pack contents"
+                        >
+                          Edit Contents
+                        </button>
+                      )}
+                    </>
                   )}
                   {packManager && (
                     <button
@@ -465,6 +491,7 @@ export default function InventoryWorkspace({
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
                 onAddItemToPack={handleAddItemToActivePack}
+                onAddItemsToPack={handleAddItemsToActivePack}
               />
             </div>
           </div>

@@ -32,6 +32,7 @@ interface GearDetailPanelProps {
   activePack?: Pack | null;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
+  onAddItemsToPack?: (itemIds: string[]) => void;
   onGearDragStart?: (itemId: string) => void;
   onGearDragEnd?: () => void;
 }
@@ -54,6 +55,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   activePack = null,
   activePackItemIds = [],
   onTogglePackItem,
+  onAddItemsToPack,
   onGearDragStart,
   onGearDragEnd,
 }) => {
@@ -116,6 +118,18 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       clearSelection();
     }
   };
+
+  const addableSelectedCount = useMemo(
+    () => selectedIds.filter((id) => !activePackItemIds.includes(id)).length,
+    [selectedIds, activePackItemIds]
+  );
+
+  const handleAddSelectedToPack = useCallback(() => {
+    if (!activePack || !onAddItemsToPack || selectedIds.length === 0) return;
+    const addableIds = selectedIds.filter((id) => !activePackItemIds.includes(id));
+    onAddItemsToPack(addableIds);
+    clearSelection();
+  }, [activePack, onAddItemsToPack, selectedIds, activePackItemIds, clearSelection]);
 
   const handleQuantityDisplayModeChange = useCallback(() => {
     const next =
@@ -184,6 +198,27 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     );
   }
 
+  // 表示中の全アイテムがパックに入っているか
+  const isAllVisibleInPack = useMemo(
+    () => processedItems.length > 0 && processedItems.every((item) => activePackItemIds.includes(item.id)),
+    [processedItems, activePackItemIds]
+  );
+
+  const handleAddAllToPack = useCallback(() => {
+    if (!activePack) return;
+    if (isAllVisibleInPack) {
+      // 全て入っている → 一括削除
+      if (onTogglePackItem) {
+        processedItems.forEach((item) => onTogglePackItem(item.id));
+      }
+    } else {
+      // 未追加があれば一括追加
+      if (onAddItemsToPack) {
+        onAddItemsToPack(processedItems.map((item) => item.id));
+      }
+    }
+  }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
+
   // Table / Compare モード
   const contextValue = {
     quantityDisplayMode,
@@ -192,6 +227,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onCurrencyChange: handleCurrencyChange,
     showCheckboxes: shouldShowCheckboxes,
     isEditable,
+    activePackName: activePack?.name,
+    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
+    isAllVisibleInPack,
   };
 
   return (
@@ -211,6 +249,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               maxCompareItems={MAX_COMPARE_ITEMS}
               canCompare={isCompareMode ? validationResult.isValid : undefined}
               compareDisabledReason={isCompareMode ? validationResult.errorMessage : undefined}
+              onAddToPack={!isCompareMode && activePack ? handleAddSelectedToPack : undefined}
+              addToPackLabel={activePack ? `Add to ${activePack.name}` : undefined}
+              addableCount={!isCompareMode && activePack ? addableSelectedCount : undefined}
             />
           </div>
         )}
@@ -237,6 +278,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   changedFields={changedFields[item.id]}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}
+                  onTogglePackItem={onTogglePackItem}
                   onGearDragStart={onGearDragStart}
                   onGearDragEnd={onGearDragEnd}
                 />

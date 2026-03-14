@@ -27,6 +27,7 @@ interface TableRowProps {
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   onEdit?: (item: GearItemWithCalculated) => void
+  onTogglePackItem?: (itemId: string) => void
   onGearDragStart?: (itemId: string) => void
   onGearDragEnd?: () => void
 }
@@ -42,6 +43,7 @@ const TableRow: React.FC<TableRowProps> = ({
   onSelectItem,
   onUpdateItem,
   onEdit,
+  onTogglePackItem,
   onGearDragStart,
   onGearDragEnd,
 }) => {
@@ -114,6 +116,30 @@ const TableRow: React.FC<TableRowProps> = ({
         ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
         : undefined}
     >
+      {/* Pack Toggle */}
+      {activePackName && onTogglePackItem && !isEditable && (
+        <td className="px-1 py-2 text-center w-7">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onTogglePackItem(item.id)
+            }}
+            className={[
+              'p-0.5 rounded transition-colors',
+              isInActivePack
+                ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200'
+                : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'
+            ].join(' ')}
+            title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isInActivePack ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={isInActivePack ? 0 : 1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-2-3H6L4 7m16 0v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0H4m8 4v6m-3-3l3 3 3-3" />
+            </svg>
+          </button>
+        </td>
+      )}
+
       {/* Checkbox */}
       {showCheckboxes && (
         <td className="px-2 py-2 whitespace-nowrap text-center w-8">
@@ -182,21 +208,6 @@ const TableRow: React.FC<TableRowProps> = ({
               {item.brand && (
                 <div className="gear-text-sub break-words line-clamp-1">
                   {item.brand}
-                </div>
-              )}
-              {activePackName && (
-                <div className="mt-0.5">
-                  <span
-                    className={[
-                      'inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold tracking-wide',
-                      isInActivePack
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/45 dark:text-emerald-200'
-                        : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-gray-300'
-                    ].join(' ')}
-                    title={`${activePackName} ${isInActivePack ? 'に追加済み' : '未追加'}`}
-                  >
-                    {isInActivePack ? 'IN PACK' : 'NOT IN PACK'}
-                  </span>
                 </div>
               )}
             </>

@@ -8,6 +8,7 @@ import { getQuantityForDisplayMode } from '../utils/chartHelpers';
 import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import ProfileEditorModal from './ProfileEditorModal';
+import PackBuilderModal from './PackBuilderModal';
 
 const fallbackUserId = 'local-user';
 
@@ -18,7 +19,7 @@ interface PacksPageProps {
 export default function PacksPage({ appState }: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
-  const { packs, createPack, updatePack, deletePack, toggleItemInPack } = usePacks(user?.id ?? fallbackUserId);
+  const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack, setPackItems } = usePacks(user?.id ?? fallbackUserId);
   const { profile, updateField, showEditor, setShowEditor } = useProfile(user?.name);
 
   const [showPackCreator, setShowPackCreator] = useState(false);
@@ -29,6 +30,7 @@ export default function PacksPage({ appState }: PacksPageProps) {
   const [workspaceScope, setWorkspaceScope] = useState<'all' | 'pack'>('all');
   const [packRouteDraft, setPackRouteDraft] = useState('');
   const [packDescriptionDraft, setPackDescriptionDraft] = useState('');
+  const [packBuilderPackId, setPackBuilderPackId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!packs.length) {
@@ -85,8 +87,8 @@ export default function PacksPage({ appState }: PacksPageProps) {
     setNewPackRouteName('');
     setNewPackDescription('');
     setShowPackCreator(false);
-    // Keep All scope so users can immediately drag gear into the new empty pack.
-    setWorkspaceScope('all');
+    // 作成後すぐにPack Builderモーダルを開いてアイテム追加を促す
+    setPackBuilderPackId(next.id);
   };
 
   const handleCreateSamplePack = () => {
@@ -135,6 +137,8 @@ export default function PacksPage({ appState }: PacksPageProps) {
             activePack={selectedSummary ? selectedSummary.pack : null}
             activePackItemIds={selectedSummary?.pack.itemIds ?? []}
             onTogglePackItem={selectedSummary ? (itemId: string) => toggleItemInPack(selectedSummary.pack.id, itemId) : undefined}
+            onAddItemsToPack={selectedSummary ? (itemIds: string[]) => addItemsToPack(selectedSummary.pack.id, itemIds) : undefined}
+            onOpenPackBuilder={selectedSummary ? () => setPackBuilderPackId(selectedSummary.pack.id) : undefined}
             packStats={selectedSummary ? {
               itemCount: selectedSummary.items.length,
               totalWeight: selectedSummary.totalWeight,
@@ -183,6 +187,23 @@ export default function PacksPage({ appState }: PacksPageProps) {
           onClose={() => setShowEditor(false)}
         />
       )}
+
+      {packBuilderPackId && (() => {
+        const builderPack = packs.find((p) => p.id === packBuilderPackId);
+        if (!builderPack) return null;
+        return (
+          <PackBuilderModal
+            pack={builderPack}
+            allItems={gearItems}
+            categories={appState.categories}
+            onSave={(itemIds) => {
+              setPackItems(packBuilderPackId, itemIds);
+              setPackBuilderPackId(null);
+            }}
+            onClose={() => setPackBuilderPackId(null)}
+          />
+        );
+      })()}
     </main>
   );
 }

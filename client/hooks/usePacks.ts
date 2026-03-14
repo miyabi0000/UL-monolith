@@ -96,6 +96,47 @@ export const usePacks = (userId: string) => {
     });
   }, []);
 
+  const addItemsToPack = useCallback((packId: string, itemIds: string[]) => {
+    if (itemIds.length === 0) return 0;
+
+    let addedCount = 0;
+    setPacks((prev) => {
+      const updated = prev.map((pack) => {
+        if (pack.id !== packId) return pack;
+        const existing = new Set(pack.itemIds);
+        const uniqueNewIds = itemIds.filter((id) => !existing.has(id));
+        addedCount = uniqueNewIds.length;
+        if (addedCount === 0) return pack;
+
+        return {
+          ...pack,
+          itemIds: [...pack.itemIds, ...uniqueNewIds],
+          updatedAt: new Date().toISOString()
+        };
+      });
+      writePacks(updated);
+      return updated;
+    });
+
+    return addedCount;
+  }, []);
+
+  // アトミックにパックのアイテムリストを置き換える（PackBuilderモーダル用）
+  const setPackItems = useCallback((packId: string, itemIds: string[]) => {
+    setPacks((prev) => {
+      const updated = prev.map((pack) => {
+        if (pack.id !== packId) return pack;
+        return {
+          ...pack,
+          itemIds: [...itemIds],
+          updatedAt: new Date().toISOString()
+        };
+      });
+      writePacks(updated);
+      return updated;
+    });
+  }, []);
+
   const getPackById = useCallback(
     (packId: string) => packs.find((pack) => pack.id === packId),
     [packs]
@@ -108,6 +149,8 @@ export const usePacks = (userId: string) => {
     createPack,
     updatePack,
     deletePack,
-    toggleItemInPack
+    toggleItemInPack,
+    addItemsToPack,
+    setPackItems
   };
 };

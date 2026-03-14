@@ -536,6 +536,7 @@ interface GearChartProps {
   activePackItemIds?: string[]
   onTogglePackItem?: (itemId: string) => void
   onAddItemToPack?: (itemId: string) => void
+  onAddItemsToPack?: (itemIds: string[]) => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -566,7 +567,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   activePack,
   activePackItemIds = [],
   onTogglePackItem,
-  onAddItemToPack
+  onAddItemToPack,
+  onAddItemsToPack
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [centerPulse, setCenterPulse] = useState(false)
@@ -1447,6 +1449,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 activePack={activePack}
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
+                onAddItemsToPack={onAddItemsToPack}
                 onGearDragStart={setDraggedGearId}
                 onGearDragEnd={() => {
                   setDraggedGearId(null)

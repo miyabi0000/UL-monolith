@@ -9,6 +9,9 @@ interface GearListContextValue {
   onCurrencyChange: () => void;
   showCheckboxes: boolean;
   isEditable: boolean;
+  activePackName?: string;
+  onAddAllToPack?: () => void;
+  isAllVisibleInPack?: boolean;
 }
 
 const GearListContext = createContext<GearListContextValue | null>(null);
