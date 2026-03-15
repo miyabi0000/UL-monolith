@@ -228,8 +228,6 @@ export default function InventoryWorkspace({
         paddingRight: showChat ? '400px' : undefined
       };
 
-  const hasPacks = packList && packList.length > 0;
-
   return (
     <>
       <div className={containerClassName} style={containerStyle}>
@@ -244,48 +242,56 @@ export default function InventoryWorkspace({
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
             <div className="sticky top-0 z-20 mb-3 rounded-xl bg-white/88 p-3 backdrop-blur dark:bg-slate-800/88 neu-raised">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Pack セレクター */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {/* Pack pill リスト */}
                 {packList !== undefined && (
                   <>
-                    {hasPacks ? (
-                      <select
-                        value={selectedPackId ?? ''}
-                        onChange={(e) => onSelectPack?.(e.target.value)}
-                        className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 cursor-pointer"
-                      >
-                        {packList.map((pack) => (
-                          <option key={pack.id} value={pack.id}>
-                            {pack.name} ({activePackItemIds.length > 0 && pack.id === selectedPackId ? activePackItemIds.length : ''})
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-xs text-gray-400 dark:text-gray-500 px-1">Packs なし</span>
-                    )}
-
-                    {/* ⚙ 設定ボタン */}
-                    {activePack && onOpenPackSettings && (
-                      <button
-                        type="button"
-                        onClick={onOpenPackSettings}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-100/80 dark:bg-slate-800/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
-                        title="Pack settings"
-                        aria-label="Pack settings"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </button>
-                    )}
+                    {packList.map((pack) => {
+                      const isActive = pack.id === selectedPackId;
+                      return (
+                        <div key={pack.id} className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => onSelectPack?.(pack.id)}
+                            className={[
+                              'h-8 pl-3 text-xs font-medium transition-colors',
+                              onOpenPackSettings && isActive ? 'pr-1.5 rounded-l-lg' : 'pr-3 rounded-lg',
+                              isActive
+                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                                : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+                            ].join(' ')}
+                          >
+                            {pack.name}
+                            {isActive && (
+                              <span className="ml-1.5 text-gray-400 dark:text-gray-500 font-normal">
+                                {activePackItemIds.length}
+                              </span>
+                            )}
+                          </button>
+                          {/* 編集ボタン（選択中のみ表示） */}
+                          {isActive && onOpenPackSettings && (
+                            <button
+                              type="button"
+                              onClick={onOpenPackSettings}
+                              className="h-8 w-7 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
+                              title="Pack settings"
+                              aria-label="Pack settings"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
 
                     {/* + New Pack */}
                     {showNewPackInput ? (
                       <form onSubmit={handleCreateNewPack} className="flex items-center gap-1.5">
                         <input
                           ref={newPackInputRef}
-                          className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-36"
+                          className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-32"
                           placeholder="Pack name"
                           value={newPackName}
                           onChange={(e) => setNewPackName(e.target.value)}
@@ -305,10 +311,14 @@ export default function InventoryWorkspace({
                     ) : (
                       <button
                         type="button"
-                        className="h-8 px-3 rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                         onClick={() => setShowNewPackInput(true)}
+                        title="New pack"
+                        aria-label="New pack"
                       >
-                        + New
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
                       </button>
                     )}
                   </>
