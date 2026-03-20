@@ -101,6 +101,68 @@ export class LLMService {
   }
 
   /**
+   * ギアアドバイザーチャット（マルチターン会話）
+   * ギアリストのコンテキストを持ちながらアドバイスや編集提案を行う
+   */
+  async advisorChat(
+    conversation: { role: 'user' | 'assistant'; content: string }[],
+    gearContext: {
+      items: any[];
+      weightBreakdown?: any;
+      ulStatus?: any;
+    }
+  ): Promise<{ message: string; suggestedEdits: any[] }> {
+    try {
+      // ギアコンテキストをシステムプロンプトに注入
+      const gearSummary = JSON.stringify({
+        totalItems: gearContext.items.length,
+        ulStatus: gearContext.ulStatus,
+        weightBreakdown: gearContext.weightBreakdown,
+        // アイテムは上位20件に絞る（トークン節約）
+        items: gearContext.items.slice(0, 20).map(item => ({
+          id: item.id,
+          name: item.name,
+          brand: item.brand,
+          categoryId: item.categoryId,
+          weightGrams: item.weightGrams,
+          priceCents: item.priceCents,
+          weightClass: item.weightClass,
+          isInKit: item.isInKit,
+          priority: item.priority,
+          requiredQuantity: item.requiredQuantity,
+          ownedQuantity: item.ownedQuantity,
+        }))
+      }, null, 2);
+
+      const systemWithContext = `${PROMPTS.GEAR_ADVISOR_SYSTEM}
+
+## 現在のギアリスト情報
+\`\`\`json
+${gearSummary}
+\`\`\``;
+
+      const response = await openaiClient.chatCompletionWithHistory(
+        systemWithContext,
+        conversation,
+        1500
+      );
+
+      const result = this.parseJSON(response);
+
+      return {
+        message: result.message || response,
+        suggestedEdits: Array.isArray(result.suggestedEdits) ? result.suggestedEdits : []
+      };
+    } catch (error) {
+      console.error('Advisor chat failed:', error);
+      return {
+        message: 'アドバイザーとの通信に失敗しました。OpenAI APIキーが設定されているか確認してください。',
+        suggestedEdits: []
+      };
+    }
+  }
+
+  /**
    * リスト分析
    */
   async analyzeList(gearList: any[]): Promise<{ summary: string; tips: string[] }> {

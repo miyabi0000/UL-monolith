@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { handleExtractUrl, handleExtractPrompt, handleEnhancePrompt } from './llm/extractHandlers';
 import { handleExtractCategory } from './llm/categoryHandlers';
 import { handleHealthCheck } from './llm/healthHandlers';
+import { handleAdvisorChat } from './llm/advisorHandlers';
 
 const router = Router();
 
@@ -12,6 +13,9 @@ router.post('/enhance-prompt', handleEnhancePrompt);
 
 // Category endpoints
 router.post('/extract-category', handleExtractCategory);
+
+// Advisor endpoints
+router.post('/advisor', handleAdvisorChat);
 
 // Health endpoint
 router.get('/health', handleHealthCheck);

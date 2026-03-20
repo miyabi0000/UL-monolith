@@ -11,6 +11,7 @@ import NotificationPopup from './NotificationPopup';
 const Login = React.lazy(() => import('./Login'));
 const ChatPopup = React.lazy(() => import('./ChatPopup'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
+const GearAdvisorChat = React.lazy(() => import('./GearAdvisorChat'));
 
 export default function App() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -18,10 +19,15 @@ export default function App() {
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
+    showAdvisor, setShowAdvisor,
     categories,
+    gearItems,
+    weightBreakdown,
+    ulStatus,
     handleCreateCategory,
     handleUpdateCategory,
-    handleDeleteCategory
+    handleDeleteCategory,
+    handleUpdateGear,
   } = useAppState();
 
   const {
@@ -42,6 +48,7 @@ export default function App() {
         onLogout={logout}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
+        onShowAdvisor={() => setShowAdvisor(true)}
       />
 
       {/* ルーティング */}
@@ -77,6 +84,17 @@ export default function App() {
               // ChatPopupからのギア抽出はHomePageで処理する必要があるため
               // 将来的にはコンテキストAPIで管理するか、状態を上位に引き上げる
               console.log('Gear extracted from chat:', gearItem);
+            }}
+          />
+        )}
+
+        {showAdvisor && (
+          <GearAdvisorChat
+            isOpen={showAdvisor}
+            onClose={() => setShowAdvisor(false)}
+            gearContext={{ items: gearItems, weightBreakdown, ulStatus }}
+            onApplyEdit={async (gearId, field, value) => {
+              await handleUpdateGear(gearId, { [field]: value });
             }}
           />
         )}

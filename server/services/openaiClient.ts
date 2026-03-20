@@ -46,6 +46,36 @@ export class OpenAIClient {
   }
 
   /**
+   * 会話履歴付きチャット完了API呼び出し（マルチターン対応）
+   */
+  async chatCompletionWithHistory(
+    systemPrompt: string,
+    history: { role: 'user' | 'assistant'; content: string }[],
+    maxTokens = 1500
+  ): Promise<string> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not available');
+    }
+
+    const completion = await this.openai.chat.completions.create({
+      model: this.defaultModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...history
+      ],
+      temperature: 0.3,
+      max_tokens: maxTokens
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from OpenAI');
+    }
+
+    return content;
+  }
+
+  /**
    * ヘルスチェック
    */
   async healthCheck(): Promise<boolean> {
