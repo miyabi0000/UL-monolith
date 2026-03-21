@@ -17,7 +17,7 @@ const validateCognitoPassword = (password: string): boolean => {
   const hasLowercase = /[a-z]/.test(password)
   const hasUppercase = /[A-Z]/.test(password)  
   const hasNumbers = /\d/.test(password)
-  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password)
+  const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(password)
 
   return hasLowercase && hasUppercase && hasNumbers && hasSpecialChar
 }

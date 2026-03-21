@@ -1,5 +1,6 @@
 import React from 'react'
-import { WeightClass } from '../../utils/types'
+import { WeightClass, WEIGHT_CLASS_COLORS } from '../../utils/types'
+import { alpha } from '../../styles/tokens'
 
 interface WeightClassBadgeProps {
   weightClass: WeightClass
@@ -35,23 +36,20 @@ const UtensilsIcon: React.FC<{ className?: string }> = ({ className = 'w-3 h-3' 
 const WEIGHT_CLASS_CONFIG = {
   base: {
     Icon: BackpackIcon,
-    color: '#6B7280',
-    bgColor: '#F3F4F6',
-    darkBgColor: 'rgba(107, 114, 128, 0.2)',
+    color: WEIGHT_CLASS_COLORS.base,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.base, 0.1),
     label: 'Base'
   },
   worn: {
     Icon: ShirtIcon,
-    color: '#3B82F6',
-    bgColor: '#DBEAFE',
-    darkBgColor: 'rgba(59, 130, 246, 0.2)',
+    color: WEIGHT_CLASS_COLORS.worn,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.worn, 0.12),
     label: 'Worn'
   },
   consumable: {
     Icon: UtensilsIcon,
-    color: '#F97316',
-    bgColor: '#FED7AA',
-    darkBgColor: 'rgba(249, 115, 22, 0.2)',
+    color: WEIGHT_CLASS_COLORS.consumable,
+    bgColor: alpha(WEIGHT_CLASS_COLORS.consumable, 0.15),
     label: 'Cons'
   }
 } as const
@@ -62,22 +60,14 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
 
   if (compact) {
     return (
-      <span className="inline-flex items-center gap-0.5">
+      <span className="inline-flex items-center justify-center">
         <span
-          className="inline-flex items-center justify-center w-5 h-5 rounded"
-          style={{ backgroundColor: config.bgColor, color: config.color }}
-          title={`${config.label} - ${weightClass === 'base' ? '背負って運ぶ' : weightClass === 'worn' ? '身に着けて運ぶ' : '消費物'}`}
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full border"
+          style={{ backgroundColor: config.bgColor, color: config.color, borderColor: alpha(config.color, 0.35) }}
+          title={`${config.label}${isBig3 ? ' / Big3' : ''} - ${weightClass === 'base' ? '背負って運ぶ' : weightClass === 'worn' ? '身に着けて運ぶ' : '消費物'}`}
         >
-          <IconComponent className="w-3 h-3" />
+          <IconComponent className="w-2.5 h-2.5" />
         </span>
-        {isBig3 && (
-          <span
-            className="px-1 py-0.5 text-[9px] font-bold rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-            title="Big3: Backpack / Shelter / Sleep"
-          >
-            B3
-          </span>
-        )}
       </span>
     )
   }
@@ -93,7 +83,7 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
       </span>
       {isBig3 && (
         <span
-          className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+          className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-200 text-gray-700"
           title="Big3: Backpack / Shelter / Sleep"
         >
           Big3

@@ -1,3 +1,5 @@
+import { primitiveColors } from '../styles/tokens';
+
 // 簡素化された型定義
 
 // ==================== 意味論軸の型定義 ====================
@@ -168,6 +170,18 @@ export interface GearList {
   createdAt: string;
 }
 
+export interface Pack {
+  id: string;
+  userId: string;
+  name: string;
+  routeName?: string;
+  description?: string;
+  itemIds: string[];
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // チャート用データ
 export interface ChartData {
   name: string;
@@ -189,9 +203,9 @@ export interface WeightClassChartData {
 
 // Weight-Class用カラー定義
 export const WEIGHT_CLASS_COLORS = {
-  base: '#6B7280',      // gray-500
-  worn: '#3B82F6',      // blue-500
-  consumable: '#F97316' // orange-500
+  base: primitiveColors.gray[500],
+  worn: primitiveColors.blue[500],
+  consumable: primitiveColors.orange[500]
 } as const;
 
 export type ChartViewMode = 'weight' | 'cost' | 'weight-class';
@@ -223,12 +237,12 @@ export interface DonutSegment {
 // 二重ドーナツ用カラートークン
 export const DUAL_RING_COLORS = {
   // Inner ring（濃い色でコントラスト強調）
-  big3: '#7C3AED',        // violet-600（より濃い紫）
-  other: '#4B5563',       // gray-600（より濃いグレー）
+  big3: primitiveColors.purple[600],
+  other: primitiveColors.gray[600],
   // Big3内訳（Outer ring when focus='big3'）
-  big3_pack: '#6D28D9',   // violet-700
-  big3_shelter: '#8B5CF6', // violet-500
-  big3_sleep: '#A78BFA'   // violet-400
+  big3_pack: primitiveColors.purple[700],
+  big3_shelter: primitiveColors.purple[500],
+  big3_sleep: primitiveColors.purple[400]
 } as const;
 
 // ==================== ギア比較機能 ====================

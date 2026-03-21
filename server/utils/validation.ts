@@ -16,7 +16,7 @@ export const escapeHtml = (text: string): string => {
     '`': '&#x60;',
     '=': '&#x3D;'
   }
-  return text.replace(/[&<>"'`=\/]/g, (s) => map[s])
+  return text.replace(/[&<>"'`=/]/g, (s) => map[s])
 }
 
 /**
@@ -24,11 +24,16 @@ export const escapeHtml = (text: string): string => {
  */
 export const sanitizeString = (input: string): string => {
   if (typeof input !== 'string') return ''
-  
-  return input
-    .trim()
-    .replace(/[\x00-\x1F\x7F]/g, '') // 制御文字を除去
-    .slice(0, 500) // 最大500文字に制限
+
+  // 制御文字を除去してから最大長を制限
+  const withoutControlChars = Array.from(input.trim())
+    .filter((char) => {
+      const code = char.charCodeAt(0)
+      return code >= 0x20 && code !== 0x7f
+    })
+    .join('')
+
+  return withoutControlChars.slice(0, 500)
 }
 
 /**

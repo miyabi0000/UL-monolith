@@ -1,7 +1,12 @@
 /**
  * Unified Design System
  * Consolidates colors, styles, and utilities into a single source of truth
+ *
+ * 色値は client/styles/tokens/ のトークンから取得（互換シム）
+ * スケール値（白銀比）は現在の値を維持
  */
+
+import { primitiveColors, alpha } from '../styles/tokens';
 
 // 白銀比（Silver Ratio）定数
 export const SILVER_RATIO = 1.414;
@@ -53,44 +58,89 @@ export const RADIUS_SCALE = {
   full: 9999, // 完全な円
 } as const;
 
-// Minimal color palette - White base with monochrome
+// コンポーネント角丸: 3層階層ルール
+// CSS変数: --radius-surface / --radius-control / --radius-badge
+export const COMPONENT_RADIUS = {
+  /** L1 Surface: カード・モーダル・パネル・テーブルシェル (12px = rounded-lg) */
+  surface: RADIUS_SCALE.lg,
+  /** L2 Control: ボタン・入力・チップ・ドロップダウン・メニュー (8px = rounded-md) */
+  control: RADIUS_SCALE.md,
+  /** L3 Badge: 優先度トークン・カテゴリバッジ・ピル形状 (9999px = rounded-pill) */
+  badge:   RADIUS_SCALE.full,
+} as const;
+
+// カラーパレット — トークンから取得（API 形状は維持）
 export const COLORS = {
-  // Base Colors (Monochrome)
-  white: '#FFFFFF',
+  // Base Colors
+  white: primitiveColors.gray.white,
   gray: {
-    50: '#FAFAFA',
-    100: '#F5F5F5',
-    200: '#E5E5E5',
-    300: '#D4D4D4',
-    400: '#A3A3A3',
-    500: '#737373',
-    600: '#525252',
-    700: '#404040',
-    800: '#262626',
-    900: '#171717',
+    50: primitiveColors.gray[50],
+    100: primitiveColors.gray[100],
+    200: primitiveColors.gray[200],
+    300: primitiveColors.gray[300],
+    400: primitiveColors.gray[400],
+    500: primitiveColors.gray[500],
+    600: primitiveColors.gray[600],
+    700: primitiveColors.gray[700],
+    800: primitiveColors.gray[800],
+    900: primitiveColors.gray[900],
   },
 
   // Accent for interactive elements only
   accent: {
-    primary: '#404040',   // Gray for links and primary actions (gray.700)
-    red: '#EF4444',       // For errors and delete actions
+    primary: primitiveColors.gray[700],
+    red: primitiveColors.red[500],
   },
 
   // Semantic Colors (Minimal)
-  background: '#FAFAFA',
-  surface: '#FFFFFF',
+  background: primitiveColors.gray[50],
+  surface: primitiveColors.gray.white,
   text: {
-    primary: '#171717',
-    secondary: '#525252',
-    muted: '#A3A3A3',
+    primary: primitiveColors.gray.black,
+    secondary: primitiveColors.gray[600],
+    muted: primitiveColors.gray[400],
   },
 
   // State Colors
-  error: '#EF4444',
-  danger: '#EF4444',   // Alias for error (for consistency)
-  warning: '#F59E0B',  // Warning/Alert color
-  success: '#10B981',  // Success color
+  error: primitiveColors.red[500],
+  danger: primitiveColors.red[500],
+  warning: primitiveColors.orange[500],
+  success: primitiveColors.green[500],
 } as const;
+
+type StatusTone = {
+  text: string
+  background: string
+  border: string
+  solid: string
+}
+
+export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', StatusTone> = {
+  success: {
+    text: primitiveColors.green[700],
+    background: alpha(primitiveColors.green[500], 0.08),
+    border: alpha(primitiveColors.green[500], 0.28),
+    solid: primitiveColors.green[500]
+  },
+  warning: {
+    text: primitiveColors.orange[700],
+    background: alpha(primitiveColors.orange[500], 0.08),
+    border: alpha(primitiveColors.orange[500], 0.28),
+    solid: primitiveColors.orange[500]
+  },
+  info: {
+    text: primitiveColors.blue[700],
+    background: alpha(primitiveColors.blue[500], 0.08),
+    border: alpha(primitiveColors.blue[500], 0.28),
+    solid: primitiveColors.blue[500]
+  },
+  error: {
+    text: primitiveColors.red[700],
+    background: alpha(primitiveColors.red[500], 0.08),
+    border: alpha(primitiveColors.red[500], 0.28),
+    solid: primitiveColors.red[500]
+  }
+} as const
 
 // Unified shadow system (single shadow variant)
 export const SHADOW = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)' as const;
@@ -98,7 +148,7 @@ export const SHADOW = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0,
 // Utility functions
 export const getPriorityColor = (priority: number) => {
   if (priority <= 2) return COLORS.accent.red; // High priority: Red
-  if (priority <= 3) return '#F59E0B'; // Medium priority: Yellow
+  if (priority <= 3) return COLORS.warning; // Medium priority: Yellow
   return COLORS.gray[400]; // Low priority: Gray
 };
 
@@ -147,7 +197,7 @@ export const generateItemColor = (baseColor: string, index: number, total: numbe
   return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`;
 };
 
-// Chart.js color palette (grayscale)
+// Chart.js color palette
 export const chartColors = {
   primary: COLORS.gray[700],
   secondary: COLORS.gray[500],

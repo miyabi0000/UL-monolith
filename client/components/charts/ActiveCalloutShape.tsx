@@ -1,5 +1,7 @@
 import React from 'react'
 import { Sector } from 'recharts'
+import { COLORS } from '../../utils/designSystem'
+import { alpha } from '../../styles/tokens'
 
 const CALLOUT_THRESHOLD = 0.03 // 3%未満はcallout非表示
 
@@ -97,7 +99,7 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
       <polyline
         points={`${x1},${y1} ${x2},${y2} ${x3},${y3}`}
         fill="none"
-        stroke="#6B7280"
+        stroke={COLORS.gray[500]}
         strokeWidth={2}
       />
       {/* ラベル背景 */}
@@ -107,7 +109,7 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
         width={textWidth}
         height={textHeight}
         rx={4}
-        fill="rgba(30, 30, 30, 0.85)"
+        fill={alpha(COLORS.gray[900], 0.85)}
       />
       {/* 値ラベル */}
       <text
@@ -117,7 +119,7 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
         dominantBaseline="middle"
         fontSize={11}
         fontWeight="bold"
-        fill="#fff"
+        fill={COLORS.white}
       >
         {valueText}
       </text>
@@ -128,7 +130,7 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
         textAnchor={textAnchor}
         dominantBaseline="middle"
         fontSize={9}
-        fill="rgba(255,255,255,0.7)"
+        fill={alpha(COLORS.white, 0.7)}
       >
         {labelText}
       </text>

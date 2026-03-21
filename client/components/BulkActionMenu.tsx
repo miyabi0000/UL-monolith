@@ -1,5 +1,4 @@
 import React from 'react';
-import { COLORS } from '../utils/designSystem';
 
 interface BulkActionMenuProps {
   showCheckboxes: boolean;
@@ -13,10 +12,10 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
   return (
     <button
       onClick={onToggleCheckboxes}
-      className={`p-2 rounded-md transition-colors text-gray-900 dark:text-gray-100 ${
+      className={`p-2 rounded-md transition-colors text-gray-900 ${
         showCheckboxes
-          ? 'bg-gray-100 dark:bg-gray-800'
-          : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+          ? 'bg-gray-100'
+          : 'hover:bg-gray-50'
       }`}
       aria-label="一括編集"
       title="一括編集"
@@ -39,4 +38,3 @@ const BulkActionMenu: React.FC<BulkActionMenuProps> = ({
 };
 
 export default BulkActionMenu;
-

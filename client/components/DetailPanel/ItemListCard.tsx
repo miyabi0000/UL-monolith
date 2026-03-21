@@ -24,13 +24,13 @@ const ItemListCard: React.FC<ItemListCardProps> = ({ item, percentage, onClick, 
   return (
     <button
       onClick={() => onClick(item.id)}
-      className="w-full px-3 py-3 rounded border border-gray-200 dark:border-gray-700
-        hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+      className="w-full px-3 py-3 rounded neu-raised
+        hover:bg-gray-50 transition-colors text-left"
     >
       {/* グリッドレイアウト: 画像 | 名前+ブランド | 重量+メタ情報 | 不足インジケーター */}
       <div className="grid gap-3" style={{ gridTemplateColumns: '48px minmax(150px, 1fr) 120px 24px' }}>
         {/* 画像 */}
-        <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+        <div className="relative w-12 h-12 rounded overflow-hidden bg-gray-100">
           <img
             src={imageUrl}
             alt={item.name}
@@ -44,10 +44,10 @@ const ItemListCard: React.FC<ItemListCardProps> = ({ item, percentage, onClick, 
           <TruncatedText
             text={item.name}
             maxLength={30}
-            className="text-xs font-medium text-gray-900 dark:text-gray-100 leading-tight"
+            className="text-xs font-medium text-gray-900 leading-tight"
           />
           {item.brand && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate leading-tight opacity-75">
+            <div className="text-xs text-gray-500 mt-1 truncate leading-tight opacity-75">
               {item.brand}
             </div>
           )}
@@ -55,10 +55,10 @@ const ItemListCard: React.FC<ItemListCardProps> = ({ item, percentage, onClick, 
 
         {/* 重量とメタ情報 - 固定幅120pxで右揃え */}
         <div className="text-right flex flex-col justify-center w-full">
-          <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 leading-tight whitespace-nowrap">
+          <div className="text-xs font-semibold text-gray-900 leading-tight whitespace-nowrap">
             {displayValue}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-tight whitespace-nowrap">
+          <div className="text-xs text-gray-500 mt-1 leading-tight whitespace-nowrap">
             <span className="font-medium">{percentage}%</span>
             <span className="ml-1.5">P{item.priority}</span>
           </div>

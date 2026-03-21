@@ -1,186 +1,205 @@
 import React from 'react'
-import type { QuantityDisplayMode } from '../../utils/types'
+import { COLORS } from '../../utils/designSystem'
+import { useGearListContext } from '../../hooks/useGearListContext'
 
 export type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price' | 'owned' | 'required' | 'season'
 export type SortDirection = 'asc' | 'desc'
 export type Currency = 'JPY' | 'USD'
 
 interface TableHeaderProps {
-  showCheckboxes: boolean
   isAllSelected: boolean
   isPartiallySelected: boolean
   sortField: SortField
   sortDirection: SortDirection
-  quantityDisplayMode: QuantityDisplayMode
-  currency?: Currency
   onSelectAll: (checked: boolean) => void
   onSort: (field: SortField) => void
-  onQuantityDisplayModeChange: () => void
-  onCurrencyChange?: () => void
   showEditColumn?: boolean
-  /** 編集モード中はソートを無効化 */
-  isEditable?: boolean
 }
 
+type HeaderColumn = {
+  key: string
+  label: string
+  widthClass: string
+  align?: 'left' | 'center'
+  sortable?: boolean
+  sortField?: SortField
+}
+
+const COLUMNS: HeaderColumn[] = [
+  { key: 'image', label: 'image', widthClass: 'w-20' },
+  { key: 'name', label: 'name', widthClass: 'min-w-[112px] max-w-[188px]', sortable: true, sortField: 'name' },
+  { key: 'category', label: 'category', widthClass: 'w-28', sortable: true, sortField: 'category' },
+  { key: 'weightclass', label: 'type', widthClass: 'w-10', align: 'center' },
+  { key: 'quantity', label: 'ALL', widthClass: 'w-[88px]', align: 'center' },
+  { key: 'weight', label: 'g', widthClass: 'w-[72px]', align: 'center', sortable: true, sortField: 'weight' },
+  { key: 'priority', label: 'priority', widthClass: 'w-8', align: 'center', sortable: true, sortField: 'priority' },
+  { key: 'price', label: 'price', widthClass: 'w-14', align: 'center', sortable: true, sortField: 'price' },
+  { key: 'season', label: 'season', widthClass: 'w-14', sortable: true, sortField: 'season' },
+]
+
+const toAriaSort = (isActive: boolean, direction: SortDirection): React.AriaAttributes['aria-sort'] =>
+  isActive ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'
+
 const TableHeader: React.FC<TableHeaderProps> = ({
-  showCheckboxes,
   isAllSelected,
   isPartiallySelected,
   sortField,
   sortDirection,
-  quantityDisplayMode,
-  currency = 'JPY',
   onSelectAll,
   onSort,
-  onQuantityDisplayModeChange,
-  onCurrencyChange,
   showEditColumn = false,
-  isEditable = false
 }) => {
-  // 編集モード中はソートを無効化
-  const handleSort = (field: SortField) => {
-    if (isEditable) return
-    onSort(field)
-  }
+  const {
+    showCheckboxes,
+    quantityDisplayMode,
+    onQuantityDisplayModeChange,
+    currency,
+    onCurrencyChange,
+    isEditable,
+    activePackName,
+  } = useGearListContext()
 
-  // ソート可能なヘッダーのスタイル
-  const sortableHeaderClass = isEditable
-    ? 'text-gray-400 dark:text-gray-500 cursor-default'
-    : 'text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
+  const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-[11px] leading-none font-medium'
+  const inactiveText = 'text-gray-500 dark:text-gray-300'
+  const hoverText = 'hover:text-gray-700 dark:hover:text-gray-100'
+
   const getStatusFilterLabel = () => {
     switch (quantityDisplayMode) {
-      case 'owned': return 'Own'
-      case 'need': return 'Need'
-      case 'all': return 'All'
-      default: return 'All'
+      case 'owned': return 'Owned'
+      case 'need': return 'Needed'
+      default: return 'ALL'
     }
   }
+
   const getStatusFilterColor = () => {
     switch (quantityDisplayMode) {
-      case 'owned': return '#10B981'
-      case 'need': return '#EF4444'
-      case 'all': return '#6B7280'
-      default: return '#6B7280'
+      case 'owned': return COLORS.success
+      case 'need': return COLORS.error
+      default: return COLORS.gray[500]
     }
   }
-  const renderSortIcon = (field: SortField) => {
-    if (sortField !== field) return null
+
+  const renderSortGlyph = (field: SortField) => {
+    const isActive = sortField === field
+    const color = isActive
+      ? 'text-gray-700 dark:text-gray-100'
+      : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
     return (
-      <span className="ml-1 text-[10px] text-gray-600 dark:text-gray-400">
-        {sortDirection === 'asc' ? '↑' : '↓'}
+      <span className={`inline-flex w-3 justify-center text-[10px] leading-none ${color}`}>
+        {isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
       </span>
     )
   }
 
+  const renderStandardColumn = (column: HeaderColumn) => {
+    if (!column.sortable || !column.sortField) {
+      return (
+        <th key={column.key} className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass}`}>
+          <span className={`${labelBase} ${column.align === 'center' ? 'justify-center' : 'justify-start'} ${inactiveText}`}>
+            <span className="whitespace-nowrap">{column.label}</span>
+          </span>
+        </th>
+      )
+    }
+
+    const isActive = sortField === column.sortField
+    return (
+      <th
+        key={column.key}
+        className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass}`}
+        aria-sort={toAriaSort(isActive, sortDirection)}
+      >
+        <button
+          type="button"
+          disabled={isEditable}
+          onClick={() => onSort(column.sortField!)}
+          className={`group ${labelBase} justify-between ${
+            isEditable ? 'text-gray-400 dark:text-gray-500 cursor-default' : `${inactiveText} ${hoverText}`
+          }`}
+          aria-label={`Sort by ${column.label}`}
+        >
+          <span className="whitespace-nowrap">{column.label}</span>
+          {renderSortGlyph(column.sortField)}
+        </button>
+      </th>
+    )
+  }
+
   return (
-    <thead className="bg-gray-50 dark:bg-gray-900">
+    <thead className="gear-table-head">
       <tr>
         {showCheckboxes && (
-          <th className="px-2 py-2 text-center w-8">
+          <th className={`${thBase} text-center w-8`}>
             <input
               type="checkbox"
               checked={isAllSelected}
-              ref={input => {
+              ref={(input) => {
                 if (input) input.indeterminate = isPartiallySelected
               }}
               onChange={(e) => onSelectAll(e.target.checked)}
-              className="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-blue-600 text-blue-600 focus:ring-blue-500 w-3 h-3"
+              className="rounded border-gray-300 dark:border-slate-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 focus:ring-gray-500 dark:focus:ring-slate-400 w-3 h-3"
             />
           </th>
         )}
-        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
-          Image
-        </th>
-        <th
-          className={`group px-2 py-2 text-left font-medium text-xs ${sortableHeaderClass} transition-colors min-w-[120px] max-w-[200px]`}
-          onClick={() => handleSort('name')}
-        >
-          <span className="flex items-center">
-            Name
-            {!isEditable && renderSortIcon('name')}
-          </span>
-        </th>
-        <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-20`}
-          onClick={() => handleSort('category')}
-        >
-          <span className="flex items-center justify-center">
-            Cat
-            {!isEditable && renderSortIcon('category')}
-          </span>
-        </th>
-        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-12">
-          Qty
-        </th>
-        <th className="px-2 py-2 text-center font-medium text-xs w-14">
-          <button
-            type="button"
-            onClick={onQuantityDisplayModeChange}
-            className="inline-flex items-center justify-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
-          >
-            <span
-              className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: getStatusFilterColor() }}
-            />
-            <span className="text-[10px]">{getStatusFilterLabel()}</span>
-          </button>
-        </th>
-        <th className="px-2 py-2 text-center font-medium text-xs text-gray-500 dark:text-gray-400 w-16">
-          WtCls
-        </th>
-        <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-20`}
-          onClick={() => handleSort('weight')}
-        >
-          <span className="flex items-center justify-center">
-            Wt(g)
-            {!isEditable && renderSortIcon('weight')}
-          </span>
-        </th>
-        <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-12`}
-          onClick={() => handleSort('priority')}
-        >
-          <span className="flex items-center justify-center">
-            Pri
-            {!isEditable && renderSortIcon('priority')}
-          </span>
-        </th>
-        <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-16`}
-          onClick={() => handleSort('price')}
-        >
-          <span className="inline-flex items-center justify-center">
-            Price
-            {onCurrencyChange && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCurrencyChange()
-                }}
-                className="ml-0.5 text-xs hover:text-gray-700 dark:hover:text-gray-300"
-                title="Toggle currency"
+
+        {COLUMNS.map((column) => {
+          if (column.key === 'quantity') {
+            return (
+              <th key={column.key} className={`${thBase} text-center ${column.widthClass}`}>
+                <button
+                  type="button"
+                  onClick={onQuantityDisplayModeChange}
+                  className={`${labelBase} justify-center gap-1.5 ${inactiveText} ${hoverText}`}
+                  title={`Filter: ${getStatusFilterLabel()} (click to cycle)`}
+                  aria-label="Cycle quantity filter mode"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getStatusFilterColor() }} />
+                  <span>{getStatusFilterLabel()}</span>
+                </button>
+              </th>
+            )
+          }
+
+          if (column.key === 'price' && column.sortField) {
+            const isActive = sortField === column.sortField
+            return (
+              <th
+                key={column.key}
+                className={`${thBase} text-center ${column.widthClass}`}
+                aria-sort={toAriaSort(isActive, sortDirection)}
               >
-                {currency === 'JPY' ? '¥' : '$'}
-              </button>
-            )}
-            {!isEditable && renderSortIcon('price')}
-          </span>
-        </th>
-        <th
-          className={`group px-2 py-2 text-center font-medium text-xs ${sortableHeaderClass} transition-colors w-16`}
-          onClick={() => handleSort('season')}
-        >
-          <span className="flex items-center justify-center">
-            Ssn
-            {!isEditable && renderSortIcon('season')}
-          </span>
-        </th>
-        {showEditColumn && (
-          <th className="px-2 py-2 text-center w-8"></th>
-        )}
+                <div className="inline-flex h-6 w-full items-center gap-0.5">
+                  <button
+                    type="button"
+                    disabled={isEditable}
+                    onClick={() => onSort(column.sortField!)}
+                    className={`group ${labelBase} min-w-0 flex-1 justify-between ${
+                      isEditable ? 'text-gray-400 dark:text-gray-500 cursor-default' : `${inactiveText} ${hoverText}`
+                    }`}
+                    aria-label="Sort by price"
+                  >
+                    <span className="whitespace-nowrap">price</span>
+                    {renderSortGlyph(column.sortField)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onCurrencyChange}
+                    className={`${labelBase} w-6 flex-shrink-0 justify-center px-0 ${inactiveText} ${hoverText}`}
+                    title="Toggle currency"
+                    aria-label="Toggle currency"
+                  >
+                    {currency === 'JPY' ? '¥' : '$'}
+                  </button>
+                </div>
+              </th>
+            )
+          }
+
+          return renderStandardColumn(column)
+        })}
+
+        {showEditColumn && <th className="px-1.5 py-1 text-center w-8"></th>}
       </tr>
     </thead>
   )

@@ -126,21 +126,20 @@ CREATE TRIGGER update_gear_items_updated_at
 
 -- グローバルカテゴリの挿入（重複回避）
 INSERT INTO categories (id, user_id, name, parent_id, path, color) VALUES
-('550e8400-e29b-41d4-a716-446655440001', NULL, 'Clothing', NULL, ARRAY['Clothing'], '#FF6B6B'),
-('550e8400-e29b-41d4-a716-446655440002', NULL, 'Sleep', NULL, ARRAY['Sleep'], '#4ECDC4'),
-('550e8400-e29b-41d4-a716-446655440003', NULL, 'Pack', NULL, ARRAY['Pack'], '#FFE66D'),
-('550e8400-e29b-41d4-a716-446655440004', NULL, 'Electronics', NULL, ARRAY['Electronics'], '#4D96FF'),
-('550e8400-e29b-41d4-a716-446655440005', NULL, 'Hygiene', NULL, ARRAY['Hygiene'], '#A66DFF'),
-('550e8400-e29b-41d4-a716-446655440006', NULL, 'Shelter', NULL, ARRAY['Shelter'], '#45B7D1'),
-('550e8400-e29b-41d4-a716-446655440007', NULL, 'Cooking', NULL, ARRAY['Cooking'], '#F39C12'),
-('550e8400-e29b-41d4-a716-446655440008', NULL, 'Water', NULL, ARRAY['Water'], '#27AE60'),
-('550e8400-e29b-41d4-a716-446655440009', NULL, 'Safety', NULL, ARRAY['Safety'], '#E74C3C'),
-('550e8400-e29b-41d4-a716-446655440010', NULL, 'Tools', NULL, ARRAY['Tools'], '#8E44AD'),
-('550e8400-e29b-41d4-a716-446655440011', NULL, 'Other', NULL, ARRAY['Other'], '#9CA3AF')
+('550e8400-e29b-41d4-a716-446655440001', NULL, 'Clothing', NULL, ARRAY['Clothing'], '#E2041B'),
+('550e8400-e29b-41d4-a716-446655440002', NULL, 'Sleep', NULL, ARRAY['Sleep'], '#00A3AF'),
+('550e8400-e29b-41d4-a716-446655440003', NULL, 'Pack', NULL, ARRAY['Pack'], '#FFB11B'),
+('550e8400-e29b-41d4-a716-446655440004', NULL, 'Electronics', NULL, ARRAY['Electronics'], '#274A78'),
+('550e8400-e29b-41d4-a716-446655440005', NULL, 'Hygiene', NULL, ARRAY['Hygiene'], '#7058A3'),
+('550e8400-e29b-41d4-a716-446655440006', NULL, 'Shelter', NULL, ARRAY['Shelter'], '#5654A2'),
+('550e8400-e29b-41d4-a716-446655440007', NULL, 'Cooking', NULL, ARRAY['Cooking'], '#C37854'),
+('550e8400-e29b-41d4-a716-446655440008', NULL, 'Water', NULL, ARRAY['Water'], '#A8D8B9'),
+('550e8400-e29b-41d4-a716-446655440009', NULL, 'Safety', NULL, ARRAY['Safety'], '#1B1D1B'),
+('550e8400-e29b-41d4-a716-446655440010', NULL, 'Tools', NULL, ARRAY['Tools'], '#7BA23F'),
+('550e8400-e29b-41d4-a716-446655440011', NULL, 'Other', NULL, ARRAY['Other'], '#5B6B73')
 ON CONFLICT (id) DO NOTHING;
 
 -- デモユーザーの作成（開発用）
 INSERT INTO users (id, email, password_hash, name) VALUES
 ('550e8400-e29b-41d4-a716-446655440100', 'demo@example.com', '$2b$10$dummy.hash.for.demo.user', 'Demo User')
 ON CONFLICT (email) DO NOTHING;
-

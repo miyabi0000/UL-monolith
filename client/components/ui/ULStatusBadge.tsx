@@ -1,5 +1,7 @@
 import React from 'react'
 import { ULClassification } from '../../utils/types'
+import { STATUS_TONES, COLORS } from '../../utils/designSystem'
+import { alpha } from '../../styles/tokens'
 
 interface ULStatusBadgeProps {
   classification: ULClassification
@@ -7,9 +9,9 @@ interface ULStatusBadgeProps {
 }
 
 const UL_STATUS_CONFIG = {
-  ultralight: { label: '⚡ UL', color: '#10B981', bgColor: '#D1FAE5' },
-  lightweight: { label: 'LW', color: '#F59E0B', bgColor: '#FEF3C7' },
-  traditional: { label: 'Trad', color: '#6B7280', bgColor: '#F3F4F6' }
+  ultralight: { label: '⚡ UL', color: STATUS_TONES.success.text, bgColor: STATUS_TONES.success.background },
+  lightweight: { label: 'LW', color: STATUS_TONES.warning.text, bgColor: STATUS_TONES.warning.background },
+  traditional: { label: 'Trad', color: COLORS.gray[500], bgColor: alpha(COLORS.gray[500], 0.08) }
 } as const
 
 const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeight }) => {

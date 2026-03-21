@@ -1,27 +1,22 @@
 import { Router } from 'express';
 import { db } from '../database/connection';
+import { sendError, sendSuccess } from './shared/httpResponse';
+import { getRequestUserId } from './shared/userContext';
 
 const router = Router();
 
-// デモユーザーID（認証実装までの仮ID）- gearルートと統一
-const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
-
 router.get('/summary', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string || DEMO_USER_ID;
+    const userId = getRequestUserId(req);
     const summary = await db.getAnalyticsSummary(userId);
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: summary
     });
   } catch (error) {
     console.error('Error fetching analytics summary:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch analytics summary',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to fetch analytics summary', error);
   }
 });
 
@@ -31,7 +26,7 @@ router.get('/summary', async (req, res) => {
  */
 router.get('/weight-breakdown', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string || DEMO_USER_ID;
+    const userId = getRequestUserId(req);
     const breakdown = await db.getWeightBreakdown(userId);
 
     // UL分類を判定
@@ -44,7 +39,7 @@ router.get('/weight-breakdown', async (req, res) => {
       classification = 'traditional';
     }
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: {
         ...breakdown,
@@ -57,11 +52,7 @@ router.get('/weight-breakdown', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching weight breakdown:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch weight breakdown',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to fetch weight breakdown', error);
   }
 });
 

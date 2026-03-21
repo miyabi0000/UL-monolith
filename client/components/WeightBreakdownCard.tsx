@@ -1,5 +1,6 @@
 import React from 'react'
-import { WeightBreakdown, ULStatus, UL_THRESHOLDS } from '../utils/types'
+import { WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS } from '../utils/types'
+import { STATUS_TONES } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
 
@@ -34,19 +35,23 @@ const UtensilsIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' 
 )
 
 const WEIGHT_CLASS_CONFIG = {
-  base: { Icon: BackpackIcon, label: 'BASE', color: '#6B7280' },
-  worn: { Icon: ShirtIcon, label: 'WORN', color: '#3B82F6' },
-  consumable: { Icon: UtensilsIcon, label: 'CONS', color: '#F97316' }
+  base: { Icon: BackpackIcon, label: 'BASE', color: WEIGHT_CLASS_COLORS.base },
+  worn: { Icon: ShirtIcon, label: 'WORN', color: WEIGHT_CLASS_COLORS.worn },
+  consumable: { Icon: UtensilsIcon, label: 'CONS', color: WEIGHT_CLASS_COLORS.consumable }
 } as const
 
 const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ulStatus }) => {
+  const successTone = STATUS_TONES.success
+  const warningTone = STATUS_TONES.warning
+  const errorTone = STATUS_TONES.error
+
   const ulProgress = Math.min(100, (breakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
 
   return (
     <Card hover className="p-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-xs font-semibold text-gray-900">
           WEIGHT BREAKDOWN
         </h3>
         <ULStatusBadge classification={ulStatus.classification} baseWeight={ulStatus.baseWeight} />
@@ -55,61 +60,61 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
       {/* Weight Class Cards */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {/* Base */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-          <BackpackIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50">
+          <BackpackIcon className="w-5 h-5 text-gray-500 mb-1" />
+          <span className="text-[10px] font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.base.label}
           </span>
-          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+          <span className="text-sm font-bold text-gray-900">
             {breakdown.baseWeight.toLocaleString()}g
           </span>
         </div>
 
         {/* Worn */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-          <ShirtIcon className="w-5 h-5 text-blue-500 dark:text-blue-400 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-100">
+          <ShirtIcon className="w-5 h-5 text-gray-500 mb-1" />
+          <span className="text-[10px] font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.worn.label}
           </span>
-          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+          <span className="text-sm font-bold text-gray-900">
             {breakdown.wornWeight.toLocaleString()}g
           </span>
         </div>
 
         {/* Consumable */}
-        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20">
-          <UtensilsIcon className="w-5 h-5 text-orange-500 dark:text-orange-400 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-100">
+          <UtensilsIcon className="w-5 h-5 text-gray-500 mb-1" />
+          <span className="text-[10px] font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.consumable.label}
           </span>
-          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+          <span className="text-sm font-bold text-gray-900">
             {breakdown.consumables.toLocaleString()}g
           </span>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+      <div className="neu-divider my-2" />
 
       {/* Summary Stats */}
       <div className="space-y-1.5 text-xs">
         <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-gray-400">Packed Weight</span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="text-gray-500">Packed Weight</span>
+          <span className="font-medium text-gray-900">
             {breakdown.packedWeight.toLocaleString()}g
             <span className="text-[10px] text-gray-400 ml-1">(Base + Cons)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-gray-400">Skin-out Weight</span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="text-gray-500">Skin-out Weight</span>
+          <span className="font-medium text-gray-900">
             {breakdown.skinOutWeight.toLocaleString()}g
             <span className="text-[10px] text-gray-400 ml-1">(All)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-gray-400">Big3</span>
-          <span className="font-medium text-purple-600 dark:text-purple-400">
+          <span className="text-gray-500">Big3</span>
+          <span className="font-medium text-gray-700">
             {breakdown.big3.toLocaleString()}g
             <span className="text-[10px] text-gray-400 ml-1">(Pack+Shelter+Sleep)</span>
           </span>
@@ -119,26 +124,27 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
       {/* UL Progress Bar */}
       <div className="mt-3">
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+          <span className="text-[10px] text-gray-500">
             Base Weight: {(breakdown.baseWeight / 1000).toFixed(2)}kg
           </span>
-          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+          <span className="text-[10px] text-gray-500">
             {Math.round(ulProgress)}% of UL limit
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-300 ${
-              ulProgress < 85
-                ? 'bg-green-500'
+            className="h-full transition-all duration-300"
+            style={{
+              backgroundColor: ulProgress < 85
+                ? successTone.solid
                 : ulProgress < 100
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500'
-            }`}
-            style={{ width: `${ulProgress}%` }}
+                  ? warningTone.solid
+                  : errorTone.solid,
+              width: `${ulProgress}%`
+            }}
           />
         </div>
-        <div className="text-[9px] text-gray-400 dark:text-gray-500 mt-0.5 text-right">
+        <div className="text-[9px] text-gray-400 mt-0.5 text-right">
           UL limit: {(UL_THRESHOLDS.ultralight / 1000).toFixed(1)}kg
         </div>
       </div>

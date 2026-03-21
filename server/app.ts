@@ -18,11 +18,14 @@ config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+const isDevelopment = (process.env.NODE_ENV || 'development') !== 'production';
+const defaultApiMax = isDevelopment ? 2000 : 100;
+const defaultLlmMax = isDevelopment ? 120 : 10;
 
 // Rate Limiting設定
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分
-  max: 100, // 1IPあたり15分で100リクエストまで
+  max: Number(process.env.RATE_LIMIT_MAX || defaultApiMax), // 開発時は上限を緩和
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -33,7 +36,7 @@ const limiter = rateLimit({
 
 const strictLimiter = rateLimit({
   windowMs: 60 * 1000, // 1分
-  max: 10, // LLM APIは1分で10リクエストまで
+  max: Number(process.env.LLM_RATE_LIMIT_MAX || defaultLlmMax), // 開発時は上限を緩和
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -57,6 +60,16 @@ app.get('/api/health', (req, res) => {
     message: 'UL Gear Manager API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Root endpoint to avoid 404 on base URL
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'UL Gear Manager API',
+    health: '/api/health',
+    docs: '/docs/startup-guide.md'
   });
 });
 
@@ -94,4 +107,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-

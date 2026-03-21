@@ -14,16 +14,16 @@ export default function ComparisonPage() {
       }}
     >
       <div className="w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
             ギア比較
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 mb-6">
             ギアアイテムを比較して最適な選択をサポートします。
           </p>
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="bg-gray-50 neu-raised rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-700">
               🚧 このページは現在開発中です（Phase 1実装予定）
             </p>
           </div>

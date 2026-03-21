@@ -4,6 +4,8 @@ import { ExtractedGearWithUrl } from '../../utils/gearExtractionHelpers'
 import { extractFromUrl } from '../../services/llmExtraction'
 import { sanitizeGearForm } from '../../utils/helpers'
 import { useImageUpload } from '../../hooks/useImageUpload'
+import { STATUS_TONES } from '../../utils/designSystem'
+import Button from '../ui/Button'
 
 interface GearInputModalProps {
   isOpen?: boolean
@@ -29,6 +31,12 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
   bulkGears = [],
   onBulkComplete
 }) => {
+  const labelClassName = 'block text-sm font-medium mb-1 text-gray-900'
+  const inputBaseClass = 'input w-full px-3 py-2 rounded-md focus:outline-none'
+  const successTone = STATUS_TONES.success
+  const warningTone = STATUS_TONES.warning
+  const errorTone = STATUS_TONES.error
+
   const [form, setForm] = useState<GearItemForm>({
     name: '',
     brand: '',
@@ -277,37 +285,54 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
    * フィールドのクラス名を取得（バルクモードで未入力の場合は赤枠）
    */
   const getFieldClassName = (fieldName: string): string => {
-    const baseClass = 'input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2'
+    const baseClass = inputBaseClass
     if (bulkMode && emptyFields.includes(fieldName)) {
-      return `${baseClass} border-red-500 border-2 bg-red-50 dark:bg-red-900/10`
+      return `${baseClass} border-2`
     }
     return baseClass
   }
 
+  const getFieldStyle = (fieldName: string): React.CSSProperties | undefined => {
+    if (bulkMode && emptyFields.includes(fieldName)) {
+      return {
+        borderColor: errorTone.solid,
+        backgroundColor: errorTone.background
+      }
+    }
+    return undefined
+  }
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800">
-        <div className="p-6 border-b border-gray-300 dark:border-gray-700">
+    <div className="modal-overlay p-4">
+      <div className="modal-panel-lg">
+        <div className="p-6 neu-divider">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900">
               {bulkMode && `Review Gear (${currentBulkIndex + 1} of ${bulkGears.length})`}
               {!bulkMode && (editingGear || gear) && 'Edit Gear'}
               {!bulkMode && !(editingGear || gear) && 'Add New Gear'}
             </h2>
             {bulkMode && emptyFields.length > 0 && (
-              <span className="text-sm text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-md border border-yellow-200 dark:border-yellow-700">
+              <span
+                className="text-sm px-3 py-1 rounded-md border"
+                style={{
+                  color: warningTone.text,
+                  backgroundColor: warningTone.background,
+                  borderColor: warningTone.border
+                }}
+              >
                 {emptyFields.length} field{emptyFields.length > 1 && 's'} unfilled
               </span>
             )}
           </div>
           {bulkMode && (
             <>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 {savedCount} saved, {skippedCount} skipped
               </p>
-              <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-gray-700 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${((savedCount + skippedCount) / bulkGears.length) * 100}%` }}
                 />
               </div>
@@ -318,20 +343,21 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* 画像アップロード（ドラッグ&ドロップ） */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-              Product Image {bulkMode && emptyFields.includes('imageUrl') && <span className="text-red-600">*</span>}
+              <label className={labelClassName}>
+              Product Image {bulkMode && emptyFields.includes('imageUrl') && <span style={{ color: errorTone.text }}>*</span>}
             </label>
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, onImageSelect)}
               className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                isDragging && 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                isDragging && 'border-gray-700 bg-gray-50'
               } ${
-                !isDragging && bulkMode && emptyFields.includes('imageUrl') && 'border-red-500 bg-red-50 dark:bg-red-900/10'
-              } ${
-                !isDragging && !(bulkMode && emptyFields.includes('imageUrl')) && 'border-gray-300 dark:border-gray-600'
+                !isDragging && !(bulkMode && emptyFields.includes('imageUrl')) && 'border-gray-300'
               }`}
+              style={!isDragging && bulkMode && emptyFields.includes('imageUrl')
+                ? { borderColor: errorTone.solid, backgroundColor: errorTone.background }
+                : undefined}
             >
               {imagePreview && (
                 <div className="relative">
@@ -343,8 +369,8 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                   <button
                     type="button"
                     onClick={() => removeImagePreview(onImageRemove)}
-                    className="absolute top-2 right-2 bg-red-500 dark:bg-red-600 text-white rounded-full p-1 hover:bg-red-600 dark:hover:bg-red-700"
-                    style={{ width: '24px', height: '24px' }}
+                    className="absolute top-2 right-2 text-white rounded-full p-1"
+                    style={{ width: '24px', height: '24px', backgroundColor: errorTone.solid }}
                   >
                     ✕
                   </button>
@@ -352,7 +378,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
               )}
               {!imagePreview && (
                 <div>
-                  <p className="text-sm mb-2 text-gray-500 dark:text-gray-400">
+                  <p className="text-sm mb-2 text-gray-500">
                     Drag & drop an image here, or click to select
                   </p>
                   <input
@@ -376,7 +402,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* URL入力 & 抽出 */}
           {!bulkMode && (
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+              <label className={labelClassName}>
                 Product URL
               </label>
               <div className="flex gap-2">
@@ -384,24 +410,27 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                   type="url"
                   value={form.productUrl}
                   onChange={(e) => handleChange('productUrl', e.target.value)}
-                  className="input flex-1 px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                  className={`${inputBaseClass} flex-1`}
                   placeholder="https://example.com/product"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={handleExtractFromUrl}
                   disabled={!form.productUrl || isExtracting}
-                  className="btn-primary px-4 py-2 rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+                  variant="primary"
                 >
                   {isExtracting && 'Extracting...'}
                   {!isExtracting && 'Extract'}
-                </button>
+                </Button>
               </div>
 
               {/* 抽出結果 */}
               {extractionResult && (
-                <div className="mt-2 p-3 rounded-md border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30">
-                  <div className="text-sm text-green-700 dark:text-green-300">
+                <div
+                  className="mt-2 p-3 rounded-md border"
+                  style={{ borderColor: successTone.border, backgroundColor: successTone.background }}
+                >
+                  <div className="text-sm" style={{ color: successTone.text }}>
                     ✓ Extracted successfully
                   </div>
                 </div>
@@ -412,14 +441,14 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* バルクモード: URL表示（読み取り専用） */}
           {bulkMode && (
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+              <label className={labelClassName}>
                 Product URL
               </label>
               <input
                 type="url"
                 value={form.productUrl}
                 readOnly
-                className="input w-full px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                className={`${inputBaseClass} bg-gray-50 text-gray-600`}
               />
             </div>
           )}
@@ -427,8 +456,8 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* 基本情報 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-                Product Name * {bulkMode && emptyFields.includes('name') && <span className="text-red-600">!</span>}
+              <label className={labelClassName}>
+                Product Name * {bulkMode && emptyFields.includes('name') && <span style={{ color: errorTone.text }}>!</span>}
               </label>
               <input
                 type="text"
@@ -436,18 +465,20 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 value={form.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 className={getFieldClassName('name')}
+                style={getFieldStyle('name')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-                Brand {bulkMode && emptyFields.includes('brand') && <span className="text-red-600">!</span>}
+              <label className={labelClassName}>
+                Brand {bulkMode && emptyFields.includes('brand') && <span style={{ color: errorTone.text }}>!</span>}
               </label>
               <input
                 type="text"
                 value={form.brand}
                 onChange={(e) => handleChange('brand', e.target.value)}
                 className={getFieldClassName('brand')}
+                style={getFieldStyle('brand')}
               />
             </div>
           </div>
@@ -455,9 +486,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* 数量 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label
-              className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100"
-            >
+              <label className={labelClassName}>
                 Required Quantity
               </label>
               <input
@@ -465,14 +494,12 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 min="0"
                 value={form.requiredQuantity}
                 onChange={(e) => handleChange('requiredQuantity', parseInt(e.target.value) || 0)}
-                className="input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                className={inputBaseClass}
               />
             </div>
 
             <div>
-              <label
-              className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100"
-            >
+              <label className={labelClassName}>
                 Owned Quantity
               </label>
               <input
@@ -480,7 +507,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 min="0"
                 value={form.ownedQuantity}
                 onChange={(e) => handleChange('ownedQuantity', parseInt(e.target.value) || 0)}
-                className="input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                className={inputBaseClass}
               />
             </div>
           </div>
@@ -488,8 +515,8 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* 重量・価格 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-                Weight (grams) {bulkMode && emptyFields.includes('weightGrams') && <span className="text-red-600">!</span>}
+              <label className={labelClassName}>
+                Weight (grams) {bulkMode && emptyFields.includes('weightGrams') && <span style={{ color: errorTone.text }}>!</span>}
               </label>
               <input
                 type="number"
@@ -497,12 +524,13 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 value={form.weightGrams || ''}
                 onChange={(e) => handleChange('weightGrams', e.target.value ? parseInt(e.target.value) : undefined)}
                 className={getFieldClassName('weightGrams')}
+                style={getFieldStyle('weightGrams')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-                Price (¥) {bulkMode && emptyFields.includes('priceCents') && <span className="text-red-600">!</span>}
+              <label className={labelClassName}>
+                Price (¥) {bulkMode && emptyFields.includes('priceCents') && <span style={{ color: errorTone.text }}>!</span>}
               </label>
               <input
                 type="number"
@@ -510,19 +538,21 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 value={form.priceCents ? Math.round(form.priceCents / 100) : ''}
                 onChange={(e) => handleChange('priceCents', e.target.value ? parseInt(e.target.value) * 100 : undefined)}
                 className={getFieldClassName('priceCents')}
+                style={getFieldStyle('priceCents')}
               />
             </div>
           </div>
 
           {/* カテゴリ選択 */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
-              Category * {bulkMode && emptyFields.includes('categoryId') && <span className="text-red-600">!</span>}
+            <label className={labelClassName}>
+              Category * {bulkMode && emptyFields.includes('categoryId') && <span style={{ color: errorTone.text }}>!</span>}
             </label>
             <select
               value={form.categoryId}
               onChange={(e) => handleChange('categoryId', e.target.value)}
               className={getFieldClassName('categoryId')}
+              style={getFieldStyle('categoryId')}
             >
               <option value="">Select Category</option>
               {categories.map(category => (
@@ -536,15 +566,15 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* 会計区分・キット包含 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+              <label className={labelClassName}>
                 Weight Class
               </label>
               <select
                 value={form.weightClass}
                 onChange={(e) => handleChange('weightClass', e.target.value as WeightClass)}
                 disabled={isBig3}
-                className={`input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 ${
-                  isBig3 ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''
+                className={`${inputBaseClass} ${
+                  isBig3 ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}
               >
                 <option value="base">Base - 背負って運ぶ</option>
@@ -552,7 +582,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                 <option value="consumable">Consumable - 消費物</option>
               </select>
               {isBig3 && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-gray-500">
                   Big3カテゴリのため会計はBaseに固定
                 </p>
               )}
@@ -564,9 +594,9 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
                   type="checkbox"
                   checked={form.isInKit}
                   onChange={(e) => handleChange('isInKit', e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded border-gray-300 text-gray-700 focus:ring-gray-500"
                 />
-                <span className="ml-2 text-sm text-gray-900 dark:text-gray-100">
+                <span className="ml-2 text-sm text-gray-900">
                   キットに含める（集計対象）
                 </span>
               </label>
@@ -576,15 +606,13 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           {/* 季節・優先度 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label
-              className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100"
-            >
+              <label className={labelClassName}>
                 Season
               </label>
               <select
                 value={form.season}
                 onChange={(e) => handleChange('season', e.target.value)}
-                className="input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                className={inputBaseClass}
               >
                 <option value="">All seasons</option>
                 <option value="spring">Spring</option>
@@ -595,15 +623,13 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
             </div>
 
             <div>
-              <label
-              className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100"
-            >
+              <label className={labelClassName}>
                 Priority (1=High, 5=Low)
               </label>
               <select
                 value={form.priority}
                 onChange={(e) => handleChange('priority', parseInt(e.target.value))}
-                className="input w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2"
+                className={inputBaseClass}
               >
                 <option value={1}>1 - Critical</option>
                 <option value={2}>2 - High</option>
@@ -616,59 +642,59 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
 
           {/* ボタン */}
           {bulkMode && (
-            <div className="flex justify-between pt-4 border-t border-gray-300 dark:border-gray-700">
+            <div className="flex justify-between pt-4 neu-divider">
               <div className="flex space-x-2">
-                <button
+                <Button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  variant="secondary"
                 >
                   Cancel All
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleSkip}
-                  className="px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  variant="secondary"
                 >
                   Skip
-                </button>
+                </Button>
               </div>
 
               <div className="flex space-x-2">
-                <button
+                <Button
                   type="button"
                   onClick={handlePrevious}
                   disabled={currentBulkIndex === 0}
-                  className="px-4 py-2 rounded-md text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  variant="secondary"
                 >
                   ← Previous
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors font-medium"
+                  variant="primary"
                 >
                   {currentBulkIndex === bulkGears.length - 1 && 'Save & Finish'}
                   {currentBulkIndex !== bulkGears.length - 1 && 'Save & Next →'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
           {!bulkMode && (
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-300 dark:border-gray-700">
-              <button
+            <div className="flex justify-end space-x-3 pt-4 neu-divider">
+              <Button
                 type="button"
                 onClick={onClose}
-                className="btn-secondary px-4 py-2 rounded-md"
+                variant="secondary"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="btn-primary px-4 py-2 rounded-md"
+                variant="primary"
               >
                 {(editingGear || gear) && 'Update'}
                 {!(editingGear || gear) && 'Add'} Gear
-              </button>
+              </Button>
             </div>
           )}
         </form>

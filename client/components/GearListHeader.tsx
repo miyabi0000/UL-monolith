@@ -28,82 +28,45 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
   onSort
 }) => {
   return (
-    <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="relative z-20 flex items-center justify-between px-3 py-2 neu-divider h-11">
       <div className="flex items-center gap-3">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+        <h3 className="font-semibold text-sm text-gray-900 tracking-tight">
           GEAR LIST
         </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500 tabular-nums">
           {itemCount} items
         </span>
-
-        {/* ViewSwitcher統合 */}
-        <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
-          <button
-            onClick={() => onViewChange('card')}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-              currentView === 'card'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
-            aria-label="Card view"
-          >
-            Card
-          </button>
-          <button
-            onClick={() => onViewChange('table')}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-              currentView === 'table'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
-            aria-label="Table view"
-          >
-            Table
-          </button>
-          <button
-            onClick={() => onViewChange('compare')}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-              currentView === 'compare'
-                ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}
-            aria-label="Comparison view"
-          >
-            Compare
-          </button>
-        </div>
 
         {/* ソート機能 */}
         {onSort && (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Sort by:</span>
+            <span className="text-xs text-gray-500">Sort by:</span>
             <button
               onClick={() => onSort('name')}
-              className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'name'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  : 'bg-transparent text-gray-500'
               }`}
             >
               Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
             </button>
             <button
               onClick={() => onSort('weight')}
-              className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'weight'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  : 'bg-transparent text-gray-500'
               }`}
             >
               Weight {sortField === 'weight' && (sortDirection === 'asc' ? '↑' : '↓')}
             </button>
             <button
               onClick={() => onSort('price')}
-              className={`px-2.5 py-1 text-xs rounded transition-colors border ${
+              className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'price'
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700'
+                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  : 'bg-transparent text-gray-500'
               }`}
             >
               Price {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -112,12 +75,45 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
+        <div className="inline-flex rounded-md p-0.5 bg-white/50 neu-inset">
+          <button
+            onClick={() => onViewChange('card')}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+              currentView === 'card' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
+            }`}
+            aria-label="Card view"
+          >
+            Card
+          </button>
+          <button
+            onClick={() => onViewChange('table')}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+              currentView === 'table' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
+            }`}
+            aria-label="Table view"
+          >
+            Table
+          </button>
+          <button
+            onClick={() => onViewChange('compare')}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+              currentView === 'compare' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500'
+            }`}
+            aria-label="Comparison view"
+          >
+            A|B
+          </button>
+        </div>
         <button
           onClick={onShowForm}
-          className="btn-primary btn-xs"
+          className="p-1.5 rounded-md bg-gray-200 text-gray-800 neu-raised hover:bg-gray-300 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          aria-label="Add item"
+          title="Add"
         >
-          + ADD
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+          </svg>
         </button>
         {onToggleCheckboxes && (
           <BulkActionMenu

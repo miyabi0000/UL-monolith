@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { db } from '../database/connection';
+import { sendError, sendSuccess } from './shared/httpResponse';
+import { DEMO_USER_ID } from './shared/userContext';
 import { 
   validateCategoryInput, 
   normalizeCategoryName, 
@@ -8,9 +10,6 @@ import {
 
 const router = Router();
 
-// デモユーザーID（認証実装までの仮ID）
-const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
-
 /**
  * GET /api/v1/categories - 全カテゴリ取得
  */
@@ -18,17 +17,13 @@ router.get('/', async (req, res) => {
   try {
     const categories = await db.getCategories(DEMO_USER_ID);
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: categories
     });
   } catch (error) {
     console.error('Error fetching categories:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch categories',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to fetch categories', error);
   }
 });
 
@@ -42,23 +37,16 @@ router.get('/:id', async (req, res) => {
     const category = categories.find(c => c.id === id);
 
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+      return sendError(res, 'Category not found', undefined, 404);
     }
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: category
     });
   } catch (error) {
     console.error('Error fetching category:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to fetch category', error);
   }
 });
 
@@ -72,10 +60,7 @@ router.post('/', async (req, res) => {
     // バリデーション（共通関数使用）
     const validationError = validateCategoryInput(name, color);
     if (validationError) {
-      return res.status(400).json({
-        success: false,
-        message: validationError.message
-      });
+      return sendError(res, validationError.message, undefined, 400);
     }
 
     const normalizedName = normalizeCategoryName(name);
@@ -83,10 +68,7 @@ router.post('/', async (req, res) => {
     // 重複チェック
     const existingCategories = await db.getCategories(DEMO_USER_ID);
     if (existingCategories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
-      return res.status(409).json({
-        success: false,
-        message: 'Category with this name already exists'
-      });
+      return sendError(res, 'Category with this name already exists', undefined, 409);
     }
 
     const newCategory = await db.createCategory(
@@ -95,18 +77,14 @@ router.post('/', async (req, res) => {
       DEMO_USER_ID
     );
 
-    res.status(201).json({
+    return sendSuccess(res, {
       success: true,
       data: newCategory,
       message: 'Category created successfully'
-    });
+    }, 201);
   } catch (error) {
     console.error('Error creating category:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to create category', error);
   }
 });
 
@@ -123,18 +101,12 @@ router.put('/:id', async (req, res) => {
     const category = categories.find(c => c.id === id);
     
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+      return sendError(res, 'Category not found', undefined, 404);
     }
 
     // "Other" カテゴリーの名前変更を保護
     if ((category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') && name !== undefined) {
-      return res.status(403).json({
-        success: false,
-        message: 'Cannot rename the "Other" category. This is a system-protected category.'
-      });
+      return sendError(res, 'Cannot rename the "Other" category. This is a system-protected category.', undefined, 403);
     }
 
     // バリデーション（共通関数使用）
@@ -144,10 +116,7 @@ router.put('/:id', async (req, res) => {
         color !== undefined ? color : category.color
       );
       if (validationError) {
-        return res.status(400).json({
-          success: false,
-          message: validationError.message
-        });
+        return sendError(res, validationError.message, undefined, 400);
       }
     }
 
@@ -157,10 +126,7 @@ router.put('/:id', async (req, res) => {
       if (categories.some(cat => 
         cat.id !== id && cat.name.toLowerCase() === normalizedName.toLowerCase()
       )) {
-        return res.status(409).json({
-          success: false,
-          message: 'Category with this name already exists'
-        });
+        return sendError(res, 'Category with this name already exists', undefined, 409);
       }
     }
 
@@ -171,18 +137,14 @@ router.put('/:id', async (req, res) => {
 
     const updatedCategory = await db.updateCategory(id, updates);
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       data: updatedCategory,
       message: 'Category updated successfully'
     });
   } catch (error) {
     console.error('Error updating category:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to update category', error);
   }
 });
 
@@ -198,48 +160,32 @@ router.delete('/:id', async (req, res) => {
     const category = categories.find(c => c.id === id);
     
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+      return sendError(res, 'Category not found', undefined, 404);
     }
 
     // "Other" カテゴリーの削除を保護
     if (category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') {
-      return res.status(403).json({
-        success: false,
-        message: 'Cannot delete the "Other" category. This is a system-protected category.'
-      });
+      return sendError(res, 'Cannot delete the "Other" category. This is a system-protected category.', undefined, 403);
     }
 
     const deleted = await db.deleteCategory(id);
 
     if (!deleted) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to delete category'
-      });
+      return sendError(res, 'Failed to delete category');
     }
 
-    res.json({
+    return sendSuccess(res, {
       success: true,
       message: 'Category deleted successfully'
     });
   } catch (error) {
     // カテゴリが使用中の場合
     if (error instanceof Error && error.message.includes('associated items')) {
-      return res.status(409).json({
-        success: false,
-        message: 'Cannot delete category with associated items. Please reassign or delete items first.'
-      });
+      return sendError(res, 'Cannot delete category with associated items. Please reassign or delete items first.', undefined, 409);
     }
 
     console.error('Error deleting category:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete category',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    return sendError(res, 'Failed to delete category', error);
   }
 });
 
