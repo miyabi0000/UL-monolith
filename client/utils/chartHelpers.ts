@@ -5,11 +5,23 @@ import {
   ChartScope,
   ChartFocus,
   DonutSegment,
-  Category,
   isBig3Category,
-  DUAL_RING_COLORS
+  DUAL_RING_COLORS,
+  ChartViewMode
 } from './types';
 import { COLORS } from './designSystem';
+
+/**
+ * チャート軸ラベル用コンパクトフォーマット
+ * 重量: 1000g以上は kg 表示、コスト: 10000円以上は 万 表示
+ */
+export const formatChartAxisValue = (value: number, viewMode: ChartViewMode): string => {
+  if (viewMode === 'cost') {
+    const yen = Math.round(value / 100)
+    return yen >= 10000 ? `¥${(yen / 10000).toFixed(1)}万` : `¥${yen.toLocaleString()}`
+  }
+  return value >= 1000 ? `${(value / 1000).toFixed(1)}kg` : `${value}g`
+}
 
 export const getQuantityForDisplayMode = (
   item: GearItemWithCalculated,
@@ -18,17 +30,6 @@ export const getQuantityForDisplayMode = (
   if (quantityDisplayMode === 'owned') return item.ownedQuantity;
   if (quantityDisplayMode === 'all') return item.requiredQuantity;
   return Math.max(0, item.requiredQuantity - item.ownedQuantity);
-};
-
-export const getCategoryColor = (systemName: string): string => {
-  const colorMap: { [key: string]: string } = {
-    'Clothing': '#FF6B6B',
-    'Sleep': '#4ECDC4',
-    'Pack': '#FFE66D',
-    'Electronics': '#4D96FF',
-    'Hygiene': '#A66DFF'
-  };
-  return colorMap[systemName] || COLORS.gray[500];
 };
 
 export const calculateChartData = (
@@ -159,8 +160,7 @@ export function calculateInnerRingData(
  * Big3内訳を計算（Pack/Shelter/Sleep）
  */
 export function calculateBig3Breakdown(
-  items: GearItemWithCalculated[],
-  _categories: Category[]
+  items: GearItemWithCalculated[]
 ): DonutSegment[] {
   const big3Items = items.filter(i => isBig3Category(i.category));
 
@@ -200,8 +200,7 @@ export function calculateBig3Breakdown(
  * カテゴリ内訳を計算
  */
 export function calculateCategoryBreakdown(
-  items: GearItemWithCalculated[],
-  _categories: Category[]
+  items: GearItemWithCalculated[]
 ): DonutSegment[] {
   const categoryMap = new Map<string, { items: GearItemWithCalculated[]; color: string; name: string; isBig3: boolean }>();
 
@@ -241,22 +240,18 @@ export function calculateCategoryBreakdown(
 export function calculateOuterRingData(
   items: GearItemWithCalculated[],
   scope: ChartScope,
-  focus: ChartFocus,
-  categories: Category[]
+  focus: ChartFocus
 ): DonutSegment[] {
   const scopedItems = filterByScope(items, scope);
 
   if (focus === 'big3') {
-    // Big3カテゴリの内訳（Pack/Shelter/Sleep）
-    return calculateBig3Breakdown(scopedItems, categories);
+    return calculateBig3Breakdown(scopedItems);
   }
 
   if (focus === 'other') {
-    // 非Big3カテゴリの内訳
     const nonBig3Items = scopedItems.filter(i => !isBig3Category(i.category));
-    return calculateCategoryBreakdown(nonBig3Items, categories);
+    return calculateCategoryBreakdown(nonBig3Items);
   }
 
-  // focus === 'all': 全カテゴリ内訳
-  return calculateCategoryBreakdown(scopedItems, categories);
+  return calculateCategoryBreakdown(scopedItems);
 }
