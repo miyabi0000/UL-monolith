@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, isBig3Category } from '../utils/types';
+import { GearItemWithCalculated, GearFieldValue, Category, QuantityDisplayMode, ChartViewMode, ChartFocus, Pack, isBig3Category } from '../utils/types';
 import CardGridView from './DetailPanel/CardGridView';
 import ComparisonTable from './ComparisonTable';
-import TableHeader, { SortField, SortDirection, Currency } from './GearTable/TableHeader';
+import TableHeader from './GearTable/TableHeader';
 import TableRow from './GearTable/TableRow';
 import BulkActionBar from './BulkActionBar';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { filterByCategories, sortItems } from '../utils/sortHelpers';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { useComparisonMode } from '../hooks/useComparisonMode';
+import { useGearSort } from '../hooks/useGearSort';
+import { GearListProvider } from '../hooks/useGearListContext';
+import { useChangedFields } from '../hooks/useChangedFields';
+import type { Currency } from './GearTable/TableHeader';
 
 interface GearDetailPanelProps {
   items: GearItemWithCalculated[];
@@ -25,6 +29,11 @@ interface GearDetailPanelProps {
   filteredByCategory?: string[];
   chartFocusFilter?: ChartFocus;
   selectedItemId?: string | null;
+  activePack?: Pack | null;
+  activePackItemIds?: string[];
+  onTogglePackItem?: (itemId: string) => void;
+  onGearDragStart?: (itemId: string) => void;
+  onGearDragEnd?: () => void;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -42,16 +51,19 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   filteredByCategory = [],
   chartFocusFilter = 'all',
   selectedItemId,
+  activePack = null,
+  activePackItemIds = [],
+  onTogglePackItem,
+  onGearDragStart,
+  onGearDragEnd,
 }) => {
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [changedFields, setChangedFields] = useState<Record<string, Set<string>>>({});
+  const { sortField, sortDirection, handleSort } = useGearSort();
+  const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
   const [currency, setCurrency] = useState<Currency>(() => {
     const saved = localStorage.getItem('currency');
     return (saved === 'JPY' || saved === 'USD') ? saved : 'JPY';
   });
 
-  // 通貨設定をlocalStorageに保存
   useEffect(() => {
     localStorage.setItem('currency', currency);
   }, [currency]);
@@ -60,52 +72,31 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     setCurrency(prev => prev === 'JPY' ? 'USD' : 'JPY');
   }, []);
 
-  // Compareモード用の状態
   const isCompareMode = gearViewMode === 'compare';
   const MAX_COMPARE_ITEMS = 4;
 
   const quantityFilteredItems = useMemo(() => {
-    if (quantityDisplayMode === 'owned') {
-      return items.filter(item => item.ownedQuantity > 0);
-    }
-    if (quantityDisplayMode === 'need') {
-      return items.filter(item => item.shortage > 0);
-    }
+    if (quantityDisplayMode === 'owned') return items.filter(item => item.ownedQuantity > 0);
+    if (quantityDisplayMode === 'need') return items.filter(item => item.shortage > 0);
     return items;
   }, [items, quantityDisplayMode]);
 
-  // Big3/Otherフィルタ（Weight-Classモードのチャートと連動）
   const big3FilteredItems = useMemo(() => {
-    if (chartFocusFilter === 'all') {
-      return quantityFilteredItems;
-    }
-    if (chartFocusFilter === 'big3') {
-      return quantityFilteredItems.filter(item => isBig3Category(item.category));
-    }
-    // chartFocusFilter === 'other'
+    if (chartFocusFilter === 'all') return quantityFilteredItems;
+    if (chartFocusFilter === 'big3') return quantityFilteredItems.filter(item => isBig3Category(item.category));
     return quantityFilteredItems.filter(item => !isBig3Category(item.category));
   }, [quantityFilteredItems, chartFocusFilter]);
 
-  const chartFilteredItems = useMemo(() => {
-    return filterByCategories(big3FilteredItems, filteredByCategory);
-  }, [big3FilteredItems, filteredByCategory]);
+  const chartFilteredItems = useMemo(
+    () => filterByCategories(big3FilteredItems, filteredByCategory),
+    [big3FilteredItems, filteredByCategory]
+  );
 
-  // ソート処理（sortHelpers を使用）
   const processedItems = useMemo(
     () => sortItems(chartFilteredItems, sortField, sortDirection),
     [chartFilteredItems, sortField, sortDirection]
   );
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  // 選択ロジック（useItemSelection フックを使用）
   const {
     selectedIds,
     selectedItems,
@@ -128,11 +119,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
 
   const handleQuantityDisplayModeChange = useCallback(() => {
     const next =
-      quantityDisplayMode === 'owned'
-        ? 'need'
-        : quantityDisplayMode === 'need'
-          ? 'all'
-          : 'owned';
+      quantityDisplayMode === 'owned' ? 'need' :
+      quantityDisplayMode === 'need' ? 'all' : 'owned';
     onQuantityDisplayModeChange(next);
   }, [quantityDisplayMode, onQuantityDisplayModeChange]);
 
@@ -142,11 +130,10 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   useEffect(() => {
     if (!showCheckboxes) {
       clearSelection();
-      setChangedFields({});
+      clearChangedFields();
     }
-  }, [showCheckboxes, clearSelection]);
+  }, [showCheckboxes, clearSelection, clearChangedFields]);
 
-  // 比較モードロジック（useComparisonMode フックを使用）
   const {
     showComparisonModal,
     validationResult,
@@ -159,46 +146,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     selectedItems,
     onUpdateItem,
     onClearSelection: clearSelection,
-    onRemoveItem: (itemId) => {
-      setSelectedIds(prev => prev.filter(id => id !== itemId));
-    },
+    onRemoveItem: (itemId) => setSelectedIds(prev => prev.filter(id => id !== itemId)),
     onDeleteItem: onDelete,
   });
 
-  const handleFieldChange = useCallback(async (id: string, field: string, value: GearFieldValue) => {
-    // 変更中フィールドをマーク
-    setChangedFields(prev => {
-      const updated = { ...prev };
-      if (!updated[id]) {
-        updated[id] = new Set();
-      } else {
-        updated[id] = new Set(updated[id]);
-      }
-      updated[id].add(field);
-      return updated;
-    });
-
-    try {
-      await onUpdateItem(id, field, value);
-    } catch (err) {
-      console.error('Failed to update field:', err);
-    } finally {
-      // 成功・失敗に関わらずフィールドをクリア
-      setChangedFields(prev => {
-        const updated = { ...prev };
-        if (updated[id]) {
-          updated[id] = new Set(updated[id]);
-          updated[id].delete(field);
-          if (updated[id].size === 0) {
-            delete updated[id];
-          }
-        }
-        return updated;
-      });
-    }
-  }, [onUpdateItem]);
-
-  // Compareモード時の比較表示（縦型テーブル）
+  // Compareモード時の比較表示
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
     return (
       <ComparisonTable
@@ -222,16 +174,29 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           viewMode={viewMode}
           quantityDisplayMode={quantityDisplayMode}
           selectedItemId={selectedItemId}
+          activePackName={activePack?.name}
+          activePackItemIds={activePackItemIds}
+          onTogglePackItem={onTogglePackItem}
+          onGearDragStart={onGearDragStart}
+          onGearDragEnd={onGearDragEnd}
         />
       </div>
     );
   }
 
-  // Tableモードまたはcompareモード（テーブル表示）
-  if (gearViewMode === 'table' || gearViewMode === 'compare') {
-    return (
-      <div className="w-full h-full min-w-0 overflow-y-auto">
-        {/* 一括操作バー（チェックボックス表示時のみ） */}
+  // Table / Compare モード
+  const contextValue = {
+    quantityDisplayMode,
+    onQuantityDisplayModeChange: handleQuantityDisplayModeChange,
+    currency,
+    onCurrencyChange: handleCurrencyChange,
+    showCheckboxes: shouldShowCheckboxes,
+    isEditable,
+  };
+
+  return (
+    <GearListProvider value={contextValue}>
+      <div className="w-full h-full min-w-0 overflow-auto">
         {shouldShowCheckboxes && (
           <div style={{ padding: `${SPACING_SCALE.base}px` }}>
             <BulkActionBar
@@ -249,23 +214,15 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
             />
           </div>
         )}
-
-        {/* テーブル表示 */}
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full" style={{ minWidth: '600px' }}>
             <TableHeader
-              showCheckboxes={shouldShowCheckboxes}
               isAllSelected={isAllSelected}
               isPartiallySelected={isPartiallySelected}
               sortField={sortField}
               sortDirection={sortDirection}
               onSort={handleSort}
               onSelectAll={handleSelectAll}
-              quantityDisplayMode={quantityDisplayMode}
-              onQuantityDisplayModeChange={handleQuantityDisplayModeChange}
-              currency={currency}
-              onCurrencyChange={handleCurrencyChange}
-              isEditable={isEditable}
             />
             <tbody>
               {processedItems.map((item) => (
@@ -273,34 +230,20 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   key={item.id}
                   item={item}
                   categories={categories}
-                  showCheckboxes={shouldShowCheckboxes}
                   isSelected={selectedIds.includes(item.id)}
                   isHighlighted={selectedItemId === item.id}
                   changedFields={changedFields[item.id]}
-                  quantityDisplayMode={quantityDisplayMode}
-                  isEditable={isEditable}
-                  currency={currency}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}
+                  onGearDragStart={onGearDragStart}
+                  onGearDragEnd={onGearDragEnd}
                 />
               ))}
             </tbody>
           </table>
         </div>
       </div>
-    );
-  }
-
-  // デフォルト
-  return (
-    <div className="w-full h-full min-w-0 overflow-hidden">
-      <CardGridView
-        items={chartFilteredItems}
-        viewMode={viewMode}
-        quantityDisplayMode={quantityDisplayMode}
-        selectedItemId={selectedItemId}
-      />
-    </div>
+    </GearListProvider>
   );
 };
 

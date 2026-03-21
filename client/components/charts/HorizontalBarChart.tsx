@@ -39,7 +39,7 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload
     ? `¥${Math.round(item.value / 100).toLocaleString()}`
     : `${item.value.toLocaleString()}${item.unit}`
   return (
-    <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-md shadow-md px-2.5 py-1.5 text-xs pointer-events-none">
+    <div className="bg-white dark:bg-slate-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
       <div className="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">{item.name}</div>
       <div className="text-gray-500 dark:text-gray-400">{formattedValue} · {item.percentage}%</div>
     </div>

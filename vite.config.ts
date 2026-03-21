@@ -7,22 +7,7 @@ export default defineConfig({
   root: 'client',
   build: {
     outDir: '../dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('/react/')) return 'vendor-react';
-            if (id.includes('recharts')) return 'vendor-charts';
-            if (id.includes('openai') || id.includes('axios') || id.includes('cheerio')) return 'vendor-llm';
-            return 'vendor-misc';
-          }
-          if (id.includes('/client/components/GearChart')) return 'feature-gear-chart';
-          if (id.includes('/client/components/ChatPopup')) return 'feature-chat';
-          if (id.includes('/client/components/CategoryManager')) return 'feature-category';
-        }
-      }
-    }
+    emptyOutDir: true
   },
   publicDir: '../public',
   resolve: {
@@ -44,5 +29,4 @@ export default defineConfig({
     }
   }
 })
-
 

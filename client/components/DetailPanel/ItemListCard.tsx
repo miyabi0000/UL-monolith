@@ -24,7 +24,7 @@ const ItemListCard: React.FC<ItemListCardProps> = ({ item, percentage, onClick, 
   return (
     <button
       onClick={() => onClick(item.id)}
-      className="w-full px-3 py-3 rounded border border-gray-200
+      className="w-full px-3 py-3 rounded neu-raised
         hover:bg-gray-50 transition-colors text-left"
     >
       {/* グリッドレイアウト: 画像 | 名前+ブランド | 重量+メタ情報 | 不足インジケーター */}
