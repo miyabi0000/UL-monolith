@@ -170,6 +170,18 @@ export interface GearList {
   createdAt: string;
 }
 
+export interface Pack {
+  id: string;
+  userId: string;
+  name: string;
+  routeName?: string;
+  description?: string;
+  itemIds: string[];
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // チャート用データ
 export interface ChartData {
   name: string;

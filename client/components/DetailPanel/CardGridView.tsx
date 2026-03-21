@@ -7,9 +7,26 @@ interface CardGridViewProps {
   viewMode: 'weight' | 'cost';
   quantityDisplayMode: QuantityDisplayMode;
   selectedItemId?: string | null;
+  disableSort?: boolean;
+  activePackName?: string;
+  activePackItemIds?: string[];
+  onTogglePackItem?: (itemId: string) => void;
+  onGearDragStart?: (itemId: string) => void;
+  onGearDragEnd?: () => void;
 }
 
-const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDisplayMode, selectedItemId }) => {
+const CardGridView: React.FC<CardGridViewProps> = ({
+  items,
+  viewMode,
+  quantityDisplayMode,
+  selectedItemId,
+  disableSort,
+  activePackName,
+  activePackItemIds = [],
+  onTogglePackItem,
+  onGearDragStart,
+  onGearDragEnd
+}) => {
   const getItemValue = (item: GearItemWithCalculated) => {
     const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
     return viewMode === 'cost'
@@ -17,13 +34,14 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
       : (item.weightGrams || 0) * quantity;
   };
 
-  // アイテムを表示値（weight/cost）昇順でソート
+  // アイテムを表示値（weight/cost）昇順でソート（編集中は無効）
   const sortedItems = useMemo(() => {
+    if (disableSort) return items;
     return [...items].sort((a, b) => getItemValue(a) - getItemValue(b));
-  }, [items, quantityDisplayMode, viewMode]);
+  }, [items, quantityDisplayMode, viewMode, disableSort]);
 
   return (
-    <div className="p-3 space-y-3 overflow-y-auto h-full w-full min-w-0">
+    <div className="p-2 sm:p-3 space-y-2 w-full min-w-0">
       {/* アイテムグリッド */}
       <div>
         <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
@@ -35,20 +53,45 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
             No items
           </p>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-1.5">
+          <div className="grid grid-cols-3 gap-1">
             {sortedItems.map(item => {
               const imageUrl = item.imageUrl || null;
               const isHighlighted = selectedItemId === item.id;
+              const isInActivePack = activePackItemIds.includes(item.id);
 
               return (
                 <div
                   key={item.id}
-                  className={`aspect-square relative overflow-hidden rounded-md border transition-all flex items-center justify-center ${
+                  draggable={Boolean(onGearDragStart)}
+                  onDragStart={(event) => {
+                    if (!onGearDragStart) return;
+                    event.dataTransfer.effectAllowed = 'copy';
+                    event.dataTransfer.setData('application/x-gear-id', item.id);
+                    event.dataTransfer.setData('text/plain', item.id);
+                    onGearDragStart(item.id);
+                  }}
+                  onDragEnd={onGearDragEnd}
+                  className={`aspect-square relative overflow-hidden bg-white transition-all flex items-center justify-center ${
                     isHighlighted
-                      ? 'border-gray-500 ring-2 ring-gray-400/50 shadow-md'
-                      : 'border-gray-100 hover:border-gray-300 hover:shadow-sm'
-                  } bg-white`}
+                      ? 'ring-2 ring-gray-500/70'
+                      : ''
+                  }`}
                 >
+                  {activePackName && onTogglePackItem && (
+                    <button
+                      type="button"
+                      onClick={() => onTogglePackItem(item.id)}
+                      className={[
+                        'absolute top-1 right-1 z-10 h-5 min-w-[34px] rounded-md px-1.5 text-[9px] font-semibold transition-colors',
+                        isInActivePack
+                          ? 'bg-gray-800 text-white dark:bg-slate-100 dark:text-slate-900'
+                          : 'bg-white/90 text-gray-600 dark:bg-slate-700/90 dark:text-gray-300'
+                      ].join(' ')}
+                      title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
+                    >
+                      {isInActivePack ? 'IN' : 'OUT'}
+                    </button>
+                  )}
                   {imageUrl ? (
                     <img
                       src={imageUrl}
@@ -57,7 +100,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({ items, viewMode, quantityDi
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center p-1">
+                    <div className="w-full h-full flex items-center justify-center p-1 bg-white">
                       <span className="text-[9px] text-gray-400 text-center leading-tight line-clamp-2">
                         {item.name}
                       </span>

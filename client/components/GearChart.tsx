@@ -5,7 +5,7 @@ import BackpackIcon from './icons/BackpackIcon'
 import ScaleIcon from './icons/ScaleIcon'
 import YenIcon from './icons/YenIcon'
 import { useResponsiveSize } from '../hooks/useResponsiveSize'
-import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
@@ -425,7 +425,7 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   itemCount
 }) => {
   return (
-    <div className="px-2 py-1.5 border-t border-gray-200 dark:border-slate-600">
+    <div className="px-2 py-1.5 neu-divider">
       <div className="flex justify-center mb-1.5">
         <SegmentedControl
           options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
@@ -505,6 +505,10 @@ interface GearChartProps {
   // Weight-Class用
   weightBreakdown?: WeightBreakdown | null
   ulStatus?: ULStatus | null
+  activePack?: Pack | null
+  activePackItemIds?: string[]
+  onTogglePackItem?: (itemId: string) => void
+  onAddItemToPack?: (itemId: string) => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -530,7 +534,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   showCheckboxes,
   onToggleCheckboxes,
   weightBreakdown,
-  ulStatus
+  ulStatus,
+  activePack,
+  activePackItemIds = [],
+  onTogglePackItem,
+  onAddItemToPack
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [centerPulse, setCenterPulse] = useState(false)
@@ -538,6 +546,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
+  const [draggedGearId, setDraggedGearId] = useState<string | null>(null)
+  const [isDropTargetActive, setIsDropTargetActive] = useState(false)
+  const [dropFlash, setDropFlash] = useState(false)
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
@@ -764,15 +775,41 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setChartFocus(prev => prev === focus ? 'all' : focus)
   }, [])
 
+  const handlePackDropDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!onAddItemToPack || !activePack) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    if (!isDropTargetActive) {
+      setIsDropTargetActive(true)
+    }
+  }, [onAddItemToPack, activePack, isDropTargetActive])
+
+  const handlePackDropLeave = useCallback(() => {
+    setIsDropTargetActive(false)
+  }, [])
+
+  const handlePackDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (!onAddItemToPack || !activePack) return
+    event.preventDefault()
+    const gearId = event.dataTransfer.getData('application/x-gear-id') || event.dataTransfer.getData('text/plain')
+    if (!gearId) return
+
+    onAddItemToPack(gearId)
+    setDraggedGearId(null)
+    setIsDropTargetActive(false)
+    setDropFlash(true)
+    window.setTimeout(() => setDropFlash(false), 400)
+  }, [onAddItemToPack, activePack])
+
   // ==================== レンダリング ====================
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none border-gray-300 dark:border-slate-500' : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none' : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
-          <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
+          <div className={`flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
@@ -850,6 +887,46 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               </>
             )}
           </div>
+
+          {activePack && onAddItemToPack && (activePackItemIds.length === 0 || draggedGearId !== null) && !isChartCollapsed && (
+            <div className="px-2 pt-2">
+              <div
+                onDragOver={handlePackDropDragOver}
+                onDragEnter={handlePackDropDragOver}
+                onDragLeave={handlePackDropLeave}
+                onDrop={handlePackDrop}
+                className={[
+                  'rounded-lg border border-dashed px-3 py-2 transition-all duration-150',
+                  (isDropTargetActive || dropFlash)
+                    ? 'border-gray-500 bg-gray-100/85 dark:border-slate-300 dark:bg-slate-700/80'
+                    : 'border-gray-300 bg-white/70 dark:border-slate-600 dark:bg-slate-800/45'
+                ].join(' ')}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
+                      <path d="M9 20V14H15V20" />
+                      <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
+                      <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                      {activePack.name}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {isDropTargetActive
+                        ? 'ドロップしてPackに追加'
+                        : activePackItemIds.length === 0
+                          ? '空のPackです。Gearをドラッグして追加'
+                          : 'ドラッグ中: ここにドロップ'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {!isChartCollapsed && (
             <>
@@ -1113,7 +1190,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
-          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-slate-600 flex-shrink-0 h-11 overflow-visible">
+          <div className="relative z-[60] flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 h-11 overflow-visible">
             <div className="flex items-center gap-1 text-xs min-w-0">
               {/* パンくずナビゲーション */}
               <button
@@ -1204,7 +1281,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <div className="relative add-menu-container z-[200] isolate">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-slate-500 shadow-sm hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
+                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -1215,7 +1292,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 py-1 z-[1000]">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg neu-raised py-1 z-[1000]">
                       <button
                         className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                         onClick={() => {
@@ -1242,7 +1319,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       </button>
                       {onShowCategoryManager && (
                         <>
-                          <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
+                          <div className="my-1 neu-divider"></div>
                           <button
                             className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                             onClick={() => {
@@ -1306,6 +1383,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
                 selectedItemId={selectedItem}
+                activePack={activePack}
+                activePackItemIds={activePackItemIds}
+                onTogglePackItem={onTogglePackItem}
+                onGearDragStart={setDraggedGearId}
+                onGearDragEnd={() => {
+                  setDraggedGearId(null)
+                  setIsDropTargetActive(false)
+                }}
               />
           </div>
         </Card>

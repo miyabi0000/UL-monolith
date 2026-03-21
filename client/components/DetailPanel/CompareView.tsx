@@ -76,7 +76,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
           <div className="overflow-x-auto -mx-3 px-3">
             <table className="w-full min-w-max text-xs">
               <thead>
-                <tr className="border-b border-gray-200">
+                <tr className="neu-divider">
                   <th className="text-left py-1.5 pr-2 text-gray-500 font-medium w-14"></th>
                   {comparedItems.map(item => (
                     <th key={item.id} className="text-center px-2 py-1.5 min-w-[72px]">
@@ -101,7 +101,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
               </thead>
               <tbody>
                 {/* Weight row */}
-                <tr className="border-b border-gray-100">
+                <tr className="neu-divider">
                   <td className="py-1.5 pr-2 text-gray-500">Weight</td>
                   {comparedItems.map(item => {
                     const weight = item.totalWeight || 0;
@@ -121,7 +121,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                   })}
                 </tr>
                 {/* Price row */}
-                <tr className="border-b border-gray-100">
+                <tr className="neu-divider">
                   <td className="py-1.5 pr-2 text-gray-500">Price</td>
                   {comparedItems.map(item => {
                     const price = item.totalPrice || 0;
@@ -141,7 +141,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                   })}
                 </tr>
                 {/* Priority row */}
-                <tr className="border-b border-gray-100">
+                <tr className="neu-divider">
                   <td className="py-1.5 pr-2 text-gray-500">Priority</td>
                   {comparedItems.map(item => (
                     <td key={item.id} className="text-center px-2 py-1.5">
@@ -152,7 +152,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                   ))}
                 </tr>
                 {/* Category row */}
-                <tr className="border-b border-gray-100">
+                <tr className="neu-divider">
                   <td className="py-1.5 pr-2 text-gray-500">Category</td>
                   {comparedItems.map(item => (
                     <td key={item.id} className="text-center px-2 py-1.5">
@@ -192,7 +192,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
           )}
 
           {/* Divider */}
-          <div className="border-t border-gray-200" />
+          <div className="neu-divider" />
         </>
       )}
 
@@ -216,10 +216,10 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                 <button
                   key={item.id}
                   onClick={() => handleToggleSelect(item.id)}
-                  className={`w-full px-3 py-3 rounded border transition-all text-left ${
+                  className={`w-full px-3 py-3 rounded transition-all text-left ${
                     isSelected
-                      ? 'border-gray-500 bg-gray-50'
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'neu-raised bg-gray-50'
+                      : 'neu-raised hover:bg-gray-50'
                   }`}
                 >
                   <div className="grid gap-3" style={{ gridTemplateColumns: '20px 48px minmax(100px, 1fr) 80px' }}>
