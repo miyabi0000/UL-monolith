@@ -10,11 +10,15 @@ interface GearAdvisorChatProps {
   onApplyEdit: (gearId: string, field: string, value: any) => Promise<void>;
 }
 
+interface SuggestedEditWithState extends SuggestedEdit {
+  _applied?: boolean;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  suggestedEdits?: SuggestedEdit[];
+  suggestedEdits?: SuggestedEditWithState[];
   timestamp: Date;
 }
 
@@ -45,15 +49,25 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
   const [applyingEdit, setApplyingEdit] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const nextMessageIdRef = useRef(1);
+
+  const createMessageId = () => {
+    const id = `msg-${Date.now()}-${nextMessageIdRef.current}`;
+    nextMessageIdRef.current += 1;
+    return id;
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+    if (!isOpen || !inputRef.current) {
+      return;
     }
+
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 100);
+    return () => window.clearTimeout(timer);
   }, [isOpen]);
 
   const handleSend = async () => {
@@ -61,7 +75,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
     if (!trimmed || isLoading) return;
 
     const userMsg: ChatMessage = {
-      id: Date.now().toString(),
+      id: createMessageId(),
       role: 'user',
       content: trimmed,
       timestamp: new Date(),
@@ -81,7 +95,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       const result = await callAdvisor(history, gearContext);
 
       const assistantMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: createMessageId(),
         role: 'assistant',
         content: result.message,
         suggestedEdits: result.suggestedEdits,
@@ -91,7 +105,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       setMessages(prev => [...prev, assistantMsg]);
     } catch (error) {
       const errMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: createMessageId(),
         role: 'assistant',
         content: `エラーが発生しました：${error instanceof Error ? error.message : '不明なエラー'}`,
         timestamp: new Date(),
@@ -121,7 +135,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
             ? {
                 ...msg,
                 suggestedEdits: msg.suggestedEdits.map((e, i) =>
-                  i === editIndex ? { ...e, _applied: true } as any : e
+                  i === editIndex ? { ...e, _applied: true } : e
                 ),
               }
             : msg
@@ -228,7 +242,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                 {/* 編集提案カード */}
                 {message.suggestedEdits && message.suggestedEdits.length > 0 && (
                   <div className="mt-2 space-y-2">
-                    {message.suggestedEdits.map((edit: any, index: number) => {
+                    {message.suggestedEdits.map((edit, index) => {
                       const key = `${message.id}-${index}`;
                       const isApplied = edit._applied === true;
                       return (

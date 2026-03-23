@@ -3,6 +3,22 @@ import { openaiClient } from './openaiClient.js';
 import { scrapeUrl } from './scraping/scrapeOrchestrator.js';
 import { PROMPTS } from './llmPrompts.js';
 
+interface AdvisorConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface GearAdvisorContext {
+  items: Array<Record<string, unknown>>;
+  weightBreakdown?: unknown;
+  ulStatus?: unknown;
+}
+
+interface AdvisorResponse {
+  message: string;
+  suggestedEdits: unknown[];
+}
+
 /**
  * LLM Service - 最小限実装
  */
@@ -105,44 +121,12 @@ export class LLMService {
    * ギアリストのコンテキストを持ちながらアドバイスや編集提案を行う
    */
   async advisorChat(
-    conversation: { role: 'user' | 'assistant'; content: string }[],
-    gearContext: {
-      items: any[];
-      weightBreakdown?: any;
-      ulStatus?: any;
-    }
-  ): Promise<{ message: string; suggestedEdits: any[] }> {
+    conversation: AdvisorConversationMessage[],
+    gearContext: GearAdvisorContext
+  ): Promise<AdvisorResponse> {
     try {
-      // ギアコンテキストをシステムプロンプトに注入
-      const gearSummary = JSON.stringify({
-        totalItems: gearContext.items.length,
-        ulStatus: gearContext.ulStatus,
-        weightBreakdown: gearContext.weightBreakdown,
-        // アイテムは上位20件に絞る（トークン節約）
-        items: gearContext.items.slice(0, 20).map(item => ({
-          id: item.id,
-          name: item.name,
-          brand: item.brand,
-          categoryId: item.categoryId,
-          weightGrams: item.weightGrams,
-          priceCents: item.priceCents,
-          weightClass: item.weightClass,
-          isInKit: item.isInKit,
-          priority: item.priority,
-          requiredQuantity: item.requiredQuantity,
-          ownedQuantity: item.ownedQuantity,
-        }))
-      }, null, 2);
-
-      const systemWithContext = `${PROMPTS.GEAR_ADVISOR_SYSTEM}
-
-## 現在のギアリスト情報
-\`\`\`json
-${gearSummary}
-\`\`\``;
-
       const response = await openaiClient.chatCompletionWithHistory(
-        systemWithContext,
+        this.buildAdvisorSystemPrompt(gearContext),
         conversation,
         1500
       );
@@ -162,10 +146,39 @@ ${gearSummary}
     }
   }
 
+  private buildAdvisorSystemPrompt(gearContext: GearAdvisorContext): string {
+    const gearSummary = JSON.stringify({
+      totalItems: gearContext.items.length,
+      ulStatus: gearContext.ulStatus,
+      weightBreakdown: gearContext.weightBreakdown,
+      // アイテムは上位20件に絞る（トークン節約）
+      items: gearContext.items.slice(0, 20).map(item => ({
+        id: item.id,
+        name: item.name,
+        brand: item.brand,
+        categoryId: item.categoryId,
+        weightGrams: item.weightGrams,
+        priceCents: item.priceCents,
+        weightClass: item.weightClass,
+        isInKit: item.isInKit,
+        priority: item.priority,
+        requiredQuantity: item.requiredQuantity,
+        ownedQuantity: item.ownedQuantity,
+      }))
+    }, null, 2);
+
+    return `${PROMPTS.GEAR_ADVISOR_SYSTEM}
+
+## 現在のギアリスト情報
+\`\`\`json
+${gearSummary}
+\`\`\``;
+  }
+
   /**
    * リスト分析
    */
-  async analyzeList(gearList: any[]): Promise<{ summary: string; tips: string[] }> {
+  async analyzeList(gearList: unknown[]): Promise<{ summary: string; tips: string[] }> {
     try {
       const listData = JSON.stringify(gearList.slice(0, 10)); // 最初の10件のみ
       const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, listData);

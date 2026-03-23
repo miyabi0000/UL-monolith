@@ -1,13 +1,42 @@
 import { Request, Response } from 'express';
 import { llmService } from '../../services/llmService.js';
 
+type AdvisorRole = 'user' | 'assistant';
+
+interface AdvisorMessage {
+  role: AdvisorRole;
+  content: string;
+}
+
+interface AdvisorRequestBody {
+  conversation?: unknown;
+  gearContext?: {
+    items?: unknown;
+    weightBreakdown?: unknown;
+    ulStatus?: unknown;
+  };
+}
+
+const isAdvisorRole = (value: unknown): value is AdvisorRole => {
+  return value === 'user' || value === 'assistant';
+};
+
+const isAdvisorMessage = (value: unknown): value is AdvisorMessage => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const maybe = value as { role?: unknown; content?: unknown };
+  return isAdvisorRole(maybe.role) && typeof maybe.content === 'string';
+};
+
 /**
  * POST /api/v1/llm/advisor - ギアアドバイザーチャット
  * ギアリストのコンテキストを持ちながらLLMとマルチターン会話を行う
  */
 export const handleAdvisorChat = async (req: Request, res: Response) => {
   try {
-    const { conversation, gearContext } = req.body;
+    const { conversation, gearContext } = req.body as AdvisorRequestBody;
 
     // バリデーション
     if (!conversation || !Array.isArray(conversation)) {
@@ -30,12 +59,10 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
         message: 'gearContext.items (array) is required'
       });
     }
+    const items = gearContext.items as Record<string, unknown>[];
 
     // 会話履歴のロール検証
-    const validRoles = ['user', 'assistant'];
-    const isValidConversation = conversation.every(
-      (msg: any) => validRoles.includes(msg.role) && typeof msg.content === 'string'
-    );
+    const isValidConversation = conversation.every(isAdvisorMessage);
     if (!isValidConversation) {
       return res.status(400).json({
         success: false,
@@ -43,9 +70,13 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[LLM] Advisor chat - ${gearContext.items.length} items, ${conversation.length} messages`);
+    console.log(`[LLM] Advisor chat - ${items.length} items, ${conversation.length} messages`);
 
-    const result = await llmService.advisorChat(conversation, gearContext);
+    const result = await llmService.advisorChat(conversation, {
+      items,
+      weightBreakdown: gearContext.weightBreakdown,
+      ulStatus: gearContext.ulStatus,
+    });
 
     res.json({
       success: true,
