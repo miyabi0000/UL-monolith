@@ -15,15 +15,25 @@ export interface SuggestedEdit {
   reason: string;
 }
 
+/** AIがメッセージ中で言及した特定ギアへの参照 */
+export interface GearRef {
+  gearId: string;
+  gearName: string;
+}
+
 export interface AdvisorResponse {
   message: string;
   suggestedEdits: SuggestedEdit[];
+  /** レスポンス内で言及されたギアの一覧（クリックでリストにフォーカス可能） */
+  gearRefs: GearRef[];
 }
 
 export interface GearAdvisorContext {
   items: GearItemWithCalculated[];
   weightBreakdown?: WeightBreakdown | null;
   ulStatus?: ULStatus | null;
+  /** 選択中パックの名前（nullなら全ギアスコープ） */
+  packName?: string | null;
 }
 
 export async function callAdvisor(
