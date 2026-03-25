@@ -7,14 +7,24 @@ import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import ProfileEditorModal from './ProfileEditorModal';
 import PackSettingsModal from './PackSettingsModal';
+import { GearItemWithCalculated } from '../utils/types';
 
 const fallbackUserId = 'local-user';
 
-interface PacksPageProps {
-  appState: ReturnType<typeof useAppState>;
+export interface AdvisorPackScope {
+  /** アドバイザーに渡すアイテム一覧（パック選択中はそのパックのみ） */
+  items: GearItemWithCalculated[];
+  /** 選択中パック名（null = 全ギアスコープ） */
+  packName: string | null;
 }
 
-export default function PacksPage({ appState }: PacksPageProps) {
+interface PacksPageProps {
+  appState: ReturnType<typeof useAppState>;
+  /** パック選択状態が変わったときに呼ばれるコールバック（アドバイザーのスコープ連携用） */
+  onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
+}
+
+export default function PacksPage({ appState, onAdvisorScopeChange }: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
@@ -23,14 +33,10 @@ export default function PacksPage({ appState }: PacksPageProps) {
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [showPackSettings, setShowPackSettings] = useState(false);
 
-  // パックが削除されたとき・初回ロード時に自動選択
+  // 選択中のパックが削除された場合のみリセット（nullはALLモードとして有効）
   useEffect(() => {
-    if (!packs.length) {
+    if (selectedPackId && !packs.some((p) => p.id === selectedPackId)) {
       setSelectedPackId(null);
-      return;
-    }
-    if (!selectedPackId || !packs.some((p) => p.id === selectedPackId)) {
-      setSelectedPackId(packs[0].id);
     }
   }, [packs, selectedPackId]);
 
@@ -38,6 +44,22 @@ export default function PacksPage({ appState }: PacksPageProps) {
     () => packs.find((p) => p.id === selectedPackId) ?? null,
     [packs, selectedPackId]
   );
+
+  // アドバイザーのスコープを親に通知（パック選択変更時）
+  const activePackItems = useMemo(
+    () =>
+      selectedPack
+        ? gearItems.filter((item) => selectedPack.itemIds.includes(item.id))
+        : null,
+    [selectedPack, gearItems]
+  );
+
+  useEffect(() => {
+    onAdvisorScopeChange?.({
+      items: activePackItems ?? gearItems,
+      packName: selectedPack?.name ?? null,
+    });
+  }, [activePackItems, gearItems, selectedPack, onAdvisorScopeChange]);
 
   const handleCreatePack = (name: string) => {
     const next = createPack(name);
