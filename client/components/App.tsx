@@ -10,12 +10,22 @@ import AppDock from './AppDock';
 
 // 遅延インポート（コード分割）
 const Login = React.lazy(() => import('./Login'));
+const GearAdvisorChat = React.lazy(() => import('./GearAdvisorChat'));
 
 export default function App() {
   const location = useLocation();
   const { user, isAuthenticated, logout, login } = useAuth();
   const appState = useAppState();
-  const { showLogin, setShowLogin } = appState;
+  const {
+    showLogin,
+    setShowLogin,
+    showAdvisor,
+    setShowAdvisor,
+    gearItems,
+    weightBreakdown,
+    ulStatus,
+    handleUpdateGear,
+  } = appState;
 
   const {
     messages,
@@ -53,6 +63,7 @@ export default function App() {
         onLogout={logout}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
+        onShowAdvisor={() => setShowAdvisor(true)}
       />
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
@@ -64,6 +75,15 @@ export default function App() {
             onLoginSuccess={handleLoginSuccess}
           />
         )}
+
+        <GearAdvisorChat
+          isOpen={showAdvisor}
+          onClose={() => setShowAdvisor(false)}
+          gearContext={{ items: gearItems, weightBreakdown, ulStatus }}
+          onApplyEdit={async (gearId, field, value) => {
+            await handleUpdateGear(gearId, { [field]: value });
+          }}
+        />
       </Suspense>
 
       {/* 右端通知ポップアップ */}
