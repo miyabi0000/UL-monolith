@@ -21,6 +21,8 @@ interface TableRowProps {
   categories: Category[]
   isSelected: boolean
   isHighlighted?: boolean
+  /** アドバイザーからのフォーカス対象かどうか（スクロール・ハイライト用） */
+  id?: string
   activePackName?: string
   isInActivePack?: boolean
   changedFields?: Set<string>
@@ -35,6 +37,7 @@ const TableRow: React.FC<TableRowProps> = ({
   categories,
   isSelected,
   isHighlighted,
+  id,
   activePackName,
   isInActivePack = false,
   changedFields,
@@ -90,6 +93,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
   return (
     <tr
+      id={id}
       className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
         isSelected
           ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'

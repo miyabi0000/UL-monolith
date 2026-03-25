@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* アドバイザーからのギアフォーカスアニメーション */
+@keyframes gear-focus-flash {
+  0%   { background-color: transparent; }
+  20%  { background-color: rgb(254 240 138 / 0.7); } /* yellow-200 */
+  80%  { background-color: rgb(254 240 138 / 0.5); }
+  100% { background-color: transparent; }
+}
+
+.gear-focus-flash {
+  animation: gear-focus-flash 1.8s ease-in-out forwards;
+}
+
 @layer base {
   html,
   body,

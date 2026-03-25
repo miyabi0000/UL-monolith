@@ -246,6 +246,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               {processedItems.map((item) => (
                 <TableRow
                   key={item.id}
+                  id={`gear-item-${item.id}`}
                   item={item}
                   categories={categories}
                   isSelected={selectedIds.includes(item.id)}
