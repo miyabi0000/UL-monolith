@@ -137,14 +137,14 @@ const buildFallbackResponse = (ctx: GearContext): AdvisorResponseData => {
   const baseWeightKg = ctx.weightBreakdown?.baseWeight
     ? (ctx.weightBreakdown.baseWeight / 1000).toFixed(2)
     : null;
-  const scopeLabel = ctx.packName ? `パック「${ctx.packName}」` : '全ギアリスト';
+  const scopeLabel = ctx.packName ? `pack "${ctx.packName}"` : 'your full gear list';
 
   const lines = [
-    `${scopeLabel}を確認しました（${totalItems}アイテム）。`,
-    baseWeightKg ? `現在のベースウェイトは ${baseWeightKg}kg です。` : null,
+    `Loaded ${scopeLabel} (${totalItems} items).`,
+    baseWeightKg ? `Current base weight: ${baseWeightKg}kg.` : null,
     '',
-    '※ AIアドバイザーは現在オフラインです。',
-    'OPENAI_API_KEY を設定すると詳細な軽量化アドバイスが利用できます。',
+    'The AI advisor is currently offline.',
+    'Set OPENAI_API_KEY to enable full weight-saving analysis.',
   ]
     .filter((l) => l !== null)
     .join('\n');
@@ -250,7 +250,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
       success: true,
       data: {
         ...buildFallbackResponse(gearContext),
-        message: `AI呼び出しに失敗しました。しばらくしてから再試行してください。\n\n${error instanceof Error ? error.message : '不明なエラー'}`,
+        message: `The AI request failed. Please try again in a moment.\n\n${error instanceof Error ? error.message : 'Unknown error'}`,
       },
       message: 'Fallback response (API error)',
     });
