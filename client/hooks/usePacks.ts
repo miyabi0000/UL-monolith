@@ -2,6 +2,16 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Pack } from '../utils/types';
 
 const STORAGE_KEY = 'ul_packs_v1';
+const LEGACY_LOCAL_USER_ID = 'local-user';
+
+type StoredPack = Partial<Pack> & Pick<Pack, 'id' | 'name' | 'itemIds' | 'isPublic' | 'createdAt' | 'updatedAt'>;
+
+const normalizePack = (pack: StoredPack): Pack => ({
+  ...pack,
+  userId: pack.userId || LEGACY_LOCAL_USER_ID,
+  routeName: pack.routeName?.trim() || undefined,
+  description: pack.description?.trim() || undefined,
+}) as Pack;
 
 const readPacks = (): Pack[] => {
   try {
@@ -9,7 +19,7 @@ const readPacks = (): Pack[] => {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as Pack[];
+    return parsed.map((pack) => normalizePack(pack as StoredPack));
   } catch {
     return [];
   }
@@ -23,7 +33,10 @@ export const usePacks = (userId: string) => {
   const [packs, setPacks] = useState<Pack[]>(() => readPacks());
 
   const userPacks = useMemo(
-    () => packs.filter((pack) => pack.userId === userId),
+    () =>
+      packs.filter(
+        (pack) => pack.userId === userId || pack.userId === LEGACY_LOCAL_USER_ID
+      ),
     [packs, userId]
   );
 

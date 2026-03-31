@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import HorizontalBarChart from './charts/HorizontalBarChart'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
@@ -536,6 +536,12 @@ interface GearChartProps {
   activePackItemIds?: string[]
   onTogglePackItem?: (itemId: string) => void
   onAddItemsToPack?: (itemIds: string[]) => void
+  // Pack タブ（detail panel ヘッダーに統合）
+  packList?: Array<{ id: string; name: string }>
+  selectedPackId?: string | null
+  onSelectPack?: (packId: string | null) => void
+  onCreatePack?: (name: string) => void
+  onOpenPackSettings?: () => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -566,10 +572,33 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   activePack,
   activePackItemIds = [],
   onTogglePackItem,
-  onAddItemsToPack
+  onAddItemsToPack,
+  packList,
+  selectedPackId,
+  onSelectPack,
+  onCreatePack,
+  onOpenPackSettings,
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  const [showNewPackInput, setShowNewPackInput] = useState(false)
+  const [newPackName, setNewPackName] = useState('')
+  const newPackInputRef = useRef<HTMLInputElement>(null)
   const [centerPulse, setCenterPulse] = useState(false)
+
+  useEffect(() => {
+    if (showNewPackInput) {
+      newPackInputRef.current?.focus()
+    }
+  }, [showNewPackInput])
+
+  const handleCreateNewPack = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = newPackName.trim()
+    if (!trimmed || !onCreatePack) return
+    onCreatePack(trimmed)
+    setNewPackName('')
+    setShowNewPackInput(false)
+  }
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
@@ -1169,43 +1198,154 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
           <div className="relative z-[60] flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 h-11 overflow-visible">
-            <div className="flex items-center gap-1 text-xs min-w-0">
-              {/* パンくずナビゲーション */}
-              <button
-                onClick={() => {
-                  setSelectedItem(null)
-                  onCategorySelect([])
-                }}
-                className={`flex-shrink-0 transition-colors ${
-                  !selectedCategoryFromChart && !selectedItem
-                    ? 'text-gray-700 dark:text-gray-200 font-medium'
-                    : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-              >
-                All
-              </button>
-              {selectedCategoryFromChart && (
+            <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto">
+              {packList !== undefined ? (
+                /* Pack タブモード */
                 <>
-                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                  {/* ALL タブ */}
                   <button
-                    onClick={() => setSelectedItem(null)}
-                    className={`truncate max-w-[80px] transition-colors ${
-                      !selectedItem
+                    type="button"
+                    onClick={() => { onSelectPack?.(null); setSelectedItem(null); onCategorySelect([]); }}
+                    className={[
+                      'flex-shrink-0 h-7 px-2.5 rounded-lg font-medium transition-colors',
+                      !selectedPackId
+                        ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    ].join(' ')}
+                  >
+                    ALL
+                  </button>
+
+                  {/* Pack タブ */}
+                  {packList.map((pack) => {
+                    const isActive = pack.id === selectedPackId;
+                    return (
+                      <div key={pack.id} className="flex items-center flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => { onSelectPack?.(pack.id); setSelectedItem(null); onCategorySelect([]); }}
+                          className={[
+                            'h-7 font-medium transition-colors',
+                            isActive && onOpenPackSettings ? 'pl-2.5 pr-1.5 rounded-l-lg' : 'pl-2.5 pr-2.5 rounded-lg',
+                            isActive
+                              ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                          ].join(' ')}
+                        >
+                          {pack.name}
+                        </button>
+                        {isActive && onOpenPackSettings && (
+                          <button
+                            type="button"
+                            onClick={onOpenPackSettings}
+                            className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
+                            title="Pack settings"
+                            aria-label="Pack settings"
+                          >
+                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* + New Pack */}
+                  {showNewPackInput ? (
+                    <form onSubmit={handleCreateNewPack} className="flex items-center gap-1 flex-shrink-0">
+                      <input
+                        ref={newPackInputRef}
+                        className="h-7 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-28"
+                        placeholder="Pack name"
+                        value={newPackName}
+                        onChange={(e) => setNewPackName(e.target.value)}
+                        required
+                      />
+                      <button type="submit" className="btn-primary h-7 px-2 text-xs">OK</button>
+                      <button
+                        type="button"
+                        className="btn-secondary h-7 px-2 text-xs"
+                        onClick={() => { setShowNewPackInput(false); setNewPackName(''); }}
+                      >✕</button>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      className="flex-shrink-0 h-7 w-7 flex items-center justify-center rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                      onClick={() => setShowNewPackInput(true)}
+                      title="New pack"
+                      aria-label="New pack"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* カテゴリ/アイテムのパンくず */}
+                  {selectedCategoryFromChart && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <button
+                        onClick={() => setSelectedItem(null)}
+                        className={`truncate max-w-[80px] transition-colors flex-shrink-0 ${
+                          !selectedItem
+                            ? 'text-gray-700 dark:text-gray-200 font-medium'
+                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'
+                        }`}
+                        title={selectedCategoryFromChart}
+                      >
+                        {selectedCategoryFromChart}
+                      </button>
+                    </>
+                  )}
+                  {selectedItem && selectedItemName && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                        {selectedItemName}
+                      </span>
+                    </>
+                  )}
+                </>
+              ) : (
+                /* 通常のパンくずモード */
+                <>
+                  <button
+                    onClick={() => { setSelectedItem(null); onCategorySelect([]); }}
+                    className={`flex-shrink-0 transition-colors ${
+                      !selectedCategoryFromChart && !selectedItem
                         ? 'text-gray-700 dark:text-gray-200 font-medium'
                         : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                     }`}
-                    title={selectedCategoryFromChart}
                   >
-                    {selectedCategoryFromChart}
+                    All
                   </button>
-                </>
-              )}
-              {selectedItem && selectedItemName && (
-                <>
-                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
-                    {selectedItemName}
-                  </span>
+                  {selectedCategoryFromChart && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <button
+                        onClick={() => setSelectedItem(null)}
+                        className={`truncate max-w-[80px] transition-colors ${
+                          !selectedItem
+                            ? 'text-gray-700 dark:text-gray-200 font-medium'
+                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                        }`}
+                        title={selectedCategoryFromChart}
+                      >
+                        {selectedCategoryFromChart}
+                      </button>
+                    </>
+                  )}
+                  {selectedItem && selectedItemName && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                        {selectedItemName}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </div>

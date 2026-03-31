@@ -1,66 +1,13 @@
 import { Request, Response } from 'express';
 import { openaiClient } from '../../services/openaiClient.js';
-
-// ==================== 型定義 ====================
-
-type AdvisorRole = 'user' | 'assistant';
-
-interface AdvisorMessage {
-  role: AdvisorRole;
-  content: string;
-}
-
-interface GearItem {
-  id: string;
-  name: string;
-  brand?: string;
-  weightGrams?: number;
-  priceCents?: number;
-  weightClass?: string;
-  isInKit?: boolean;
-  category?: { name: string } | null;
-}
-
-interface WeightBreakdown {
-  baseWeight?: number;
-  big3?: number;
-}
-
-interface ULStatus {
-  classification?: string;
-}
-
-interface GearContext {
-  items: GearItem[];
-  weightBreakdown?: WeightBreakdown | null;
-  ulStatus?: ULStatus | null;
-  packName?: string | null;
-}
-
-interface AdvisorRequestBody {
-  conversation?: unknown;
-  gearContext?: unknown;
-}
-
-interface SuggestedEdit {
-  gearId: string;
-  gearName: string;
-  field: string;
-  currentValue: unknown;
-  suggestedValue: unknown;
-  reason: string;
-}
-
-interface GearRef {
-  gearId: string;
-  gearName: string;
-}
-
-interface AdvisorResponseData {
-  message: string;
-  gearRefs: GearRef[];
-  suggestedEdits: SuggestedEdit[];
-}
+import type {
+  AdvisorMessage,
+  AdvisorRequestBody,
+  AdvisorResponseData,
+  GearContext,
+  GearRef,
+  SuggestedEdit,
+} from './advisorTypes.js';
 
 // ==================== バリデーション ====================
 

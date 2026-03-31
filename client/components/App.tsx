@@ -1,8 +1,9 @@
-import React, { Suspense, useCallback, useRef, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
+import { useGearFocus } from '../hooks/useGearFocus';
 import NotificationPopup from './NotificationPopup';
 import PacksPage, { AdvisorPackScope } from './PacksPage';
 import PackDetailPage from './PackDetailPage';
@@ -48,35 +49,7 @@ export default function App() {
     });
   }, [location.hash]);
 
-  /**
-   * アドバイザーからのギアフォーカス要求
-   * 対象行にスクロールし、一時的なハイライトアニメーションを付与する
-   */
-  const flashTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-
-  const handleFocusGear = useCallback((gearId: string) => {
-    const el = document.getElementById(`gear-item-${gearId}`);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // 既存のタイマーがあればクリア（連続クリック対応）
-    if (flashTimerRef.current !== null) {
-      window.clearTimeout(flashTimerRef.current);
-      el.classList.remove('gear-focus-flash');
-      // 一フレーム待ってアニメーションを再トリガー
-      window.requestAnimationFrame(() => {
-        el.classList.add('gear-focus-flash');
-      });
-    } else {
-      el.classList.add('gear-focus-flash');
-    }
-
-    flashTimerRef.current = window.setTimeout(() => {
-      el.classList.remove('gear-focus-flash');
-      flashTimerRef.current = null;
-    }, 1900);
-  }, []);
+  const handleFocusGear = useGearFocus();
 
   // アドバイザーに渡すコンテキスト（パック選択中はそのスコープを使用）
   const advisorGearContext = {

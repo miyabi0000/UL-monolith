@@ -94,6 +94,7 @@ export default function PacksPage({ appState, onAdvisorScopeChange }: PacksPageP
             selectedPackId={selectedPackId}
             onSelectPack={setSelectedPackId}
             onCreatePack={handleCreatePack}
+            onDeletePack={(packId) => { deletePack(packId); setSelectedPackId(null); }}
             onOpenPackSettings={selectedPack ? () => setShowPackSettings(true) : undefined}
           />
         </div>

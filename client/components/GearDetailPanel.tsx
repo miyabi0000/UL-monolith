@@ -148,6 +148,25 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onDeleteItem: onDelete,
   });
 
+  // 表示中の全アイテムがパックに入っているか
+  const isAllVisibleInPack = useMemo(
+    () => processedItems.length > 0 && processedItems.every((item) => activePackItemIds.includes(item.id)),
+    [processedItems, activePackItemIds]
+  );
+
+  const handleAddAllToPack = useCallback(() => {
+    if (!activePack) return;
+    if (isAllVisibleInPack) {
+      if (onTogglePackItem) {
+        processedItems.forEach((item) => onTogglePackItem(item.id));
+      }
+    } else {
+      if (onAddItemsToPack) {
+        onAddItemsToPack(processedItems.map((item) => item.id));
+      }
+    }
+  }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
+
   // Compareモード時の比較表示
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
     return (
@@ -179,25 +198,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       </div>
     );
   }
-
-  // 表示中の全アイテムがパックに入っているか
-  const isAllVisibleInPack = useMemo(
-    () => processedItems.length > 0 && processedItems.every((item) => activePackItemIds.includes(item.id)),
-    [processedItems, activePackItemIds]
-  );
-
-  const handleAddAllToPack = useCallback(() => {
-    if (!activePack) return;
-    if (isAllVisibleInPack) {
-      if (onTogglePackItem) {
-        processedItems.forEach((item) => onTogglePackItem(item.id));
-      }
-    } else {
-      if (onAddItemsToPack) {
-        onAddItemsToPack(processedItems.map((item) => item.id));
-      }
-    }
-  }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
 
   // Table / Compare モード
   const contextValue = {

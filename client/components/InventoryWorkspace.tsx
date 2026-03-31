@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
@@ -7,6 +7,7 @@ import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
 import GearChart from './GearChart';
+import PackTabBar from './PackTabBar';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 
@@ -30,8 +31,9 @@ interface InventoryWorkspaceProps {
   // Pack selector UI
   packList?: Array<{ id: string; name: string }>;
   selectedPackId?: string | null;
-  onSelectPack?: (packId: string) => void;
+  onSelectPack?: (packId: string | null) => void;
   onCreatePack?: (name: string) => void;
+  onDeletePack?: (packId: string) => void;
   onOpenPackSettings?: () => void;
 }
 
@@ -48,6 +50,7 @@ export default function InventoryWorkspace({
   selectedPackId,
   onSelectPack,
   onCreatePack,
+  onDeletePack,
   onOpenPackSettings,
 }: InventoryWorkspaceProps) {
   const { login } = useAuth();
@@ -88,10 +91,6 @@ export default function InventoryWorkspace({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [showBulkReview, setShowBulkReview] = useState(false);
-  // 新規パック作成インライン入力
-  const [showNewPackInput, setShowNewPackInput] = useState(false);
-  const [newPackName, setNewPackName] = useState('');
-  const newPackInputRef = useRef<HTMLInputElement>(null);
 
   const {
     extractGears,
@@ -106,11 +105,6 @@ export default function InventoryWorkspace({
     localStorage.setItem('gearViewMode', gearViewMode);
   }, [gearViewMode]);
 
-  useEffect(() => {
-    if (showNewPackInput) {
-      newPackInputRef.current?.focus();
-    }
-  }, [showNewPackInput]);
 
   const scopedItems = items ?? gearItems;
   const activePackItems = useMemo(() => {
@@ -207,14 +201,10 @@ export default function InventoryWorkspace({
     showSuccess(`${savedCount} items added, ${skippedCount} skipped`);
   };
 
-  const handleCreateNewPack = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = newPackName.trim();
-    if (!trimmed || !onCreatePack) return;
-    onCreatePack(trimmed);
-    setNewPackName('');
-    setShowNewPackInput(false);
-  };
+  const routeMapQuery = (activePack?.routeName || activePack?.name || '').trim();
+  const mapEmbedUrl = routeMapQuery
+    ? `https://www.google.com/maps?q=${encodeURIComponent(routeMapQuery)}&output=embed`
+    : '';
 
   const containerClassName = embedded
     ? 'w-full'
@@ -227,6 +217,39 @@ export default function InventoryWorkspace({
         paddingBottom: `${SPACING_SCALE.md}px`,
         paddingRight: showChat ? '400px' : undefined
       };
+
+  const gearChartPanel = (
+    <GearChart
+      data={chartData}
+      totalWeight={totals.weight}
+      totalCost={totals.price}
+      viewMode={viewMode}
+      quantityDisplayMode={quantityDisplayMode}
+      selectedCategories={selectedCategories}
+      onCategorySelect={setSelectedCategories}
+      onViewModeChange={setViewMode}
+      onQuantityDisplayModeChange={setQuantityDisplayMode}
+      items={scopedItems}
+      analysisItems={analysisItems}
+      categories={categories}
+      onEdit={handleEditGear}
+      onDelete={handleDeleteGear}
+      onUpdateItem={handleUpdateItem}
+      onShowForm={() => setShowForm(true)}
+      onShowUrlImport={() => setShowUrlImport(true)}
+      onShowCategoryManager={() => setShowCategoryManager(true)}
+      gearViewMode={gearViewMode}
+      onGearViewModeChange={setGearViewMode}
+      showCheckboxes={showCheckboxes}
+      onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
+      weightBreakdown={items ? null : weightBreakdown}
+      ulStatus={items ? null : ulStatus}
+      activePack={activePack}
+      activePackItemIds={activePackItemIds}
+      onTogglePackItem={onTogglePackItem}
+      onAddItemsToPack={handleAddItemsToActivePack}
+    />
+  );
 
   return (
     <>
@@ -241,123 +264,64 @@ export default function InventoryWorkspace({
           </>
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
-            <div className="sticky top-0 z-20 mb-3 rounded-xl bg-white/88 p-3 backdrop-blur dark:bg-slate-800/88 neu-raised">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {/* Pack pill リスト */}
-                {packList !== undefined && (
-                  <>
-                    {packList.map((pack) => {
-                      const isActive = pack.id === selectedPackId;
-                      return (
-                        <div key={pack.id} className="flex items-center">
-                          <button
-                            type="button"
-                            onClick={() => onSelectPack?.(pack.id)}
-                            className={[
-                              'h-8 pl-3 text-xs font-medium transition-colors',
-                              onOpenPackSettings && isActive ? 'pr-1.5 rounded-l-lg' : 'pr-3 rounded-lg',
-                              isActive
-                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                                : 'bg-gray-100/80 dark:bg-slate-800/70 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
-                            ].join(' ')}
-                          >
-                            {pack.name}
-                            {isActive && (
-                              <span className="ml-1.5 text-gray-400 dark:text-gray-500 font-normal">
-                                {activePackItemIds.length}
-                              </span>
-                            )}
-                          </button>
-                          {/* 編集ボタン（選択中のみ表示） */}
-                          {isActive && onOpenPackSettings && (
-                            <button
-                              type="button"
-                              onClick={onOpenPackSettings}
-                              className="h-8 w-7 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
-                              title="Pack settings"
-                              aria-label="Pack settings"
-                            >
-                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
+            {packList !== undefined && (
+              <div className="mb-3 rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800 neu-raised overflow-hidden">
+                <PackTabBar
+                  packList={packList}
+                  selectedPackId={selectedPackId ?? null}
+                  onSelectPack={(id) => onSelectPack?.(id)}
+                  onCreatePack={onCreatePack}
+                  onDeletePack={onDeletePack}
+                />
 
-                    {/* + New Pack */}
-                    {showNewPackInput ? (
-                      <form onSubmit={handleCreateNewPack} className="flex items-center gap-1.5">
-                        <input
-                          ref={newPackInputRef}
-                          className="h-8 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-32"
-                          placeholder="Pack name"
-                          value={newPackName}
-                          onChange={(e) => setNewPackName(e.target.value)}
-                          required
-                        />
-                        <button type="submit" className="btn-primary h-8 px-2 text-xs">
-                          Create
-                        </button>
+                <div role="tabpanel" className="grid gap-3 px-3 pb-3">
+                  <section className="px-1 pt-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
+                      {selectedPackId && onOpenPackSettings && (
                         <button
                           type="button"
-                          className="btn-secondary h-8 px-2 text-xs"
-                          onClick={() => { setShowNewPackInput(false); setNewPackName(''); }}
+                          className="btn-secondary h-7 px-2.5 text-xs"
+                          onClick={onOpenPackSettings}
                         >
-                          ✕
+                          Edit
                         </button>
-                      </form>
+                      )}
+                    </div>
+                    {activePack ? (
+                      <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                        <p>{activePack.name}</p>
+                        <p>{activePack.description || 'No description'}</p>
+                        <p>{`Items: ${activePackItemIds.length}`}</p>
+                      </div>
                     ) : (
-                      <button
-                        type="button"
-                        className="h-8 w-8 flex items-center justify-center rounded-lg text-xs font-medium transition-colors bg-gray-100/80 dark:bg-slate-800/70 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                        onClick={() => setShowNewPackInput(true)}
-                        title="New pack"
-                        aria-label="New pack"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                      </button>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">All gear is selected.</p>
                     )}
-                  </>
-                )}
-              </div>
-            </div>
+                  </section>
 
-            <div className="w-full">
-              <GearChart
-                data={chartData}
-                totalWeight={totals.weight}
-                totalCost={totals.price}
-                viewMode={viewMode}
-                quantityDisplayMode={quantityDisplayMode}
-                selectedCategories={selectedCategories}
-                onCategorySelect={setSelectedCategories}
-                onViewModeChange={setViewMode}
-                onQuantityDisplayModeChange={setQuantityDisplayMode}
-                items={scopedItems}
-                analysisItems={analysisItems}
-                categories={categories}
-                onEdit={handleEditGear}
-                onDelete={handleDeleteGear}
-                onUpdateItem={handleUpdateItem}
-                onShowForm={() => setShowForm(true)}
-                onShowUrlImport={() => setShowUrlImport(true)}
-                onShowCategoryManager={() => setShowCategoryManager(true)}
-                gearViewMode={gearViewMode}
-                onGearViewModeChange={setGearViewMode}
-                showCheckboxes={showCheckboxes}
-                onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
-                weightBreakdown={items ? null : weightBreakdown}
-                ulStatus={items ? null : ulStatus}
-                activePack={activePack}
-                activePackItemIds={activePackItemIds}
-                onTogglePackItem={onTogglePackItem}
-                onAddItemsToPack={handleAddItemsToActivePack}
-              />
-            </div>
+                  {mapEmbedUrl && (
+                    <section className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-3 neu-inset border border-gray-200/70 dark:border-slate-700/70">
+                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
+                      <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-slate-700/80">
+                        <iframe
+                          title="Route map"
+                          src={mapEmbedUrl}
+                          className="h-44 w-full"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    </section>
+                  )}
+                </div>
+
+                <div className="px-3 pb-3 pt-3">
+                  {gearChartPanel}
+                </div>
+              </div>
+            )}
+
+            {packList === undefined && <div className="w-full">{gearChartPanel}</div>}
           </div>
         )}
       </div>
