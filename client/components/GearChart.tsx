@@ -1,6 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import HorizontalBarChart from './charts/HorizontalBarChart'
+import BackpackIcon from './icons/BackpackIcon'
+import ScaleIcon from './icons/ScaleIcon'
+import YenIcon from './icons/YenIcon'
+import { useResponsiveSize } from '../hooks/useResponsiveSize'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
@@ -9,36 +13,6 @@ import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingDa
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ActiveCalloutShape from './charts/ActiveCalloutShape'
-
-// ==================== SVGアイコン ====================
-const BackpackIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
-    <path d="M9 20V14H15V20" />
-    <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
-    <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
-    <path d="M12 10V12" />
-  </svg>
-)
-
-const ScaleIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 4V19" />
-    <path d="M6.5 7.5H17.5" />
-    <path d="M4.5 20H19.5" />
-    <path d="M7.5 7.5L4.5 12.5H10.5L7.5 7.5Z" />
-    <path d="M16.5 7.5L13.5 12.5H19.5L16.5 7.5Z" />
-  </svg>
-)
-
-const YenIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M7 4L12 10L17 4" />
-    <path d="M8 12H16" />
-    <path d="M8 15H16" />
-    <path d="M12 10V21" />
-  </svg>
-)
 
 // ==================== 定数 ====================
 // デザインシステムに基づいたチャート設定（コンパクト化）
@@ -585,6 +559,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const newPackInputRef = useRef<HTMLInputElement>(null)
   const [centerPulse, setCenterPulse] = useState(false)
 
+
   useEffect(() => {
     if (showNewPackInput) {
       newPackInputRef.current?.focus()
@@ -599,7 +574,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setNewPackName('')
     setShowNewPackInput(false)
   }
-  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
+  const screenSize = useResponsiveSize()
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
@@ -610,24 +585,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   // hover callout用activeIndex
   const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
   const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
-
-  // レスポンシブ対応
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth
-      if (width < 768) {
-        setScreenSize('mobile')
-      } else if (width < 1024) {
-        setScreenSize('tablet')
-      } else {
-        setScreenSize('desktop')
-      }
-    }
-
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // メニューを閉じる（クリックアウトサイド）
   useEffect(() => {
