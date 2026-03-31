@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* アドバイザーからのギアフォーカスアニメーション */
+@keyframes gear-focus-flash {
+  0%   { background-color: transparent; }
+  20%  { background-color: rgb(254 240 138 / 0.7); } /* yellow-200 */
+  80%  { background-color: rgb(254 240 138 / 0.5); }
+  100% { background-color: transparent; }
+}
+
+.gear-focus-flash {
+  animation: gear-focus-flash 1.8s ease-in-out forwards;
+}
+
 @layer base {
   html,
   body,
@@ -680,4 +692,42 @@
   .dark .hover\:text-gray-600:not([class*='dark:hover:text-']):hover { color: #f3f4f6; }
   .dark .hover\:text-gray-700:not([class*='dark:hover:text-']):hover { color: #ffffff; }
   .dark .hover\:text-gray-900:not([class*='dark:hover:text-']):hover { color: #ffffff; }
+}
+
+/* Pack folder tab – trapezoid via perspective transform (Lea Verou method) */
+.pack-tab-shape {
+  position: relative;
+  border: none !important;
+  background: transparent !important;
+  z-index: 0;
+  isolation: isolate; /* 疑似要素の z-index:-1 を機能させる */
+}
+.pack-tab-shape[aria-selected="true"] {
+  z-index: 2;
+}
+.pack-tab-shape::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  z-index: -1;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background-color: rgb(229 231 235) !important; /* gray-200 */
+  transform: scaleX(1.15) perspective(0.5em) rotateX(3deg);
+  transform-origin: bottom;
+}
+.pack-tab-shape[aria-selected="true"]::before {
+  background-color: white !important;
+  border-color: rgb(209 213 219); /* gray-300 */
+}
+.dark .pack-tab-shape::before {
+  background-color: rgb(51 65 85) !important; /* slate-700 */
+}
+.dark .pack-tab-shape[aria-selected="true"]::before {
+  background-color: rgb(30 41 59) !important; /* slate-800 */
+  border-color: rgb(71 85 105); /* slate-600 */
 }

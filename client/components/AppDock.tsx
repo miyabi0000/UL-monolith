@@ -6,13 +6,15 @@ interface AppDockProps {
   onLogout: () => void;
   isAuthenticated: boolean;
   userName?: string;
+  onShowAdvisor?: () => void;
 }
 
 const AppDock: React.FC<AppDockProps> = ({
   onShowLogin,
   onLogout,
   isAuthenticated,
-  userName
+  userName,
+  onShowAdvisor
 }) => {
   const location = useLocation();
   const [isDark, setIsDark] = useState(false);
@@ -65,6 +67,18 @@ const AppDock: React.FC<AppDockProps> = ({
           >
             Board
           </a>
+        )}
+
+        {onShowAdvisor && (
+          <button
+            type="button"
+            className="glass-header-chip h-9 px-3 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60 text-xs font-medium"
+            onClick={onShowAdvisor}
+            aria-label="UL Advisor"
+            title="ULギアアドバイザー"
+          >
+            Advisor
+          </button>
         )}
 
         <button

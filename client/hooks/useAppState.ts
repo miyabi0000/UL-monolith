@@ -10,6 +10,7 @@ export const useAppState = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showAdvisor, setShowAdvisor] = useState(false);
   const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
@@ -145,6 +146,7 @@ export const useAppState = () => {
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
+    showAdvisor, setShowAdvisor,
     showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
 

@@ -57,6 +57,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     onCurrencyChange,
     isEditable,
     activePackName,
+    onAddAllToPack,
+    isAllVisibleInPack,
   } = useGearListContext()
 
   const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
@@ -129,6 +131,31 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   return (
     <thead className="gear-table-head">
       <tr>
+        {activePackName && !isEditable && (
+          <th className={`${thBase} text-center w-7`}>
+            <button
+              type="button"
+              onClick={onAddAllToPack}
+              disabled={!onAddAllToPack}
+              className={[
+                labelBase,
+                'justify-center',
+                isAllVisibleInPack
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : inactiveText,
+                onAddAllToPack ? `${hoverText} cursor-pointer` : 'cursor-default'
+              ].join(' ')}
+              title={onAddAllToPack
+                ? isAllVisibleInPack ? `${activePackName} から全て削除` : `${activePackName} に全て追加`
+                : undefined}
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill={isAllVisibleInPack ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={isAllVisibleInPack ? 0 : 1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-2-3H6L4 7m16 0v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0H4" />
+              </svg>
+            </button>
+          </th>
+        )}
+
         {showCheckboxes && (
           <th className={`${thBase} text-center w-8`}>
             <input
