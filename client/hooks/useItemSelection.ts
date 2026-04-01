@@ -67,11 +67,17 @@ export function useItemSelection(
   }, [controlledSelectedIds, onSelectedIdsChange, onSelectionChange]);
 
   const setSelectedIds = useCallback((value: React.SetStateAction<string[]>) => {
-    const nextIds = typeof value === 'function'
-      ? (value as (prevState: string[]) => string[])(selectedIds)
-      : value;
-    commitSelection(nextIds);
-  }, [selectedIds, commitSelection]);
+    if (typeof value === 'function') {
+      setInternalSelectedIds(prev => {
+        const nextIds = (value as (prevState: string[]) => string[])(prev);
+        onSelectedIdsChange?.(nextIds);
+        onSelectionChange?.(nextIds);
+        return nextIds;
+      });
+    } else {
+      commitSelection(value);
+    }
+  }, [commitSelection, onSelectedIdsChange, onSelectionChange]);
 
   // 選択されたアイテムのオブジェクト配列
   const selectedItems = useMemo(
@@ -134,11 +140,11 @@ export function useItemSelection(
 
   useEffect(() => {
     const validItemIds = new Set(items.map(item => item.id));
-    const filtered = selectedIds.filter(id => validItemIds.has(id));
-    if (filtered.length !== selectedIds.length) {
-      commitSelection(filtered);
-    }
-  }, [items, selectedIds, commitSelection]);
+    setInternalSelectedIds(prev => {
+      const filtered = prev.filter(id => validItemIds.has(id));
+      return filtered.length !== prev.length ? filtered : prev;
+    });
+  }, [items]);
 
   return {
     selectedIds,

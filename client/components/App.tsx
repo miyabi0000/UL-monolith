@@ -82,7 +82,7 @@ export default function App() {
         onLogout={logout}
         isAuthenticated={isAuthenticated}
         userName={user?.name}
-        onShowAdvisor={() => setShowAdvisor(true)}
+        onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
       />
 
       <Suspense fallback={null}>
