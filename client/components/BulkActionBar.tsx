@@ -26,7 +26,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
   isCompareMode = false,
   maxCompareItems = 3,
   canCompare: canCompareFromProps,
-  compareDisabledReason
+  compareDisabledReason,
 }) => {
   // 比較ボタンの有効状態判定
   // - canCompareFromProps が渡されている場合はそれを優先（バリデーション済み）

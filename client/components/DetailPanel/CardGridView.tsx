@@ -11,8 +11,6 @@ interface CardGridViewProps {
   activePackName?: string;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
-  onGearDragStart?: (itemId: string) => void;
-  onGearDragEnd?: () => void;
 }
 
 const CardGridView: React.FC<CardGridViewProps> = ({
@@ -24,8 +22,6 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   activePackName,
   activePackItemIds = [],
   onTogglePackItem,
-  onGearDragStart,
-  onGearDragEnd
 }) => {
   const getItemValue = (item: GearItemWithCalculated) => {
     const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
@@ -62,15 +58,6 @@ const CardGridView: React.FC<CardGridViewProps> = ({
               return (
                 <div
                   key={item.id}
-                  draggable={Boolean(onGearDragStart)}
-                  onDragStart={(event) => {
-                    if (!onGearDragStart) return;
-                    event.dataTransfer.effectAllowed = 'copy';
-                    event.dataTransfer.setData('application/x-gear-id', item.id);
-                    event.dataTransfer.setData('text/plain', item.id);
-                    onGearDragStart(item.id);
-                  }}
-                  onDragEnd={onGearDragEnd}
                   className={`aspect-square relative overflow-hidden bg-white transition-all flex items-center justify-center ${
                     isHighlighted
                       ? 'ring-2 ring-gray-500/70'

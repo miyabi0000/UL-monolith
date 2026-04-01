@@ -32,8 +32,7 @@ interface GearDetailPanelProps {
   activePack?: Pack | null;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
-  onGearDragStart?: (itemId: string) => void;
-  onGearDragEnd?: () => void;
+  onAddItemsToPack?: (itemIds: string[]) => void;
 }
 
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
@@ -54,8 +53,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   activePack = null,
   activePackItemIds = [],
   onTogglePackItem,
-  onGearDragStart,
-  onGearDragEnd,
+  onAddItemsToPack,
 }) => {
   const { sortField, sortDirection, handleSort } = useGearSort();
   const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
@@ -150,6 +148,25 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onDeleteItem: onDelete,
   });
 
+  // 表示中の全アイテムがパックに入っているか
+  const isAllVisibleInPack = useMemo(
+    () => processedItems.length > 0 && processedItems.every((item) => activePackItemIds.includes(item.id)),
+    [processedItems, activePackItemIds]
+  );
+
+  const handleAddAllToPack = useCallback(() => {
+    if (!activePack) return;
+    if (isAllVisibleInPack) {
+      if (onTogglePackItem) {
+        processedItems.forEach((item) => onTogglePackItem(item.id));
+      }
+    } else {
+      if (onAddItemsToPack) {
+        onAddItemsToPack(processedItems.map((item) => item.id));
+      }
+    }
+  }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
+
   // Compareモード時の比較表示
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
     return (
@@ -177,8 +194,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           activePackName={activePack?.name}
           activePackItemIds={activePackItemIds}
           onTogglePackItem={onTogglePackItem}
-          onGearDragStart={onGearDragStart}
-          onGearDragEnd={onGearDragEnd}
         />
       </div>
     );
@@ -192,6 +207,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onCurrencyChange: handleCurrencyChange,
     showCheckboxes: shouldShowCheckboxes,
     isEditable,
+    activePackName: activePack?.name,
+    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
+    isAllVisibleInPack,
   };
 
   return (
@@ -228,15 +246,17 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               {processedItems.map((item) => (
                 <TableRow
                   key={item.id}
+                  id={`gear-item-${item.id}`}
                   item={item}
                   categories={categories}
                   isSelected={selectedIds.includes(item.id)}
                   isHighlighted={selectedItemId === item.id}
+                  activePackName={activePack?.name}
+                  isInActivePack={activePackItemIds.includes(item.id)}
                   changedFields={changedFields[item.id]}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}
-                  onGearDragStart={onGearDragStart}
-                  onGearDragEnd={onGearDragEnd}
+                  onTogglePackItem={onTogglePackItem}
                 />
               ))}
             </tbody>

@@ -19,7 +19,7 @@ export class OpenAIClient {
   }
 
   /**
-   * チャット完了API呼び出し
+   * チャット完了API呼び出し（シングルターン）
    */
   async chatCompletion(systemPrompt: string, userMessage: string): Promise<string> {
     if (!this.openai) {
@@ -46,11 +46,14 @@ export class OpenAIClient {
   }
 
   /**
-   * 会話履歴付きチャット完了API呼び出し（マルチターン対応）
+   * マルチターン会話API呼び出し
+   * @param systemPrompt システムプロンプト
+   * @param messages 会話履歴（user/assistantの交互メッセージ）
+   * @param maxTokens レスポンスの最大トークン数
    */
-  async chatCompletionWithHistory(
+  async chatWithHistory(
     systemPrompt: string,
-    history: { role: 'user' | 'assistant'; content: string }[],
+    messages: Array<{ role: 'user' | 'assistant'; content: string }>,
     maxTokens = 1500
   ): Promise<string> {
     if (!this.openai) {
@@ -61,10 +64,10 @@ export class OpenAIClient {
       model: this.defaultModel,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...history
+        ...messages,
       ],
       temperature: 0.3,
-      max_tokens: maxTokens
+      max_tokens: maxTokens,
     });
 
     const content = completion.choices[0]?.message?.content;

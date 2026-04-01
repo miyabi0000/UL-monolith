@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import HorizontalBarChart from './charts/HorizontalBarChart'
 import BackpackIcon from './icons/BackpackIcon'
@@ -490,7 +490,8 @@ interface GearChartProps {
   onCategorySelect: (categories: string[]) => void
   onViewModeChange: (mode: ChartViewMode) => void
   onQuantityDisplayModeChange: (mode: QuantityDisplayMode) => void
-  items: GearItemWithCalculated[] // すべてのギアアイテム
+  items: GearItemWithCalculated[] // ギアリスト（右ペイン表示用）
+  analysisItems?: GearItemWithCalculated[] // チャート集計用
   categories: Category[] // カテゴリリスト
   onEdit: (item: GearItemWithCalculated) => void
   onDelete: (id: string) => void
@@ -508,7 +509,13 @@ interface GearChartProps {
   activePack?: Pack | null
   activePackItemIds?: string[]
   onTogglePackItem?: (itemId: string) => void
-  onAddItemToPack?: (itemId: string) => void
+  onAddItemsToPack?: (itemIds: string[]) => void
+  // Pack タブ（detail panel ヘッダーに統合）
+  packList?: Array<{ id: string; name: string }>
+  selectedPackId?: string | null
+  onSelectPack?: (packId: string | null) => void
+  onCreatePack?: (name: string) => void
+  onOpenPackSettings?: () => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -522,6 +529,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onViewModeChange,
   onQuantityDisplayModeChange,
   items,
+  analysisItems = items,
   categories,
   onEdit,
   onDelete,
@@ -538,17 +546,38 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   activePack,
   activePackItemIds = [],
   onTogglePackItem,
-  onAddItemToPack
+  onAddItemsToPack,
+  packList,
+  selectedPackId,
+  onSelectPack,
+  onCreatePack,
+  onOpenPackSettings,
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  const [showNewPackInput, setShowNewPackInput] = useState(false)
+  const [newPackName, setNewPackName] = useState('')
+  const newPackInputRef = useRef<HTMLInputElement>(null)
   const [centerPulse, setCenterPulse] = useState(false)
+
+
+  useEffect(() => {
+    if (showNewPackInput) {
+      newPackInputRef.current?.focus()
+    }
+  }, [showNewPackInput])
+
+  const handleCreateNewPack = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = newPackName.trim()
+    if (!trimmed || !onCreatePack) return
+    onCreatePack(trimmed)
+    setNewPackName('')
+    setShowNewPackInput(false)
+  }
   const screenSize = useResponsiveSize()
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
-  const [draggedGearId, setDraggedGearId] = useState<string | null>(null)
-  const [isDropTargetActive, setIsDropTargetActive] = useState(false)
-  const [dropFlash, setDropFlash] = useState(false)
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
@@ -580,18 +609,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   // 二重ドーナツ: Inner ring (Big3 vs Other) - ratioを含む
   const dualRingInnerData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
-    const data = calculateInnerRingData(items, chartScope)
+    const data = calculateInnerRingData(analysisItems, chartScope)
     const total = data.reduce((sum, d) => sum + d.value, 0)
     return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
-  }, [viewMode, items, chartScope])
+  }, [viewMode, analysisItems, chartScope])
 
   // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
   const dualRingOuterData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
-    const data = calculateOuterRingData(items, chartScope, chartFocus)
+    const data = calculateOuterRingData(analysisItems, chartScope, chartFocus, categories)
     const total = data.reduce((sum, d) => sum + d.value, 0)
     return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
-  }, [viewMode, items, chartScope, chartFocus, categories])
+  }, [viewMode, analysisItems, chartScope, chartFocus, categories])
 
   const displayData = useMemo(() => {
     return data.map(category => ({
@@ -775,32 +804,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     setChartFocus(prev => prev === focus ? 'all' : focus)
   }, [])
 
-  const handlePackDropDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!onAddItemToPack || !activePack) return
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'copy'
-    if (!isDropTargetActive) {
-      setIsDropTargetActive(true)
-    }
-  }, [onAddItemToPack, activePack, isDropTargetActive])
-
-  const handlePackDropLeave = useCallback(() => {
-    setIsDropTargetActive(false)
-  }, [])
-
-  const handlePackDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    if (!onAddItemToPack || !activePack) return
-    event.preventDefault()
-    const gearId = event.dataTransfer.getData('application/x-gear-id') || event.dataTransfer.getData('text/plain')
-    if (!gearId) return
-
-    onAddItemToPack(gearId)
-    setDraggedGearId(null)
-    setIsDropTargetActive(false)
-    setDropFlash(true)
-    window.setTimeout(() => setDropFlash(false), 400)
-  }, [onAddItemToPack, activePack])
-
   // ==================== レンダリング ====================
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">
@@ -888,45 +891,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             )}
           </div>
 
-          {activePack && onAddItemToPack && (activePackItemIds.length === 0 || draggedGearId !== null) && !isChartCollapsed && (
-            <div className="px-2 pt-2">
-              <div
-                onDragOver={handlePackDropDragOver}
-                onDragEnter={handlePackDropDragOver}
-                onDragLeave={handlePackDropLeave}
-                onDrop={handlePackDrop}
-                className={[
-                  'rounded-lg border border-dashed px-3 py-2 transition-all duration-150',
-                  (isDropTargetActive || dropFlash)
-                    ? 'border-gray-500 bg-gray-100/85 dark:border-slate-300 dark:bg-slate-700/80'
-                    : 'border-gray-300 bg-white/70 dark:border-slate-600 dark:bg-slate-800/45'
-                ].join(' ')}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 10V18C5 19.1 5.9 20 7 20H17C18.1 20 19 19.1 19 18V10" />
-                      <path d="M9 20V14H15V20" />
-                      <path d="M5 10C5 7.79 6.79 6 9 6H15C17.21 6 19 7.79 19 10" />
-                      <path d="M9 6V4C9 3.45 9.45 3 10 3H14C14.55 3 15 3.45 15 4V6" />
-                    </svg>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
-                      {activePack.name}
-                    </p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                      {isDropTargetActive
-                        ? 'ドロップしてPackに追加'
-                        : activePackItemIds.length === 0
-                          ? '空のPackです。Gearをドラッグして追加'
-                          : 'ドラッグ中: ここにドロップ'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {!isChartCollapsed && (
             <>
@@ -1181,7 +1145,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           onToggleChartFocus={handleToggleChartFocus}
           totalWeight={totalWeight}
           totalCost={totalCost}
-          itemCount={items.length}
+          itemCount={analysisItems.length}
         />
             </>
           )}
@@ -1191,43 +1155,154 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
           <div className="relative z-[60] flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 h-11 overflow-visible">
-            <div className="flex items-center gap-1 text-xs min-w-0">
-              {/* パンくずナビゲーション */}
-              <button
-                onClick={() => {
-                  setSelectedItem(null)
-                  onCategorySelect([])
-                }}
-                className={`flex-shrink-0 transition-colors ${
-                  !selectedCategoryFromChart && !selectedItem
-                    ? 'text-gray-700 dark:text-gray-200 font-medium'
-                    : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-              >
-                All
-              </button>
-              {selectedCategoryFromChart && (
+            <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto">
+              {packList !== undefined ? (
+                /* Pack タブモード */
                 <>
-                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                  {/* ALL タブ */}
                   <button
-                    onClick={() => setSelectedItem(null)}
-                    className={`truncate max-w-[80px] transition-colors ${
-                      !selectedItem
+                    type="button"
+                    onClick={() => { onSelectPack?.(null); setSelectedItem(null); onCategorySelect([]); }}
+                    className={[
+                      'flex-shrink-0 h-7 px-2.5 rounded-lg font-medium transition-colors',
+                      !selectedPackId
+                        ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    ].join(' ')}
+                  >
+                    ALL
+                  </button>
+
+                  {/* Pack タブ */}
+                  {packList.map((pack) => {
+                    const isActive = pack.id === selectedPackId;
+                    return (
+                      <div key={pack.id} className="flex items-center flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => { onSelectPack?.(pack.id); setSelectedItem(null); onCategorySelect([]); }}
+                          className={[
+                            'h-7 font-medium transition-colors',
+                            isActive && onOpenPackSettings ? 'pl-2.5 pr-1.5 rounded-l-lg' : 'pl-2.5 pr-2.5 rounded-lg',
+                            isActive
+                              ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                          ].join(' ')}
+                        >
+                          {pack.name}
+                        </button>
+                        {isActive && onOpenPackSettings && (
+                          <button
+                            type="button"
+                            onClick={onOpenPackSettings}
+                            className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
+                            title="Pack settings"
+                            aria-label="Pack settings"
+                          >
+                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* + New Pack */}
+                  {showNewPackInput ? (
+                    <form onSubmit={handleCreateNewPack} className="flex items-center gap-1 flex-shrink-0">
+                      <input
+                        ref={newPackInputRef}
+                        className="h-7 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-28"
+                        placeholder="Pack name"
+                        value={newPackName}
+                        onChange={(e) => setNewPackName(e.target.value)}
+                        required
+                      />
+                      <button type="submit" className="btn-primary h-7 px-2 text-xs">OK</button>
+                      <button
+                        type="button"
+                        className="btn-secondary h-7 px-2 text-xs"
+                        onClick={() => { setShowNewPackInput(false); setNewPackName(''); }}
+                      >✕</button>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      className="flex-shrink-0 h-7 w-7 flex items-center justify-center rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                      onClick={() => setShowNewPackInput(true)}
+                      title="New pack"
+                      aria-label="New pack"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* カテゴリ/アイテムのパンくず */}
+                  {selectedCategoryFromChart && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <button
+                        onClick={() => setSelectedItem(null)}
+                        className={`truncate max-w-[80px] transition-colors flex-shrink-0 ${
+                          !selectedItem
+                            ? 'text-gray-700 dark:text-gray-200 font-medium'
+                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'
+                        }`}
+                        title={selectedCategoryFromChart}
+                      >
+                        {selectedCategoryFromChart}
+                      </button>
+                    </>
+                  )}
+                  {selectedItem && selectedItemName && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                        {selectedItemName}
+                      </span>
+                    </>
+                  )}
+                </>
+              ) : (
+                /* 通常のパンくずモード */
+                <>
+                  <button
+                    onClick={() => { setSelectedItem(null); onCategorySelect([]); }}
+                    className={`flex-shrink-0 transition-colors ${
+                      !selectedCategoryFromChart && !selectedItem
                         ? 'text-gray-700 dark:text-gray-200 font-medium'
                         : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                     }`}
-                    title={selectedCategoryFromChart}
                   >
-                    {selectedCategoryFromChart}
+                    All
                   </button>
-                </>
-              )}
-              {selectedItem && selectedItemName && (
-                <>
-                  <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
-                    {selectedItemName}
-                  </span>
+                  {selectedCategoryFromChart && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <button
+                        onClick={() => setSelectedItem(null)}
+                        className={`truncate max-w-[80px] transition-colors ${
+                          !selectedItem
+                            ? 'text-gray-700 dark:text-gray-200 font-medium'
+                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                        }`}
+                        title={selectedCategoryFromChart}
+                      >
+                        {selectedCategoryFromChart}
+                      </button>
+                    </>
+                  )}
+                  {selectedItem && selectedItemName && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
+                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
+                        {selectedItemName}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -1386,11 +1461,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 activePack={activePack}
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
-                onGearDragStart={setDraggedGearId}
-                onGearDragEnd={() => {
-                  setDraggedGearId(null)
-                  setIsDropTargetActive(false)
-                }}
+                onAddItemsToPack={onAddItemsToPack}
               />
           </div>
         </Card>
