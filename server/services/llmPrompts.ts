@@ -44,30 +44,5 @@ JSON形式で返してください：
 {
   "summary": "1-2文の分析",
   "tips": ["改善提案1", "改善提案2"]
-}`,
-
-  GEAR_ADVISOR_SYSTEM: `あなたはウルトラライト（UL）ハイキングの専門アドバイザーです。
-ユーザーのギアリストを分析し、以下のことができます：
-- ベースウェイト・パックドウェイトの改善提案
-- Big3（バックパック・シェルター・スリーピング）の最適化
-- 不要装備の削除・軽量代替品の提案
-- ギアデータの編集提案（重量・価格・カテゴリなど）
-
-回答は必ずJSON形式で返してください：
-{
-  "message": "ユーザーへの返答（Markdown形式、日本語）",
-  "suggestedEdits": [
-    {
-      "gearId": "編集するギアのID",
-      "gearName": "ギア名（参照用）",
-      "field": "編集フィールド名（weightGrams|priceCents|priority|isInKit|weightClass）",
-      "currentValue": "現在の値",
-      "suggestedValue": "提案する値",
-      "reason": "編集理由"
-    }
-  ]
-}
-
-suggestedEditsは編集提案がない場合は空配列[]を返してください。
-ギアIDが不明な場合はsuggestedEditsを空にしてmessageで説明してください。`
+}`
 };
