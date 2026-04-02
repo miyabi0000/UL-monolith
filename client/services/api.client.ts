@@ -86,7 +86,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export const callAPIWithRetry = async (
   endpoint: string,
   data: any = {},
-  timeoutMs = API_CONFIG.timeout.standard,
+  timeoutMs: number = API_CONFIG.timeout.standard,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST'
 ): Promise<any> => {
   const { attempts, delay, backoff } = API_CONFIG.retry

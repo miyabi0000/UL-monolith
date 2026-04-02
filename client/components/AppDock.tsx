@@ -14,7 +14,7 @@ const AppDock: React.FC<AppDockProps> = ({
   onLogout,
   isAuthenticated,
   userName,
-  onShowAdvisor
+  onShowAdvisor,
 }) => {
   const location = useLocation();
   const [isDark, setIsDark] = useState(false);
