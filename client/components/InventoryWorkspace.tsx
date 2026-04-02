@@ -274,48 +274,70 @@ export default function InventoryWorkspace({
                   onDeletePack={onDeletePack}
                 />
 
-                <div role="tabpanel" className="grid gap-3 px-3 pb-3">
-                  <section className="px-1 pt-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
-                      {selectedPackId && onOpenPackSettings && (
-                        <button
-                          type="button"
-                          className="btn-secondary h-7 px-2.5 text-xs"
-                          onClick={onOpenPackSettings}
-                        >
-                          Edit
-                        </button>
+                {selectedPackId && (
+                  <div role="tabpanel" className="grid gap-2 px-3 pt-1 pb-2">
+                    <section className="px-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
+                        <div className="flex items-center gap-1">
+                          {onOpenPackSettings && (
+                            <button
+                              type="button"
+                              className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                              onClick={onOpenPackSettings}
+                              title="Edit pack"
+                              aria-label="Edit pack"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                          {onDeletePack && (
+                            <button
+                              type="button"
+                              className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                              onClick={() => {
+                                if (window.confirm('Delete this pack?')) {
+                                  onDeletePack(selectedPackId);
+                                }
+                              }}
+                              title="Delete pack"
+                              aria-label="Delete pack"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {activePack && (
+                        <div className="mt-1 space-y-0.5 text-xs text-gray-600 dark:text-gray-300">
+                          <p>{activePack.description || 'No description'}</p>
+                          <p>{`Items: ${activePackItemIds.length}`}</p>
+                        </div>
                       )}
-                    </div>
-                    {activePack ? (
-                      <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300">
-                        <p>{activePack.name}</p>
-                        <p>{activePack.description || 'No description'}</p>
-                        <p>{`Items: ${activePackItemIds.length}`}</p>
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">All gear is selected.</p>
-                    )}
-                  </section>
-
-                  {mapEmbedUrl && (
-                    <section className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-3 neu-inset border border-gray-200/70 dark:border-slate-700/70">
-                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
-                      <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-slate-700/80">
-                        <iframe
-                          title="Route map"
-                          src={mapEmbedUrl}
-                          className="h-44 w-full"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
                     </section>
-                  )}
-                </div>
 
-                <div className="px-3 pb-3 pt-3">
+                    {mapEmbedUrl && (
+                      <section className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-3 neu-inset border border-gray-200/70 dark:border-slate-700/70">
+                        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
+                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-slate-700/80">
+                          <iframe
+                            title="Route map"
+                            src={mapEmbedUrl}
+                            className="h-44 w-full"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        </div>
+                      </section>
+                    )}
+                  </div>
+                )}
+
+                <div className="px-3 pb-3 pt-1">
                   {gearChartPanel}
                 </div>
               </div>

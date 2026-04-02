@@ -28,7 +28,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
   };
 
   const tabClass = (isActive: boolean) => [
-    'pack-tab-shape relative -mb-px h-8 px-5 text-[11px] font-semibold transition-all duration-150',
+    'pack-tab-shape relative -mb-px h-9 px-5 text-[11px] font-semibold transition-all duration-150 inline-flex items-center justify-center',
     isActive
       ? 'text-gray-900 dark:text-gray-100'
       : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
@@ -106,7 +106,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
         ) : onCreatePack ? (
           <button
             type="button"
-            className="-mb-px ml-1 w-7 h-7 self-end mb-0.5 rounded-full flex items-center justify-center bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
+            className="-mb-px ml-1 w-6 h-6 self-end mb-0.5 rounded-full flex items-center justify-center bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
             onClick={() => setShowCreateInput(true)}
             title="New pack"
             aria-label="New pack"
@@ -117,26 +117,6 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
           </button>
         ) : null}
 
-        {/* 削除ボタン（右端・パック選択時のみ） */}
-        {selectedPackId && onDeletePack && !showCreateInput && (
-          <div className="ml-auto flex items-center pb-1">
-            <button
-              type="button"
-              className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-              onClick={() => {
-                if (window.confirm('Delete this pack?')) {
-                  onDeletePack(selectedPackId);
-                }
-              }}
-              title="Delete pack"
-              aria-label="Delete pack"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

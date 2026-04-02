@@ -221,7 +221,7 @@ const TableRow: React.FC<TableRowProps> = ({
       </td>
 
       {/* Weight Class */}
-      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10">
+      <td className="px-1 py-2 whitespace-nowrap text-center w-7">
         {isEditable ? (
           <EditableWeightClassField
             value={item.weightClass || 'base'}
