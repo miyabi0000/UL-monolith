@@ -8,8 +8,8 @@ export interface HistoryEntry {
   action: 'create' | 'update' | 'delete' | 'bulk_update' | 'bulk_delete';
   changes: {
     field: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
   }[];
   timestamp: string;
   userId: string;
@@ -71,7 +71,7 @@ export class GearService {
   }
 
   // ENHANCED: Unified bulk operations
-  static async bulkOperation(action: 'update' | 'delete', ids: string[], data?: any): Promise<{
+  static async bulkOperation(action: 'update' | 'delete', ids: string[], data?: Record<string, unknown>): Promise<{
     processedCount: number;
     bulkOperationId: string;
     updatedItems?: GearItemWithCalculated[];
@@ -155,7 +155,10 @@ export class GearService {
           consumables: response.data.consumables,
           packedWeight: response.data.packedWeight,
           skinOutWeight: response.data.skinOutWeight,
-          big3: response.data.big3
+          big3: response.data.big3,
+          big3Pack: response.data.big3Pack ?? 0,
+          big3Shelter: response.data.big3Shelter ?? 0,
+          big3Sleep: response.data.big3Sleep ?? 0,
         },
         ulStatus: response.data.ulStatus
       };

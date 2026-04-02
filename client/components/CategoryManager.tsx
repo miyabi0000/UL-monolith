@@ -34,7 +34,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     setError(null)
     setIsSubmitting(true)
 
-    const isAllowedColor = JAPANESE_COLOR_HEX_SET.has(formData.color)
+    const isAllowedColor = JAPANESE_COLOR_HEX_SET.has(formData.color as Parameters<typeof JAPANESE_COLOR_HEX_SET.has>[0])
     if (!isAllowedColor) {
       setError('Color must be selected from the Japanese color palette.')
       setIsSubmitting(false)
@@ -60,7 +60,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
   const handleEdit = (category: Category) => {
     const fallbackColor = DEFAULT_JAPANESE_COLOR
-    const normalizedColor = JAPANESE_COLOR_HEX_SET.has(category.color)
+    const normalizedColor = JAPANESE_COLOR_HEX_SET.has(category.color as Parameters<typeof JAPANESE_COLOR_HEX_SET.has>[0])
       ? category.color
       : fallbackColor
     setEditingCategory(category)

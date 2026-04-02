@@ -87,7 +87,7 @@ export const callAPIWithRetry = async (
   endpoint: string,
   data: any = {},
   timeoutMs: number = API_CONFIG.timeout.standard,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST'
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST'
 ): Promise<any> => {
   const { attempts, delay, backoff } = API_CONFIG.retry
   let lastError: Error
