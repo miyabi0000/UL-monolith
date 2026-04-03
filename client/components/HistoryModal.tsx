@@ -173,14 +173,14 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
                             className="px-2 py-1 rounded"
                             style={{ color: errorTone.text, backgroundColor: errorTone.background }}
                           >
-                            {change.oldValue ?? 'null'}
+                            {String(change.oldValue ?? 'null')}
                           </span>
                           <span className="text-gray-400">→</span>
                           <span
                             className="px-2 py-1 rounded"
                             style={{ color: successTone.text, backgroundColor: successTone.background }}
                           >
-                            {change.newValue ?? 'null'}
+                            {String(change.newValue ?? 'null')}
                           </span>
                         </div>
                       </div>

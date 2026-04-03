@@ -1,4 +1,4 @@
-import { LLMExtractionResult } from '../types';
+import { LLMExtractionResult, Category } from '../utils/types';
 import { callAPIWithRetry, API_ENDPOINTS, API_CONFIG } from './api.client';
 
 /**
@@ -16,7 +16,7 @@ export class APIError extends Error {
 /**
  * Extract gear information from prompt
  */
-export async function extractFromPrompt(prompt: string, userCategories?: any[]): Promise<LLMExtractionResult> {
+export async function extractFromPrompt(prompt: string, userCategories?: Category[] | string[]): Promise<LLMExtractionResult> {
   try {
     const response = await callAPIWithRetry(
       '/llm/extract-prompt',
@@ -41,7 +41,7 @@ export async function extractFromPrompt(prompt: string, userCategories?: any[]):
 /**
  * Extract gear information from URL
  */
-export async function extractFromUrl(url: string, userCategories?: any[]): Promise<LLMExtractionResult> {
+export async function extractFromUrl(url: string, userCategories?: Category[] | string[]): Promise<LLMExtractionResult> {
   try {
     const response = await callAPIWithRetry(
       '/llm/extract-url',

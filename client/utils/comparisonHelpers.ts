@@ -3,6 +3,7 @@
  */
 
 import { GearItemWithCalculated, ComparisonMetrics } from './types';
+import { formatPrice, formatWeight } from './formatters';
 
 /**
  * 効率指標（g/¥）を計算
@@ -175,28 +176,7 @@ export function calculateDelta(
   };
 }
 
-/**
- * 価格をフォーマット（円表示）
- */
-export function formatPrice(priceCents: number | undefined): string {
-  if (priceCents === undefined || priceCents === null) {
-    return '—';
-  }
-
-  const priceYen = Math.round(priceCents / 100);
-  return `¥${priceYen.toLocaleString()}`;
-}
-
-/**
- * 重量をフォーマット（g表示）
- */
-export function formatWeight(weightGrams: number | undefined): string {
-  if (weightGrams === undefined || weightGrams === null) {
-    return '—';
-  }
-
-  return `${weightGrams}g`;
-}
+export { formatPrice, formatWeight };
 
 /**
  * 効率をフォーマット（g/¥表示）

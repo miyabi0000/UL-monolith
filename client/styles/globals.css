@@ -605,6 +605,71 @@
     @apply modal-panel max-w-4xl overflow-hidden;
   }
 
+  /* ダークモード: テーブル行・ヘッダー */
+  .dark .gear-table-head {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.80));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .dark .gear-table-row {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.55), rgba(15, 23, 42, 0.45));
+  }
+
+  .dark .gear-table-row:nth-child(even) {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.52), rgba(2, 6, 23, 0.42));
+  }
+
+  /* ダークモード: ガラスUI */
+  .dark .gear-glass-control {
+    background: linear-gradient(145deg, rgba(51, 65, 85, 0.72), rgba(30, 41, 59, 0.58));
+    box-shadow:
+      3px 3px 6px rgba(0, 0, 0, 0.25),
+      -2px -2px 5px rgba(50, 65, 85, 0.3);
+  }
+
+  .dark .gear-glass-chip {
+    background: linear-gradient(145deg, rgba(51, 65, 85, 0.65), rgba(30, 41, 59, 0.48));
+    box-shadow:
+      2px 2px 5px rgba(0, 0, 0, 0.2),
+      -2px -2px 4px rgba(50, 65, 85, 0.25);
+  }
+
+  /* ダークモード: フラットパネル */
+  .dark .card.flat-panel {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.85));
+    box-shadow:
+      5px 5px 12px rgba(0, 0, 0, 0.35),
+      -4px -4px 10px rgba(40, 55, 80, 0.25);
+  }
+
+  /* ダークモード: 異常値（在庫不足等）の赤色 */
+  .dark .gear-anomaly-value {
+    color: #f87171; /* red-400: ダーク背景でのコントラスト確保 */
+  }
+
+  /* ダークモード: CSS変数（通常時） */
+  .dark {
+    --text-table-head: #d1d5db;
+    --text-table-main: #f9fafb;
+    --text-table-sub: #9ca3af;
+    --text-table-num: #f3f4f6;
+    --text-table-micro: #9ca3af;
+    --surface-level-0: #111827;
+    --surface-level-1: #1f2937;
+    --surface-level-2: #374151;
+    --ink-primary: #f9fafb;
+    --ink-secondary: #e5e7eb;
+    --ink-muted: #9ca3af;
+    --stroke-subtle: rgba(71, 85, 105, 0.48);
+    --stroke-default: rgba(100, 116, 139, 0.7);
+    --stroke-divider: rgba(71, 85, 105, 0.62);
+    --focus-ring-offset: #111827;
+    --overlay-hover: rgba(255, 255, 255, 0.04);
+    --overlay-active: rgba(255, 255, 255, 0.08);
+  }
+
 }
 
 /* Recharts フォーカスリング非表示 */

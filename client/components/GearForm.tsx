@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category, WeightClass, isBig3Category, DEFAULT_GEAR_VALUES } from '../utils/types'
-import { extractFromUrl } from '../services/llmExtraction'
+import { extractFromUrl } from '../services/llmService'
 import { sanitizeGearForm } from '../utils/helpers'
 import { useImageUpload } from '../hooks/useImageUpload'
 import { STATUS_TONES } from '../utils/designSystem'
@@ -83,7 +83,7 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         weightConfidence: gearToEdit.weightConfidence || DEFAULT_GEAR_VALUES.weightConfidence,
         weightSource: gearToEdit.weightSource || DEFAULT_GEAR_VALUES.weightSource,
         priceCents: gearToEdit.priceCents,
-        season: gearToEdit.season || '',
+        season: (gearToEdit.seasons?.[0]) || '',
         priority: gearToEdit.priority,
         isInKit: gearToEdit.isInKit ?? DEFAULT_GEAR_VALUES.isInKit
       })
@@ -136,6 +136,8 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
       // エラーの場合は簡単なフォールバック
       const fallbackResult: LLMExtractionResult = {
         name: 'Unknown Product',
+        extractedFields: [],
+        source: 'fallback',
       }
       setExtractionResult(fallbackResult)
     } finally {

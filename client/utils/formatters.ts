@@ -6,7 +6,7 @@ export type Currency = 'JPY' | 'USD';
  * @returns Formatted price string (e.g., "¥12,345")
  */
 export const formatPrice = (priceCents?: number): string => {
-  if (!priceCents) return '-'
+  if (!priceCents) return '—'
   const price = priceCents / 100
   return `¥${Math.round(price).toLocaleString()}`
 }
@@ -58,7 +58,7 @@ export const calculateEfficiency = (
  * Format weight in grams
  */
 export const formatWeight = (weightGrams?: number): string => {
-  if (!weightGrams) return '-'
+  if (!weightGrams) return '—'
   return `${weightGrams}g`
 }
 

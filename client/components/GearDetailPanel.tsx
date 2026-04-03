@@ -132,6 +132,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     }
   }, [showCheckboxes, clearSelection, clearChangedFields]);
 
+  const asyncOnUpdateItem = useCallback(
+    async (id: string, field: string, value: GearFieldValue) => { onUpdateItem(id, field, value); },
+    [onUpdateItem]
+  );
+
   const {
     showComparisonModal,
     validationResult,
@@ -142,7 +147,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     raisePriority: handleRaisePriority,
   } = useComparisonMode({
     selectedItems,
-    onUpdateItem,
+    onUpdateItem: asyncOnUpdateItem,
     onClearSelection: clearSelection,
     onRemoveItem: (itemId) => setSelectedIds(prev => prev.filter(id => id !== itemId)),
     onDeleteItem: onDelete,
@@ -188,7 +193,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       <div className="w-full h-full min-w-0 overflow-hidden">
         <CardGridView
           items={chartFilteredItems}
-          viewMode={viewMode}
+          viewMode={viewMode === 'cost' ? 'cost' : 'weight'}
           quantityDisplayMode={quantityDisplayMode}
           selectedItemId={selectedItemId}
           activePackName={activePack?.name}

@@ -107,7 +107,7 @@ export interface GearItem {
 
   // LLM
   llmData?: {
-    extracted: any;
+    extracted: Record<string, unknown>;
     extractedAt: string;
   };
 
@@ -280,8 +280,10 @@ export interface DecisionSummary {
 
 // API レスポンス
 export interface ApiResponse<T> {
+  success: boolean;
   data: T;
   message?: string;
+  error?: string;
 }
 
 export interface PaginatedResponse<T> {

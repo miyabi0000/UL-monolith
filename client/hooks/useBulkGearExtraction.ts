@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { extractFromUrl } from '../services/llmExtraction'
+import { extractFromUrl } from '../services/llmService'
 import { Category } from '../utils/types'
 import {
   ExtractedGearWithUrl,

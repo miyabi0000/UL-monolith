@@ -17,7 +17,7 @@ export const SEASON_ORDER: Record<string, number> = {
  * @param sortField - ソートするフィールド
  * @returns ソート用の値
  */
-export function getSortValue(item: GearItemWithCalculated, sortField: SortField): any {
+export function getSortValue(item: GearItemWithCalculated, sortField: SortField): string | number {
   switch (sortField) {
     case 'name':
       return item.name.toLowerCase();
