@@ -220,8 +220,8 @@ const TableRow: React.FC<TableRowProps> = ({
         </div>
       </td>
 
-      {/* Weight Class (モバイル非表示) */}
-      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10 hidden sm:table-cell">
+      {/* Weight Class */}
+      <td className="px-1.5 py-2 whitespace-nowrap text-center w-10">
         {isEditable ? (
           <EditableWeightClassField
             value={item.weightClass || 'base'}
@@ -239,8 +239,8 @@ const TableRow: React.FC<TableRowProps> = ({
         )}
       </td>
 
-      {/* Own/Need (モバイル非表示) */}
-      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[88px] hidden sm:table-cell">
+      {/* Own/Need */}
+      <td className="gear-text-num px-2 py-2 whitespace-nowrap text-center w-[88px]">
         <div className="flex h-6 items-center justify-center">
           {isEditable ? (
             <QuantitySelector
@@ -267,16 +267,16 @@ const TableRow: React.FC<TableRowProps> = ({
         />
       </td>
 
-      {/* Priority (モバイル非表示) */}
-      <td className="px-1.5 py-2 whitespace-nowrap text-center w-8 hidden sm:table-cell">
+      {/* Priority */}
+      <td className="px-1.5 py-2 whitespace-nowrap text-center w-8">
         <PrioritySelector
           priority={item.priority}
           onChange={(value) => onUpdateItem(item.id, 'priority', value)}
         />
       </td>
 
-      {/* Price (モバイル非表示) */}
-      <td className="gear-text-num px-1.5 py-2 whitespace-nowrap text-center w-14 hidden sm:table-cell">
+      {/* Price */}
+      <td className="gear-text-num px-1.5 py-2 whitespace-nowrap text-center w-14">
         <EditablePriceField
           value={item.priceCents}
           onChange={(value) => onUpdateItem(item.id, 'priceCents', value)}
@@ -286,9 +286,9 @@ const TableRow: React.FC<TableRowProps> = ({
         />
       </td>
 
-      {/* Season (モバイル非表示) */}
+      {/* Season */}
       <td
-        className="px-1.5 py-2 text-center w-14 hidden sm:table-cell"
+        className="px-1.5 py-2 text-center w-14"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => isEditable && e.stopPropagation()}
       >
