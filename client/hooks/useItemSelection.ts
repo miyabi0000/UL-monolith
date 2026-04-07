@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 
 interface UseItemSelectionOptions {
@@ -57,10 +57,16 @@ export function useItemSelection(
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
 
   const selectedIds = controlledSelectedIds ?? internalSelectedIds;
+  // refで最新のselectedIdsを保持し、setSelectedIdsの依存配列からselectedIdsを除去して無限ループを防止
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
 
   const commitSelection = useCallback((newIds: string[]) => {
     if (controlledSelectedIds === undefined) {
-      setInternalSelectedIds(newIds);
+      setInternalSelectedIds(prev => {
+        if (prev.length === newIds.length && prev.every((id, i) => id === newIds[i])) return prev;
+        return newIds;
+      });
     }
     onSelectedIdsChange?.(newIds);
     onSelectionChange?.(newIds);
@@ -68,10 +74,10 @@ export function useItemSelection(
 
   const setSelectedIds = useCallback((value: React.SetStateAction<string[]>) => {
     const nextIds = typeof value === 'function'
-      ? (value as (prevState: string[]) => string[])(selectedIds)
+      ? (value as (prevState: string[]) => string[])(selectedIdsRef.current)
       : value;
     commitSelection(nextIds);
-  }, [selectedIds, commitSelection]);
+  }, [commitSelection]);
 
   // 選択されたアイテムのオブジェクト配列
   const selectedItems = useMemo(
