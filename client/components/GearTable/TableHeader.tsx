@@ -23,7 +23,6 @@ type HeaderColumn = {
   align?: 'left' | 'center'
   sortable?: boolean
   sortField?: SortField
-
 }
 
 const COLUMNS: HeaderColumn[] = [

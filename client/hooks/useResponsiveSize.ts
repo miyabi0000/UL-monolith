@@ -2,9 +2,10 @@ import { useSyncExternalStore } from 'react'
 
 export type ScreenSize = 'mobile' | 'tablet' | 'desktop'
 
+// Tailwind の sm: (640px) と一致させる
 const getScreenSize = (): ScreenSize => {
   const width = window.innerWidth
-  if (width < 768) return 'mobile'
+  if (width < 640) return 'mobile'
   if (width < 1024) return 'tablet'
   return 'desktop'
 }

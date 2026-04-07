@@ -810,7 +810,11 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 lg:overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? (screenSize === 'mobile' ? 'w-full shadow-none' : 'w-12 shadow-none') : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${
+          isChartCollapsed
+            ? screenSize === 'mobile' ? 'w-full shadow-none' : 'w-12 shadow-none'
+            : 'w-full lg:w-[40%]'
+        }`}>
           {/* グラフヘッダー */}
           <div className={`flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
