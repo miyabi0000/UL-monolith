@@ -23,11 +23,20 @@ const SEASON_LABELS_SHORT: Record<string, string> = {
   winter: 'Wi'
 }
 
-const SEASON_COLORS: Record<string, { icon: string; bg: string; border: string; selectedText: string }> = {
-  spring: { icon: '#16a34a', bg: '#dcfce7', border: '#86efac', selectedText: '#14532d' },
-  summer: { icon: '#f59e0b', bg: '#fef3c7', border: '#fcd34d', selectedText: '#78350f' },
-  fall: { icon: '#ea580c', bg: '#ffedd5', border: '#fdba74', selectedText: '#7c2d12' },
-  winter: { icon: '#2563eb', bg: '#dbeafe', border: '#93c5fd', selectedText: '#1e3a8a' }
+// 選択時のTailwindクラス（ライト/ダーク対応）
+const SEASON_SELECTED_CLASSES: Record<string, string> = {
+  spring: 'bg-green-100 dark:bg-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-200',
+  summer: 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200',
+  fall:   'bg-orange-100 dark:bg-orange-900/40 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200',
+  winter: 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200',
+}
+
+// 非選択時のアイコン色クラス
+const SEASON_ICON_CLASSES: Record<string, string> = {
+  spring: 'text-green-600 dark:text-green-500',
+  summer: 'text-amber-500 dark:text-amber-400',
+  fall:   'text-orange-600 dark:text-orange-500',
+  winter: 'text-blue-600 dark:text-blue-500',
 }
 
 // シーズンアイコン
@@ -117,17 +126,6 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
       <div className={`flex ${isSmall ? 'gap-0.5' : 'gap-1'} justify-center`}>
         {SEASONS.map(season => {
           const selected = isSelected(season)
-          const seasonColor = SEASON_COLORS[season]
-          const selectedStyle = {
-            backgroundColor: seasonColor.bg,
-            color: seasonColor.selectedText,
-            borderColor: seasonColor.border
-          }
-          const unselectedStyle = {
-            color: seasonColor.icon,
-            borderColor: isEditing ? 'rgba(148, 163, 184, 0.42)' : 'transparent',
-            backgroundColor: isEditing ? 'rgba(255, 255, 255, 0.45)' : 'transparent'
-          }
 
           return (
             <button
@@ -146,13 +144,12 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
                 ${isSmall ? 'w-5 h-5' : 'w-7 h-7'}
                 ${isEditing ? 'cursor-pointer' : 'cursor-default'}
                 ${selected
-                  ? 'shadow-sm'
+                  ? `shadow-sm ${SEASON_SELECTED_CLASSES[season]}`
                   : isEditing
-                    ? 'hover:brightness-95'
-                    : 'opacity-75'
+                    ? `${SEASON_ICON_CLASSES[season]} border-slate-300/60 dark:border-slate-600/60 bg-white/45 dark:bg-slate-700/30 hover:brightness-95`
+                    : `${SEASON_ICON_CLASSES[season]} border-transparent bg-transparent opacity-75`
                 }
               `}
-              style={selected ? selectedStyle : unselectedStyle}
               title={SEASON_LABELS[season]}
             >
               <SeasonIcon season={season} size={size} />

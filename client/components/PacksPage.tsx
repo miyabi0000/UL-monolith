@@ -20,12 +20,24 @@ export interface AdvisorPackScope {
 
 interface PacksPageProps {
   appState: ReturnType<typeof useAppState>;
-  /** パック選択状態が変わったときに呼ばれるコールバック（アドバイザーのスコープ連携用） */
   onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
-  onShowLogin?: () => void;
+  // ProfileHeader に渡すコントロール
+  isAuthenticated: boolean;
+  userName?: string;
+  onShowLogin: () => void;
+  onLogout: () => void;
+  onShowAdvisor?: () => void;
 }
 
-export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin }: PacksPageProps) {
+export default function PacksPage({
+  appState,
+  onAdvisorScopeChange,
+  isAuthenticated,
+  userName,
+  onShowLogin,
+  onLogout,
+  onShowAdvisor,
+}: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
@@ -77,12 +89,16 @@ export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin 
   };
 
   return (
-    <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-3 pt-16 pb-6 sm:px-6 md:px-8 lg:px-[16px]">
+    <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-3 pt-4 pb-6 sm:px-6 md:px-8 lg:px-[16px]">
       <div className="flex min-h-0 flex-col gap-3">
         <ProfileHeader
           profile={profile}
           onEditProfile={() => setShowEditor(true)}
+          isAuthenticated={isAuthenticated}
+          userName={userName}
           onShowLogin={onShowLogin}
+          onLogout={onLogout}
+          onShowAdvisor={onShowAdvisor}
         />
 
         <div className="min-h-0 flex-1">

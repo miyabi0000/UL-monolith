@@ -1,132 +1,27 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import HorizontalBarChart from './charts/HorizontalBarChart'
-import BackpackIcon from './icons/BackpackIcon'
-import ScaleIcon from './icons/ScaleIcon'
-import YenIcon from './icons/YenIcon'
 import { useResponsiveSize } from '../hooks/useResponsiveSize'
-import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, UL_THRESHOLDS, ChartFocus, ChartScope, DUAL_RING_COLORS } from '../utils/types'
+import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, ChartFocus, ChartScope } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
-import { getQuantityForDisplayMode, calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
+import { calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ActiveCalloutShape from './charts/ActiveCalloutShape'
-
-// ==================== 定数 ====================
-// デザインシステムに基づいたチャート設定（コンパクト化）
-const CHART_CONFIG = {
-  height: {
-    mobile: 240,
-    tablet: 300,
-    desktop: 340
-  },
-  outerRadius: {
-    mobile: { outer: 96, inner: 68 },
-    tablet: { outer: 128, inner: 92 },
-    desktop: { outer: 160, inner: 112 }
-  },
-  innerRadius: {
-    mobile: { outer: 68, inner: 44 },
-    tablet: { outer: 92, inner: 60 },
-    desktop: { outer: 112, inner: 76 }
-  },
-  centerMaxWidth: {
-    mobile: 80,
-    tablet: 112,
-    desktop: 144
-  }
-} as const
+import SegmentedControl from './ui/SegmentedControl'
+import ChartCenterDisplay from './charts/ChartCenterDisplay'
+import { CHART_CONFIG, getItemValue } from '../utils/chartConfig'
+import ChartSummaryFooter from './charts/ChartSummaryFooter'
 
 const DEFAULT_COLOR = COLORS.gray[500]
-
-// UL分類カラートークン
-const UL_BADGE_COLORS = {
-  ultralight: COLORS.success,
-  lightweight: COLORS.warning,
-  traditional: COLORS.error
-} as const
-
-// フォントサイズトークン
-const FONT_SIZES = {
-  center: {
-    primary: { mobile: '1.1rem', desktop: '1.4rem' },      // 値表示
-    secondary: { mobile: '0.65rem', desktop: '0.75rem' },   // ラベル
-    tertiary: { mobile: '0.55rem', desktop: '0.65rem' }     // サブ情報
-  },
-  badge: { mobile: '0.5rem', desktop: '0.55rem' }
-} as const
-
-// ==================== ヘルパー関数 ====================
-// Color utilities moved to /client/utils/colorHelpers.ts
-
-const formatValue = (value: number, mode: ChartViewMode): string => {
-  if (mode === 'cost') {
-    return `¥${Math.round(value / 100).toLocaleString()}`
-  }
-  return `${value}g`
-}
-
-const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, quantityMode: QuantityDisplayMode): number => {
-  const quantity = getQuantityForDisplayMode(item, quantityMode)
-  const unitValue = viewMode === 'cost' ? (item.priceCents || 0) : (item.weightGrams || 0)
-  return unitValue * quantity
-}
 
 type GearItemWithPercentages = GearItemWithCalculated & {
   systemPercentage: number
   totalPercentage: number
   displayValue: number
 }
-
-const VIEW_MODE_OPTIONS = [
-  { mode: 'weight', label: 'Weight', icon: ScaleIcon },
-  { mode: 'cost', label: 'Cost', icon: YenIcon },
-  { mode: 'weight-class', label: 'Class', icon: BackpackIcon }
-] as const
-
-interface SegmentedOption {
-  key: string
-  label: React.ReactNode
-  onClick: () => void
-  isActive: boolean
-  isDisabled?: boolean
-  title?: string
-  ariaLabel?: string
-  activeClassName?: string
-  inactiveClassName?: string
-  disabledClassName?: string
-}
-
-interface SegmentedControlProps {
-  options: SegmentedOption[]
-  className?: string
-}
-
-const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, className = '' }) => (
-  <div className={`inline-flex items-center gap-1 ${className}`}>
-    {options.map((option) => {
-      const activeClass = option.activeClassName ?? 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 shadow-sm'
-      const inactiveClass = option.inactiveClassName ?? 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
-      const disabledClass = option.disabledClassName ?? 'text-gray-300 dark:text-gray-500 cursor-not-allowed'
-      const stateClass = option.isDisabled ? disabledClass : option.isActive ? activeClass : inactiveClass
-
-      return (
-        <button
-          key={option.key}
-          onClick={option.onClick}
-          disabled={option.isDisabled}
-          title={option.title}
-          aria-label={option.ariaLabel}
-          className={`gear-glass-chip h-6 px-2 rounded-md text-[10px] font-medium transition-all duration-200 inline-flex items-center gap-1 ${stateClass}`}
-        >
-          {option.label}
-        </button>
-      )
-    })}
-  </div>
-)
 
 type OuterPieDataItem = {
   id: string
@@ -135,348 +30,6 @@ type OuterPieDataItem = {
   color: string
   brand?: string
   percentage: number
-}
-
-type SelectedCategoryInfo = {
-  value: number
-  color: string
-  percentage: number
-}
-
-interface ChartCenterDisplayProps {
-  selectedItemData: OuterPieDataItem | null
-  selectedCategoryFromChart: string | null
-  selectedCategoryData: SelectedCategoryInfo | null
-  viewMode: ChartViewMode
-  screenSize: 'mobile' | 'tablet' | 'desktop'
-  centerMaxWidth: number
-  chartFocus: ChartFocus
-  weightBreakdown?: WeightBreakdown | null
-  ulStatus?: ULStatus | null
-  totalValue: number
-}
-
-const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
-  selectedItemData,
-  selectedCategoryFromChart,
-  selectedCategoryData,
-  viewMode,
-  screenSize,
-  centerMaxWidth,
-  chartFocus,
-  weightBreakdown,
-  ulStatus,
-  totalValue
-}) => {
-  if (selectedItemData) {
-    return (
-      <>
-        <div
-          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-          }}
-        >
-          {formatValue(selectedItemData.value, viewMode)}
-        </div>
-        <div
-          className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
-            color: selectedItemData.color,
-            maxWidth: centerMaxWidth - 16,
-            lineHeight: '1.2',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis'
-          }}
-          title={selectedItemData.name}
-        >
-          {selectedItemData.name}
-        </div>
-        {selectedItemData.brand && (
-          <div
-            className="text-gray-500 dark:text-gray-400 mb-0.5 px-1 text-center overflow-hidden"
-            style={{
-              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
-              maxWidth: centerMaxWidth - 16,
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis'
-            }}
-            title={selectedItemData.brand}
-          >
-            {selectedItemData.brand}
-          </div>
-        )}
-        <div
-          className="text-gray-500 dark:text-gray-400"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-          }}
-        >
-          {selectedItemData.percentage}% of total
-        </div>
-      </>
-    )
-  }
-
-  if (selectedCategoryFromChart && selectedCategoryData) {
-    return (
-      <>
-        <div
-          className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-          }}
-        >
-          {formatValue(selectedCategoryData.value, viewMode)}
-        </div>
-        <div
-          className="uppercase tracking-wide font-bold mb-1"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop,
-            color: selectedCategoryData.color
-          }}
-        >
-          {selectedCategoryFromChart}
-        </div>
-        <div
-          className="text-gray-500 dark:text-gray-400"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-          }}
-        >
-          {selectedCategoryData.percentage}% of total
-        </div>
-      </>
-    )
-  }
-
-  if (viewMode === 'weight-class' && weightBreakdown && ulStatus) {
-    const ulProgress = Math.min(100, (weightBreakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
-    const ulBadgeColor = UL_BADGE_COLORS[ulStatus.classification]
-    const ulBadgeLabel = ulStatus.classification === 'ultralight'
-      ? 'UL'
-      : ulStatus.classification === 'lightweight'
-        ? 'LW'
-        : 'Trad'
-
-    const otherWeight = weightBreakdown.baseWeight - weightBreakdown.big3
-    const displayWeight = chartFocus === 'big3'
-      ? weightBreakdown.big3
-      : chartFocus === 'other'
-        ? otherWeight
-        : weightBreakdown.baseWeight
-    const displayLabel = chartFocus === 'big3'
-      ? 'BIG3'
-      : chartFocus === 'other'
-        ? 'OTHER'
-        : 'BASE WEIGHT'
-    const displayColor = chartFocus === 'big3'
-      ? DUAL_RING_COLORS.big3
-      : chartFocus === 'other'
-        ? DUAL_RING_COLORS.other
-        : undefined
-
-    return (
-      <>
-        <div
-          className="font-bold mb-0.5"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop,
-            color: displayColor || 'inherit'
-          }}
-        >
-          {(displayWeight / 1000).toFixed(2)}kg
-        </div>
-        <div
-          className="uppercase tracking-wide font-bold mb-1"
-          style={{
-            fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop,
-            color: displayColor || DEFAULT_COLOR
-          }}
-        >
-          {displayLabel}
-        </div>
-        {chartFocus === 'all' && (
-          <>
-            <span
-              className="px-1.5 py-0.5 rounded-full text-white font-bold"
-              style={{
-                fontSize: screenSize === 'mobile' ? FONT_SIZES.badge.mobile : FONT_SIZES.badge.desktop,
-                backgroundColor: ulBadgeColor
-              }}
-            >
-              {ulBadgeLabel}
-            </span>
-            <div
-              className="text-gray-400 dark:text-gray-500 mt-0.5"
-              style={{
-                fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-              }}
-            >
-              {Math.round(ulProgress)}% of UL
-            </div>
-          </>
-        )}
-        {chartFocus !== 'all' && (
-          <div
-            className="text-gray-400 dark:text-gray-500 mt-0.5"
-            style={{
-              fontSize: screenSize === 'mobile' ? FONT_SIZES.center.tertiary.mobile : FONT_SIZES.center.tertiary.desktop
-            }}
-          >
-            {weightBreakdown.baseWeight > 0
-              ? Math.round((displayWeight / weightBreakdown.baseWeight) * 100)
-              : 0}% of Base
-          </div>
-        )}
-      </>
-    )
-  }
-
-  return (
-    <>
-      <div
-        className="font-bold mb-0.5 text-gray-900 dark:text-gray-100"
-        style={{
-          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
-        }}
-      >
-        {formatValue(totalValue, viewMode)}
-      </div>
-      <div
-        className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
-        style={{
-          fontSize: screenSize === 'mobile' ? FONT_SIZES.center.secondary.mobile : FONT_SIZES.center.secondary.desktop
-        }}
-      >
-        {viewMode === 'cost' ? 'TOTAL COST' : 'TOTAL WEIGHT'}
-      </div>
-    </>
-  )
-}
-
-interface ChartSummaryFooterProps {
-  viewMode: ChartViewMode
-  onViewModeChange: (mode: ChartViewMode) => void
-  weightBreakdown?: WeightBreakdown | null
-  weightClassSummaryCards: Array<{ key: string; label: string; value: number; focus: ChartFocus }>
-  chartFocus: ChartFocus
-  onToggleChartFocus: (focus: ChartFocus) => void
-  totalWeight: number
-  totalCost: number
-  itemCount: number
-}
-
-interface SummaryStatCardProps {
-  label: string
-  value: string
-  subValue?: string
-  icon?: React.ReactNode
-  isActive?: boolean
-  onClick?: () => void
-}
-
-const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
-  label,
-  value,
-  subValue,
-  icon,
-  isActive = false,
-  onClick,
-}) => {
-  const cardClass = `flex flex-col items-center justify-center px-1 h-[72px] rounded-md transition-all duration-200 ${
-    isActive
-      ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500'
-      : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
-  }`
-
-  const content = (
-    <>
-      <div className="flex items-center gap-1.5 mb-0.5 leading-none">
-        {icon}
-        <span className="text-[10px] leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
-      </div>
-      <span className="text-[11px] leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
-      {subValue && <span className="text-[9px] leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
-    </>
-  )
-
-  if (onClick) {
-    return (
-      <button onClick={onClick} className={cardClass}>
-        {content}
-      </button>
-    )
-  }
-
-  return <div className={cardClass}>{content}</div>
-}
-
-const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
-  viewMode,
-  onViewModeChange,
-  weightBreakdown,
-  weightClassSummaryCards,
-  chartFocus,
-  onToggleChartFocus,
-  totalWeight,
-  totalCost,
-  itemCount
-}) => {
-  return (
-    <div className="px-2 py-1.5 neu-divider">
-      <div className="flex justify-center mb-1.5">
-        <SegmentedControl
-          options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
-            key: mode,
-            onClick: () => onViewModeChange(mode),
-            isActive: viewMode === mode,
-            ariaLabel: `${label} mode`,
-            label: (
-              <>
-                <Icon className="w-3 h-3" />
-                {label}
-              </>
-            ),
-          }))}
-        />
-      </div>
-
-      <div className="min-h-[72px]">
-        {viewMode === 'weight-class' && weightBreakdown ? (
-          <div className="grid grid-cols-4 gap-1 h-[72px]">
-            {weightClassSummaryCards.map(card => (
-              <SummaryStatCard
-                key={card.key}
-                label={card.label}
-                value={`${card.value.toLocaleString()}g`}
-                isActive={chartFocus === card.focus}
-                onClick={() => onToggleChartFocus(card.focus)}
-              />
-            ))}
-          </div>
-      ) : (
-          <div className="grid grid-cols-2 gap-1.5 h-[72px]">
-            <SummaryStatCard
-              label="Weight"
-              value={`${totalWeight.toLocaleString()}g`}
-              subValue={`${(totalWeight / 1000).toFixed(2)}kg`}
-              isActive={viewMode === 'weight'}
-              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
-            />
-            <SummaryStatCard
-              label="Price"
-              value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
-              subValue={`${itemCount} items`}
-              isActive={viewMode === 'cost'}
-              icon={<YenIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
-            />
-          </div>
-      )}
-      </div>
-    </div>
-  )
 }
 
 // ==================== メインコンポーネント ====================
@@ -617,7 +170,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
   const dualRingOuterData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
-    const data = calculateOuterRingData(analysisItems, chartScope, chartFocus, categories)
+    const data = calculateOuterRingData(analysisItems, chartScope, chartFocus)
     const total = data.reduce((sum, d) => sum + d.value, 0)
     return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
   }, [viewMode, analysisItems, chartScope, chartFocus, categories])
@@ -949,7 +502,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     innerRadius={outerRadiusConfig.inner}
                     onClick={(entry) => handleDualRingOuterClick(entry.id)}
                     activeIndex={outerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape}
+                    activeShape={ActiveCalloutShape as any}
                     onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
                     onMouseLeave={() => setOuterActiveIndex(null)}
                     className="cursor-pointer"
@@ -985,7 +538,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     innerRadius={innerRadiusConfig.inner}
                     onClick={(entry) => handleInnerRingClick(entry.id)}
                     activeIndex={innerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape}
+                    activeShape={ActiveCalloutShape as any}
                     onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
                     onMouseLeave={() => setInnerActiveIndex(null)}
                     className="cursor-pointer"
@@ -1024,7 +577,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       innerRadius={outerRadiusConfig.inner}
                       onClick={(entry) => handleItemClick(entry.id)}
                       activeIndex={outerActiveIndex ?? undefined}
-                      activeShape={ActiveCalloutShape}
+                      activeShape={ActiveCalloutShape as any}
                       onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
                       onMouseLeave={() => setOuterActiveIndex(null)}
                       className="cursor-pointer"
@@ -1066,7 +619,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     innerRadius={innerRadiusConfig.inner}
                     onClick={(entry) => handleCategoryClick(entry.name)}
                     activeIndex={innerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape}
+                    activeShape={ActiveCalloutShape as any}
                     onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
                     onMouseLeave={() => setInnerActiveIndex(null)}
                     className="cursor-pointer"

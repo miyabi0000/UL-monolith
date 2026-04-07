@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 
 interface UseItemSelectionOptions {
@@ -57,27 +57,27 @@ export function useItemSelection(
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
 
   const selectedIds = controlledSelectedIds ?? internalSelectedIds;
-  // refで最新のselectedIdsを保持し、setSelectedIdsの依存配列からselectedIdsを除去して無限ループを防止
-  const selectedIdsRef = useRef(selectedIds);
-  selectedIdsRef.current = selectedIds;
 
   const commitSelection = useCallback((newIds: string[]) => {
     if (controlledSelectedIds === undefined) {
-      setInternalSelectedIds(prev => {
-        if (prev.length === newIds.length && prev.every((id, i) => id === newIds[i])) return prev;
-        return newIds;
-      });
+      setInternalSelectedIds(newIds);
     }
     onSelectedIdsChange?.(newIds);
     onSelectionChange?.(newIds);
   }, [controlledSelectedIds, onSelectedIdsChange, onSelectionChange]);
 
   const setSelectedIds = useCallback((value: React.SetStateAction<string[]>) => {
-    const nextIds = typeof value === 'function'
-      ? (value as (prevState: string[]) => string[])(selectedIdsRef.current)
-      : value;
-    commitSelection(nextIds);
-  }, [commitSelection]);
+    if (typeof value === 'function') {
+      setInternalSelectedIds(prev => {
+        const nextIds = (value as (prevState: string[]) => string[])(prev);
+        onSelectedIdsChange?.(nextIds);
+        onSelectionChange?.(nextIds);
+        return nextIds;
+      });
+    } else {
+      commitSelection(value);
+    }
+  }, [commitSelection, onSelectedIdsChange, onSelectionChange]);
 
   // 選択されたアイテムのオブジェクト配列
   const selectedItems = useMemo(
@@ -140,11 +140,11 @@ export function useItemSelection(
 
   useEffect(() => {
     const validItemIds = new Set(items.map(item => item.id));
-    const filtered = selectedIds.filter(id => validItemIds.has(id));
-    if (filtered.length !== selectedIds.length) {
-      commitSelection(filtered);
-    }
-  }, [items, selectedIds, commitSelection]);
+    setInternalSelectedIds(prev => {
+      const filtered = prev.filter(id => validItemIds.has(id));
+      return filtered.length !== prev.length ? filtered : prev;
+    });
+  }, [items]);
 
   return {
     selectedIds,

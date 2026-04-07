@@ -20,13 +20,15 @@ const Card: React.FC<CardProps> = ({
     ${className}
   `.trim().replace(/\s+/g, ' ');
 
+  const AnyComponent = Component as any;
+
   return (
-    <Component
+    <AnyComponent
       className={classes}
       {...props}
     >
       {children}
-    </Component>
+    </AnyComponent>
   );
 };
 

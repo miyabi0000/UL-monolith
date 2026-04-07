@@ -249,7 +249,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
             <SeasonBar
               seasons={formData.seasons}
               isEditing={true}
-              onChange={(newSeasons) => setFormData({ ...formData, seasons: newSeasons })}
+              onChange={(newSeasons) => setFormData({ ...formData, seasons: newSeasons as ('spring' | 'summer' | 'fall' | 'winter')[] })}
               size="md"
             />
           </div>

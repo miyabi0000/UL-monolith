@@ -258,7 +258,6 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
 
                   // Check if the result is actually valid (not a fallback)
                   const isFallback = data.source === 'fallback' ||
-                                    data.confidence !== undefined && data.confidence < 0.5 ||
                                     !data.name ||
                                     data.name.includes('Failed to Extract') ||
                                     data.name.includes('Product from')

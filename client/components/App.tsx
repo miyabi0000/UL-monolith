@@ -69,7 +69,11 @@ export default function App() {
             <PacksPage
               appState={appState}
               onAdvisorScopeChange={setAdvisorScope}
+              isAuthenticated={isAuthenticated}
+              userName={user?.name}
               onShowLogin={() => setShowLogin(true)}
+              onLogout={logout}
+              onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
             />
           }
         />
@@ -78,13 +82,16 @@ export default function App() {
         <Route path="/p/:packId" element={<PackDetailPage />} />
       </Routes>
 
-      <AppDock
-        onShowLogin={() => setShowLogin(true)}
-        onLogout={logout}
-        isAuthenticated={isAuthenticated}
-        userName={user?.name}
-        onShowAdvisor={() => setShowAdvisor(true)}
-      />
+      {/* PacksPage(/) 以外のルート（/p/:packId など）でのみ表示 */}
+      {location.pathname !== '/' && (
+        <AppDock
+          onShowLogin={() => setShowLogin(true)}
+          onLogout={logout}
+          isAuthenticated={isAuthenticated}
+          userName={user?.name}
+          onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
+        />
+      )}
 
       <Suspense fallback={null}>
         {showLogin && (

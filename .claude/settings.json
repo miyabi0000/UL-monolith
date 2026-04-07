@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Read(//Users/shimizumasaya/pr16-work/client/components/**)",
+      "Read(//Users/shimizumasaya/pr16-work/client/services/**)",
+      "Read(//Users/shimizumasaya/pr16-work/server/routes/llm/**)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
