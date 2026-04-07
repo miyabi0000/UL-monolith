@@ -806,9 +806,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // ==================== レンダリング ====================
   return (
-    <div className="h-[calc(100vh-100px)] flex flex-col">
+    <div className="lg:h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 lg:overflow-hidden">
         {/* グラフエリア */}
         <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? (screenSize === 'mobile' ? 'w-full shadow-none' : 'w-12 shadow-none') : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
