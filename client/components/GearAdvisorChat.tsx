@@ -128,10 +128,9 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
 
   return (
     <>
-      {/* モバイル用背景スクリム */}
       {isMobile && isOpen && (
         <div
-          className="fixed inset-0 z-[39] bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+          className="fixed inset-0 z-[39] bg-black/30 transition-opacity duration-300"
           onClick={onClose}
         />
       )}

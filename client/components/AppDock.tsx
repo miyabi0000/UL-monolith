@@ -33,8 +33,9 @@ const AppDock: React.FC<AppDockProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!userMenuOpen) return;
     const onClickOutside = (event: MouseEvent) => {
-      if (userMenuOpen && !(event.target as Element).closest('.app-dock-user-menu')) {
+      if (!(event.target as Element).closest('.app-dock-user-menu')) {
         setUserMenuOpen(false);
       }
     };

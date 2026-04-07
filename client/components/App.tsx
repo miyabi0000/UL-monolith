@@ -70,7 +70,6 @@ export default function App() {
               appState={appState}
               onAdvisorScopeChange={setAdvisorScope}
               onShowLogin={() => setShowLogin(true)}
-              onLogout={logout}
             />
           }
         />

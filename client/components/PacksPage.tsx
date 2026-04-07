@@ -23,10 +23,9 @@ interface PacksPageProps {
   /** パック選択状態が変わったときに呼ばれるコールバック（アドバイザーのスコープ連携用） */
   onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
   onShowLogin?: () => void;
-  onLogout?: () => void;
 }
 
-export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin, onLogout }: PacksPageProps) {
+export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin }: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
@@ -83,10 +82,7 @@ export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin,
         <ProfileHeader
           profile={profile}
           onEditProfile={() => setShowEditor(true)}
-          isAuthenticated={!!user}
-          userName={user?.name}
           onShowLogin={onShowLogin}
-          onLogout={onLogout}
         />
 
         <div className="min-h-0 flex-1">
