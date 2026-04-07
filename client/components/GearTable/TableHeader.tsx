@@ -23,18 +23,20 @@ type HeaderColumn = {
   align?: 'left' | 'center'
   sortable?: boolean
   sortField?: SortField
+  /** sm未満で非表示にする */
+  hiddenOnMobile?: boolean
 }
 
 const COLUMNS: HeaderColumn[] = [
   { key: 'image', label: 'image', widthClass: 'w-20' },
   { key: 'name', label: 'name', widthClass: 'min-w-[112px] max-w-[188px]', sortable: true, sortField: 'name' },
   { key: 'category', label: 'category', widthClass: 'w-28', sortable: true, sortField: 'category' },
-  { key: 'weightclass', label: 'type', widthClass: 'w-10', align: 'center' },
-  { key: 'quantity', label: 'ALL', widthClass: 'w-[88px]', align: 'center' },
+  { key: 'weightclass', label: 'type', widthClass: 'w-10', align: 'center', hiddenOnMobile: true },
+  { key: 'quantity', label: 'ALL', widthClass: 'w-[88px]', align: 'center', hiddenOnMobile: true },
   { key: 'weight', label: 'g', widthClass: 'w-[72px]', align: 'center', sortable: true, sortField: 'weight' },
-  { key: 'priority', label: 'priority', widthClass: 'w-8', align: 'center', sortable: true, sortField: 'priority' },
-  { key: 'price', label: 'price', widthClass: 'w-14', align: 'center', sortable: true, sortField: 'price' },
-  { key: 'season', label: 'season', widthClass: 'w-14', sortable: true, sortField: 'season' },
+  { key: 'priority', label: 'priority', widthClass: 'w-8', align: 'center', sortable: true, sortField: 'priority', hiddenOnMobile: true },
+  { key: 'price', label: 'price', widthClass: 'w-14', align: 'center', sortable: true, sortField: 'price', hiddenOnMobile: true },
+  { key: 'season', label: 'season', widthClass: 'w-14', sortable: true, sortField: 'season', hiddenOnMobile: true },
 ]
 
 const toAriaSort = (isActive: boolean, direction: SortDirection): React.AriaAttributes['aria-sort'] =>
@@ -94,10 +96,12 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     )
   }
 
+  const mobileClass = (col: HeaderColumn) => col.hiddenOnMobile ? 'hidden sm:table-cell' : '';
+
   const renderStandardColumn = (column: HeaderColumn) => {
     if (!column.sortable || !column.sortField) {
       return (
-        <th key={column.key} className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass}`}>
+        <th key={column.key} className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass} ${mobileClass(column)}`}>
           <span className={`${labelBase} ${column.align === 'center' ? 'justify-center' : 'justify-start'} ${inactiveText}`}>
             <span className="whitespace-nowrap">{column.label}</span>
           </span>
@@ -109,7 +113,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     return (
       <th
         key={column.key}
-        className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass}`}
+        className={`${thBase} ${column.align === 'center' ? 'text-center' : 'text-left'} ${column.widthClass} ${mobileClass(column)}`}
         aria-sort={toAriaSort(isActive, sortDirection)}
       >
         <button
@@ -173,7 +177,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
         {COLUMNS.map((column) => {
           if (column.key === 'quantity') {
             return (
-              <th key={column.key} className={`${thBase} text-center ${column.widthClass}`}>
+              <th key={column.key} className={`${thBase} text-center ${column.widthClass} ${mobileClass(column)}`}>
                 <button
                   type="button"
                   onClick={onQuantityDisplayModeChange}
@@ -193,7 +197,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
             return (
               <th
                 key={column.key}
-                className={`${thBase} text-center ${column.widthClass}`}
+                className={`${thBase} text-center ${column.widthClass} ${mobileClass(column)}`}
                 aria-sort={toAriaSort(isActive, sortDirection)}
               >
                 <div className="inline-flex h-6 w-full items-center gap-0.5">
