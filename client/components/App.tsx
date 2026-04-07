@@ -69,6 +69,8 @@ export default function App() {
             <PacksPage
               appState={appState}
               onAdvisorScopeChange={setAdvisorScope}
+              onShowLogin={() => setShowLogin(true)}
+              onLogout={logout}
             />
           }
         />

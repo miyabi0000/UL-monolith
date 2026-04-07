@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, RADIUS_SCALE } from '../utils/designSystem';
 import { alpha } from '../styles/tokens';
-import { useResponsiveSize } from '../hooks/useResponsiveSize';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 import CategoryBadge from './ui/CategoryBadge';
 
 interface GearCardProps {
@@ -34,8 +34,7 @@ const GearCard: React.FC<GearCardProps> = ({
   showCheckbox = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const screenSize = useResponsiveSize();
-  const isMobile = screenSize === 'mobile';
+  const isMobile = useIsMobile();
 
   const hasShortage = item.shortage > 0;
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image';

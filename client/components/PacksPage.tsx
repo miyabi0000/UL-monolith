@@ -22,9 +22,11 @@ interface PacksPageProps {
   appState: ReturnType<typeof useAppState>;
   /** パック選択状態が変わったときに呼ばれるコールバック（アドバイザーのスコープ連携用） */
   onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
+  onShowLogin?: () => void;
+  onLogout?: () => void;
 }
 
-export default function PacksPage({ appState, onAdvisorScopeChange }: PacksPageProps) {
+export default function PacksPage({ appState, onAdvisorScopeChange, onShowLogin, onLogout }: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
@@ -78,7 +80,14 @@ export default function PacksPage({ appState, onAdvisorScopeChange }: PacksPageP
   return (
     <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-3 pt-16 pb-6 sm:px-6 md:px-8 lg:px-[16px]">
       <div className="flex min-h-0 flex-col gap-3">
-        <ProfileHeader profile={profile} onEditProfile={() => setShowEditor(true)} />
+        <ProfileHeader
+          profile={profile}
+          onEditProfile={() => setShowEditor(true)}
+          isAuthenticated={!!user}
+          userName={user?.name}
+          onShowLogin={onShowLogin}
+          onLogout={onLogout}
+        />
 
         <div className="min-h-0 flex-1">
           <InventoryWorkspace

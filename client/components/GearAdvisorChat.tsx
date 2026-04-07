@@ -1,7 +1,7 @@
 import React from 'react';
 import { GearAdvisorContext, SuggestedEdit, GearRef } from '../services/llmAdvisor';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
-import { useResponsiveSize } from '../hooks/useResponsiveSize';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 
 interface GearAdvisorChatProps {
   isOpen: boolean;
@@ -116,8 +116,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
   } = useAdvisorChat(gearContext, onApplyEdit);
 
   const { messagesEndRef, inputRef } = useAdvisorPanel(isOpen, messages);
-  const screenSize = useResponsiveSize();
-  const isMobile = screenSize === 'mobile';
+  const isMobile = useIsMobile();
 
   const totalWeightKg = gearContext.weightBreakdown
     ? (gearContext.weightBreakdown.baseWeight / 1000).toFixed(2)

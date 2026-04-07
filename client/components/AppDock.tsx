@@ -105,57 +105,60 @@ const AppDock: React.FC<AppDockProps> = ({
           )}
         </button>
 
-        <button
-          type="button"
-          className="glass-header-chip h-11 min-w-[44px] sm:h-9 sm:min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
-          onClick={() => setUserMenuOpen((prev) => !prev)}
-          aria-label="User menu"
-        >
-          {isAuthenticated ? (
-            <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-[10px] font-semibold inline-flex items-center justify-center">
-              {userInitial}
-            </span>
-          ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          )}
-        </button>
-
-        {userMenuOpen && (
-          <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-slate-800 neu-raised overflow-hidden">
+        {/* ユーザーメニュー（モバイルではProfileHeaderに統合済みのため非表示） */}
+        <div className="hidden sm:block relative">
+          <button
+            type="button"
+            className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
+            onClick={() => setUserMenuOpen((prev) => !prev)}
+            aria-label="User menu"
+          >
             {isAuthenticated ? (
-              <>
-                {userName && (
-                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 neu-divider truncate">
-                    {userName}
-                  </div>
-                )}
+              <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-[10px] font-semibold inline-flex items-center justify-center">
+                {userInitial}
+              </span>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
+          </button>
+
+          {userMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-slate-800 neu-raised overflow-hidden">
+              {isAuthenticated ? (
+                <>
+                  {userName && (
+                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 neu-divider truncate">
+                      {userName}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    onClick={() => {
+                      onLogout();
+                      setUserMenuOpen(false);
+                    }}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                   onClick={() => {
-                    onLogout();
+                    onShowLogin();
                     setUserMenuOpen(false);
                   }}
                 >
-                  Logout
+                  Login
                 </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                onClick={() => {
-                  onShowLogin();
-                  setUserMenuOpen(false);
-                }}
-              >
-                Login
-              </button>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

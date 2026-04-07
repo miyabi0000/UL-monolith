@@ -810,18 +810,18 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       {/* メインコンテンツ - 統合レイアウト */}
       <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden">
         {/* グラフエリア */}
-        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? 'w-12 shadow-none' : 'w-full lg:w-[40%]'}`}>
+        <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${isChartCollapsed ? (screenSize === 'mobile' ? 'w-full shadow-none' : 'w-12 shadow-none') : 'w-full lg:w-[40%]'}`}>
           {/* グラフヘッダー */}
           <div className={`flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
             {isChartCollapsed ? (
               <div className="flex items-center justify-center w-full">
                 <button
                   onClick={() => setIsChartCollapsed(false)}
-                  className="w-full flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors py-2"
+                  className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors ${screenSize === 'mobile' ? 'flex-row gap-2 py-2 px-3' : 'flex-col py-2'}`}
                   aria-label="Expand chart"
                 >
                   <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-300 mb-2"
+                    className={`w-4 h-4 text-gray-600 dark:text-gray-300 ${screenSize === 'mobile' ? '' : 'mb-2'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -829,7 +829,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <circle cx="12" cy="12" r="10" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
                   </svg>
-                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium" style={{ writingMode: 'vertical-rl' }}>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium" style={screenSize === 'mobile' ? undefined : { writingMode: 'vertical-rl' }}>
                     Chart
                   </span>
                 </button>

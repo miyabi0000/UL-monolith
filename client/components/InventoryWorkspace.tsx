@@ -5,7 +5,7 @@ import { useAppState } from '../hooks/useAppState';
 import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
-import { useResponsiveSize } from '../hooks/useResponsiveSize';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
 import GearChart from './GearChart';
 import PackTabBar from './PackTabBar';
@@ -82,8 +82,7 @@ export default function InventoryWorkspace({
     showError,
     showLoading
   } = useNotifications();
-  const screenSize = useResponsiveSize();
-  const isMobile = screenSize === 'mobile';
+  const isMobile = useIsMobile();
 
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
   const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
