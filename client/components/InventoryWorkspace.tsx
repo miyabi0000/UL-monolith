@@ -278,9 +278,9 @@ export default function InventoryWorkspace({
                 />
 
                 <div role="tabpanel" className="grid gap-3 px-3 pb-3">
-                  <section className="rounded-xl bg-gray-50/80 dark:bg-slate-700/40 p-3 border border-gray-200/70 dark:border-slate-700/70">
+                  <section className="px-1 pt-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Pack Info</h3>
+                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
                       {selectedPackId && onOpenPackSettings && (
                         <button
                           type="button"
@@ -292,14 +292,10 @@ export default function InventoryWorkspace({
                       )}
                     </div>
                     {activePack ? (
-                      <div className="mt-2 space-y-1.5">
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{activePack.name}</p>
-                        {activePack.description ? (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{activePack.description}</p>
-                        ) : (
-                          <p className="text-xs italic text-gray-400 dark:text-gray-500">No description</p>
-                        )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{activePackItemIds.length} items</p>
+                      <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                        <p>{activePack.name}</p>
+                        <p>{activePack.description || 'No description'}</p>
+                        <p>{`Items: ${activePackItemIds.length}`}</p>
                       </div>
                     ) : (
                       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">All gear is selected.</p>
