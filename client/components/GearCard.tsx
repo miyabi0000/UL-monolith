@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { COLORS, RADIUS_SCALE } from '../utils/designSystem';
 import { alpha } from '../styles/tokens';
+import { useResponsiveSize } from '../hooks/useResponsiveSize';
 import CategoryBadge from './ui/CategoryBadge';
 
 interface GearCardProps {
@@ -33,6 +34,8 @@ const GearCard: React.FC<GearCardProps> = ({
   showCheckbox = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const screenSize = useResponsiveSize();
+  const isMobile = screenSize === 'mobile';
 
   const hasShortage = item.shortage > 0;
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image';
@@ -72,8 +75,8 @@ const GearCard: React.FC<GearCardProps> = ({
         transition: 'all 200ms ease-out',
         aspectRatio: '1 / 1'
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={isMobile ? undefined : () => setIsHovered(true)}
+      onMouseLeave={isMobile ? undefined : () => setIsHovered(false)}
       onClick={handleCardClick}
     >
       {/* チェックボックス（チェックボックスモード時） */}
@@ -126,7 +129,20 @@ const GearCard: React.FC<GearCardProps> = ({
         className="w-full h-full object-contain"
       />
 
-      {/* ホバーオーバーレイ */}
+      {/* モバイル用 底部ラベル */}
+      {isMobile && (
+        <div
+          className="absolute bottom-0 left-0 right-0 px-2 py-1.5 truncate"
+          style={{ backgroundColor: alpha(COLORS.gray[900], 0.75) }}
+        >
+          <p className="text-[11px] font-medium truncate" style={{ color: COLORS.white }}>
+            {item.name}
+          </p>
+        </div>
+      )}
+
+      {/* ホバーオーバーレイ（デスクトップのみ） */}
+      {!isMobile && (
       <div
         className="absolute inset-0 flex flex-col items-center justify-center p-4"
         style={{
@@ -218,6 +234,7 @@ const GearCard: React.FC<GearCardProps> = ({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 };

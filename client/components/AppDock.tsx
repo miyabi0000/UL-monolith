@@ -63,27 +63,33 @@ const AppDock: React.FC<AppDockProps> = ({
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
-            className="h-9 px-3 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/55 dark:hover:bg-slate-700/50 inline-flex items-center transition-colors"
+            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/55 dark:hover:bg-slate-700/50 inline-flex items-center gap-1.5 transition-colors"
           >
-            Board
+            <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span className="hidden sm:inline">Board</span>
           </a>
         )}
 
         {onShowAdvisor && (
           <button
             type="button"
-            className="glass-header-chip h-9 px-3 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60 text-xs font-medium"
+            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60 text-xs font-medium"
             onClick={onShowAdvisor}
             aria-label="UL Advisor"
             title="ULギアアドバイザー"
           >
-            Advisor
+            <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <span className="hidden sm:inline">Advisor</span>
           </button>
         )}
 
         <button
           type="button"
-          className="glass-header-chip h-9 w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
+          className="glass-header-chip h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
           onClick={toggleDarkMode}
           aria-label="Toggle dark mode"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -101,7 +107,7 @@ const AppDock: React.FC<AppDockProps> = ({
 
         <button
           type="button"
-          className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
+          className="glass-header-chip h-11 min-w-[44px] sm:h-9 sm:min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
           onClick={() => setUserMenuOpen((prev) => !prev)}
           aria-label="User menu"
         >

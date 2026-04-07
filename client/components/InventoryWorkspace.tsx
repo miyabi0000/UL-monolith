@@ -5,6 +5,7 @@ import { useAppState } from '../hooks/useAppState';
 import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
+import { useResponsiveSize } from '../hooks/useResponsiveSize';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
 import GearChart from './GearChart';
 import PackTabBar from './PackTabBar';
@@ -81,6 +82,8 @@ export default function InventoryWorkspace({
     showError,
     showLoading
   } = useNotifications();
+  const screenSize = useResponsiveSize();
+  const isMobile = screenSize === 'mobile';
 
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
   const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
@@ -210,12 +213,13 @@ export default function InventoryWorkspace({
     ? 'w-full'
     : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]';
 
+  const chatPaddingRight = showChat && !isMobile ? '400px' : undefined;
   const containerStyle = embedded
-    ? { paddingRight: showChat ? '400px' : undefined }
+    ? { paddingRight: chatPaddingRight }
     : {
         paddingTop: `${SPACING_SCALE.md}px`,
         paddingBottom: `${SPACING_SCALE.md}px`,
-        paddingRight: showChat ? '400px' : undefined
+        paddingRight: chatPaddingRight
       };
 
   const gearChartPanel = (
@@ -275,9 +279,9 @@ export default function InventoryWorkspace({
                 />
 
                 <div role="tabpanel" className="grid gap-3 px-3 pb-3">
-                  <section className="px-1 pt-1">
+                  <section className="rounded-xl bg-gray-50/80 dark:bg-slate-700/40 p-3 border border-gray-200/70 dark:border-slate-700/70">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Pack Info</h3>
                       {selectedPackId && onOpenPackSettings && (
                         <button
                           type="button"
@@ -289,10 +293,14 @@ export default function InventoryWorkspace({
                       )}
                     </div>
                     {activePack ? (
-                      <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-300">
-                        <p>{activePack.name}</p>
-                        <p>{activePack.description || 'No description'}</p>
-                        <p>{`Items: ${activePackItemIds.length}`}</p>
+                      <div className="mt-2 space-y-1.5">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{activePack.name}</p>
+                        {activePack.description ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{activePack.description}</p>
+                        ) : (
+                          <p className="text-xs italic text-gray-400 dark:text-gray-500">No description</p>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{activePackItemIds.length} items</p>
                       </div>
                     ) : (
                       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">All gear is selected.</p>

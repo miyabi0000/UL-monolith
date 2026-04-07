@@ -1,6 +1,7 @@
 import React from 'react';
 import { GearAdvisorContext, SuggestedEdit, GearRef } from '../services/llmAdvisor';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
+import { useResponsiveSize } from '../hooks/useResponsiveSize';
 
 interface GearAdvisorChatProps {
   isOpen: boolean;
@@ -115,6 +116,8 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
   } = useAdvisorChat(gearContext, onApplyEdit);
 
   const { messagesEndRef, inputRef } = useAdvisorPanel(isOpen, messages);
+  const screenSize = useResponsiveSize();
+  const isMobile = screenSize === 'mobile';
 
   const totalWeightKg = gearContext.weightBreakdown
     ? (gearContext.weightBreakdown.baseWeight / 1000).toFixed(2)
@@ -125,14 +128,22 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
     : `${gearContext.items.length} items`;
 
   return (
-    <div
-      className="fixed top-0 right-0 h-full z-40 flex flex-col
-                 bg-white/92 dark:bg-slate-900/95 backdrop-blur
-                 border-l border-gray-200 dark:border-slate-700
-                 shadow-xl
-                 transition-transform duration-300 ease-in-out"
-      style={{ width: '420px', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
-    >
+    <>
+      {/* モバイル用背景スクリム */}
+      {isMobile && isOpen && (
+        <div
+          className="fixed inset-0 z-[39] bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+          onClick={onClose}
+        />
+      )}
+      <div
+        className="fixed top-0 right-0 h-full z-40 flex flex-col
+                   bg-white/92 dark:bg-slate-900/95 backdrop-blur
+                   border-l border-gray-200 dark:border-slate-700
+                   shadow-xl
+                   transition-transform duration-300 ease-in-out"
+        style={{ width: isMobile ? '100%' : '420px', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+      >
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0
                       bg-white/80 dark:bg-slate-800/80 backdrop-blur
@@ -261,7 +272,8 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           e.g. "How can I reduce my base weight?" · "What's my Big 3 total?"
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

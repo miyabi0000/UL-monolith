@@ -49,7 +49,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
             No items
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
             {sortedItems.map(item => {
               const imageUrl = item.imageUrl || null;
               const isHighlighted = selectedItemId === item.id;
