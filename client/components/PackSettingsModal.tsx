@@ -57,8 +57,9 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
       className="modal-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="modal-panel w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
+      <div className="modal-panel-md">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 neu-divider">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Pack Settings</h2>
           <button
             type="button"
@@ -72,9 +73,10 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
           </button>
         </div>
 
-        <div className="grid gap-3">
+        {/* Body */}
+        <div className="px-6 py-4 grid gap-4">
           <div>
-            <label className="gear-text-micro block mb-1">Pack Name</label>
+            <label className="gear-text-micro block mb-1.5">Pack Name</label>
             <input
               className="input w-full"
               value={name}
@@ -84,7 +86,7 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
             />
           </div>
           <div>
-            <label className="gear-text-micro block mb-1">Route</label>
+            <label className="gear-text-micro block mb-1.5">Route</label>
             <input
               className="input w-full"
               value={routeName}
@@ -93,7 +95,7 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
             />
           </div>
           <div>
-            <label className="gear-text-micro block mb-1">Description</label>
+            <label className="gear-text-micro block mb-1.5">Description</label>
             <textarea
               className="input w-full min-h-[80px] text-xs"
               value={description}
@@ -103,7 +105,8 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        {/* Footer */}
+        <div className="px-6 pb-6 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <button type="button" className="btn-secondary h-8 px-3 text-xs" onClick={onOpen}>
               Open

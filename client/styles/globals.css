@@ -270,12 +270,16 @@
     }
   }
 
-  /* モバイル縮退: blur/影を軽減してパフォーマンスを確保 */
+  /* モバイル縮退: blur/影を軽減してパフォーマンスを確保 + 行高さ調整 */
   @media (max-width: 640px) {
     :root {
       --glass-blur: calc((10px + (var(--glass-ior) - 1) * 70px) * 0.7);
       --glass-key-shadow: 0.1;
       --glass-ambient-shadow: 0.06;
+      --gear-row-height: 48px;
+    }
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
     }
   }
 

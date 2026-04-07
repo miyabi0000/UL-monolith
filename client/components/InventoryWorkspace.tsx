@@ -5,6 +5,7 @@ import { useAppState } from '../hooks/useAppState';
 import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
 import GearChart from './GearChart';
 import PackTabBar from './PackTabBar';
@@ -81,6 +82,7 @@ export default function InventoryWorkspace({
     showError,
     showLoading
   } = useNotifications();
+  const isMobile = useIsMobile();
 
   const [viewMode, setViewMode] = useState<ChartViewMode>('weight');
   const [quantityDisplayMode, setQuantityDisplayMode] = useState<QuantityDisplayMode>('all');
@@ -210,12 +212,13 @@ export default function InventoryWorkspace({
     ? 'w-full'
     : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]';
 
+  const chatPaddingRight = showChat && !isMobile ? '400px' : undefined;
   const containerStyle = embedded
-    ? { paddingRight: showChat ? '400px' : undefined }
+    ? { paddingRight: chatPaddingRight }
     : {
         paddingTop: `${SPACING_SCALE.md}px`,
         paddingBottom: `${SPACING_SCALE.md}px`,
-        paddingRight: showChat ? '400px' : undefined
+        paddingRight: chatPaddingRight
       };
 
   const gearChartPanel = (

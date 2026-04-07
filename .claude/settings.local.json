@@ -14,8 +14,12 @@
       "Bash(git checkout:*)",
       "Bash(npm install:*)",
       "Bash(lsof:*)",
-      "Bash(npm run server:dev:*)"
+      "Bash(npm run server:dev:*)",
+      "Read(//Users/shimizumasaya/pr16-work/**)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "/Users/shimizumasaya/pr16-work/client/styles"
+    ]
   }
 }
