@@ -199,6 +199,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           activePackName={activePack?.name}
           activePackItemIds={activePackItemIds}
           onTogglePackItem={onTogglePackItem}
+          onEdit={onEdit}
         />
       </div>
     );

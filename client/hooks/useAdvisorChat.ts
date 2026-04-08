@@ -49,14 +49,14 @@ export const useAdvisorChat = (
     return id;
   }, []);
 
-  const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+  /** 指定テキストを送信する内部関数 */
+  const sendText = useCallback(async (text: string) => {
+    if (!text || isLoading) return;
 
     const userMsg: ChatMessage = {
       id: createMessageId(),
       role: 'user',
-      content: trimmed,
+      content: text,
       timestamp: new Date(),
     };
 
@@ -94,7 +94,13 @@ export const useAdvisorChat = (
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, gearContext, createMessageId]);
+  }, [isLoading, messages, gearContext, createMessageId]);
+
+  /** 現在の入力欄テキストを送信 */
+  const handleSend = useCallback(() => {
+    const trimmed = input.trim();
+    if (trimmed) sendText(trimmed);
+  }, [input, sendText]);
 
   const handleApplyEdit = useCallback(
     async (edit: SuggestedEdit, messageId: string, editIndex: number) => {
@@ -128,6 +134,7 @@ export const useAdvisorChat = (
     isLoading,
     applyingEdit,
     handleSend,
+    sendText,
     handleApplyEdit,
   };
 };
