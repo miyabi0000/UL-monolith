@@ -1,5 +1,5 @@
 import { GearItemWithCalculated, ApiResponse, PaginatedResponse } from '../utils/types';
-import { API_CONFIG } from './api.client';
+import { API_CONFIG, getHeaders } from './api.client';
 
 /**
  * Gear API Service - RESTful設計に基づく段階的実装
@@ -36,9 +36,7 @@ export class GearApiService {
       
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });
 
@@ -67,9 +65,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear/${id}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });
 
@@ -103,9 +99,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear/summary`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         signal: AbortSignal.timeout(API_CONFIG.timeout.light)
       });
 
@@ -129,9 +123,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         body: JSON.stringify(gearData),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });
@@ -161,9 +153,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         body: JSON.stringify(gearData),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });
@@ -193,9 +183,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });
 
@@ -222,9 +210,7 @@ export class GearApiService {
     try {
       const response = await fetch(`${this.baseUrl}/gear`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getHeaders(),
         body: JSON.stringify({ ids }),
         signal: AbortSignal.timeout(API_CONFIG.timeout.standard)
       });

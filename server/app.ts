@@ -12,6 +12,8 @@ import analyticsRoutes from './routes/analytics';
 import llmRoutes from './routes/llm';
 import authRoutes from './routes/auth';
 import imageProxyRoutes from './routes/imageProxy';
+import packRoutes from './routes/packs';
+import { cognitoAuth } from './middleware/cognitoAuth';
 
 // Load environment variables
 config();
@@ -73,13 +75,14 @@ app.get('/', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/v1/gear', gearRoutes);
-app.use('/api/v1/categories', categoryRoutes);
-app.use('/api/v1/analytics', analyticsRoutes);
-app.use('/api/v1/llm', strictLimiter, llmRoutes); // LLM APIには厳格なRate Limiting
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/image', imageProxyRoutes);
+// API routes（認証ミドルウェアをグローバルに適用）
+app.use('/api/v1/gear', cognitoAuth, gearRoutes);
+app.use('/api/v1/categories', cognitoAuth, categoryRoutes);
+app.use('/api/v1/analytics', cognitoAuth, analyticsRoutes);
+app.use('/api/v1/llm', cognitoAuth, strictLimiter, llmRoutes);
+app.use('/api/v1/auth', authRoutes); // 認証エンドポイント自体は認証不要
+app.use('/api/v1/image', imageProxyRoutes); // 画像プロキシは認証不要
+app.use('/api/v1/packs', packRoutes); // パック（内部で認証制御）
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
