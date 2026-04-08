@@ -1,5 +1,5 @@
 import React from 'react';
-import { GearAdvisorContext, SuggestedEdit, GearRef } from '../services/llmAdvisor';
+import { GearAdvisorContext, GearRef } from '../services/llmAdvisor';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
 import { useIsMobile } from '../hooks/useResponsiveSize';
 
@@ -31,8 +31,10 @@ const FIELD_LABELS: Record<string, string> = {
 
 // ==================== ヘルパー ====================
 
+const TIME_FMT = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' });
+
 const formatEditValue = (field: string, value: unknown): string => {
-  if (field === 'weightGrams') return `${value}g`;
+  if (field === 'weightGrams' && typeof value === 'number') return `${value}g`;
   if (field === 'priceCents' && typeof value === 'number') {
     return `¥${Math.round(value / 100).toLocaleString()}`;
   }
@@ -194,7 +196,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                 <div className="whitespace-pre-wrap">{message.content}</div>
                 <div className={`text-[10px] mt-1 opacity-50 select-none
                                  ${message.role === 'user' ? 'text-right' : ''}`}>
-                  {message.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {TIME_FMT.format(message.timestamp)}
                 </div>
               </div>
 

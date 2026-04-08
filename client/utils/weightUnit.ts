@@ -1,17 +1,13 @@
 // 重量単位変換ユーティリティ
 // DBはグラム保存のまま、表示層・入力層・CSV入出力で変換する
 
+import { UL_THRESHOLDS } from './types';
+
 export type WeightUnit = 'g' | 'oz';
 
 // --- 定数 ---
 const OZ_PER_GRAM = 1 / 28.3495;
 const GRAM_PER_OZ = 28.3495;
-
-// UL判定閾値（グラム基準）
-export const UL_THRESHOLDS = {
-  ultralight: 4500,  // 4.5kg
-  lightweight: 9000, // 9.0kg
-} as const;
 
 // --- 変換 ---
 
@@ -70,6 +66,9 @@ export function formatULThreshold(thresholdGrams: number, unit: WeightUnit): str
 
 // --- CSV 入出力 ---
 
+// 単位付き値を解析: "100g", "3.5oz", "3.5 oz" 等
+const CSV_WEIGHT_RE = /^(\d+(?:\.\d+)?)\s*(g|oz|grams?|ounces?)?$/i;
+
 /** CSV ヘッダーの重量カラム名を生成 */
 export function csvWeightHeader(unit: WeightUnit): string {
   return unit === 'oz' ? 'weight_oz' : 'weight_g';
@@ -89,8 +88,7 @@ export function parseCSVWeight(
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  // 単位付き値を解析: "100g", "3.5oz", "3.5 oz" 等
-  const match = trimmed.match(/^(\d+(?:\.\d+)?)\s*(g|oz|grams?|ounces?)?$/i);
+  const match = trimmed.match(CSV_WEIGHT_RE);
   if (!match) return null;
 
   const num = parseFloat(match[1]);
