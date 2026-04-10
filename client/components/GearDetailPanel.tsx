@@ -176,6 +176,21 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     }
   }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
 
+  // Table / Compare モード用 Context（早期returnよりも前で呼ぶ — Hooks Rules）
+  const contextValue = useMemo(() => ({
+    quantityDisplayMode,
+    onQuantityDisplayModeChange: handleQuantityDisplayModeChange,
+    currency,
+    onCurrencyChange: handleCurrencyChange,
+    showCheckboxes: shouldShowCheckboxes,
+    isEditable,
+    activePackName: activePack?.name,
+    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
+    isAllVisibleInPack,
+  }), [quantityDisplayMode, handleQuantityDisplayModeChange, currency, handleCurrencyChange,
+       shouldShowCheckboxes, isEditable, activePack, onAddItemsToPack, onTogglePackItem,
+       handleAddAllToPack, isAllVisibleInPack]);
+
   // Compareモード時の比較表示
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
     return (
@@ -208,21 +223,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       </div>
     );
   }
-
-  // Table / Compare モード
-  const contextValue = useMemo(() => ({
-    quantityDisplayMode,
-    onQuantityDisplayModeChange: handleQuantityDisplayModeChange,
-    currency,
-    onCurrencyChange: handleCurrencyChange,
-    showCheckboxes: shouldShowCheckboxes,
-    isEditable,
-    activePackName: activePack?.name,
-    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
-    isAllVisibleInPack,
-  }), [quantityDisplayMode, handleQuantityDisplayModeChange, currency, handleCurrencyChange,
-       shouldShowCheckboxes, isEditable, activePack, onAddItemsToPack, onTogglePackItem,
-       handleAddAllToPack, isAllVisibleInPack]);
 
   return (
     <GearListProvider value={contextValue}>
