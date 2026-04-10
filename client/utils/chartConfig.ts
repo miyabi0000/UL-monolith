@@ -1,6 +1,7 @@
 import { COLORS } from './designSystem'
 import { ChartViewMode, QuantityDisplayMode, GearItemWithCalculated } from './types'
 import { getQuantityForDisplayMode } from './chartHelpers'
+import { formatWeight, WeightUnit } from './weightUnit'
 
 // ==================== 定数 ====================
 // デザインシステムに基づいたチャート設定（コンパクト化）
@@ -45,11 +46,11 @@ export const FONT_SIZES = {
 } as const
 
 // ==================== ヘルパー関数 ====================
-export const formatValue = (value: number, mode: ChartViewMode): string => {
+export const formatValue = (value: number, mode: ChartViewMode, unit: WeightUnit = 'g'): string => {
   if (mode === 'cost') {
     return `¥${Math.round(value / 100).toLocaleString()}`
   }
-  return `${value}g`
+  return formatWeight(value, unit)
 }
 
 export const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, quantityMode: QuantityDisplayMode): number => {

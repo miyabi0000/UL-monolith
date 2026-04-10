@@ -4,6 +4,8 @@ import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { formatPrice } from '../utils/formatters';
 import { getQuantityForDisplayMode } from '../utils/chartHelpers';
+import { formatWeight, formatWeightLarge } from '../utils/weightUnit';
+import { useWeightUnit } from '../contexts/WeightUnitContext';
 import CategoryBadge from './ui/CategoryBadge';
 
 const fallbackUserId = 'local-user';
@@ -12,6 +14,7 @@ export default function PackDetailPage() {
   const { packId = '' } = useParams();
   const { gearItems, isLoading } = useAppState();
   const { getPackById } = usePacks(fallbackUserId);
+  const { unit } = useWeightUnit();
   const pack = getPackById(packId);
 
   const items = useMemo(
@@ -58,7 +61,7 @@ export default function PackDetailPage() {
           </div>
           <div className="rounded-md px-2 py-2 neu-inset">
             <p className="text-gray-500 dark:text-gray-400">Weight</p>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{totalWeight.toLocaleString()}g</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{formatWeightLarge(totalWeight, unit)}</p>
           </div>
           <div className="rounded-md px-2 py-2 neu-inset">
             <p className="text-gray-500 dark:text-gray-400">Cost</p>
@@ -101,7 +104,7 @@ export default function PackDetailPage() {
                   )}
                 </span>
               </span>
-              <span className="text-gray-700 dark:text-gray-200">{((item.weightGrams || 0) * getQuantityForDisplayMode(item, 'all')).toLocaleString()}g</span>
+              <span className="text-gray-700 dark:text-gray-200">{formatWeight((item.weightGrams || 0) * getQuantityForDisplayMode(item, 'all'), unit)}</span>
               <span className="text-gray-700 dark:text-gray-200">{formatPrice((item.priceCents || 0) * getQuantityForDisplayMode(item, 'all'))}</span>
             </div>
           ))}

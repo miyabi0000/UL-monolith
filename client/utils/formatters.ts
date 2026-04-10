@@ -54,11 +54,3 @@ export const calculateEfficiency = (
   return (weightGrams / jpy).toFixed(2);
 };
 
-/**
- * Format weight in grams
- */
-export const formatWeight = (weightGrams?: number): string => {
-  if (!weightGrams) return '—'
-  return `${weightGrams}g`
-}
-

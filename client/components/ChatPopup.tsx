@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
 import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
+import { useWeightUnit } from '../contexts/WeightUnitContext'
+import { formatWeight } from '../utils/weightUnit'
 
 interface ChatMessage {
   id: string
@@ -20,6 +22,7 @@ interface ChatPopupProps {
 }
 
 const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted, categories = [] }) => {
+  const { unit: weightUnit } = useWeightUnit()
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -133,7 +136,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
             try {
               const extractedData = await extractFromUrl(currentInput, categories)
               const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
-              assistantResponse = `Successfully extracted product info from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
+              assistantResponse = `Successfully extracted product info from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -160,7 +163,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
             try {
               const extractedData = await extractFromPrompt(currentInput, categories)
               const matchedCategory = categories.find(cat => cat.name === extractedData.suggestedCategory)
-              assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? `${extractedData.weightGrams}g` : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
+              assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdding to your gear list!`
               shouldExtractGear = true
               mockGearData = {
                 name: extractedData.name,
@@ -212,7 +215,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput)
                 const matchedCategory = categories.find(cat => cat.name === enhancedData.suggestedCategory)
 
-                assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${enhancedData.weightGrams}g\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
+                assistantResponse = `Processed URL with additional info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${formatWeight(enhancedData.weightGrams ?? null, weightUnit)}\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdding to your gear list!`
                 shouldExtractGear = true
                 mockGearData = {
                   name: enhancedData.name,
@@ -281,7 +284,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                 successResults.forEach((item, idx) => {
                   assistantResponse += `**${idx + 1}. ${item.data.name}**\n`
                   assistantResponse += `  Brand: ${item.data.brand || 'Unknown'}\n`
-                  assistantResponse += `  Weight: ${item.data.weightGrams ? `${item.data.weightGrams}g` : 'Estimating...'}\n`
+                  assistantResponse += `  Weight: ${item.data.weightGrams ? formatWeight(item.data.weightGrams, weightUnit) : 'Estimating...'}\n`
                   assistantResponse += `  Price: ${item.data.priceCents ? `¥${Math.round(item.data.priceCents / 100).toLocaleString()}` : 'Estimating...'}\n`
                   assistantResponse += `  Category: ${item.data.suggestedCategory}\n\n`
                 })

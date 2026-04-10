@@ -1,6 +1,8 @@
 import React from 'react';
 import { ChartViewMode } from '../utils/types';
 import Card from './ui/Card';
+import { formatWeight } from '../utils/weightUnit';
+import { useWeightUnit } from '../contexts/WeightUnitContext';
 
 interface CompactSummaryProps {
   totals: {
@@ -14,10 +16,11 @@ interface CompactSummaryProps {
 }
 
 const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'weight', onViewModeChange }) => {
+  const { unit } = useWeightUnit();
   const stats = [
     {
       label: 'Total Weight',
-      value: `${totals.weight}g`,
+      value: formatWeight(totals.weight, unit),
       icon: 'W',
       mode: 'weight' as ChartViewMode
     },

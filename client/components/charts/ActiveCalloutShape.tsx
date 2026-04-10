@@ -2,6 +2,7 @@ import React from 'react'
 import { Sector } from 'recharts'
 import { COLORS } from '../../utils/designSystem'
 import { alpha } from '../../styles/tokens'
+import { formatWeight, WeightUnit } from '../../utils/weightUnit'
 
 const CALLOUT_THRESHOLD = 0.03 // 3%未満はcallout非表示
 
@@ -72,11 +73,11 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
   const labelX = x3 + (cos >= 0 ? 6 : -6)
   const labelY = y3
 
-  // 単位に応じた値テキスト
+  // 単位に応じた値テキスト（payload.unit に 'g' / 'oz' / '¥' いずれかが入る）
   const unit = payload.unit ?? 'g'
   const valueText = unit === '¥'
     ? `¥${Math.round(payload.value / 100).toLocaleString()}`
-    : `${payload.value.toLocaleString()}${unit}`
+    : formatWeight(payload.value, unit as WeightUnit)
   const labelText = payload.label ?? ''
   const textWidth = Math.max(valueText.length * 7, labelText.length * 5.5) + 8
   const textHeight = 28

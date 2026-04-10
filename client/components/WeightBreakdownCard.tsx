@@ -3,6 +3,8 @@ import { WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS } from '.
 import { STATUS_TONES } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
+import { formatWeight, formatWeightLarge } from '../utils/weightUnit'
+import { useWeightUnit } from '../contexts/WeightUnitContext'
 
 interface WeightBreakdownCardProps {
   breakdown: WeightBreakdown
@@ -41,6 +43,7 @@ const WEIGHT_CLASS_CONFIG = {
 } as const
 
 const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ulStatus }) => {
+  const { unit } = useWeightUnit()
   const successTone = STATUS_TONES.success
   const warningTone = STATUS_TONES.warning
   const errorTone = STATUS_TONES.error
@@ -66,7 +69,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
             {WEIGHT_CLASS_CONFIG.base.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
-            {breakdown.baseWeight.toLocaleString()}g
+            {formatWeight(breakdown.baseWeight, unit)}
           </span>
         </div>
 
@@ -77,7 +80,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
             {WEIGHT_CLASS_CONFIG.worn.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
-            {breakdown.wornWeight.toLocaleString()}g
+            {formatWeight(breakdown.wornWeight, unit)}
           </span>
         </div>
 
@@ -88,7 +91,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
             {WEIGHT_CLASS_CONFIG.consumable.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
-            {breakdown.consumables.toLocaleString()}g
+            {formatWeight(breakdown.consumables, unit)}
           </span>
         </div>
       </div>
@@ -101,21 +104,21 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         <div className="flex justify-between items-center">
           <span className="text-gray-500">Packed Weight</span>
           <span className="font-medium text-gray-900">
-            {breakdown.packedWeight.toLocaleString()}g
+            {formatWeight(breakdown.packedWeight, unit)}
             <span className="text-[10px] text-gray-400 ml-1">(Base + Cons)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-500">Skin-out Weight</span>
           <span className="font-medium text-gray-900">
-            {breakdown.skinOutWeight.toLocaleString()}g
+            {formatWeight(breakdown.skinOutWeight, unit)}
             <span className="text-[10px] text-gray-400 ml-1">(All)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-500">Big3</span>
           <span className="font-medium text-gray-700">
-            {breakdown.big3.toLocaleString()}g
+            {formatWeight(breakdown.big3, unit)}
             <span className="text-[10px] text-gray-400 ml-1">(Pack+Shelter+Sleep)</span>
           </span>
         </div>
@@ -125,7 +128,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
       <div className="mt-3">
         <div className="flex justify-between items-center mb-1">
           <span className="text-[10px] text-gray-500">
-            Base Weight: {(breakdown.baseWeight / 1000).toFixed(2)}kg
+            Base Weight: {formatWeightLarge(breakdown.baseWeight, unit)}
           </span>
           <span className="text-[10px] text-gray-500">
             {Math.round(ulProgress)}% of UL limit
@@ -145,7 +148,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
           />
         </div>
         <div className="text-[9px] text-gray-400 mt-0.5 text-right">
-          UL limit: {(UL_THRESHOLDS.ultralight / 1000).toFixed(1)}kg
+          UL limit: {formatWeightLarge(UL_THRESHOLDS.ultralight, unit)}
         </div>
       </div>
     </Card>

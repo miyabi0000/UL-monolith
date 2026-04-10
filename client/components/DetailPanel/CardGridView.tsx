@@ -4,6 +4,7 @@ import { COLORS, SHADOW, COMPONENT_RADIUS, getPriorityColor } from '../../utils/
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import { formatWeight } from '../../utils/weightUnit';
 import { formatPrice } from '../../utils/formatters';
+import { useWeightUnit } from '../../contexts/WeightUnitContext';
 
 interface CardGridViewProps {
   items: GearItemWithCalculated[];
@@ -57,6 +58,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   onTogglePackItem,
   onEdit,
 }) => {
+  const { unit: weightUnit } = useWeightUnit();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // アイテムを表示値（weight/cost）昇順でソート
@@ -142,7 +144,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   {/* 2行目: 重量 + 価格 */}
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[11px] font-semibold" style={{ color: COLORS.text.primary }}>
-                      {formatWeight(item.weightGrams, 'g')}
+                      {formatWeight(item.weightGrams, weightUnit)}
                     </span>
                     <span className="text-[11px]" style={{ color: COLORS.text.secondary }}>
                       {formatPrice(item.priceCents)}

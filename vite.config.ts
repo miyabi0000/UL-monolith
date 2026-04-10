@@ -5,6 +5,10 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   root: 'client',
+  // amazon-cognito-identity-js が node の `global` を参照するため polyfill
+  define: {
+    global: 'globalThis'
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true

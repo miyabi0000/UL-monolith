@@ -2,6 +2,8 @@ import React from 'react';
 import { GearItemWithCalculated } from '../utils/types';
 import { Currency, formatPriceWithCurrency, calculateEfficiency } from '../utils/formatters';
 import { STATUS_TONES } from '../utils/designSystem';
+import { formatWeight } from '../utils/weightUnit';
+import { useWeightUnit } from '../contexts/WeightUnitContext';
 
 interface ComparisonTableProps {
   items: GearItemWithCalculated[];
@@ -30,6 +32,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
   onRemove
 }) => {
   const successTone = STATUS_TONES.success;
+  const { unit } = useWeightUnit();
 
   // 最良値を計算
   const bestValues = React.useMemo(() => {
@@ -146,7 +149,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
                     className={`px-2 py-2 text-center text-xs ${isBest ? 'font-semibold' : 'text-gray-900'}`}
                     style={isBest ? { backgroundColor: successTone.background, color: successTone.text } : undefined}
                   >
-                    {item.weightGrams ? `${item.weightGrams}g` : '-'}
+                    {item.weightGrams ? formatWeight(item.weightGrams, unit) : '-'}
                   </td>
                 );
               })}

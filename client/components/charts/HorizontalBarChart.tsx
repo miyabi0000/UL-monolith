@@ -12,6 +12,8 @@ import {
 import type { ChartViewMode } from '../../utils/types'
 import { darkenColor } from '../../utils/colorHelpers'
 import { formatChartAxisValue } from '../../utils/chartHelpers'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
+import { formatWeight } from '../../utils/weightUnit'
 
 export interface BarItem {
   id?: string
@@ -31,13 +33,14 @@ export interface HorizontalBarChartProps {
   onItemClick?: (id: string) => void
 }
 
-// カスタムツールチップ
-const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload }) => {
+// カスタムツールチップ（recharts が content として要素を受け取る）
+const ChartTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload }) => {
+  const { unit } = useWeightUnit()
   if (!active || !payload?.length) return null
   const item = payload[0].payload as BarItem
   const formattedValue = item.unit === '¥'
     ? `¥${Math.round(item.value / 100).toLocaleString()}`
-    : `${item.value.toLocaleString()}${item.unit}`
+    : formatWeight(item.value, unit)
   return (
     <div className="bg-white dark:bg-slate-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
       <div className="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">{item.name}</div>
@@ -90,6 +93,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   onCategoryClick,
   onItemClick,
 }) => {
+  const { unit } = useWeightUnit()
   const hasSelection = selectedCategories.length > 0
   const chartHeight = Math.max(MIN_CHART_HEIGHT, data.length * (BAR_HEIGHT + BAR_GAP) + HEIGHT_PADDING)
 
@@ -105,7 +109,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         >
           <XAxis
             type="number"
-            tickFormatter={(value: number) => formatChartAxisValue(value, viewMode)}
+            tickFormatter={(value: number) => formatChartAxisValue(value, viewMode, unit)}
             tick={{ fontSize: 9, fill: '#9ca3af' }}
             axisLine={false}
             tickLine={false}
@@ -126,7 +130,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
             )}
           />
           <Tooltip
-            content={<CustomTooltip />}
+            content={<ChartTooltip />}
             cursor={{ fill: 'rgba(156, 163, 175, 0.08)' }}
           />
           <Bar
