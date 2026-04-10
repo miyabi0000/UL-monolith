@@ -10,15 +10,21 @@ import {
   ChartViewMode
 } from './types';
 import { COLORS } from './designSystem';
+import { convertFromGrams, WeightUnit } from './weightUnit';
 
 /**
  * チャート軸ラベル用コンパクトフォーマット
- * 重量: 1000g以上は kg 表示、コスト: 10000円以上は 万 表示
+ * 重量: g モードでは 1000g以上で kg、oz モードでは 16oz 以上で lb 表示
+ * コスト: 10000円以上は 万 表示
  */
-export const formatChartAxisValue = (value: number, viewMode: ChartViewMode): string => {
+export const formatChartAxisValue = (value: number, viewMode: ChartViewMode, unit: WeightUnit = 'g'): string => {
   if (viewMode === 'cost') {
     const yen = Math.round(value / 100)
     return yen >= 10000 ? `¥${(yen / 10000).toFixed(1)}万` : `¥${yen.toLocaleString()}`
+  }
+  if (unit === 'oz') {
+    const oz = convertFromGrams(value, 'oz')
+    return oz >= 16 ? `${(oz / 16).toFixed(1)}lb` : `${oz}oz`
   }
   return value >= 1000 ? `${(value / 1000).toFixed(1)}kg` : `${value}g`
 }

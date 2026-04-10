@@ -4,6 +4,8 @@ import { COLORS } from '../../utils/designSystem';
 import TruncatedText from '../TruncatedText';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import { formatPrice } from '../../utils/formatters';
+import { formatWeight } from '../../utils/weightUnit';
+import { useWeightUnit } from '../../contexts/WeightUnitContext';
 
 interface ItemListCardProps {
   item: GearItemWithCalculated;
@@ -14,12 +16,13 @@ interface ItemListCardProps {
 }
 
 const ItemListCard: React.FC<ItemListCardProps> = ({ item, percentage, onClick, quantityDisplayMode, viewMode }) => {
+  const { unit } = useWeightUnit();
   const imageUrl = item.imageUrl || 'https://via.placeholder.com/40x40?text=No+Image';
   const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
   const displayValue =
     viewMode === 'cost'
       ? formatPrice((item.priceCents || 0) * quantity)
-      : `${(item.weightGrams || 0) * quantity}g`;
+      : formatWeight((item.weightGrams || 0) * quantity, unit);
 
   return (
     <button

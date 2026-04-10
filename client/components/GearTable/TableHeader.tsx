@@ -1,6 +1,7 @@
 import React from 'react'
 import { COLORS } from '../../utils/designSystem'
 import { useGearListContext } from '../../hooks/useGearListContext'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
 
 export type SortField = 'name' | 'category' | 'weight' | 'shortage' | 'priority' | 'price' | 'owned' | 'required' | 'season'
 export type SortDirection = 'asc' | 'desc'
@@ -25,13 +26,13 @@ type HeaderColumn = {
   sortField?: SortField
 }
 
-const COLUMNS: HeaderColumn[] = [
+const buildColumns = (weightLabel: string): HeaderColumn[] => [
   { key: 'image', label: 'image', widthClass: 'w-20' },
   { key: 'name', label: 'name', widthClass: 'min-w-[112px] max-w-[188px]', sortable: true, sortField: 'name' },
   { key: 'category', label: 'category', widthClass: 'w-28', sortable: true, sortField: 'category' },
   { key: 'weightclass', label: 'type', widthClass: 'w-7', align: 'center' },
   { key: 'quantity', label: 'ALL', widthClass: 'w-[88px]', align: 'center' },
-  { key: 'weight', label: 'g', widthClass: 'w-[72px]', align: 'center', sortable: true, sortField: 'weight' },
+  { key: 'weight', label: weightLabel, widthClass: 'w-[72px]', align: 'center', sortable: true, sortField: 'weight' },
   { key: 'priority', label: 'priority', widthClass: 'w-8', align: 'center', sortable: true, sortField: 'priority' },
   { key: 'price', label: 'price', widthClass: 'w-14', align: 'center', sortable: true, sortField: 'price' },
   { key: 'season', label: 'season', widthClass: 'w-14', sortable: true, sortField: 'season' },
@@ -60,6 +61,9 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     onAddAllToPack,
     isAllVisibleInPack,
   } = useGearListContext()
+
+  const { unit } = useWeightUnit()
+  const COLUMNS = React.useMemo(() => buildColumns(unit), [unit])
 
   const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
   const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-[11px] leading-none font-medium'

@@ -2,6 +2,8 @@ import React from 'react'
 import { ChartViewMode, ChartFocus, WeightBreakdown, ULStatus, UL_THRESHOLDS, DUAL_RING_COLORS } from '../../utils/types'
 import { COLORS } from '../../utils/designSystem'
 import { FONT_SIZES, UL_BADGE_COLORS, formatValue } from '../../utils/chartConfig'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
+import { formatWeightLarge } from '../../utils/weightUnit'
 
 const DEFAULT_COLOR = COLORS.gray[500]
 
@@ -45,6 +47,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
   ulStatus,
   totalValue
 }) => {
+  const { unit } = useWeightUnit()
   if (selectedItemData) {
     return (
       <>
@@ -54,7 +57,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
         >
-          {formatValue(selectedItemData.value, viewMode)}
+          {formatValue(selectedItemData.value, viewMode, unit)}
         </div>
         <div
           className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
@@ -105,7 +108,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
         >
-          {formatValue(selectedCategoryData.value, viewMode)}
+          {formatValue(selectedCategoryData.value, viewMode, unit)}
         </div>
         <div
           className="uppercase tracking-wide font-bold mb-1"
@@ -163,7 +166,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
             color: displayColor || 'inherit'
           }}
         >
-          {(displayWeight / 1000).toFixed(2)}kg
+          {formatWeightLarge(displayWeight, unit)}
         </div>
         <div
           className="uppercase tracking-wide font-bold mb-1"
@@ -219,7 +222,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
           fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
         }}
       >
-        {formatValue(totalValue, viewMode)}
+        {formatValue(totalValue, viewMode, unit)}
       </div>
       <div
         className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"

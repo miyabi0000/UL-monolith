@@ -5,6 +5,8 @@ import SeasonBar from '../SeasonBar'
 import WeightClassBadge from '../ui/WeightClassBadge'
 import CategoryBadge from '../ui/CategoryBadge'
 import { useDebouncedInput } from '../../hooks/useDebouncedInput'
+import { convertFromGrams, convertToGrams, formatWeight, WeightUnit } from '../../utils/weightUnit'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
 
 const ERROR_TONE = STATUS_TONES.error
 const SUCCESS_TONE = STATUS_TONES.success
@@ -326,19 +328,28 @@ interface EditableWeightFieldProps extends BaseFieldProps {
   isEditing: boolean
 }
 
-export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
+// 編集中に単位を切り替えると localValue 同期が走らない（useDebouncedInput は value 変更時のみ再同期）ため、
+// Outer 側で key={unit} を渡して再マウントさせる
+const EditableWeightFieldInner: React.FC<EditableWeightFieldProps & { unit: WeightUnit }> = ({
   weightGrams,
   totalWeight,
   requiredQuantity,
   onChange,
   isEditing,
-  isChanged
+  isChanged,
+  unit
 }) => {
   const { localValue, handleChange, handleFocus, handleBlur } = useDebouncedInput<number | null>({
     value: weightGrams ?? null,
     onChange,
-    serialize: (v) => v?.toString() ?? '',
-    deserialize: (s) => s ? parseInt(s) : null
+    // 表示時は現在単位に変換、保存時はグラムへ戻す
+    serialize: (v) => v == null ? '' : convertFromGrams(v, unit).toString(),
+    deserialize: (s) => {
+      if (!s) return null
+      const num = parseFloat(s)
+      if (isNaN(num)) return null
+      return convertToGrams(num, unit)
+    }
   })
 
   if (isEditing) {
@@ -346,11 +357,12 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
       <input
         type="number"
         min="0"
+        step={unit === 'oz' ? 0.1 : 1}
         value={localValue}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        placeholder="0"
+        placeholder={unit === 'oz' ? '0.0' : '0'}
         className="w-14 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
@@ -365,7 +377,12 @@ export const EditableWeightField: React.FC<EditableWeightFieldProps> = ({
     return <span className="gear-anomaly-value" title="Invalid weight">!</span>
   }
 
-  return <span className="gear-text-num font-semibold">{totalWeight.toLocaleString()}</span>
+  return <span className="gear-text-num font-semibold">{formatWeight(totalWeight, unit)}</span>
+}
+
+export const EditableWeightField: React.FC<EditableWeightFieldProps> = (props) => {
+  const { unit } = useWeightUnit()
+  return <EditableWeightFieldInner key={unit} unit={unit} {...props} />
 }
 
 interface EditableSeasonFieldProps extends BaseFieldProps {

@@ -5,6 +5,7 @@ import './styles/globals.css'
 import { themeCssVariables } from './styles/tokens'
 import App from './components/App'
 import { AuthProvider } from './utils/AuthContext'
+import { WeightUnitProvider } from './contexts/WeightUnitContext'
 
 type ThemeMode = 'light' | 'dark'
 
@@ -43,7 +44,9 @@ createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <WeightUnitProvider>
+          <App />
+        </WeightUnitProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

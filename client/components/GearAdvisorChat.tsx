@@ -2,6 +2,8 @@ import React from 'react';
 import { GearAdvisorContext, GearRef } from '../services/llmAdvisor';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
 import { useIsMobile } from '../hooks/useResponsiveSize';
+import { useWeightUnit } from '../contexts/WeightUnitContext';
+import { formatWeight, formatWeightLarge } from '../utils/weightUnit';
 
 interface GearAdvisorChatProps {
   isOpen: boolean;
@@ -33,8 +35,8 @@ const FIELD_LABELS: Record<string, string> = {
 
 const TIME_FMT = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' });
 
-const formatEditValue = (field: string, value: unknown): string => {
-  if (field === 'weightGrams' && typeof value === 'number') return `${value}g`;
+const formatEditValue = (field: string, value: unknown, weightUnit: 'g' | 'oz' = 'g'): string => {
+  if (field === 'weightGrams' && typeof value === 'number') return formatWeight(value, weightUnit);
   if (field === 'priceCents' && typeof value === 'number') {
     return `¥${Math.round(value / 100).toLocaleString()}`;
   }
@@ -72,7 +74,8 @@ const SuggestedEditCard: React.FC<{
   editKey: string;
   applyingKey: string | null;
   onApply: () => void;
-}> = ({ edit, editKey, applyingKey, onApply }) => {
+  weightUnit: 'g' | 'oz';
+}> = ({ edit, editKey, applyingKey, onApply, weightUnit }) => {
   const isApplied = edit._applied === true;
   const isApplying = applyingKey === editKey;
 
@@ -86,9 +89,9 @@ const SuggestedEditCard: React.FC<{
       </p>
       <p className="mb-1 text-gray-800 dark:text-gray-200">
         <span className="text-gray-500 dark:text-gray-400">{FIELD_LABELS[edit.field] ?? edit.field}: </span>
-        <span className="line-through text-gray-400 dark:text-gray-500">{formatEditValue(edit.field, edit.currentValue)}</span>
+        <span className="line-through text-gray-400 dark:text-gray-500">{formatEditValue(edit.field, edit.currentValue, weightUnit)}</span>
         {' → '}
-        <span className="font-medium">{formatEditValue(edit.field, edit.suggestedValue)}</span>
+        <span className="font-medium">{formatEditValue(edit.field, edit.suggestedValue, weightUnit)}</span>
       </p>
       <p className="mb-2 text-gray-500 dark:text-gray-400">{edit.reason}</p>
       <button
@@ -128,9 +131,10 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
 
   const { messagesEndRef, inputRef } = useAdvisorPanel(isOpen, messages);
   const isMobile = useIsMobile();
+  const { unit: weightUnit } = useWeightUnit();
 
-  const totalWeightKg = gearContext.weightBreakdown
-    ? (gearContext.weightBreakdown.baseWeight / 1000).toFixed(2)
+  const baseWeightLabel = gearContext.weightBreakdown
+    ? formatWeightLarge(gearContext.weightBreakdown.baseWeight, weightUnit)
     : null;
 
   const scopeLabel = gearContext.packName
@@ -163,7 +167,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           </h3>
           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
             {scopeLabel}
-            {totalWeightKg && ` · Base ${totalWeightKg}kg`}
+            {baseWeightLabel && ` · Base ${baseWeightLabel}`}
             {gearContext.ulStatus && ` · ${gearContext.ulStatus.classification}`}
           </p>
         </div>
@@ -219,6 +223,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                       editKey={`${message.id}-${index}`}
                       applyingKey={applyingEdit}
                       onApply={() => handleApplyEdit(edit, message.id, index)}
+                      weightUnit={weightUnit}
                     />
                   ))}
                 </div>

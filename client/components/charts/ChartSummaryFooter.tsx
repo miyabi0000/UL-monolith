@@ -1,9 +1,12 @@
 import React from 'react'
 import { ChartViewMode, WeightBreakdown, ChartFocus } from '../../utils/types'
 import SegmentedControl from '../ui/SegmentedControl'
+import WeightUnitToggle from '../ui/WeightUnitToggle'
 import ScaleIcon from '../icons/ScaleIcon'
 import YenIcon from '../icons/YenIcon'
 import BackpackIcon from '../icons/BackpackIcon'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
+import { formatWeight, formatWeightLarge } from '../../utils/weightUnit'
 
 const VIEW_MODE_OPTIONS = [
   { mode: 'weight', label: 'Weight', icon: ScaleIcon },
@@ -79,9 +82,10 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   totalCost,
   itemCount
 }) => {
+  const { unit } = useWeightUnit()
   return (
     <div className="px-2 py-1.5 neu-divider">
-      <div className="flex justify-center mb-1.5">
+      <div className="flex justify-center mb-1">
         <SegmentedControl
           options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
             key: mode,
@@ -97,6 +101,10 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
           }))}
         />
       </div>
+      {/* 重量単位トグル：折り返さないよう独立行に配置 */}
+      <div className="flex justify-end mb-1.5">
+        <WeightUnitToggle />
+      </div>
 
       <div className="min-h-[72px]">
         {viewMode === 'weight-class' && weightBreakdown ? (
@@ -105,7 +113,7 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
               <SummaryStatCard
                 key={card.key}
                 label={card.label}
-                value={`${card.value.toLocaleString()}g`}
+                value={formatWeight(card.value, unit)}
                 isActive={chartFocus === card.focus}
                 onClick={() => onToggleChartFocus(card.focus)}
               />
@@ -115,8 +123,8 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
           <div className="grid grid-cols-2 gap-1.5 h-[72px]">
             <SummaryStatCard
               label="Weight"
-              value={`${totalWeight.toLocaleString()}g`}
-              subValue={`${(totalWeight / 1000).toFixed(2)}kg`}
+              value={formatWeight(totalWeight, unit)}
+              subValue={formatWeightLarge(totalWeight, unit)}
               isActive={viewMode === 'weight'}
               icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
             />

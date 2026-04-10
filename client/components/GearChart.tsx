@@ -14,6 +14,7 @@ import SegmentedControl from './ui/SegmentedControl'
 import ChartCenterDisplay from './charts/ChartCenterDisplay'
 import { CHART_CONFIG, getItemValue } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
+import { useWeightUnit } from '../contexts/WeightUnitContext'
 
 const DEFAULT_COLOR = COLORS.gray[500]
 
@@ -106,6 +107,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onCreatePack,
   onOpenPackSettings,
 }) => {
+  const { unit: weightUnit } = useWeightUnit()
   const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const [showNewPackInput, setShowNewPackInput] = useState(false)
   const [newPackName, setNewPackName] = useState('')
@@ -164,16 +166,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     if (viewMode !== 'weight-class') return null
     const data = calculateInnerRingData(analysisItems, chartScope)
     const total = data.reduce((sum, d) => sum + d.value, 0)
-    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
-  }, [viewMode, analysisItems, chartScope])
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: weightUnit }))
+  }, [viewMode, analysisItems, chartScope, weightUnit])
 
   // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
   const dualRingOuterData = useMemo(() => {
     if (viewMode !== 'weight-class') return null
     const data = calculateOuterRingData(analysisItems, chartScope, chartFocus)
     const total = data.reduce((sum, d) => sum + d.value, 0)
-    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: 'g' }))
-  }, [viewMode, analysisItems, chartScope, chartFocus, categories])
+    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: weightUnit }))
+  }, [viewMode, analysisItems, chartScope, chartFocus, categories, weightUnit])
 
   const displayData = useMemo(() => {
     return data.map(category => ({
@@ -184,14 +186,16 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   const totalValue = viewMode === 'cost' ? totalCost : totalWeight
 
+  // チャート payload に載せる単位記号（cost モードでは ¥、それ以外は g/oz）
+  const payloadUnit = viewMode === 'cost' ? '¥' : weightUnit
+
   const sortedData = useMemo(() => {
-    const unit = viewMode === 'cost' ? '¥' : 'g'
     return [...displayData].sort((a, b) => b.value - a.value).map(category => ({
       ...category,
       percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
       ratio: totalValue > 0 ? category.value / totalValue : 0,
       label: category.name,
-      unit,
+      unit: payloadUnit,
       sortedItems: (category.items || [])
         .map(item => ({ item, itemValue: getItemValue(item, viewMode, quantityDisplayMode) }))
         .filter(({ itemValue }) => itemValue > 0)
@@ -205,7 +209,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
           } satisfies GearItemWithPercentages
         }) as GearItemWithPercentages[]
     }))
-  }, [displayData, totalValue, viewMode, quantityDisplayMode])
+  }, [displayData, totalValue, viewMode, quantityDisplayMode, payloadUnit])
 
   // チャートで選択中のカテゴリ
   const selectedCategoryFromChart = selectedCategories.length === 1 ? selectedCategories[0] : null
@@ -216,7 +220,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
   // バーチャート用データ: カテゴリ選択時はそのアイテム一覧、未選択時はカテゴリ一覧
   const barData = useMemo(() => {
-    const unit = viewMode === 'cost' ? '¥' : 'g'
     if (selectedData && selectedData.sortedItems.length > 0) {
       return selectedData.sortedItems.map((item, index) => ({
         id: item.id,
@@ -224,7 +227,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         value: item.displayValue,
         color: generateItemColor(selectedData.color, index, selectedData.sortedItems.length),
         percentage: item.systemPercentage,
-        unit,
+        unit: payloadUnit,
       }))
     }
     return sortedData.map(cat => ({
@@ -232,14 +235,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
       value: cat.value,
       color: cat.color,
       percentage: cat.percentage,
-      unit,
+      unit: payloadUnit,
     }))
-  }, [selectedData, sortedData, viewMode])
+  }, [selectedData, sortedData, payloadUnit])
 
   const outerPieData = useMemo(() => {
     const items = selectedData?.sortedItems || []
     const categoryTotal = items.reduce((sum, item) => sum + item.displayValue, 0)
-    const unit = viewMode === 'cost' ? '¥' : 'g'
     return items.map((item, index) => {
       const itemValue = item.displayValue
       const fillColor = generateItemColor(
@@ -261,10 +263,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
         systemPercentage: item.systemPercentage,
         ratio: categoryTotal > 0 ? itemValue / categoryTotal : 0,
         label: item.name,
-        unit
+        unit: payloadUnit
       }
     })
-  }, [selectedData, viewMode])
+  }, [selectedData, payloadUnit])
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {

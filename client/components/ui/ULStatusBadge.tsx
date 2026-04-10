@@ -2,6 +2,8 @@ import React from 'react'
 import { ULClassification } from '../../utils/types'
 import { STATUS_TONES, COLORS } from '../../utils/designSystem'
 import { alpha } from '../../styles/tokens'
+import { formatWeightLarge } from '../../utils/weightUnit'
+import { useWeightUnit } from '../../contexts/WeightUnitContext'
 
 interface ULStatusBadgeProps {
   classification: ULClassification
@@ -16,12 +18,13 @@ const UL_STATUS_CONFIG = {
 
 const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeight }) => {
   const config = UL_STATUS_CONFIG[classification]
+  const { unit } = useWeightUnit()
 
   return (
     <span
       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold"
       style={{ backgroundColor: config.bgColor, color: config.color }}
-      title={baseWeight ? `Base Weight: ${(baseWeight / 1000).toFixed(2)}kg` : undefined}
+      title={baseWeight ? `Base Weight: ${formatWeightLarge(baseWeight, unit)}` : undefined}
     >
       {config.label}
     </span>
