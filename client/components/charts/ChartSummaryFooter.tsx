@@ -41,10 +41,10 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
     <>
       <div className="flex items-center gap-1.5 mb-0.5 leading-none">
         {icon}
-        <span className="text-[10px] leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
+        <span className="text-2xs leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
       </div>
-      <span className="text-[11px] leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
-      {subValue && <span className="text-[9px] leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
+      <span className="text-xs leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
+      {subValue && <span className="text-3xs leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
     </>
   )
 

@@ -65,7 +65,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Base */}
         <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-50">
           <BackpackIcon className="w-5 h-5 text-gray-500 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500">
+          <span className="text-2xs font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.base.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
@@ -76,7 +76,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Worn */}
         <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-100">
           <ShirtIcon className="w-5 h-5 text-gray-500 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500">
+          <span className="text-2xs font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.worn.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
@@ -87,7 +87,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Consumable */}
         <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-gray-100">
           <UtensilsIcon className="w-5 h-5 text-gray-500 mb-1" />
-          <span className="text-[10px] font-medium text-gray-500">
+          <span className="text-2xs font-medium text-gray-500">
             {WEIGHT_CLASS_CONFIG.consumable.label}
           </span>
           <span className="text-sm font-bold text-gray-900">
@@ -105,21 +105,21 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
           <span className="text-gray-500">Packed Weight</span>
           <span className="font-medium text-gray-900">
             {formatWeight(breakdown.packedWeight, unit)}
-            <span className="text-[10px] text-gray-400 ml-1">(Base + Cons)</span>
+            <span className="text-2xs text-gray-400 ml-1">(Base + Cons)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-500">Skin-out Weight</span>
           <span className="font-medium text-gray-900">
             {formatWeight(breakdown.skinOutWeight, unit)}
-            <span className="text-[10px] text-gray-400 ml-1">(All)</span>
+            <span className="text-2xs text-gray-400 ml-1">(All)</span>
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-gray-500">Big3</span>
           <span className="font-medium text-gray-700">
             {formatWeight(breakdown.big3, unit)}
-            <span className="text-[10px] text-gray-400 ml-1">(Pack+Shelter+Sleep)</span>
+            <span className="text-2xs text-gray-400 ml-1">(Pack+Shelter+Sleep)</span>
           </span>
         </div>
       </div>
@@ -127,10 +127,10 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
       {/* UL Progress Bar */}
       <div className="mt-3">
         <div className="flex justify-between items-center mb-1">
-          <span className="text-[10px] text-gray-500">
+          <span className="text-2xs text-gray-500">
             Base Weight: {formatWeightLarge(breakdown.baseWeight, unit)}
           </span>
-          <span className="text-[10px] text-gray-500">
+          <span className="text-2xs text-gray-500">
             {Math.round(ulProgress)}% of UL limit
           </span>
         </div>
@@ -147,7 +147,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
             }}
           />
         </div>
-        <div className="text-[9px] text-gray-400 mt-0.5 text-right">
+        <div className="text-3xs text-gray-400 mt-0.5 text-right">
           UL limit: {formatWeightLarge(UL_THRESHOLDS.ultralight, unit)}
         </div>
       </div>

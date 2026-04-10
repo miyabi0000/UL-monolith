@@ -79,7 +79,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
         <div className="inline-flex rounded-md p-0.5 bg-white/50 neu-inset">
           <button
             onClick={() => onViewChange('card')}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
               currentView === 'card' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Card view"
@@ -88,7 +88,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
           </button>
           <button
             onClick={() => onViewChange('table')}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
               currentView === 'table' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Table view"
@@ -97,7 +97,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
           </button>
           <button
             onClick={() => onViewChange('compare')}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-200 ${
+            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
               currentView === 'compare' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Comparison view"

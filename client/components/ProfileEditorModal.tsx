@@ -9,7 +9,7 @@ interface ProfileEditorModalProps {
 }
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <label className="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</label>
+  <label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</label>
 );
 
 /** ギア入力と同じドラッグ&ドロップ画像選択UI（コンパクト版） */
@@ -44,14 +44,14 @@ const ImageDropZone: React.FC<{
           <button
             type="button"
             onClick={() => removeImage(onRemove)}
-            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] inline-flex items-center justify-center"
+            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-red-500 text-white text-2xs inline-flex items-center justify-center"
           >
             ✕
           </button>
         </div>
       ) : (
         <div className="py-1">
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
             Drag & drop or click to select
           </p>
           <input
@@ -63,7 +63,7 @@ const ImageDropZone: React.FC<{
           />
           <label
             htmlFor={inputId}
-            className="btn-secondary text-[11px] px-3 py-1 rounded cursor-pointer"
+            className="btn-secondary text-xs px-3 py-1 rounded cursor-pointer"
           >
             Choose Image
           </label>

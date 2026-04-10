@@ -68,13 +68,13 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
             >
               <div className="flex items-center space-x-1 mb-0.5">
                 <span
-                  className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 ${
+                  className={`text-2xs font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 ${
                     isClickable ? 'group-hover:scale-110' : ''
                   }`}
                 >
                   {stat.icon}
                 </span>
-                <span className="text-[10px] font-medium text-gray-500">
+                <span className="text-2xs font-medium text-gray-500">
                   {stat.label}
                 </span>
               </div>

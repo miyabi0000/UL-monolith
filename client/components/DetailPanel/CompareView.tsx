@@ -92,7 +92,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                         <TruncatedText
                           text={item.name}
                           maxLength={10}
-                          className="font-medium text-gray-900 text-[10px]"
+                          className="font-medium text-gray-900 text-2xs"
                         />
                       </div>
                     </th>
@@ -114,7 +114,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                           style={isMin ? { color: successTone.text } : isMax ? { color: errorTone.text } : undefined}
                         >
                           {weight}g
-                          {isMin && <span className="ml-0.5 text-[9px]">★</span>}
+                          {isMin && <span className="ml-0.5 text-3xs">★</span>}
                         </span>
                       </td>
                     );
@@ -134,7 +134,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                           style={isMin ? { color: successTone.text } : isMax ? { color: errorTone.text } : undefined}
                         >
                           {formatPrice(price)}
-                          {isMin && <span className="ml-0.5 text-[9px]">★</span>}
+                          {isMin && <span className="ml-0.5 text-3xs">★</span>}
                         </span>
                       </td>
                     );
@@ -160,7 +160,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                         <CategoryBadge
                           name={item.category.name}
                           color={item.category.color || COLORS.gray[500]}
-                          className="text-[10px] font-medium"
+                          className="text-2xs font-medium"
                         />
                       ) : (
                         <span className="text-gray-400">-</span>
@@ -173,7 +173,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                   <td className="py-1.5 pr-2 text-gray-500">Brand</td>
                   {comparedItems.map(item => (
                     <td key={item.id} className="text-center px-2 py-1.5">
-                      <span className="text-gray-700 text-[10px]">
+                      <span className="text-gray-700 text-2xs">
                         {item.brand || '-'}
                       </span>
                     </td>

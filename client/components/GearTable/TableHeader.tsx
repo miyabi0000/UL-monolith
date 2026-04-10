@@ -66,7 +66,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   const COLUMNS = React.useMemo(() => buildColumns(unit), [unit])
 
   const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
-  const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-[11px] leading-none font-medium'
+  const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-xs leading-none font-medium'
   const inactiveText = 'text-gray-500 dark:text-gray-300'
   const hoverText = 'hover:text-gray-700 dark:hover:text-gray-100'
 
@@ -92,7 +92,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
       ? 'text-gray-700 dark:text-gray-100'
       : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
     return (
-      <span className={`inline-flex w-3 justify-center text-[10px] leading-none ${color}`}>
+      <span className={`inline-flex w-3 justify-center text-2xs leading-none ${color}`}>
         {isActive ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
       </span>
     )
@@ -216,7 +216,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                   <button
                     type="button"
                     onClick={onCurrencyChange}
-                    className={`inline-flex h-full w-6 flex-shrink-0 items-center justify-center rounded text-[11px] leading-none font-medium px-0 ${inactiveText} ${hoverText}`}
+                    className={`inline-flex h-full w-6 flex-shrink-0 items-center justify-center rounded text-xs leading-none font-medium px-0 ${inactiveText} ${hoverText}`}
                     title="Toggle currency"
                     aria-label="Toggle currency"
                   >

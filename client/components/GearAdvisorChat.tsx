@@ -55,7 +55,7 @@ const GearRefChip: React.FC<{ ref_: GearRef; onClick: (gearId: string) => void }
     type="button"
     onClick={() => onClick(ref_.gearId)}
     title={`Jump to ${ref_.gearName}`}
-    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
                bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200
                border border-gray-200 dark:border-slate-600
                hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
@@ -165,7 +165,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
             UL Gear Advisor
           </h3>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {scopeLabel}
             {baseWeightLabel && ` · Base ${baseWeightLabel}`}
             {gearContext.ulStatus && ` · ${gearContext.ulStatus.classification}`}
@@ -198,7 +198,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                                  ? 'rounded-2xl rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
                                  : 'rounded-2xl rounded-bl-sm bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-slate-700'}`}>
                 <div className="whitespace-pre-wrap">{message.content}</div>
-                <div className={`text-[10px] mt-1 opacity-50 select-none
+                <div className={`text-2xs mt-1 opacity-50 select-none
                                  ${message.role === 'user' ? 'text-right' : ''}`}>
                   {TIME_FMT.format(message.timestamp)}
                 </div>
@@ -257,7 +257,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
               type="button"
               disabled={isLoading}
               onClick={() => sendText(qp.prompt)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
                          whitespace-nowrap shrink-0
                          bg-white/60 dark:bg-slate-700/60 backdrop-blur
                          text-gray-700 dark:text-gray-200
@@ -304,7 +304,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
             Send
           </button>
         </div>
-        <p className="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+        <p className="mt-1.5 text-2xs text-gray-400 dark:text-gray-500">
           e.g. "How can I reduce my base weight?" · "What's my Big 3 total?"
         </p>
       </div>
