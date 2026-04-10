@@ -485,8 +485,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             </div>
           </div>
         ) : (
-        <div className="relative flex items-center justify-center p-2 flex-1" style={{ minHeight: chartHeight }}>
-          <>
+        <div className="relative flex items-center justify-center p-2 flex-1" style={{ minHeight: chartHeight, maxHeight: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* Weight-Classモード: 二重ドーナツ */}
@@ -689,7 +688,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               />
             </div>
           </div>
-          </>
         </div>
         )}
 

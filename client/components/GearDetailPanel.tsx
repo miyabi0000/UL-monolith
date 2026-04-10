@@ -35,6 +35,8 @@ interface GearDetailPanelProps {
   onAddItemsToPack?: (itemIds: string[]) => void;
 }
 
+const MAX_COMPARE_ITEMS = 4;
+
 const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   items,
   categories,
@@ -71,7 +73,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   }, []);
 
   const isCompareMode = gearViewMode === 'compare';
-  const MAX_COMPARE_ITEMS = 4;
 
   const quantityFilteredItems = useMemo(() => {
     if (quantityDisplayMode === 'owned') return items.filter(item => item.ownedQuantity > 0);
@@ -153,10 +154,13 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onDeleteItem: onDelete,
   });
 
+  // O(1)ルックアップ用のSet
+  const activePackIdSet = useMemo(() => new Set(activePackItemIds), [activePackItemIds]);
+
   // 表示中の全アイテムがパックに入っているか
   const isAllVisibleInPack = useMemo(
-    () => processedItems.length > 0 && processedItems.every((item) => activePackItemIds.includes(item.id)),
-    [processedItems, activePackItemIds]
+    () => processedItems.length > 0 && processedItems.every((item) => activePackIdSet.has(item.id)),
+    [processedItems, activePackIdSet]
   );
 
   const handleAddAllToPack = useCallback(() => {
@@ -171,6 +175,21 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       }
     }
   }, [activePack, isAllVisibleInPack, onTogglePackItem, onAddItemsToPack, processedItems]);
+
+  // Table / Compare モード用 Context（早期returnよりも前で呼ぶ — Hooks Rules）
+  const contextValue = useMemo(() => ({
+    quantityDisplayMode,
+    onQuantityDisplayModeChange: handleQuantityDisplayModeChange,
+    currency,
+    onCurrencyChange: handleCurrencyChange,
+    showCheckboxes: shouldShowCheckboxes,
+    isEditable,
+    activePackName: activePack?.name,
+    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
+    isAllVisibleInPack,
+  }), [quantityDisplayMode, handleQuantityDisplayModeChange, currency, handleCurrencyChange,
+       shouldShowCheckboxes, isEditable, activePack, onAddItemsToPack, onTogglePackItem,
+       handleAddAllToPack, isAllVisibleInPack]);
 
   // Compareモード時の比較表示
   if (isCompareMode && showComparisonModal && selectedItems.length >= 2) {
@@ -199,23 +218,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           activePackName={activePack?.name}
           activePackItemIds={activePackItemIds}
           onTogglePackItem={onTogglePackItem}
+          onEdit={onEdit}
         />
       </div>
     );
   }
-
-  // Table / Compare モード
-  const contextValue = {
-    quantityDisplayMode,
-    onQuantityDisplayModeChange: handleQuantityDisplayModeChange,
-    currency,
-    onCurrencyChange: handleCurrencyChange,
-    showCheckboxes: shouldShowCheckboxes,
-    isEditable,
-    activePackName: activePack?.name,
-    onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
-    isAllVisibleInPack,
-  };
 
   return (
     <GearListProvider value={contextValue}>

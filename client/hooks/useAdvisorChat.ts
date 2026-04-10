@@ -15,7 +15,7 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-const INITIAL_MESSAGE: ChatMessage = {
+const createInitialMessage = (): ChatMessage => ({
   id: 'init',
   role: 'assistant',
   content: [
@@ -28,7 +28,10 @@ const INITIAL_MESSAGE: ChatMessage = {
     '• Click a gear chip below any reply to jump to that item',
   ].join('\n'),
   timestamp: new Date(),
-};
+});
+
+let msgCounter = 0;
+const createMessageId = () => `msg-${Date.now()}-${++msgCounter}`;
 
 /**
  * アドバイザーチャットの状態管理フック
@@ -37,26 +40,23 @@ export const useAdvisorChat = (
   gearContext: GearAdvisorContext,
   onApplyEdit: (gearId: string, field: string, value: unknown) => Promise<void>,
 ) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [createInitialMessage()]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [applyingEdit, setApplyingEdit] = useState<string | null>(null);
-  const nextMsgId = useRef(1);
 
-  const createMessageId = useCallback(() => {
-    const id = `msg-${Date.now()}-${nextMsgId.current}`;
-    nextMsgId.current += 1;
-    return id;
-  }, []);
+  // sendText 内で最新の messages を参照するための ref
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
-  const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+  /** 指定テキストを送信する内部関数 */
+  const sendText = useCallback(async (text: string) => {
+    if (!text || isLoading) return;
 
     const userMsg: ChatMessage = {
       id: createMessageId(),
       role: 'user',
-      content: trimmed,
+      content: text,
       timestamp: new Date(),
     };
 
@@ -65,9 +65,12 @@ export const useAdvisorChat = (
     setIsLoading(true);
 
     try {
-      const history: AdvisorMessage[] = [...messages.filter((m) => m.id !== 'init'), userMsg].map(
-        (m) => ({ role: m.role, content: m.content })
-      );
+      // ref から最新の messages を取得し、init メッセージを除外
+      const history: AdvisorMessage[] = [
+        ...messagesRef.current.filter((m) => m.id !== 'init'),
+        userMsg,
+      ].map((m) => ({ role: m.role, content: m.content }));
+
       const result = await callAdvisor(history, gearContext);
 
       setMessages((prev) => [
@@ -94,7 +97,13 @@ export const useAdvisorChat = (
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, gearContext, createMessageId]);
+  }, [isLoading, gearContext]);
+
+  /** 現在の入力欄テキストを送信 */
+  const handleSend = useCallback(() => {
+    const trimmed = input.trim();
+    if (trimmed) sendText(trimmed);
+  }, [input, sendText]);
 
   const handleApplyEdit = useCallback(
     async (edit: SuggestedEdit, messageId: string, editIndex: number) => {
@@ -128,6 +137,7 @@ export const useAdvisorChat = (
     isLoading,
     applyingEdit,
     handleSend,
+    sendText,
     handleApplyEdit,
   };
 };

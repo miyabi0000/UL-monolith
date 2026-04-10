@@ -1,5 +1,5 @@
 import React from 'react';
-import { GearAdvisorContext, SuggestedEdit, GearRef } from '../services/llmAdvisor';
+import { GearAdvisorContext, GearRef } from '../services/llmAdvisor';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
 import { useIsMobile } from '../hooks/useResponsiveSize';
 
@@ -13,6 +13,14 @@ interface GearAdvisorChatProps {
 
 // ==================== 定数 ====================
 
+/** クイックプロンプト定義: よくある質問をワンタップで送信 */
+const QUICK_PROMPTS = [
+  { icon: '⚡', label: 'Reduce base weight', prompt: 'How can I reduce my base weight? Focus on the heaviest items and suggest specific lighter alternatives.' },
+  { icon: '📊', label: 'Analyze Big 3', prompt: 'Analyze my Big 3 (backpack, shelter, sleep system). Are they optimized for ultralight hiking?' },
+  { icon: '💰', label: 'Budget alternatives', prompt: 'Suggest more affordable alternatives for my most expensive items without significantly increasing weight.' },
+  { icon: '🎒', label: '3-day trip', prompt: 'Optimize my gear list for a 3-day backpacking trip. What can I leave behind?' },
+] as const;
+
 const FIELD_LABELS: Record<string, string> = {
   weightGrams: 'Weight',
   priceCents: 'Price',
@@ -23,8 +31,10 @@ const FIELD_LABELS: Record<string, string> = {
 
 // ==================== ヘルパー ====================
 
+const TIME_FMT = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' });
+
 const formatEditValue = (field: string, value: unknown): string => {
-  if (field === 'weightGrams') return `${value}g`;
+  if (field === 'weightGrams' && typeof value === 'number') return `${value}g`;
   if (field === 'priceCents' && typeof value === 'number') {
     return `¥${Math.round(value / 100).toLocaleString()}`;
   }
@@ -112,6 +122,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
     isLoading,
     applyingEdit,
     handleSend,
+    sendText,
     handleApplyEdit,
   } = useAdvisorChat(gearContext, onApplyEdit);
 
@@ -185,7 +196,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                 <div className="whitespace-pre-wrap">{message.content}</div>
                 <div className={`text-[10px] mt-1 opacity-50 select-none
                                  ${message.role === 'user' ? 'text-right' : ''}`}>
-                  {message.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  {TIME_FMT.format(message.timestamp)}
                 </div>
               </div>
 
@@ -233,6 +244,28 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       <div className="shrink-0 px-4 py-3
                       bg-white/80 dark:bg-slate-800/80 backdrop-blur
                       border-t border-gray-200 dark:border-slate-700">
+        {/* クイックプロンプトボタン */}
+        <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 scrollbar-thin">
+          {QUICK_PROMPTS.map((qp) => (
+            <button
+              key={qp.label}
+              type="button"
+              disabled={isLoading}
+              onClick={() => sendText(qp.prompt)}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+                         whitespace-nowrap shrink-0
+                         bg-white/60 dark:bg-slate-700/60 backdrop-blur
+                         text-gray-700 dark:text-gray-200
+                         border border-gray-200 dark:border-slate-600
+                         hover:bg-gray-100 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-slate-500
+                         disabled:opacity-40 disabled:cursor-not-allowed
+                         transition-all"
+            >
+              <span>{qp.icon}</span>
+              <span>{qp.label}</span>
+            </button>
+          ))}
+        </div>
         <div className="flex gap-2">
           <textarea
             ref={inputRef}
