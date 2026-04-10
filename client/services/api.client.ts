@@ -40,12 +40,36 @@ export const API_ENDPOINTS = {
 }
 
 /**
- * Request headers
+ * 認証トークン取得関数の登録
+ * AuthContext の初期化時に setAuthTokenProvider を呼び出し、
+ * getIdToken 関数を登録する。以降 getHeaders() が自動的にトークンを付与する。
  */
-export const getHeaders = () => {
-  return {
+let authTokenProvider: (() => Promise<string | null>) | null = null;
+
+export const setAuthTokenProvider = (provider: () => Promise<string | null>) => {
+  authTokenProvider = provider;
+};
+
+/**
+ * Request headers（認証トークン付き）
+ */
+export const getHeaders = async (): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+  };
+
+  if (authTokenProvider) {
+    try {
+      const token = await authTokenProvider();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    } catch {
+      // トークン取得失敗時は認証なしで続行
+    }
   }
+
+  return headers;
 }
 
 /**
@@ -98,7 +122,7 @@ export const callAPIWithRetry = async (
       
       const requestOptions: RequestInit = {
         method,
-        headers: getHeaders(),
+        headers: await getHeaders(),
       }
 
       if (method !== 'GET' && method !== 'DELETE') {
