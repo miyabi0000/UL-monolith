@@ -401,7 +401,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <button
                       type="button"
                       onClick={() => setChartDisplayMode('pie')}
-                      className={`h-5 px-1.5 rounded text-[10px] font-medium transition-all duration-150 inline-flex items-center gap-1 ${
+                      className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
                         chartDisplayMode === 'pie'
                           ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -416,7 +416,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <button
                       type="button"
                       onClick={() => setChartDisplayMode('bar')}
-                      className={`h-5 px-1.5 rounded text-[10px] font-medium transition-all duration-150 inline-flex items-center gap-1 ${
+                      className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
                         chartDisplayMode === 'bar'
                           ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -462,15 +462,15 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <button
                   type="button"
                   onClick={() => handleCategoryClick(selectedData.name)}
-                  className="flex items-center gap-0.5 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  className="flex items-center gap-0.5 text-2xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 >
                   <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10 12L6 8l4-4"/>
                   </svg>
                   All
                 </button>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">/</span>
-                <span className="text-[10px] font-medium truncate" style={{ color: selectedData.color }}>
+                <span className="text-2xs text-gray-400 dark:text-gray-500">/</span>
+                <span className="text-2xs font-medium truncate" style={{ color: selectedData.color }}>
                   {selectedData.name}
                 </span>
               </div>

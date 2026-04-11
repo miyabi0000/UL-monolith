@@ -66,7 +66,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">{profile.headerTitle}</p>
+            <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{profile.headerTitle}</p>
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{profile.displayName}</h2>
             {profile.bio && (
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{profile.bio}</p>
@@ -125,7 +125,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             aria-label="User menu"
           >
             {isAuthenticated ? (
-              <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-[10px] font-semibold inline-flex items-center justify-center">
+              <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                 {userInitial}
               </span>
             ) : (

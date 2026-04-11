@@ -14,6 +14,18 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      // Typography scale — --gear-font-* (globals.css) と整合
+      // Tailwind 組み込み値 (text-xs=12px / text-sm=14px ...) を 1 段下にずらして上書き
+      fontSize: {
+        '3xs':  ['9px',  { lineHeight: '1'    }],  // 新規: バッジ最小
+        '2xs':  ['10px', { lineHeight: '1'    }],  // 新規: ラベル・キャプション
+        'xs':   ['11px', { lineHeight: '1.5'  }],  // 上書き (旧 12px)
+        'sm':   ['12px', { lineHeight: '1.5'  }],  // 上書き (旧 14px)
+        'base': ['14px', { lineHeight: '1.5'  }],  // 上書き (旧 16px)
+        'lg':   ['16px', { lineHeight: '1.35' }],  // 上書き (旧 18px)
+        'xl':   ['18px', { lineHeight: '1.2'  }],  // 上書き (旧 20px)
+        '2xl':  ['20px', { lineHeight: '1.2'  }],  // 上書き (旧 24px)
+      },
       colors: {
         // Tailwind 標準クラス（text-gray-900 など）をトークンへ一致させる
         gray: {

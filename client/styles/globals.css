@@ -38,10 +38,14 @@
     --glass-noise-opacity: 0.035;
     --glass-key-shadow: 0.14;
     --glass-ambient-shadow: 0.08;
+    --gear-font-3xs: 9px;
     --gear-font-2xs: 10px;
     --gear-font-xs: 11px;
     --gear-font-sm: 12px;
     --gear-font-md: 14px;
+    --gear-font-lg: 16px;
+    --gear-font-xl: 18px;
+    --gear-font-2xl: 20px;
     --gear-badge-size: 20px;
     --gear-row-height: 60px;
     /* 角丸階層: 3層ルール */
@@ -321,7 +325,7 @@
   /* Gear table typography hierarchy */
   .gear-th {
     font-size: var(--gear-font-2xs);
-    @apply font-semibold tracking-[0.02em];
+    @apply font-semibold tracking-wide;
     color: var(--text-table-head, #4b5563);
   }
 
@@ -343,8 +347,8 @@
   }
 
   .gear-text-micro {
-    font-size: 11px;
-    @apply font-medium tracking-[0.03em];
+    font-size: var(--gear-font-xs);
+    @apply font-medium tracking-wide;
     color: var(--text-table-micro, #6b7280);
   }
 

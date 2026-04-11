@@ -87,13 +87,13 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
                 >
                   <div className="flex items-start justify-between gap-1">
                     {/* A/B/C/D ラベル */}
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-[10px] font-bold flex-shrink-0">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-2xs font-bold flex-shrink-0">
                       {ITEM_LABELS[index] || index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-gray-900 text-xs truncate">{item.name}</div>
                       {item.brand && (
-                        <div className="text-[10px] text-gray-600 mt-0.5 truncate">{item.brand}</div>
+                        <div className="text-2xs text-gray-600 mt-0.5 truncate">{item.brand}</div>
                       )}
                     </div>
                     {/* 削除ボタン */}
@@ -231,7 +231,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({
                       item.seasons.map(season => (
                         <span
                           key={season}
-                          className="px-1.5 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700"
+                          className="px-1.5 py-0.5 text-2xs rounded-full bg-gray-200 text-gray-700"
                         >
                           {season}
                         </span>

@@ -115,7 +115,7 @@ const AppDock: React.FC<AppDockProps> = ({
             aria-label="User menu"
           >
             {isAuthenticated ? (
-              <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-[10px] font-semibold inline-flex items-center justify-center">
+              <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                 {userInitial}
               </span>
             ) : (

@@ -83,7 +83,7 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
       </span>
       {isBig3 && (
         <span
-          className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-gray-200 text-gray-700"
+          className="px-1.5 py-0.5 text-2xs font-bold rounded bg-gray-200 text-gray-700"
           title="Big3: Backpack / Shelter / Sleep"
         >
           Big3

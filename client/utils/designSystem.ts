@@ -28,14 +28,23 @@ export const SPACING_SCALE = {
 // Font Family
 export const FONT_FAMILY = 'Inter, sans-serif' as const;
 
-// Minimal Typography (3 sizes only)
+// Typography scale — tailwind.config.js fontSize と globals.css の --gear-font-* と整合
+// 単一の真実: 値の変更は 3 ファイル全てに反映する
 export const FONT_SCALE = {
-  sm: 12,   // Small text (captions, labels)
-  base: 14, // Base text (body, inputs)
-  lg: 18,   // Large text (headings)
+  '3xs': 9,
+  '2xs': 10,
+  xs:    11,
+  sm:    12,
+  base:  14,
+  lg:    16,
+  xl:    18,
+  '2xl': 20,
 } as const;
 
-// 行間（フォントサイズ × 白銀比）
+/**
+ * @deprecated Tailwind の `leading-*` ユーティリティを優先。
+ * 既存のチャート系コンポーネントが参照しているため値は保持。
+ */
 export const LINE_HEIGHT_SCALE = {
   xs: 17,   // 12 × 1.414
   sm: 24,   // 17 × 1.414

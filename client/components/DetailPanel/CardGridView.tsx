@@ -31,7 +31,7 @@ const formatSeasons = (seasons?: string[]): string => {
 
 /** 展開セクションの詳細行 */
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex justify-between text-[10px] leading-relaxed">
+  <div className="flex justify-between text-2xs leading-relaxed">
     <span style={{ color: COLORS.text.muted }}>{label}</span>
     <span style={{ color: COLORS.text.secondary }}>{value}</span>
   </div>
@@ -44,7 +44,7 @@ const actionButtonStyle = {
   borderRadius: COMPONENT_RADIUS.control,
 } as const;
 
-const actionButtonClass = 'text-[10px] font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';
+const actionButtonClass = 'text-2xs font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';
 
 /** コンパクトテキストカードのグリッド表示 */
 const CardGridView: React.FC<CardGridViewProps> = ({
@@ -109,7 +109,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onTogglePackItem(item.id); }}
                     className={[
-                      'absolute top-1 right-1 z-10 h-5 min-w-[34px] rounded-md px-1.5 text-[9px] font-semibold transition-colors',
+                      'absolute top-1 right-1 z-10 h-5 min-w-[34px] rounded-md px-1.5 text-3xs font-semibold transition-colors',
                       isInActivePack ? 'bg-gray-800 text-white' : 'bg-white/90 text-gray-600',
                     ].join(' ')}
                     title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
@@ -130,7 +130,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                       {item.name}
                     </span>
                     <span
-                      className="text-[10px] font-bold flex-shrink-0 px-1 rounded"
+                      className="text-2xs font-bold flex-shrink-0 px-1 rounded"
                       style={{
                         color: getPriorityColor(item.priority),
                         backgroundColor: `${getPriorityColor(item.priority)}${PRIORITY_BG_OPACITY}`,
@@ -143,10 +143,10 @@ const CardGridView: React.FC<CardGridViewProps> = ({
 
                   {/* 2行目: 重量 + 価格 */}
                   <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-[11px] font-semibold" style={{ color: COLORS.text.primary }}>
+                    <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
                       {formatWeight(item.weightGrams, weightUnit)}
                     </span>
-                    <span className="text-[11px]" style={{ color: COLORS.text.secondary }}>
+                    <span className="text-xs" style={{ color: COLORS.text.secondary }}>
                       {formatPrice(item.priceCents)}
                     </span>
                   </div>
@@ -154,14 +154,14 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   {/* 3行目: weightClass + カテゴリ + 所持/必要 */}
                   <div className="flex items-center justify-between mt-0.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[10px] font-medium" style={{ color: COLORS.text.muted }}>
+                      <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
                         {item.weightClass}
                       </span>
-                      <span className="text-[10px] truncate" style={{ color: COLORS.text.secondary }}>
+                      <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
                         {item.category?.name ?? '—'}
                       </span>
                     </div>
-                    <span className="text-[10px] flex-shrink-0" style={{ color: COLORS.text.muted }}>
+                    <span className="text-2xs flex-shrink-0" style={{ color: COLORS.text.muted }}>
                       {item.ownedQuantity}/{item.requiredQuantity}
                     </span>
                   </div>
