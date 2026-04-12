@@ -31,7 +31,7 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
   isActive = false,
   onClick,
 }) => {
-  const cardClass = `flex flex-col items-center justify-center px-1 h-[72px] rounded-md transition-all duration-200 ${
+  const cardClass = `flex flex-col items-center justify-center px-1 py-2 rounded-md transition-all duration-200 ${
     isActive
       ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500'
       : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
@@ -39,7 +39,7 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
 
   const content = (
     <>
-      <div className="flex items-center gap-1.5 mb-0.5 leading-none">
+      <div className="flex items-center gap-1.5 mb-1 leading-none">
         {icon}
         <span className="text-2xs leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
       </div>
@@ -106,9 +106,9 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
         <WeightUnitToggle />
       </div>
 
-      <div className="min-h-[72px]">
+      <div>
         {viewMode === 'weight-class' && weightBreakdown ? (
-          <div className="grid grid-cols-4 gap-1 h-[72px]">
+          <div className="grid grid-cols-4 gap-1">
             {weightClassSummaryCards.map(card => (
               <SummaryStatCard
                 key={card.key}
@@ -120,7 +120,7 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
             ))}
           </div>
       ) : (
-          <div className="grid grid-cols-2 gap-1.5 h-[72px]">
+          <div className="grid grid-cols-2 gap-1.5">
             <SummaryStatCard
               label="Weight"
               value={formatWeight(totalWeight, unit)}

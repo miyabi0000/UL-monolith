@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { resolveUserIdFromSub } from '../routes/shared/userProvisioning';
 
 // Cognito JWT 検証ミドルウェア
 // 開発時は COGNITO_USER_POOL_ID が未設定なら認証をスキップ（DEMO_USER_ID を使用）
@@ -50,7 +51,14 @@ export async function cognitoAuth(req: Request, res: Response, next: NextFunctio
 
   try {
     const payload = await verifier.verify(token);
-    req.userId = payload.sub;
+    const email = (payload as Record<string, unknown>)['email'] as string | undefined;
+    if (!email) {
+      res.status(401).json({ success: false, message: 'ID token missing email claim' });
+      return;
+    }
+    const name = (payload as Record<string, unknown>)['name'] as string | undefined;
+    // Cognito sub → users.id にマッピング（初回は自動プロビジョニング）
+    req.userId = await resolveUserIdFromSub(payload.sub, email, name);
     next();
   } catch (error) {
     console.error('JWT verification failed:', error);
@@ -79,7 +87,11 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
   const token = authHeader.slice(7);
   try {
     const payload = await verifier.verify(token);
-    req.userId = payload.sub;
+    const email = (payload as Record<string, unknown>)['email'] as string | undefined;
+    if (email) {
+      const name = (payload as Record<string, unknown>)['name'] as string | undefined;
+      req.userId = await resolveUserIdFromSub(payload.sub, email, name);
+    }
   } catch {
     // トークン無効でも続行（公開ページ用）
   }

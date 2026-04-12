@@ -13,6 +13,8 @@ import llmRoutes from './routes/llm';
 import authRoutes from './routes/auth';
 import imageProxyRoutes from './routes/imageProxy';
 import packRoutes from './routes/packs';
+import profileRoutes from './routes/profile';
+import advisorRoutes from './routes/advisor';
 import { cognitoAuth } from './middleware/cognitoAuth';
 
 // Load environment variables
@@ -83,6 +85,8 @@ app.use('/api/v1/llm', cognitoAuth, strictLimiter, llmRoutes);
 app.use('/api/v1/auth', authRoutes); // 認証エンドポイント自体は認証不要
 app.use('/api/v1/image', imageProxyRoutes); // 画像プロキシは認証不要
 app.use('/api/v1/packs', packRoutes); // パック（内部で認証制御）
+app.use('/api/v1/profile', profileRoutes); // プロフィール（内部で認証制御）
+app.use('/api/v1/advisor', advisorRoutes); // アドバイザー（内部で認証制御）
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
