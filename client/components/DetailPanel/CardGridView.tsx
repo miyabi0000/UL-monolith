@@ -160,13 +160,37 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   }}
                 >
                   <div className="px-2 py-1.5">
-                    {/* 名前 + 優先度 (テーブルと同じ数字表記) */}
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-medium truncate flex-1" style={{ color: COLORS.text.primary }}>
-                        {item.name}
+                    {/* テーブル列順に情報を表示: name → category → type → quantity → weight → priority → price → season */}
+
+                    {/* name */}
+                    <span className="text-xs font-medium truncate block" style={{ color: COLORS.text.primary }}>
+                      {item.name}
+                    </span>
+
+                    {/* category + type(weightClass) */}
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
+                        {item.category?.name ?? '—'}
                       </span>
+                      <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
+                        {item.weightClass}
+                      </span>
+                    </div>
+
+                    {/* quantity + weight */}
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-2xs" style={{ color: COLORS.text.muted }}>
+                        {item.ownedQuantity}/{item.requiredQuantity}
+                      </span>
+                      <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
+                        {formatWeight(item.weightGrams, weightUnit)}
+                      </span>
+                    </div>
+
+                    {/* priority + price */}
+                    <div className="flex items-center justify-between mt-0.5">
                       <span
-                        className="text-2xs font-bold flex-shrink-0 h-5 w-5 inline-flex items-center justify-center"
+                        className="text-2xs font-bold h-5 w-5 inline-flex items-center justify-center"
                         style={{
                           color: pStyle.color,
                           backgroundColor: pStyle.bg,
@@ -175,37 +199,21 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                       >
                         {item.priority}
                       </span>
-                    </div>
-
-                    {/* 重量 + 価格 */}
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
-                        {formatWeight(item.weightGrams, weightUnit)}
-                      </span>
                       <span className="text-xs" style={{ color: COLORS.text.secondary }}>
                         {formatPrice(item.priceCents)}
                       </span>
                     </div>
 
-                    {/* weightClass + カテゴリ + 所持/必要 */}
-                    <div className="flex items-center justify-between mt-0.5">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
-                          {item.weightClass}
-                        </span>
-                        <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
-                          {item.category?.name ?? '—'}
-                        </span>
-                      </div>
-                      <span className="text-2xs flex-shrink-0" style={{ color: COLORS.text.muted }}>
-                        {item.ownedQuantity}/{item.requiredQuantity}
+                    {/* season */}
+                    <div className="mt-0.5">
+                      <span className="text-2xs" style={{ color: COLORS.text.muted }}>
+                        {formatSeasons(item.seasons)}
                       </span>
                     </div>
 
                     {/* 区切り線 + 追加詳細 */}
                     <div className="mt-1.5 mb-1" style={{ borderTop: `1px dashed ${COLORS.gray[200]}` }} />
                     <DetailRow label="Brand" value={item.brand || '—'} />
-                    <DetailRow label="Seasons" value={formatSeasons(item.seasons)} />
                     <DetailRow label="Source" value={`${item.weightSource} (${item.weightConfidence})`} />
 
                     <div className="flex items-center gap-2 mt-1.5">
