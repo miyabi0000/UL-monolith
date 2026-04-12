@@ -118,6 +118,18 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   </button>
                 )}
 
+                {/* 上カバー画像（imageUrl 無しはグレー無地フォールバック） */}
+                <div className="w-full h-20 bg-gray-100 dark:bg-slate-700 flex-shrink-0">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : null}
+                </div>
+
                 {/* タップ領域 */}
                 <button
                   type="button"
