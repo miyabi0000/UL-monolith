@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { COLORS, SHADOW, COMPONENT_RADIUS, getPriorityColor } from '../../utils/designSystem';
+import { COLORS, SHADOW } from '../../utils/designSystem';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import { formatWeight } from '../../utils/weightUnit';
 import { formatPrice } from '../../utils/formatters';
@@ -18,12 +18,17 @@ interface CardGridViewProps {
   onEdit?: (item: GearItemWithCalculated) => void;
 }
 
-// --- モジュールレベル定数・ヘルパー ---
+// --- 定数・ヘルパー ---
 
-const EXPAND_MAX_HEIGHT = '200px';
-const PRIORITY_BG_OPACITY = '18'; // hex ~9%
+/** テーブルと同じ優先度スタイル (1-5 の数字表示) */
+const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
+  1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
+  2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
+  3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
+  4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
+  5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' },
+};
 
-/** シーズン配列をカンマ区切り文字列にフォーマット */
 const formatSeasons = (seasons?: string[]): string => {
   if (!seasons || seasons.length === 0) return '—';
   return seasons.join(', ');
@@ -37,16 +42,27 @@ const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value })
   </div>
 );
 
-/** Edit / Link ボタンの共通スタイル */
+/** Edit / Link ボタン */
 const actionButtonStyle = {
   color: COLORS.text.secondary,
   border: `1px solid ${COLORS.gray[200]}`,
-  borderRadius: COMPONENT_RADIUS.control,
 } as const;
 
 const actionButtonClass = 'text-2xs font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';
 
-/** コンパクトテキストカードのグリッド表示 */
+/** 画像なし時のプレースホルダー */
+const ImagePlaceholder: React.FC<{ name: string }> = ({ name }) => (
+  <div
+    className="w-full aspect-square flex items-center justify-center"
+    style={{ backgroundColor: COLORS.gray[100] }}
+  >
+    <span className="text-xs text-center px-2 truncate" style={{ color: COLORS.text.muted }}>
+      {name}
+    </span>
+  </div>
+);
+
+/** 通常時は画像のみ、タップで詳細が出るカードグリッド */
 const CardGridView: React.FC<CardGridViewProps> = ({
   items,
   viewMode,
@@ -61,7 +77,6 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   const { unit: weightUnit } = useWeightUnit();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // アイテムを表示値（weight/cost）昇順でソート
   const sortedItems = useMemo(() => {
     if (disableSort) return items;
     return [...items].sort((a, b) => {
@@ -87,18 +102,18 @@ const CardGridView: React.FC<CardGridViewProps> = ({
       {sortedItems.length === 0 ? (
         <p className="text-xs text-gray-500 text-center py-4">No items</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
           {sortedItems.map(item => {
             const isExpanded = expandedId === item.id;
             const isHighlighted = selectedItemId === item.id;
             const isInActivePack = activePackItemIds.includes(item.id);
+            const pStyle = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE[3];
 
             return (
               <div
                 key={item.id}
                 className="relative overflow-hidden select-none"
                 style={{
-                  borderRadius: COMPONENT_RADIUS.surface,
                   boxShadow: isHighlighted ? `0 0 0 2px ${COLORS.gray[500]}` : SHADOW,
                   backgroundColor: COLORS.surface,
                 }}
@@ -109,7 +124,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onTogglePackItem(item.id); }}
                     className={[
-                      'absolute top-1 right-1 z-10 h-5 min-w-[34px] rounded-md px-1.5 text-3xs font-semibold transition-colors',
+                      'absolute top-1 right-1 z-10 h-5 min-w-[34px] px-1.5 text-3xs font-semibold transition-colors',
                       isInActivePack ? 'bg-gray-800 text-white' : 'bg-white/90 text-gray-600',
                     ].join(' ')}
                     title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
@@ -118,59 +133,77 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   </button>
                 )}
 
-                {/* タップ領域 */}
+                {/* タップ領域: 画像のみ */}
                 <button
                   type="button"
                   onClick={() => handleToggle(item.id)}
-                  className="w-full text-left px-2.5 py-2 focus:outline-none"
+                  className="w-full focus:outline-none"
                 >
-                  {/* 1行目: 名前 + 優先度 */}
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-medium truncate flex-1" style={{ color: COLORS.text.primary }}>
-                      {item.name}
-                    </span>
-                    <span
-                      className="text-2xs font-bold flex-shrink-0 px-1 rounded"
-                      style={{
-                        color: getPriorityColor(item.priority),
-                        backgroundColor: `${getPriorityColor(item.priority)}${PRIORITY_BG_OPACITY}`,
-                        borderRadius: COMPONENT_RADIUS.badge,
-                      }}
-                    >
-                      P{item.priority}
-                    </span>
-                  </div>
-
-                  {/* 2行目: 重量 + 価格 */}
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
-                      {formatWeight(item.weightGrams, weightUnit)}
-                    </span>
-                    <span className="text-xs" style={{ color: COLORS.text.secondary }}>
-                      {formatPrice(item.priceCents)}
-                    </span>
-                  </div>
-
-                  {/* 3行目: weightClass + カテゴリ + 所持/必要 */}
-                  <div className="flex items-center justify-between mt-0.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
-                        {item.weightClass}
-                      </span>
-                      <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
-                        {item.category?.name ?? '—'}
-                      </span>
-                    </div>
-                    <span className="text-2xs flex-shrink-0" style={{ color: COLORS.text.muted }}>
-                      {item.ownedQuantity}/{item.requiredQuantity}
-                    </span>
-                  </div>
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-full aspect-square object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <ImagePlaceholder name={item.name} />
+                  )}
                 </button>
 
-                {/* 展開セクション */}
-                <div style={{ maxHeight: isExpanded ? EXPAND_MAX_HEIGHT : '0px', transition: 'max-height 0.3s ease', overflow: 'hidden' }}>
-                  <div className="px-2.5 pb-2">
-                    <div className="mb-1.5" style={{ borderTop: `1px dashed ${COLORS.gray[200]}` }} />
+                {/* 展開セクション: 詳細情報 */}
+                <div
+                  style={{
+                    maxHeight: isExpanded ? '300px' : '0px',
+                    transition: 'max-height 0.3s ease',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div className="px-2 py-1.5">
+                    {/* 名前 + 優先度 (テーブルと同じ数字表記) */}
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-medium truncate flex-1" style={{ color: COLORS.text.primary }}>
+                        {item.name}
+                      </span>
+                      <span
+                        className="text-2xs font-bold flex-shrink-0 h-5 w-5 inline-flex items-center justify-center"
+                        style={{
+                          color: pStyle.color,
+                          backgroundColor: pStyle.bg,
+                          border: `1px solid ${pStyle.border}`,
+                        }}
+                      >
+                        {item.priority}
+                      </span>
+                    </div>
+
+                    {/* 重量 + 価格 */}
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
+                        {formatWeight(item.weightGrams, weightUnit)}
+                      </span>
+                      <span className="text-xs" style={{ color: COLORS.text.secondary }}>
+                        {formatPrice(item.priceCents)}
+                      </span>
+                    </div>
+
+                    {/* weightClass + カテゴリ + 所持/必要 */}
+                    <div className="flex items-center justify-between mt-0.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
+                          {item.weightClass}
+                        </span>
+                        <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
+                          {item.category?.name ?? '—'}
+                        </span>
+                      </div>
+                      <span className="text-2xs flex-shrink-0" style={{ color: COLORS.text.muted }}>
+                        {item.ownedQuantity}/{item.requiredQuantity}
+                      </span>
+                    </div>
+
+                    {/* 区切り線 + 追加詳細 */}
+                    <div className="mt-1.5 mb-1" style={{ borderTop: `1px dashed ${COLORS.gray[200]}` }} />
                     <DetailRow label="Brand" value={item.brand || '—'} />
                     <DetailRow label="Seasons" value={formatSeasons(item.seasons)} />
                     <DetailRow label="Source" value={`${item.weightSource} (${item.weightConfidence})`} />
