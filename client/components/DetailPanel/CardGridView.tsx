@@ -2,9 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
 import { COLORS, SHADOW } from '../../utils/designSystem';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
-import { formatWeight } from '../../utils/weightUnit';
-import { formatPrice } from '../../utils/formatters';
-import { useWeightUnit } from '../../contexts/WeightUnitContext';
+import GearInfoSummary from './GearInfoSummary';
 
 interface CardGridViewProps {
   items: GearItemWithCalculated[];
@@ -18,23 +16,7 @@ interface CardGridViewProps {
   onEdit?: (item: GearItemWithCalculated) => void;
 }
 
-// --- 定数・ヘルパー ---
-
-/** テーブルと同じ優先度スタイル (1-5 の数字表示) */
-const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
-  1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
-  2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
-  3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
-  4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
-  5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' },
-};
-
-const formatSeasons = (seasons?: string[]): string => {
-  if (!seasons || seasons.length === 0) return '—';
-  return seasons.join(', ');
-};
-
-/** 展開セクションの詳細行 */
+/** 展開セクションの詳細行（Brand / Source） */
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="flex justify-between text-2xs leading-relaxed">
     <span style={{ color: COLORS.text.muted }}>{label}</span>
@@ -74,7 +56,6 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   onTogglePackItem,
   onEdit,
 }) => {
-  const { unit: weightUnit } = useWeightUnit();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const sortedItems = useMemo(() => {
@@ -107,7 +88,6 @@ const CardGridView: React.FC<CardGridViewProps> = ({
             const isExpanded = expandedId === item.id;
             const isHighlighted = selectedItemId === item.id;
             const isInActivePack = activePackItemIds.includes(item.id);
-            const pStyle = PRIORITY_STYLE[item.priority] ?? PRIORITY_STYLE[3];
 
             return (
               <div
@@ -151,7 +131,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   )}
                 </button>
 
-                {/* 展開セクション: 詳細情報 */}
+                {/* 展開セクション: 共通コンポーネント GearInfoSummary + 補足情報 */}
                 <div
                   style={{
                     maxHeight: isExpanded ? '300px' : '0px',
@@ -160,58 +140,9 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   }}
                 >
                   <div className="px-2 py-1.5">
-                    {/* テーブル列順に情報を表示: name → category → type → quantity → weight → priority → price → season */}
+                    <GearInfoSummary item={item} />
 
-                    {/* name */}
-                    <span className="text-xs font-medium truncate block" style={{ color: COLORS.text.primary }}>
-                      {item.name}
-                    </span>
-
-                    {/* category + type(weightClass) */}
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
-                        {item.category?.name ?? '—'}
-                      </span>
-                      <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
-                        {item.weightClass}
-                      </span>
-                    </div>
-
-                    {/* quantity + weight */}
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-2xs" style={{ color: COLORS.text.muted }}>
-                        {item.ownedQuantity}/{item.requiredQuantity}
-                      </span>
-                      <span className="text-xs font-semibold" style={{ color: COLORS.text.primary }}>
-                        {formatWeight(item.weightGrams, weightUnit)}
-                      </span>
-                    </div>
-
-                    {/* priority + price */}
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span
-                        className="text-2xs font-bold h-5 w-5 inline-flex items-center justify-center"
-                        style={{
-                          color: pStyle.color,
-                          backgroundColor: pStyle.bg,
-                          border: `1px solid ${pStyle.border}`,
-                        }}
-                      >
-                        {item.priority}
-                      </span>
-                      <span className="text-xs" style={{ color: COLORS.text.secondary }}>
-                        {formatPrice(item.priceCents)}
-                      </span>
-                    </div>
-
-                    {/* season */}
-                    <div className="mt-0.5">
-                      <span className="text-2xs" style={{ color: COLORS.text.muted }}>
-                        {formatSeasons(item.seasons)}
-                      </span>
-                    </div>
-
-                    {/* 区切り線 + 追加詳細 */}
+                    {/* 区切り線 + 補足情報 (Brand / Source) + アクション */}
                     <div className="mt-1.5 mb-1" style={{ borderTop: `1px dashed ${COLORS.gray[200]}` }} />
                     <DetailRow label="Brand" value={item.brand || '—'} />
                     <DetailRow label="Source" value={`${item.weightSource} (${item.weightConfidence})`} />
