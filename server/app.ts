@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Import routes
 import gearRoutes from './routes/gear';
@@ -23,6 +26,17 @@ const PORT = process.env.PORT || 8000;
 const isDevelopment = (process.env.NODE_ENV || 'development') !== 'production';
 const defaultApiMax = isDevelopment ? 2000 : 100;
 const defaultLlmMax = isDevelopment ? 120 : 10;
+
+// dist/ ディレクトリの解決
+// 開発時 (tsx): __dirname = .../UL-monolith/server → ../dist
+// 本番 (tsc コンパイル後): __dirname = .../UL-monolith/server/dist → ../../dist
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const candidates = [
+  path.resolve(__dirname, '../dist'),       // tsx watch (server/app.ts から)
+  path.resolve(__dirname, '../../dist'),    // production (server/dist/app.js から)
+];
+const distPath = candidates.find((p) => fs.existsSync(p)) ?? null;
 
 // Rate Limiting設定
 const limiter = rateLimit({
@@ -65,16 +79,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root endpoint to avoid 404 on base URL
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'UL Gear Manager API',
-    health: '/api/health',
-    docs: '/docs/startup-guide.md'
-  });
-});
-
 // API routes（認証ミドルウェアをグローバルに適用）
 app.use('/api/v1/gear', cognitoAuth, gearRoutes);
 app.use('/api/v1/categories', cognitoAuth, categoryRoutes);
@@ -83,6 +87,25 @@ app.use('/api/v1/llm', cognitoAuth, strictLimiter, llmRoutes);
 app.use('/api/v1/auth', authRoutes); // 認証エンドポイント自体は認証不要
 app.use('/api/v1/image', imageProxyRoutes); // 画像プロキシは認証不要
 app.use('/api/v1/packs', packRoutes); // パック（内部で認証制御）
+
+// 静的フロントエンド配信 (本番のみ: dist/ が存在する場合)
+// dist が無い時は API のみ公開し、開発時はフロントを vite 側で動かす
+if (distPath) {
+  app.use(express.static(distPath));
+  // SPA フォールバック: API 以外の全パスを index.html にフォールバック
+  app.get(/^(?!\/api\/).*/, (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  // dist 無し: ルートだけ JSON で案内
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      message: 'UL Gear Manager API',
+      health: '/api/health',
+    });
+  });
+}
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -94,7 +117,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
+// 404 handler (API のみ。SPA フォールバック後に到達するのは /api/* の存在しないルート)
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
