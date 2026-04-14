@@ -22,6 +22,7 @@ import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
 import PackTabSection from './charts/PackTabSection'
 import ChartHeader from './charts/ChartHeader'
+import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
 const DEFAULT_COLOR = COLORS.gray[500]
@@ -142,7 +143,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     },
     [onItemSelect],
   )
-  const [centerPulse, setCenterPulse] = useState(false)
+  const [centerPulse, triggerCenterPulse] = useCenterClickPulse()
 
   const screenSize = useResponsiveSize()
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
@@ -251,11 +252,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const handleCenterClick = useCallback(() => {
     const nextMode: ChartViewMode = viewMode === 'weight' ? 'cost' : 'weight'
     onViewModeChange(nextMode)
-
-    // パルスアニメーション
-    setCenterPulse(true)
-    setTimeout(() => setCenterPulse(false), 600)
-  }, [viewMode, onViewModeChange])
+    triggerCenterPulse()
+  }, [viewMode, onViewModeChange, triggerCenterPulse])
 
   // 二重ドーナツ: Inner ringクリック（Big3 vs Other 切替）
   const handleInnerRingClick = useCallback((segmentId: string) => {
