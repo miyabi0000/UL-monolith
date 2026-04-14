@@ -1,4 +1,4 @@
-name: Deploy STG (Vercel)
+name: Deploy STG (Vercel - Frontend)
 
 on:
   push:
@@ -11,6 +11,9 @@ jobs:
     environment:
       name: stg
       url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Pull Vercel environment
+        run: npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build with Vercel
+        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel (STG)
         id: deploy
         run: |
-          URL=$(npx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          URL=$(npx vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> $GITHUB_OUTPUT
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
