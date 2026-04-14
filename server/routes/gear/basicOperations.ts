@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { sanitizeGearData } from '../../utils/helpers';
-import { db } from '../../database/connection';
+import { sanitizeGearData } from '../../utils/helpers.js';
+import { db } from '../../database/connection.js';
 
 // デモユーザーID（認証実装までの仮ID）
 const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';

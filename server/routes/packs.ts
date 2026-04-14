@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { cognitoAuth, optionalAuth } from '../middleware/cognitoAuth';
-import { db } from '../database/connection';
+import { cognitoAuth, optionalAuth } from '../middleware/cognitoAuth.js';
+import { db } from '../database/connection.js';
 
 const router = Router();
 

@@ -63,7 +63,7 @@ export class AmazonScraper {
   /**
    * Amazon特化データ抽出（最適化版）
    */
-  private extractAmazonData($: cheerio.Root, url: string): LLMExtractionResult {
+  private extractAmazonData($: cheerio.CheerioAPI, url: string): LLMExtractionResult {
     const extractedFields: string[] = [];
     
     // JSON-LDを1回だけ取得（キャッシュ）
@@ -117,7 +117,7 @@ export class AmazonScraper {
   /**
    * Amazon製品名抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonTitle($: cheerio.Root, jsonLd: any): string | undefined {
+  private extractAmazonTitle($: cheerio.CheerioAPI, jsonLd: any): string | undefined {
     // 1. JSON-LD構造化データから取得（最優先）
     if (jsonLd?.name && typeof jsonLd.name === 'string' && jsonLd.name.length > 5) {
       return this.cleanAmazonTitle(jsonLd.name);
@@ -139,7 +139,7 @@ export class AmazonScraper {
   /**
    * Amazonブランド抽出（改良版）
    */
-  private extractAmazonBrand($: cheerio.Root): string | undefined {
+  private extractAmazonBrand($: cheerio.CheerioAPI): string | undefined {
     const brandSelectors = [
       '[data-brand]',
       '#bylineInfo',
@@ -163,7 +163,7 @@ export class AmazonScraper {
   /**
    * Amazon画像URL抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonImage($: cheerio.Root, jsonLd: any): string | undefined {
+  private extractAmazonImage($: cheerio.CheerioAPI, jsonLd: any): string | undefined {
     // 1. JSON-LD構造化データから取得（最優先）
     if (jsonLd?.image) {
       const imageUrl = Array.isArray(jsonLd.image) ? jsonLd.image[0] : jsonLd.image;
@@ -211,7 +211,7 @@ export class AmazonScraper {
   /**
    * Amazon価格抽出（複数価格タイプ対応）
    */
-  private extractAmazonPrice($: cheerio.Root): number | undefined {
+  private extractAmazonPrice($: cheerio.CheerioAPI): number | undefined {
     const priceSelectors = [
       '.a-price-whole',
       '.a-price .a-offscreen',
@@ -230,7 +230,7 @@ export class AmazonScraper {
   /**
    * Amazon仕様抽出（重量・寸法）- 複数セクションから抽出
    */
-  private extractAmazonSpecs($: cheerio.Root): { weightGrams?: number } {
+  private extractAmazonSpecs($: cheerio.CheerioAPI): { weightGrams?: number } {
     // Amazon商品ページの各セクションから重量情報を検索
     const sections = [
       { name: 'productDescription', selector: '#productDescription, .product-description, #aplus' },
@@ -254,7 +254,7 @@ export class AmazonScraper {
   /**
    * Amazonカテゴリ抽出（軽量版）
    */
-  private extractAmazonCategory($: cheerio.Root): string {
+  private extractAmazonCategory($: cheerio.CheerioAPI): string {
     // タイトルとパンくずリストのみ（高速化）
     const title = $('#productTitle').text();
     const breadcrumbs = $('#wayfinding-breadcrumbs_feature_div, .a-breadcrumb').text();
@@ -268,7 +268,7 @@ export class AmazonScraper {
   /**
    * Amazon評価・レビュー情報
    */
-  private extractAmazonRatings($: cheerio.Root): { rating?: number; reviewCount?: number } {
+  private extractAmazonRatings($: cheerio.CheerioAPI): { rating?: number; reviewCount?: number } {
     const rating = parseFloat($('[data-hook="average-star-rating"] .a-offscreen').first().text().replace(/[^\d.]/g, '')) || undefined;
     const reviewCountText = $('[data-hook="total-review-count"]').first().text();
     const reviewCount = reviewCountText ? parseInt(reviewCountText.replace(/[^\d]/g, '')) : undefined;

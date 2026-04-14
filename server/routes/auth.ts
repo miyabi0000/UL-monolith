@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sendError, sendSuccess } from './shared/httpResponse';
+import { sendError, sendSuccess } from './shared/httpResponse.js';
 
 const router = Router();
 

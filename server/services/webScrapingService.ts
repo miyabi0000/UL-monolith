@@ -100,7 +100,7 @@ export class WebScrapingService {
   /**
    * 製品名抽出（強化版）
    */
-  private extractName($: cheerio.Root, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
+  private extractName($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
     // JSON-LD構造化データから取得
     if (jsonLd?.name && typeof jsonLd.name === 'string') {
       return jsonLd.name;
@@ -132,7 +132,7 @@ export class WebScrapingService {
   /**
    * ブランド抽出（統合版）
    */
-  private extractBrand($: cheerio.Root, url: string, jsonLd: Record<string, unknown> | null, ogp: OgpData, name?: string): string | undefined {
+  private extractBrand($: cheerio.CheerioAPI, url: string, jsonLd: Record<string, unknown> | null, ogp: OgpData, name?: string): string | undefined {
     // JSON-LD構造化データから取得
     if (jsonLd?.brand) {
       const brand = jsonLd.brand as string | { name?: string };
@@ -174,7 +174,7 @@ export class WebScrapingService {
   /**
    * 価格抽出（強化版）
    */
-  private extractPrice($: cheerio.Root, jsonLd: Record<string, unknown> | null): number | undefined {
+  private extractPrice($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null): number | undefined {
     // JSON-LD構造化データから取得
     if (jsonLd) {
       const offers = jsonLd.offers as Record<string, unknown> | undefined;
@@ -212,7 +212,7 @@ export class WebScrapingService {
   /**
    * 重量抽出（強化版）
    */
-  private extractWeight($: cheerio.Root): number | undefined {
+  private extractWeight($: cheerio.CheerioAPI): number | undefined {
     // より広範囲から重量を検索
     const searchSelectors = [
       '.product-description',
@@ -240,7 +240,7 @@ export class WebScrapingService {
   /**
    * 画像URL抽出（強化版）
    */
-  private extractImage($: cheerio.Root, baseUrl: string, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
+  private extractImage($: cheerio.CheerioAPI, baseUrl: string, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
     // JSON-LD構造化データから取得
     if (jsonLd?.image) {
       const image = jsonLd.image as string | string[];
@@ -305,7 +305,7 @@ export class WebScrapingService {
   /**
    * カテゴリ推測（強化版）
    */
-  private guessCategoryFromPage(name: string, $: cheerio.Root): string {
+  private guessCategoryFromPage(name: string, $: cheerio.CheerioAPI): string {
     // より関連性の高いテキストを優先
     const title = $('h1').text();
     const breadcrumbs = $('[class*="breadcrumb"]').text();

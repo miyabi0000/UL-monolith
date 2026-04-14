@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
-import { GearItem, GearItemForm, Category, WeightBreakdown, deriveStatus } from '../models/types';
-import { buildPoolConfig } from './poolConfig';
+import { GearItem, GearItemForm, Category, WeightBreakdown, deriveStatus } from '../models/types.js';
+import { buildPoolConfig } from './poolConfig.js';
 
 // SQLパラメータ型
 type SqlParam = string | number | boolean | string[] | number[] | null | undefined;

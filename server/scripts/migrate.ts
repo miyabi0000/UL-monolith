@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
-import { buildPoolConfig } from '../database/poolConfig';
+import { buildPoolConfig } from '../database/poolConfig.js';
 
 config();
 
