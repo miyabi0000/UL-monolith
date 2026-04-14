@@ -226,13 +226,13 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       bg: mondrian.canvas, // flat warm off-white
     },
     surface: {
-      border: mondrian.orange, // Mondrian Orange 1px 線で全枠線統一
+      border: 'transparent', // borderless 方針: 枠線は描画せず背景コントラスト + shadow で表現
     },
-    // 影は最小限。マット質感のため強い shadow は禁止
+    // 影を控えめに存在感を持たせる (borderless の代替)
     shadow: {
-      sm: `0 1px 0 ${alpha(mondrian.black, 0.04)}`,
-      md: `0 1px 0 ${alpha(mondrian.black, 0.06)}`,
-      lg: `0 2px 0 ${alpha(mondrian.black, 0.08)}`,
+      sm: `0 1px 2px ${alpha(mondrian.black, 0.04)}, 0 1px 3px ${alpha(mondrian.black, 0.03)}`,
+      md: `0 2px 4px ${alpha(mondrian.black, 0.06)}, 0 4px 8px ${alpha(mondrian.black, 0.04)}`,
+      lg: `0 4px 12px ${alpha(mondrian.black, 0.08)}, 0 8px 20px ${alpha(mondrian.black, 0.05)}`,
     },
     surfaceLevel: {
       0: gray.white,        // L1: card / modal
@@ -248,10 +248,10 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       iconMuted: gray[600],
     },
     stroke: {
-      subtle:  alpha(mondrian.orange, 0.20),
-      default: mondrian.orange, // Mondrian Orange — 全枠線統一
-      strong:  mondrian.orange,
-      divider: alpha(mondrian.orange, 0.28),
+      subtle:  alpha(mondrian.black, 0.06),
+      default: 'transparent', // borderless 既定
+      strong:  alpha(mondrian.black, 0.14),
+      divider: alpha(mondrian.black, 0.06),
     },
     focus: {
       ring:       mondrian.blue,
@@ -263,27 +263,27 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       scrim:  alpha(mondrian.black, 0.5),
     },
     state: {
-      // 全 state も border は Mondrian Orange で統一。
-      // 区別は背景 tint と前景色（fg）で表現する。
+      // borderless: state border も transparent 既定。
+      // 区別は背景 tint と前景色 (fg) で表現する。
       success: {
         fg:     mondrian.black,
         bg:     alpha(mondrian.black, 0.04),
-        border: mondrian.orange,
+        border: 'transparent',
       },
       warning: {
         fg:     mondrian.black,
         bg:     alpha(mondrian.yellow, 0.20),
-        border: mondrian.orange,
+        border: 'transparent',
       },
       danger: {
         fg:     mondrian.red,
         bg:     alpha(mondrian.red, 0.10),
-        border: mondrian.orange,
+        border: 'transparent',
       },
       info: {
         fg:     mondrian.blue,
         bg:     alpha(mondrian.blue, 0.08),
-        border: mondrian.orange,
+        border: 'transparent',
       },
     },
     text: {
@@ -299,12 +299,12 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       bg: '#121212', // pure dark canvas
     },
     surface: {
-      border: mondrian.orangeLight, // Mondrian Orange (Dark: 明るめ)
+      border: 'transparent', // borderless
     },
     shadow: {
-      sm: `0 1px 0 ${alpha(mondrian.black, 0.6)}`,
-      md: `0 1px 0 ${alpha(mondrian.black, 0.7)}`,
-      lg: `0 2px 0 ${alpha(mondrian.black, 0.8)}`,
+      sm: `0 1px 2px ${alpha(mondrian.black, 0.4)}, 0 1px 3px ${alpha(mondrian.black, 0.3)}`,
+      md: `0 2px 4px ${alpha(mondrian.black, 0.5)}, 0 4px 8px ${alpha(mondrian.black, 0.35)}`,
+      lg: `0 4px 12px ${alpha(mondrian.black, 0.55)}, 0 8px 20px ${alpha(mondrian.black, 0.4)}`,
     },
     surfaceLevel: {
       0: '#1C1C1C', // L1: card / modal
@@ -320,10 +320,10 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       iconMuted: '#9C9C98',
     },
     stroke: {
-      subtle:  alpha(mondrian.orangeLight, 0.25),
-      default: mondrian.orangeLight, // Mondrian Orange (Dark)
-      strong:  mondrian.orangeLight,
-      divider: alpha(mondrian.orangeLight, 0.32),
+      subtle:  alpha(mondrian.canvas, 0.08),
+      default: 'transparent',
+      strong:  alpha(mondrian.canvas, 0.18),
+      divider: alpha(mondrian.canvas, 0.08),
     },
     focus: {
       ring:       '#5E73A8', // mondrian blue は dark で見えにくいので明るめ
@@ -335,26 +335,26 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       scrim:  alpha(mondrian.black, 0.7),
     },
     state: {
-      // 全 state border は Mondrian Orange (Dark: 明るめ) で統一
+      // borderless: state border も transparent 既定
       success: {
         fg:     mondrian.canvas,
         bg:     alpha(mondrian.canvas, 0.06),
-        border: mondrian.orangeLight,
+        border: 'transparent',
       },
       warning: {
         fg:     mondrian.yellow,
         bg:     alpha(mondrian.yellow, 0.18),
-        border: mondrian.orangeLight,
+        border: 'transparent',
       },
       danger: {
         fg:     '#E15A62',
         bg:     alpha(mondrian.red, 0.18),
-        border: mondrian.orangeLight,
+        border: 'transparent',
       },
       info: {
         fg:     '#5E73A8',
         bg:     alpha(mondrian.blue, 0.20),
-        border: mondrian.orangeLight,
+        border: 'transparent',
       },
     },
     text: {

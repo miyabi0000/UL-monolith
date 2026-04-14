@@ -131,33 +131,33 @@ type StatusTone = {
 }
 
 /**
- * STATUS_TONES — De Stijl 配色
- * 全 state の border は Mondrian Orange で統一。区別は背景 tint と前景色で表現。
+ * STATUS_TONES — Borderless De Stijl
+ * 区別は背景 tint と前景色 (text) のみで表現。枠線は透明。
  * success は黒 + "OK"。緑は De Stijl にないため排除
  */
 export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', StatusTone> = {
   success: {
     text:       mondrian.black,
     background: alpha(mondrian.black, 0.04),
-    border:     mondrian.orange,
+    border:     'transparent',
     solid:      mondrian.black
   },
   warning: {
     text:       mondrian.black,
-    background: alpha(mondrian.yellow, 0.18),
-    border:     mondrian.orange,
+    background: alpha(mondrian.yellow, 0.20),
+    border:     'transparent',
     solid:      mondrian.yellow
   },
   info: {
     text:       mondrian.blue,
-    background: alpha(mondrian.blue, 0.08),
-    border:     mondrian.orange,
+    background: alpha(mondrian.blue, 0.10),
+    border:     'transparent',
     solid:      mondrian.blue
   },
   error: {
     text:       mondrian.red,
-    background: alpha(mondrian.red, 0.10),
-    border:     mondrian.orange,
+    background: alpha(mondrian.red, 0.12),
+    border:     'transparent',
     solid:      mondrian.red
   }
 } as const

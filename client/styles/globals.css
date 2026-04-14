@@ -69,11 +69,12 @@
     --border-faint:    var(--border-width-thin)  solid var(--stroke-subtle);
     --border-divider:  var(--border-width-thin)  solid var(--stroke-divider);
     --border-focus:    var(--border-width-bold)  solid var(--focus-ring);
-    /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義 */
+    /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義
+     * Borderless 方針: --stroke-default は transparent。構造は背景コントラスト + shadow で表現 */
     --page-bg: var(--page-bg, #FAFAF7);
-    --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.04);
-    --shadow-md: 0 1px 0 rgba(10, 10, 10, 0.06);
-    --shadow-lg: 0 2px 0 rgba(10, 10, 10, 0.08);
+    --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.04), 0 1px 3px rgba(10, 10, 10, 0.03);
+    --shadow-md: 0 2px 4px rgba(10, 10, 10, 0.06), 0 4px 8px rgba(10, 10, 10, 0.04);
+    --shadow-lg: 0 4px 12px rgba(10, 10, 10, 0.08), 0 8px 20px rgba(10, 10, 10, 0.05);
     --surface-level-0: #FFFFFF;
     --surface-level-1: #FAFAF7;
     --surface-level-2: #F0EFEA;
@@ -83,10 +84,10 @@
     --ink-inverse: #FAFAF7;
     --icon-default: #2E2E2E;
     --icon-muted: #6B6B66;
-    --stroke-subtle: rgba(194, 65, 12, 0.20);
-    --stroke-default: #C2410C;           /* Mondrian Orange — 全枠線統一 */
-    --stroke-strong:  #C2410C;
-    --stroke-divider: rgba(194, 65, 12, 0.28);
+    --stroke-subtle:  rgba(10, 10, 10, 0.06);   /* hairline (input / divider) */
+    --stroke-default: transparent;               /* borderless 既定: 枠線は描画しない */
+    --stroke-strong:  rgba(10, 10, 10, 0.14);    /* 明示的な額装 (mondrian-grid 等) */
+    --stroke-divider: rgba(10, 10, 10, 0.06);
     --focus-ring: #1F3A93;              /* Mondrian Blue */
     --focus-ring-offset: #FAFAF7;
     --overlay-hover: rgba(10, 10, 10, 0.04);
@@ -480,9 +481,9 @@
   /* ダークモード — De Stijl Matte (反転) */
   .dark {
     --page-bg: #121212;
-    --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.6);
-    --shadow-md: 0 1px 0 rgba(10, 10, 10, 0.7);
-    --shadow-lg: 0 2px 0 rgba(10, 10, 10, 0.8);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
     --surface-level-0: #1C1C1C;
     --surface-level-1: #121212;
     --surface-level-2: #242424;
@@ -492,10 +493,10 @@
     --ink-inverse: #0A0A0A;
     --icon-default: #E0E0DC;
     --icon-muted: #9C9C98;
-    --stroke-subtle: rgba(251, 146, 60, 0.25);
-    --stroke-default: #FB923C;           /* Mondrian Orange (Dark theme: 明るめ) */
-    --stroke-strong:  #FB923C;
-    --stroke-divider: rgba(251, 146, 60, 0.32);
+    --stroke-subtle:  rgba(255, 255, 255, 0.08);
+    --stroke-default: transparent;
+    --stroke-strong:  rgba(255, 255, 255, 0.18);
+    --stroke-divider: rgba(255, 255, 255, 0.08);
     --focus-ring: #5E73A8;
     --focus-ring-offset: #121212;
     --overlay-hover: rgba(250, 250, 247, 0.06);

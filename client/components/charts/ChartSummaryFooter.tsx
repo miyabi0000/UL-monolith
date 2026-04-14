@@ -87,24 +87,24 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
     <div className="px-2 py-1.5 neu-divider">
       {/* Weight/Cost/Class と g/oz を同一 Y 軸 (1 行) に配置。
        * justify-between で左右に振り分け、items-center でベースラインも揃える */}
+      {/* view-mode toggle (icon only, 正方形) と g/oz トグルを同一 Y 軸に配置 */}
       <div className="flex items-center justify-between gap-2 mb-1.5">
         <SegmentedControl
+          shape="square"
           options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
             key: mode,
             onClick: () => onViewModeChange(mode),
             isActive: viewMode === mode,
             ariaLabel: `${label} mode`,
-            label: (
-              <>
-                <Icon className="w-3 h-3" />
-                {label}
-              </>
-            ),
+            title: label,
+            label: <Icon className="w-4 h-4" />,
           }))}
         />
         <WeightUnitToggle />
       </div>
 
+      {/* viewMode に応じて表示する card を切替。
+       * weight → Weight 1枚中央、cost → Price 1枚中央、weight-class → 4枚グリッド */}
       <div>
         {viewMode === 'weight-class' && weightBreakdown ? (
           <div className="grid grid-cols-4 gap-1">
@@ -118,24 +118,27 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
               />
             ))}
           </div>
-      ) : (
-          <div className="grid grid-cols-2 gap-1.5">
-            <SummaryStatCard
-              label="Weight"
-              value={formatWeight(totalWeight, unit)}
-              subValue={formatWeightLarge(totalWeight, unit)}
-              isActive={viewMode === 'weight'}
-              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
-            />
+        ) : viewMode === 'cost' ? (
+          <div className="flex justify-center">
             <SummaryStatCard
               label="Price"
               value={`¥${Math.round(totalCost / 100).toLocaleString()}`}
               subValue={`${itemCount} items`}
-              isActive={viewMode === 'cost'}
+              isActive
               icon={<YenIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
             />
           </div>
-      )}
+        ) : (
+          <div className="flex justify-center">
+            <SummaryStatCard
+              label="Weight"
+              value={formatWeight(totalWeight, unit)}
+              subValue={formatWeightLarge(totalWeight, unit)}
+              isActive
+              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
