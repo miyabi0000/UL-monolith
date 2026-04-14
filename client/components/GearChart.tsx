@@ -12,12 +12,14 @@ import {
 } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
-import SegmentedControl from './ui/SegmentedControl'
 import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
 import PackTabSection from './charts/PackTabSection'
 import ChartHeader from './charts/ChartHeader'
 import ChartBody from './charts/ChartBody'
+import ChartBreadcrumb from './charts/ChartBreadcrumb'
+import GearActionMenu from './charts/GearActionMenu'
+import GearViewToggle from './charts/GearViewToggle'
 import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
@@ -142,28 +144,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const [centerPulse, triggerCenterPulse] = useCenterClickPulse()
 
   const screenSize = useResponsiveSize()
-  const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
   // Scopeは'base'固定（将来的にトグル復活の可能性あり）
   const chartScope: ChartScope = 'base'
-  // hover callout用activeIndex
-  const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
-  const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
-
-  // メニューを閉じる（クリックアウトサイド）
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (showAddMenu && !target.closest('.add-menu-container')) {
-        setShowAddMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showAddMenu])
+  // hover callout 用 activeIndex は ChartBody 内に局在化済み
 
   // チャート設定を画面サイズに応じて取得
   const chartHeight = CHART_CONFIG.height[screenSize]
@@ -408,179 +395,40 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     onPackChange={() => { setSelectedItem(null); onCategorySelect([]) }}
                   />
 
-                  {/* カテゴリ/アイテムのパンくず */}
-                  {selectedCategoryFromChart && (
-                    <>
-                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                      <button
-                        onClick={() => setSelectedItem(null)}
-                        className={`truncate max-w-[80px] transition-colors flex-shrink-0 ${
-                          !selectedItem
-                            ? 'text-gray-700 dark:text-gray-200 font-medium'
-                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600'
-                        }`}
-                        title={selectedCategoryFromChart}
-                      >
-                        {selectedCategoryFromChart}
-                      </button>
-                    </>
-                  )}
-                  {selectedItem && selectedItemName && (
-                    <>
-                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
-                        {selectedItemName}
-                      </span>
-                    </>
-                  )}
+                  <ChartBreadcrumb
+                    packMode
+                    selectedCategoryName={selectedCategoryFromChart}
+                    selectedItemName={selectedItem ? selectedItemName : null}
+                    onClearAll={() => { setSelectedItem(null); onCategorySelect([]) }}
+                    onClearItem={() => setSelectedItem(null)}
+                  />
                 </>
               ) : (
-                /* 通常のパンくずモード */
-                <>
-                  <button
-                    onClick={() => { setSelectedItem(null); onCategorySelect([]); }}
-                    className={`flex-shrink-0 transition-colors ${
-                      !selectedCategoryFromChart && !selectedItem
-                        ? 'text-gray-700 dark:text-gray-200 font-medium'
-                        : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    All
-                  </button>
-                  {selectedCategoryFromChart && (
-                    <>
-                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                      <button
-                        onClick={() => setSelectedItem(null)}
-                        className={`truncate max-w-[80px] transition-colors ${
-                          !selectedItem
-                            ? 'text-gray-700 dark:text-gray-200 font-medium'
-                            : 'text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                        }`}
-                        title={selectedCategoryFromChart}
-                      >
-                        {selectedCategoryFromChart}
-                      </button>
-                    </>
-                  )}
-                  {selectedItem && selectedItemName && (
-                    <>
-                      <span className="text-gray-300 dark:text-gray-500 flex-shrink-0">/</span>
-                      <span className="text-gray-700 dark:text-gray-200 font-medium truncate max-w-[80px]" title={selectedItemName}>
-                        {selectedItemName}
-                      </span>
-                    </>
-                  )}
-                </>
+                <ChartBreadcrumb
+                  selectedCategoryName={selectedCategoryFromChart}
+                  selectedItemName={selectedItem ? selectedItemName : null}
+                  onClearAll={() => { setSelectedItem(null); onCategorySelect([]) }}
+                  onClearItem={() => setSelectedItem(null)}
+                />
               )}
             </div>
 
             {/* 右側: 統合ツールバー */}
             <div className="inline-flex items-center gap-1">
               {onGearViewModeChange && (
-                <SegmentedControl
-                  options={[
-                    {
-                      key: 'card',
-                      label: 'Card',
-                      onClick: () => onGearViewModeChange('card'),
-                      isActive: gearViewMode === 'card',
-                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
-                      ariaLabel: 'Card view',
-                    },
-                    {
-                      key: 'table',
-                      label: 'Table',
-                      onClick: () => onGearViewModeChange('table'),
-                      isActive: gearViewMode === 'table',
-                      inactiveClassName: gearViewMode === 'compare' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100',
-                      ariaLabel: 'Table view',
-                    },
-                    {
-                      key: 'compare',
-                      label: 'A|B',
-                      onClick: () => {
-                        if (gearViewMode === 'compare') {
-                          onGearViewModeChange('table')
-                        } else {
-                          if (showCheckboxes) {
-                            onToggleCheckboxes()
-                          }
-                          onGearViewModeChange('compare')
-                        }
-                      },
-                      isActive: gearViewMode === 'compare',
-                      isDisabled: showCheckboxes && gearViewMode !== 'compare',
-                      activeClassName: 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm',
-                      ariaLabel: 'Compare view',
-                      title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
-                    },
-                  ]}
+                <GearViewToggle
+                  gearViewMode={gearViewMode ?? 'table'}
+                  showCheckboxes={showCheckboxes}
+                  onGearViewModeChange={onGearViewModeChange}
+                  onToggleCheckboxes={onToggleCheckboxes}
                 />
               )}
 
-              {/* アクションメニュー（ADD + Manage Categories） */}
-              {onShowForm && (
-                <div className="relative add-menu-container z-[200] isolate">
-                  <button
-                    onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
-                    aria-label="Actions menu"
-                    title="Actions"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </button>
-
-                  {/* ドロップダウンメニュー */}
-                  {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg neu-raised py-1 z-[1000]">
-                      <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                        onClick={() => {
-                          onShowForm()
-                          setShowAddMenu(false)
-                        }}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add Manually
-                      </button>
-                      <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                        onClick={() => {
-                          onShowUrlImport?.()
-                          setShowAddMenu(false)
-                        }}
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        Add from URL
-                      </button>
-                      {onShowCategoryManager && (
-                        <>
-                          <div className="my-1 neu-divider"></div>
-                          <button
-                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                            onClick={() => {
-                              onShowCategoryManager()
-                              setShowAddMenu(false)
-                            }}
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                            Manage Categories
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <GearActionMenu
+                onShowForm={onShowForm}
+                onShowUrlImport={onShowUrlImport}
+                onShowCategoryManager={onShowCategoryManager}
+              />
 
               {/* Edit(✏️)ボタン - Compareモード中は無効 */}
               <button
