@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { callAdvisor, AdvisorMessage, GearAdvisorContext, SuggestedEdit } from '../services/llmAdvisor';
-import type { GearRef } from '../services/llmAdvisor';
+import type { AdvisorMessage, GearAdvisorContext, SuggestedEdit, GearRef } from '../services/llmAdvisor';
+import { streamAdvisor } from '../services/llmAdvisorStream';
 import { useAuth } from '../utils/AuthContext';
 import {
   fetchLatestSession,
@@ -12,6 +12,7 @@ import {
 
 export interface SuggestedEditWithState extends SuggestedEdit {
   _applied?: boolean;
+  _previousValue?: unknown;
 }
 
 export interface ChatMessage {
@@ -54,6 +55,7 @@ const fromServerMessage = (row: AdvisorMessageRow): ChatMessage => ({
 /**
  * アドバイザーチャットの状態管理フック
  * 認証済みの場合は DB に会話を永続化。未認証時は従来の useState のみ。
+ * SSE ストリーミングでトークンを逐次表示。
  */
 export const useAdvisorChat = (
   gearContext: GearAdvisorContext,
@@ -63,11 +65,13 @@ export const useAdvisorChat = (
   const [messages, setMessages] = useState<ChatMessage[]>(() => [createInitialMessage()]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [applyingEdit, setApplyingEdit] = useState<string | null>(null);
 
   // セッション ID（Lazy 作成: 最初のメッセージ送信時に作成）
   const sessionIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   // sendText 内で最新の messages を参照するための ref
   const messagesRef = useRef(messages);
@@ -76,7 +80,6 @@ export const useAdvisorChat = (
   // --- 初期化: 認証済みなら最新セッションを復元 ---
   useEffect(() => {
     if (!isAuthenticated) {
-      // ログアウト遷移: セッションをリセット
       if (initializedRef.current) {
         sessionIdRef.current = null;
         setMessages([createInitialMessage()]);
@@ -91,7 +94,7 @@ export const useAdvisorChat = (
     const restore = async () => {
       try {
         const session = await fetchLatestSession();
-        if (!session) return; // セッションなし → lazy 作成待ち
+        if (!session) return;
 
         const serverMessages = await fetchMessages(session.id);
         if (serverMessages.length === 0) return;
@@ -103,14 +106,18 @@ export const useAdvisorChat = (
         ]);
       } catch (err) {
         console.error('[Advisor] セッション復元エラー:', err);
-        // 復元失敗時は initial greeting のまま
       }
     };
 
     void restore();
   }, [isAuthenticated]);
 
-  /** 指定テキストを送信する内部関数 */
+  // ストリーミング中断（パネルclose / unmount 時）
+  useEffect(() => {
+    return () => { abortRef.current?.abort(); };
+  }, []);
+
+  /** 指定テキストを送信する内部関数（SSEストリーミング） */
   const sendText = useCallback(async (text: string) => {
     if (!text || isLoading) return;
 
@@ -120,10 +127,12 @@ export const useAdvisorChat = (
       content: text,
       timestamp: new Date(),
     };
+    const assistantMsgId = createMessageId();
 
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
+    setIsStreaming(false);
 
     try {
       // 認証済みで未作成なら Lazy にセッション作成
@@ -133,7 +142,6 @@ export const useAdvisorChat = (
           sessionIdRef.current = session.id;
         } catch (err) {
           console.error('[Advisor] セッション作成失敗:', err);
-          // 失敗してもチャット自体は続行（次回送信時にリトライ）
         }
       }
 
@@ -151,40 +159,115 @@ export const useAdvisorChat = (
         userMsg,
       ].map((m) => ({ role: m.role, content: m.content }));
 
-      const result = await callAdvisor(history, gearContext);
-
-      const assistantMsg: ChatMessage = {
-        id: createMessageId(),
+      // プレースホルダーメッセージを追加
+      setMessages((prev) => [...prev, {
+        id: assistantMsgId,
         role: 'assistant',
-        content: result.message,
-        suggestedEdits: result.suggestedEdits,
-        gearRefs: result.gearRefs,
+        content: '',
         timestamp: new Date(),
+      }]);
+
+      // トークンバッチ用バッファ（rAF で描画頻度を最適化）
+      let tokenBuffer = '';
+      let rafId: number | null = null;
+      const flushTokens = () => {
+        if (!tokenBuffer) return;
+        const batch = tokenBuffer;
+        tokenBuffer = '';
+        setMessages((prev) =>
+          prev.map((m) => m.id === assistantMsgId ? { ...m, content: m.content + batch } : m)
+        );
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      // AbortController
+      abortRef.current = new AbortController();
 
-      // アシスタントメッセージを DB に保存 (fire-and-forget)
-      if (isAuthenticated && sessionIdRef.current) {
-        void saveMessage(sessionIdRef.current, {
-          role: 'assistant',
-          content: result.message,
-          suggestedEdits: result.suggestedEdits,
-          gearRefs: result.gearRefs,
-        }).catch((err) => console.error('[Advisor] メッセージ保存失敗:', err));
-      }
+      await streamAdvisor(history, gearContext, {
+        onToken: (tokenText) => {
+          if (!isStreaming) setIsStreaming(true);
+          tokenBuffer += tokenText;
+          if (rafId === null) {
+            rafId = requestAnimationFrame(() => {
+              flushTokens();
+              rafId = null;
+            });
+          }
+        },
+        onTool: (name, data) => {
+          // バッファ内の残りトークンをフラッシュ
+          if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+          flushTokens();
+
+          if (name === 'reference_gear') {
+            setMessages((prev) =>
+              prev.map((m) => m.id === assistantMsgId
+                ? { ...m, gearRefs: [...(m.gearRefs ?? []), ...(data as GearRef[])] }
+                : m
+              )
+            );
+          } else if (name === 'suggest_edits') {
+            setMessages((prev) =>
+              prev.map((m) => m.id === assistantMsgId
+                ? { ...m, suggestedEdits: [...(m.suggestedEdits ?? []), ...(data as SuggestedEditWithState[])] }
+                : m
+              )
+            );
+          }
+        },
+        onDone: () => {
+          // 残りトークンフラッシュ
+          if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+          flushTokens();
+
+          // DB に保存 (fire-and-forget)
+          if (isAuthenticated && sessionIdRef.current) {
+            setMessages((prev) => {
+              const finalMsg = prev.find((m) => m.id === assistantMsgId);
+              if (finalMsg) {
+                void saveMessage(sessionIdRef.current!, {
+                  role: 'assistant',
+                  content: finalMsg.content,
+                  suggestedEdits: finalMsg.suggestedEdits,
+                  gearRefs: finalMsg.gearRefs,
+                }).catch((err) => console.error('[Advisor] メッセージ保存失敗:', err));
+              }
+              return prev;
+            });
+          }
+        },
+        onError: (err) => {
+          if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+          setMessages((prev) =>
+            prev.map((m) => m.id === assistantMsgId
+              ? { ...m, content: m.content || `Something went wrong: ${err.message}` }
+              : m
+            )
+          );
+        },
+      }, abortRef.current.signal);
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
+      // AbortError は無視（ユーザーによるキャンセル）
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+
+      setMessages((prev) => {
+        const hasPlaceholder = prev.some((m) => m.id === assistantMsgId);
+        if (hasPlaceholder) {
+          return prev.map((m) => m.id === assistantMsgId
+            ? { ...m, content: `Something went wrong: ${error instanceof Error ? error.message : 'Unknown error'}` }
+            : m
+          );
+        }
+        return [...prev, {
           id: createMessageId(),
           role: 'assistant',
           content: `Something went wrong: ${error instanceof Error ? error.message : 'Unknown error'}`,
           timestamp: new Date(),
-        },
-      ]);
+        }];
+      });
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      abortRef.current = null;
     }
   }, [isLoading, gearContext, isAuthenticated]);
 
@@ -206,7 +289,33 @@ export const useAdvisorChat = (
               ? {
                   ...msg,
                   suggestedEdits: msg.suggestedEdits.map((e, i) =>
-                    i === editIndex ? { ...e, _applied: true } : e
+                    i === editIndex ? { ...e, _applied: true, _previousValue: e.currentValue } : e
+                  ),
+                }
+              : msg
+          )
+        );
+      } finally {
+        setApplyingEdit(null);
+      }
+    },
+    [onApplyEdit]
+  );
+
+  const handleUndoEdit = useCallback(
+    async (edit: SuggestedEditWithState, messageId: string, editIndex: number) => {
+      if (!edit._applied || edit._previousValue === undefined) return;
+      const key = `${messageId}-${editIndex}`;
+      setApplyingEdit(key);
+      try {
+        await onApplyEdit(edit.gearId, edit.field, edit._previousValue);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId && msg.suggestedEdits
+              ? {
+                  ...msg,
+                  suggestedEdits: msg.suggestedEdits.map((e, i) =>
+                    i === editIndex ? { ...e, _applied: false, _previousValue: undefined } : e
                   ),
                 }
               : msg
@@ -224,10 +333,12 @@ export const useAdvisorChat = (
     input,
     setInput,
     isLoading,
+    isStreaming,
     applyingEdit,
     handleSend,
     sendText,
     handleApplyEdit,
+    handleUndoEdit,
   };
 };
 
