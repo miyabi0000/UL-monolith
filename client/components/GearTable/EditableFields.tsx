@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { Category, WeightClass } from '../../utils/types'
 import { COLORS, STATUS_TONES, getPriorityColor } from '../../utils/designSystem'
+import { alpha } from '../../styles/tokens'
+import { blue, orange, red, gray } from '../../styles/tokens/primitives'
 import SeasonBar from '../SeasonBar'
 import WeightClassBadge from '../ui/WeightClassBadge'
 import CategoryBadge from '../ui/CategoryBadge'
@@ -476,11 +478,11 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
   onChange
 }) => {
   const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
-    1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
-    2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
-    3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
-    4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
-    5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' }
+    1: { color: blue[700], bg: alpha(blue[500], 0.12), border: alpha(blue[500], 0.3) },
+    2: { color: blue[600], bg: alpha(blue[500], 0.08), border: alpha(blue[500], 0.2) },
+    3: { color: orange[700], bg: alpha(orange[500], 0.12), border: alpha(orange[500], 0.3) },
+    4: { color: orange[800], bg: alpha(orange[500], 0.18), border: alpha(orange[500], 0.4) },
+    5: { color: red[700], bg: alpha(red[500], 0.12), border: alpha(red[500], 0.3) },
   }
   const style = PRIORITY_STYLE[priority] ?? PRIORITY_STYLE[3]
 

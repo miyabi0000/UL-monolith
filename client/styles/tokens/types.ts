@@ -160,44 +160,14 @@ export type SemanticColors = AlertColors &
 export type ThemeColors = {
   page: {
     bg: string;
-    noiseOpacity: string;
-    noiseBlendMode: string;
   };
   surface: {
     border: string;
-    bgStart: string;
-    bgEnd: string;
-    beforeGloss: string;
-    fallbackBg: string;
   };
-  headerChip: {
-    border: string;
-    bgStart: string;
-    bgEnd: string;
-  };
-  table: {
-    shellBorder: string;
-    shellBgStart: string;
-    shellBgEnd: string;
-    headBg: string;
-    headShadowBottom: string;
-    headShadowTop: string;
-    rowBg: string;
-    rowEvenBg: string;
-    borderVert: string;
-    borderHead: string;
-    borderRow: string;
-  };
-  control: {
-    glassBg: string;
-    glassBorder: string;
-    chipBg: string;
-    chipBorder: string;
-  };
-  panel: {
-    flatBg: string;
-    flatBorder: string;
-    flatShadow: string;
+  shadow: {
+    sm: string;
+    md: string;
+    lg: string;
   };
   surfaceLevel: {
     0: string;

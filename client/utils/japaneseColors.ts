@@ -17,4 +17,6 @@ export const JAPANESE_COLOR_HEX_SET = new Set(
   JAPANESE_COLOR_PALETTE.map((color) => color.hex)
 );
 
-export const DEFAULT_JAPANESE_COLOR = '#5B6B73';
+import { blueGray } from '../styles/tokens/primitives';
+
+export const DEFAULT_JAPANESE_COLOR = blueGray[500] as '#5B6B73';

@@ -114,7 +114,7 @@ export const COLORS = {
   error: primitiveColors.red[500],
   danger: primitiveColors.red[500],
   warning: primitiveColors.orange[500],
-  success: primitiveColors.green[500],
+  success: primitiveColors.blue[500],
 } as const;
 
 type StatusTone = {
@@ -126,10 +126,10 @@ type StatusTone = {
 
 export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', StatusTone> = {
   success: {
-    text: primitiveColors.green[700],
-    background: alpha(primitiveColors.green[500], 0.08),
-    border: alpha(primitiveColors.green[500], 0.28),
-    solid: primitiveColors.green[500]
+    text: primitiveColors.blue[700],
+    background: alpha(primitiveColors.blue[500], 0.08),
+    border: alpha(primitiveColors.blue[500], 0.28),
+    solid: primitiveColors.blue[500]
   },
   warning: {
     text: primitiveColors.orange[700],
@@ -152,7 +152,7 @@ export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', Stat
 } as const
 
 // Unified shadow system (single shadow variant)
-export const SHADOW = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)' as const;
+export const SHADOW = `0 1px 3px 0 ${alpha(primitiveColors.gray.black, 0.1)}, 0 1px 2px -1px ${alpha(primitiveColors.gray.black, 0.1)}` as const;
 
 // Utility functions
 export const getPriorityColor = (priority: number) => {
