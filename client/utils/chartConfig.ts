@@ -1,7 +1,4 @@
 import { COLORS } from './designSystem'
-import { ChartViewMode, QuantityDisplayMode, GearItemWithCalculated } from './types'
-import { getQuantityForDisplayMode } from './chartHelpers'
-import { formatWeight, WeightUnit } from './weightUnit'
 
 // ==================== 定数 ====================
 // デザインシステムに基づいたチャート設定（コンパクト化）
@@ -45,16 +42,6 @@ export const FONT_SIZES = {
   badge: { mobile: '0.5rem', desktop: '0.55rem' }
 } as const
 
-// ==================== ヘルパー関数 ====================
-export const formatValue = (value: number, mode: ChartViewMode, unit: WeightUnit = 'g'): string => {
-  if (mode === 'cost') {
-    return `¥${Math.round(value / 100).toLocaleString()}`
-  }
-  return formatWeight(value, unit)
-}
-
-export const getItemValue = (item: GearItemWithCalculated, viewMode: ChartViewMode, quantityMode: QuantityDisplayMode): number => {
-  const quantity = getQuantityForDisplayMode(item, quantityMode)
-  const unitValue = viewMode === 'cost' ? (item.priceCents || 0) : (item.weightGrams || 0)
-  return unitValue * quantity
-}
+// ヘルパー関数は chartHelpers.ts に集約:
+//   formatValue → formatChartValue (chartHelpers.ts)
+//   getItemValue → getItemDisplayValue (chartHelpers.ts)

@@ -16,5 +16,11 @@ export function useGearSort(defaultField: SortField = 'name') {
     });
   }, []);
 
-  return { sortField, sortDirection, handleSort };
+  /** viewMode切替などで外部からソートを強制設定する */
+  const forceSort = useCallback((field: SortField, direction: SortDirection = 'asc') => {
+    setSortField(field);
+    setSortDirection(direction);
+  }, []);
+
+  return { sortField, sortDirection, handleSort, forceSort };
 }

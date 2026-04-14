@@ -9,6 +9,9 @@ interface CardGridViewProps {
   viewMode: 'weight' | 'cost';
   quantityDisplayMode: QuantityDisplayMode;
   selectedItemId?: string | null;
+  hoveredItemId?: string | null;
+  onItemSelect?: (id: string | null) => void;
+  onItemHover?: (id: string | null) => void;
   disableSort?: boolean;
   activePackName?: string;
   activePackItemIds?: string[];
@@ -50,6 +53,9 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   viewMode,
   quantityDisplayMode,
   selectedItemId,
+  hoveredItemId,
+  onItemSelect,
+  onItemHover,
   disableSort,
   activePackName,
   activePackItemIds = [],
@@ -65,13 +71,14 @@ const CardGridView: React.FC<CardGridViewProps> = ({
       const qB = getQuantityForDisplayMode(b, quantityDisplayMode);
       const valA = viewMode === 'cost' ? (a.priceCents || 0) * qA : (a.weightGrams || 0) * qA;
       const valB = viewMode === 'cost' ? (b.priceCents || 0) * qB : (b.weightGrams || 0) * qB;
-      return valA - valB;
+      return valB - valA;
     });
   }, [items, quantityDisplayMode, viewMode, disableSort]);
 
   const handleToggle = useCallback((itemId: string) => {
     setExpandedId(prev => (prev === itemId ? null : itemId));
-  }, []);
+    onItemSelect?.(itemId);
+  }, [onItemSelect]);
 
   return (
     <div className="p-2 sm:p-3 space-y-2 w-full min-w-0">
@@ -87,15 +94,23 @@ const CardGridView: React.FC<CardGridViewProps> = ({
           {sortedItems.map(item => {
             const isExpanded = expandedId === item.id;
             const isHighlighted = selectedItemId === item.id;
+            const isHovered = hoveredItemId === item.id;
             const isInActivePack = activePackItemIds.includes(item.id);
 
             return (
               <div
                 key={item.id}
                 className="relative overflow-hidden select-none"
+                onMouseEnter={() => onItemHover?.(item.id)}
+                onMouseLeave={() => onItemHover?.(null)}
                 style={{
-                  boxShadow: isHighlighted ? `0 0 0 2px ${COLORS.gray[500]}` : SHADOW,
+                  boxShadow: isHighlighted
+                    ? `0 0 0 2px ${COLORS.gray[500]}`
+                    : isHovered
+                      ? `0 0 0 1px ${COLORS.gray[400]}`
+                      : SHADOW,
                   backgroundColor: COLORS.surface,
+                  transition: 'box-shadow 120ms ease',
                 }}
               >
                 {/* パックトグル */}
