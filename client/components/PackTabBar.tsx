@@ -35,7 +35,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
   ].join(' ');
 
   return (
-    <div className="px-4 pt-2 border-b border-gray-200 dark:border-gray-700">
+    <div className="px-1.5 pt-1">
       <div
         role="tablist"
         aria-label="Pack Tabs"

@@ -355,7 +355,7 @@ export default function InventoryWorkspace({
                   </div>
                 )}
 
-                <div className="px-3 pb-3 pt-1">
+                <div className="px-1 pb-1">
                   {gearChartPanel}
                 </div>
               </div>
