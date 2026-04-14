@@ -20,6 +20,8 @@ import SegmentedControl from './ui/SegmentedControl'
 import ChartCenterDisplay from './charts/ChartCenterDisplay'
 import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
+import PackTabSection from './charts/PackTabSection'
+import ChartHeader from './charts/ChartHeader'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
 const DEFAULT_COLOR = COLORS.gray[500]
@@ -140,26 +142,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     },
     [onItemSelect],
   )
-  const [showNewPackInput, setShowNewPackInput] = useState(false)
-  const [newPackName, setNewPackName] = useState('')
-  const newPackInputRef = useRef<HTMLInputElement>(null)
   const [centerPulse, setCenterPulse] = useState(false)
 
-
-  useEffect(() => {
-    if (showNewPackInput) {
-      newPackInputRef.current?.focus()
-    }
-  }, [showNewPackInput])
-
-  const handleCreateNewPack = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = newPackName.trim()
-    if (!trimmed || !onCreatePack) return
-    onCreatePack(trimmed)
-    setNewPackName('')
-    setShowNewPackInput(false)
-  }
   const screenSize = useResponsiveSize()
   const [showAddMenu, setShowAddMenu] = useState(false) // アクションメニュー用
   const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
@@ -353,84 +337,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
             : 'w-full lg:w-[40%]'
         }`}>
           {/* グラフヘッダー */}
-          <div className={`flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 ${isChartCollapsed ? '' : 'h-11'}`}>
-            {isChartCollapsed ? (
-              <div className="flex items-center justify-center w-full">
-                <button
-                  onClick={() => setIsChartCollapsed(false)}
-                  className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors ${screenSize === 'mobile' ? 'flex-row gap-2 py-2 px-3' : 'flex-col py-2'}`}
-                  aria-label="Expand chart"
-                >
-                  <svg
-                    className={`w-4 h-4 text-gray-600 dark:text-gray-300 ${screenSize === 'mobile' ? '' : 'mb-2'}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h8M12 8l4 4-4 4" />
-                  </svg>
-                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium" style={screenSize === 'mobile' ? undefined : { writingMode: 'vertical-rl' }}>
-                    Chart
-                  </span>
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
-                  <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-slate-700 rounded-md p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setChartDisplayMode('pie')}
-                      className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
-                        chartDisplayMode === 'pie'
-                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                      }`}
-                      aria-label="Pie chart"
-                      title="Donut chart"
-                    >
-                      <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 1a7 7 0 1 0 7 7A7 7 0 0 0 8 1zm0 12A5 5 0 1 1 13 8 5 5 0 0 1 8 13zm0-8a3 3 0 1 0 3 3A3 3 0 0 0 8 5z"/>
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setChartDisplayMode('bar')}
-                      className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
-                        chartDisplayMode === 'bar'
-                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                      }`}
-                      aria-label="Bar chart"
-                      title="Horizontal bar chart"
-                    >
-                      <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-                        <rect x="1" y="2" width="10" height="3" rx="1"/>
-                        <rect x="1" y="6.5" width="14" height="3" rx="1"/>
-                        <rect x="1" y="11" width="7" height="3" rx="1"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsChartCollapsed(true)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
-                  aria-label="Collapse chart"
-                >
-                  <svg
-                    className="w-4 h-4 text-gray-600 dark:text-gray-300"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
+          <ChartHeader
+            isCollapsed={isChartCollapsed}
+            onToggleCollapsed={setIsChartCollapsed}
+            chartDisplayMode={chartDisplayMode}
+            onChartDisplayModeChange={setChartDisplayMode}
+            screenSize={screenSize}
+          />
 
 
           {!isChartCollapsed && (
@@ -706,86 +619,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               {packList !== undefined ? (
                 /* Pack タブモード */
                 <>
-                  {/* ALL タブ */}
-                  <button
-                    type="button"
-                    onClick={() => { onSelectPack?.(null); setSelectedItem(null); onCategorySelect([]); }}
-                    className={[
-                      'flex-shrink-0 h-7 px-2.5 rounded-lg font-medium transition-colors',
-                      !selectedPackId
-                        ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                    ].join(' ')}
-                  >
-                    ALL
-                  </button>
-
-                  {/* Pack タブ */}
-                  {packList.map((pack) => {
-                    const isActive = pack.id === selectedPackId;
-                    return (
-                      <div key={pack.id} className="flex items-center flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => { onSelectPack?.(pack.id); setSelectedItem(null); onCategorySelect([]); }}
-                          className={[
-                            'h-7 font-medium transition-colors',
-                            isActive && onOpenPackSettings ? 'pl-2.5 pr-1.5 rounded-l-lg' : 'pl-2.5 pr-2.5 rounded-lg',
-                            isActive
-                              ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                          ].join(' ')}
-                        >
-                          {pack.name}
-                        </button>
-                        {isActive && onOpenPackSettings && (
-                          <button
-                            type="button"
-                            onClick={onOpenPackSettings}
-                            className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
-                            title="Pack settings"
-                            aria-label="Pack settings"
-                          >
-                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* + New Pack */}
-                  {showNewPackInput ? (
-                    <form onSubmit={handleCreateNewPack} className="flex items-center gap-1 flex-shrink-0">
-                      <input
-                        ref={newPackInputRef}
-                        className="h-7 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-28"
-                        placeholder="Pack name"
-                        value={newPackName}
-                        onChange={(e) => setNewPackName(e.target.value)}
-                        required
-                      />
-                      <button type="submit" className="btn-primary h-7 px-2 text-xs">OK</button>
-                      <button
-                        type="button"
-                        className="btn-secondary h-7 px-2 text-xs"
-                        onClick={() => { setShowNewPackInput(false); setNewPackName(''); }}
-                      >✕</button>
-                    </form>
-                  ) : (
-                    <button
-                      type="button"
-                      className="flex-shrink-0 h-7 w-7 flex items-center justify-center rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                      onClick={() => setShowNewPackInput(true)}
-                      title="New pack"
-                      aria-label="New pack"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
-                  )}
+                  <PackTabSection
+                    packList={packList}
+                    selectedPackId={selectedPackId}
+                    onSelectPack={onSelectPack}
+                    onCreatePack={onCreatePack}
+                    onOpenPackSettings={onOpenPackSettings}
+                    onPackChange={() => { setSelectedItem(null); onCategorySelect([]) }}
+                  />
 
                   {/* カテゴリ/アイテムのパンくず */}
                   {selectedCategoryFromChart && (
