@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useResponsiveSize } from '../hooks/useResponsiveSize'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, ChartFocus, ChartScope } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
@@ -173,6 +173,21 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
     weightUnit,
     defaultColor: DEFAULT_COLOR,
   })
+
+  // Card/Listからアイテム選択された場合、対応カテゴリも自動選択
+  const selectedItemCategoryRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!selectedItem) {
+      selectedItemCategoryRef.current = null
+      return
+    }
+    const item = items.find(i => i.id === selectedItem)
+    const categoryName = item?.category?.name ?? null
+    if (categoryName && categoryName !== selectedItemCategoryRef.current && !selectedCategories.includes(categoryName)) {
+      selectedItemCategoryRef.current = categoryName
+      onCategorySelect([categoryName])
+    }
+  }, [selectedItem, items, selectedCategories, onCategorySelect])
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {

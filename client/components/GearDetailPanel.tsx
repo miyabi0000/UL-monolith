@@ -63,7 +63,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   onTogglePackItem,
   onAddItemsToPack,
 }) => {
-  const { sortField, sortDirection, handleSort } = useGearSort();
+  const { sortField, sortDirection, handleSort, forceSort } = useGearSort();
   const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
   const [currency, setCurrency] = useState<Currency>(() => {
     const saved = localStorage.getItem('currency');
@@ -73,6 +73,15 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   useEffect(() => {
     localStorage.setItem('currency', currency);
   }, [currency]);
+
+  // viewMode切替時にテーブルソートを自動連動（降順: 重い/高い順）
+  useEffect(() => {
+    if (viewMode === 'cost') {
+      forceSort('price', 'desc');
+    } else {
+      forceSort('weight', 'desc');
+    }
+  }, [viewMode, forceSort]);
 
   const handleCurrencyChange = useCallback(() => {
     setCurrency(prev => prev === 'JPY' ? 'USD' : 'JPY');
