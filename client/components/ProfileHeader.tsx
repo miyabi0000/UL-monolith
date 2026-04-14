@@ -61,10 +61,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       )}
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* 左: プロフィール情報 */}
-        <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--avatar-h)' }}>
+        <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--control-h)' }}>
           <span
             className="bg-mondrian-black text-mondrian-canvas dark:bg-mondrian-canvas dark:text-mondrian-black text-sm font-semibold inline-flex items-center justify-center shrink-0"
-            style={{ height: 'var(--avatar-h)', width: 'var(--avatar-h)', borderRadius: 'var(--radius-control)' }}
+            style={{ height: 'var(--control-h)', width: 'var(--control-h)', borderRadius: 'var(--radius-control)' }}
           >
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>

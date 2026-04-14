@@ -36,18 +36,14 @@
     --gear-font-xl: 18px;
     --gear-font-2xl: 20px;
     --gear-row-height: 60px;
-    /* コントロール高さスケール — ボタン/入力/チップを 4 段階に統一
-     * 4px グリッド準拠。アイコン専用 24, 補助 28, デフォルト 36, CTA 44 */
-    --control-h-xs:   24px; /* アイコンのみボタン・小チップ */
-    --control-h-sm:   28px; /* 補助操作・サブナビ */
-    --control-h-md:   36px; /* デフォルトボタン・ヘッダーチップ・タブ */
+    /* コントロール高さスケール — 3 ティアに縮退
+     * 長方形/ピル型/正方形 の interactive control は全て --control-h (36px) で
+     * short edge を揃える。data badge のみ別ティア 20px。 */
+    --control-h:      36px; /* 全 interactive control (rect/pill-chip/square 共通) */
     --control-h-lg:   44px; /* 主要 CTA・モーダルアクション (タップ目標) */
-    --badge-h:        20px; /* CategoryBadge / StatusBadge / 優先度トークン */
-    --badge-h-sm:     16px; /* インライン使用 (テーブル内など) */
-    --avatar-h:       40px; /* プロフィールアバター・ユーザーアイコン */
-    --avatar-h-sm:    24px; /* インラインアバター */
-    --field-h:        var(--control-h-md); /* 入力フィールド既定 */
-    --header-chip-h:  var(--control-h-md);
+    --badge-h:        20px; /* pill badge: CategoryBadge / StatusBadge / 優先度トークン */
+    --field-h:        var(--control-h); /* 入力フィールド既定 */
+    --header-chip-h:  var(--control-h);
     /* 後方互換: gear-badge-size は --badge-h を参照 */
     --gear-badge-size: var(--badge-h);
     /* 角丸階層: 3層ルール (De Stijl Matte: 角は控えめ。Mondrian は本来角ナシだが、
@@ -198,8 +194,8 @@
    * 付与し、文字ラベル付きチップ (.glass-header-chip / .btn-*) と高さを揃える。 */
   .icon-btn {
     @apply inline-flex items-center justify-center transition-all duration-200;
-    height: var(--control-h-md);
-    width:  var(--control-h-md);
+    height: var(--control-h);
+    width:  var(--control-h);
     border-radius: var(--radius-control);
     color: var(--ink-secondary);
     background: var(--surface-level-2);
@@ -213,14 +209,12 @@
     outline: var(--border-focus);
     outline-offset: 1px;
   }
-  .icon-btn-sm { height: var(--control-h-sm); width: var(--control-h-sm); }
-  .icon-btn-xs { height: var(--control-h-xs); width: var(--control-h-xs); }
 
   /* セグメンテッドコントロール (タブ風トグル)
-   * 内側ボタンの高さを揃え、横並び全体の高さを --control-h-md に固定 */
+   * 内側ボタンの高さを揃え、横並び全体の高さを --control-h に固定 */
   .segmented {
     @apply inline-flex p-0.5;
-    height: var(--control-h-md);
+    height: var(--control-h);
     background: var(--surface-level-2);
     border: var(--border-default);
     border-radius: var(--radius-control);
@@ -381,12 +375,12 @@
   }
 
   /* ボタン — De Stijl: solid + Mondrian 黒枠
-   * 高さは --control-h-md (36px) をデフォルトに、Button.tsx の size prop で上書き */
+   * 高さは --control-h (36px) をデフォルトに、Button.tsx の size prop で上書き */
   .btn-primary,
   .btn-secondary,
   .btn-danger {
     @apply inline-flex items-center justify-center text-sm font-medium px-4 transition-all duration-200;
-    min-height: var(--control-h-md);
+    min-height: var(--control-h);
     border-radius: var(--radius-control);
     box-shadow: var(--shadow-sm);
     border: var(--border-default);
@@ -418,7 +412,7 @@
   }
 
   /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus
-   * 高さは --field-h (= --control-h-md) で統一 */
+   * 高さは --field-h (= --control-h) で統一 */
   .input {
     @apply inline-flex items-center px-2 transition-all duration-200;
     min-height: var(--field-h);

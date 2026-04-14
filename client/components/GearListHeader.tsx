@@ -107,7 +107,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
         </div>
         <button
           onClick={onShowForm}
-          className="icon-btn icon-btn-sm"
+          className="icon-btn"
           aria-label="Add item"
           title="Add"
         >

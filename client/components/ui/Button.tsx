@@ -2,7 +2,7 @@ import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'md' | 'lg';
   children: React.ReactNode;
 }
 
@@ -12,11 +12,9 @@ const variantClasses = {
   danger:    'btn-danger',
 };
 
-// 高さは globals.css の --control-h-* と整合
+// 高さは globals.css の --control-h / --control-h-lg と整合。ティアは 2 段のみ
 const sizeStyles: Record<NonNullable<ButtonProps['size']>, { height: string; padding: string; fontSize: string }> = {
-  xs: { height: 'var(--control-h-xs)', padding: '0 8px',  fontSize: 'var(--gear-font-xs)' },
-  sm: { height: 'var(--control-h-sm)', padding: '0 12px', fontSize: 'var(--gear-font-sm)' },
-  md: { height: 'var(--control-h-md)', padding: '0 16px', fontSize: 'var(--gear-font-md)' },
+  md: { height: 'var(--control-h)',    padding: '0 16px', fontSize: 'var(--gear-font-md)' },
   lg: { height: 'var(--control-h-lg)', padding: '0 20px', fontSize: 'var(--gear-font-md)' },
 };
 

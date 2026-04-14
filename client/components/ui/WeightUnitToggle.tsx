@@ -28,7 +28,7 @@ const WeightUnitToggle: React.FC<WeightUnitToggleProps> = ({ className }) => {
     },
   ];
 
-  return <SegmentedControl options={options} className={className} />;
+  return <SegmentedControl options={options} className={className} shape="square" />;
 };
 
 export default WeightUnitToggle;
