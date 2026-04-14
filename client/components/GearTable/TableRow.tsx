@@ -21,6 +21,8 @@ interface TableRowProps {
   categories: Category[]
   isSelected: boolean
   isHighlighted?: boolean
+  /** Chart 側から hover された時の軽いハイライト (selection より弱い) */
+  isHovered?: boolean
   /** アドバイザーからのフォーカス対象かどうか（スクロール・ハイライト用） */
   id?: string
   activePackName?: string
@@ -30,6 +32,10 @@ interface TableRowProps {
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
   onEdit?: (item: GearItemWithCalculated) => void
   onTogglePackItem?: (itemId: string) => void
+  /** 行クリックで Chart にセグメント選択を通知 */
+  onItemSelect?: (id: string | null) => void
+  /** 行 hover で Chart にセグメント強調を通知 */
+  onItemHover?: (id: string | null) => void
 }
 
 const TableRow: React.FC<TableRowProps> = ({
@@ -37,6 +43,7 @@ const TableRow: React.FC<TableRowProps> = ({
   categories,
   isSelected,
   isHighlighted,
+  isHovered,
   id,
   activePackName,
   isInActivePack = false,
@@ -45,6 +52,8 @@ const TableRow: React.FC<TableRowProps> = ({
   onUpdateItem,
   onEdit,
   onTogglePackItem,
+  onItemSelect,
+  onItemHover,
 }) => {
   const {
     showCheckboxes,
@@ -94,13 +103,20 @@ const TableRow: React.FC<TableRowProps> = ({
   return (
     <tr
       id={id}
+      onClick={onItemSelect ? () => onItemSelect(item.id) : undefined}
+      onMouseEnter={onItemHover ? () => onItemHover(item.id) : undefined}
+      onMouseLeave={onItemHover ? () => onItemHover(null) : undefined}
       className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-gray-700/45 ${
+        onItemSelect ? 'cursor-pointer' : ''
+      } ${
         isSelected
           ? 'bg-gray-50 dark:bg-gray-700/55 ring-2 ring-gray-400 dark:ring-gray-500 ring-inset'
           : activePackName && isInActivePack
             ? 'bg-blue-50/55 dark:bg-blue-900/20'
           : isHighlighted
             ? 'border-l-2'
+          : isHovered
+            ? 'bg-gray-50/60 dark:bg-gray-700/30'
             : 'bg-transparent'
       }`}
       style={isHighlighted && !isSelected
