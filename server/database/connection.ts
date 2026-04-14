@@ -1,5 +1,6 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { GearItem, GearItemForm, Category, WeightBreakdown, deriveStatus } from '../models/types';
+import { buildPoolConfig } from './poolConfig';
 
 // SQLパラメータ型
 type SqlParam = string | number | boolean | string[] | number[] | null | undefined;
@@ -21,26 +22,25 @@ class DatabaseConnection {
   private pool: Pool;
 
   constructor() {
-    // Railway / Render 等のホスティングは DATABASE_URL を提供する。
-    // 個別変数 (DB_HOST 等) は docker-compose 開発用フォールバック。
-    this.pool = process.env.DATABASE_URL
-      ? new Pool({
-          connectionString: process.env.DATABASE_URL,
-          ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
-          max: 20,
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 2000,
-        })
-      : new Pool({
-          host: process.env.DB_HOST || 'localhost',
-          port: parseInt(process.env.DB_PORT || '5433'),
-          database: process.env.DB_NAME || 'gear_manager',
-          user: process.env.DB_USER || 'postgres',
-          password: process.env.DB_PASSWORD || 'password',
-          max: 20,
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 2000,
-        });
+    this.pool = new Pool({
+      ...buildPoolConfig(),
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+  }
+
+  /** 生クエリ実行 (ルート側で query/トランザクションを自由に組むため公開) */
+  async query<R extends QueryResultRow = QueryResultRow>(
+    text: string,
+    params?: unknown[],
+  ): Promise<QueryResult<R>> {
+    return this.pool.query<R>(text, params as never);
+  }
+
+  /** クライアント取得 (トランザクション用) */
+  async connect(): Promise<PoolClient> {
+    return this.pool.connect();
   }
 
   /**

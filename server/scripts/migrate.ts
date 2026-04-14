@@ -1,14 +1,14 @@
 /**
  * マイグレーションランナー
  *
- * server/database/migrations/*.sql を辞書順に適用する。
- * 適用済みは schema_migrations テーブルで追跡。
+ * users テーブルが存在しなければ init.sql を流し、
+ * server/database/migrations/*.sql を schema_migrations で追跡しつつ順次適用する。
+ *
+ * 本番 (Railway 等) はデプロイ毎に起動コマンドの先頭で実行、
+ * 開発 (docker-compose) は postgres が init.sql を自動実行するため
+ * migrate は未適用の migrations のみ流す。
  *
  * 実行: npm run migrate
- *
- * - Railway/Render 等の DATABASE_URL を優先
- * - 既存環境変数 (DB_HOST 等) はフォールバック (docker-compose 開発用)
- * - init.sql は流さない (docker-entrypoint で初回のみ実行される前提)
  */
 
 import { Pool } from 'pg';
@@ -16,24 +16,29 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
+import { buildPoolConfig } from '../database/poolConfig';
 
 config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const pool = process.env.DATABASE_URL
-  ? new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
-    })
-  : new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5433'),
-      database: process.env.DB_NAME || 'gear_manager',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-    });
+// database ディレクトリの解決: tsx 実行時は ../database、tsc コンパイル後は ../../database
+function resolveDatabaseDir(): string {
+  const candidates = [
+    path.resolve(__dirname, '../database'),
+    path.resolve(__dirname, '../../database'),
+  ];
+  const found = candidates.find((p) => fs.existsSync(p));
+  if (!found) {
+    throw new Error(`database directory not found. Checked: ${candidates.join(', ')}`);
+  }
+  return found;
+}
+const databaseDir = resolveDatabaseDir();
+
+// スクリプト終了時に pool.end() を呼ぶため、app の db singleton とは別インスタンス
+const pool = new Pool(buildPoolConfig());
 
 async function ensureSchemaMigrationsTable(): Promise<void> {
   await pool.query(`
@@ -79,14 +84,13 @@ async function main(): Promise<void> {
   );
   if (!usersCheck.rows[0].exists) {
     console.log('📦 Initial schema not found. Running init.sql...');
-    const initPath = path.resolve(__dirname, '../database/init.sql');
-    const initSql = fs.readFileSync(initPath, 'utf-8');
+    const initSql = fs.readFileSync(path.join(databaseDir, 'init.sql'), 'utf-8');
     await pool.query(initSql);
     console.log('  ✅ init.sql applied');
   }
 
   // migrations/*.sql を辞書順に適用
-  const migrationsDir = path.resolve(__dirname, '../database/migrations');
+  const migrationsDir = path.join(databaseDir, 'migrations');
   const files = fs
     .readdirSync(migrationsDir)
     .filter((f) => f.endsWith('.sql'))

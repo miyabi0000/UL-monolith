@@ -1,28 +1,15 @@
 import { Router, Request, Response } from 'express';
-import { Pool } from 'pg';
 import { cognitoAuth, optionalAuth } from '../middleware/cognitoAuth';
+import { db } from '../database/connection';
 
 const router = Router();
-
-const pool = process.env.DATABASE_URL
-  ? new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
-    })
-  : new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5433'),
-      database: process.env.DB_NAME || 'gear_manager',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-    });
 
 // ==================== パック CRUD ====================
 
 // GET /api/v1/packs - ユーザーのパック一覧
 router.get('/', cognitoAuth, async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT p.*,
               COUNT(pi.gear_id)::int AS item_count,
               COALESCE(SUM(g.weight_grams * g.required_quantity), 0)::int AS total_weight
@@ -51,7 +38,7 @@ router.post('/', cognitoAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO packs (user_id, name, description, route_name, is_public)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -71,7 +58,7 @@ router.put('/:id', cognitoAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description, routeName, isPublic } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE packs SET
          name = COALESCE($1, name),
          description = COALESCE($2, description),
@@ -98,7 +85,7 @@ router.put('/:id', cognitoAuth, async (req: Request, res: Response) => {
 router.delete('/:id', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
+    const result = await db.query(
       'DELETE FROM packs WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, req.userId]
     );
@@ -123,7 +110,7 @@ router.get('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
 
     // パックの所有者チェック
-    const packCheck = await pool.query(
+    const packCheck = await db.query(
       'SELECT id FROM packs WHERE id = $1 AND user_id = $2',
       [id, req.userId]
     );
@@ -132,7 +119,7 @@ router.get('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       'SELECT gear_id FROM pack_items WHERE pack_id = $1',
       [id]
     );
@@ -156,7 +143,7 @@ router.put('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
     }
 
     // パックの所有者チェック
-    const packCheck = await pool.query(
+    const packCheck = await db.query(
       'SELECT id FROM packs WHERE id = $1 AND user_id = $2',
       [id, req.userId]
     );
@@ -166,7 +153,7 @@ router.put('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
     }
 
     // トランザクションで全置換
-    const client = await pool.connect();
+    const client = await db.connect();
     try {
       await client.query('BEGIN');
       await client.query('DELETE FROM pack_items WHERE pack_id = $1', [id]);
@@ -201,7 +188,7 @@ router.get('/public/:id', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const packResult = await pool.query(
+    const packResult = await db.query(
       `SELECT p.*, u.display_name AS author_name, u.handle AS author_handle
        FROM packs p
        LEFT JOIN users u ON p.user_id = u.id
@@ -215,7 +202,7 @@ router.get('/public/:id', optionalAuth, async (req: Request, res: Response) => {
     }
 
     // パック内のギアアイテムも取得
-    const itemsResult = await pool.query(
+    const itemsResult = await db.query(
       `SELECT g.id, g.name, g.brand, g.weight_grams, g.price_cents,
               g.required_quantity, g.image_url, g.product_url,
               c.name AS category_name, c.color AS category_color
@@ -251,7 +238,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const client = await pool.connect();
+    const client = await db.connect();
     const importedPacks: any[] = [];
 
     try {

@@ -16,7 +16,7 @@ COPY . .
 # フロント (vite) → /app/dist
 RUN npm run build
 
-# バック (tsc) → /app/server/dist
+# バック (tsc) → /app/server/dist (app.ts + scripts/migrate.ts 含む)
 RUN npm run server:build
 
 # === Stage 2: ランタイム ===
@@ -25,19 +25,16 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-# 本番依存のみインストール
+# 本番依存のみ
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# ビルド成果物 + マイグレーション/init SQL をコピー
+# ビルド成果物 + マイグレーション SQL 本体
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server/dist ./server/dist
 COPY --from=builder /app/server/database ./server/database
-# マイグレーションスクリプト本体（tsx で実行）
-COPY --from=builder /app/server/scripts ./server/scripts
-RUN npm install -D tsx
 
 EXPOSE 8000
 
-# 起動: マイグレーション → サーバー起動
-CMD ["sh", "-c", "npm run migrate && node server/dist/app.js"]
+# 起動: マイグレーション → サーバー起動 (両方とも compiled JS を node で実行)
+CMD ["sh", "-c", "node server/dist/scripts/migrate.js && node server/dist/app.js"]
