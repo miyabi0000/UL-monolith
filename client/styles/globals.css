@@ -37,50 +37,57 @@
     --gear-font-2xl: 20px;
     --gear-badge-size: 20px;
     --gear-row-height: 60px;
-    /* 角丸階層: 3層ルール */
-    --radius-surface: 12px;   /* L1: カード・モーダル・パネル・テーブルシェル */
-    --radius-control: 8px;    /* L2: ボタン・入力・チップ・ドロップダウン */
+    /* 角丸階層: 3層ルール (De Stijl Matte: 角は控えめ。Mondrian は本来角ナシだが、
+     * 既存 Tailwind rounded-* との折衷で 4-6px に抑える) */
+    --radius-surface: 6px;    /* L1: カード・モーダル・パネル・テーブルシェル */
+    --radius-control: 4px;    /* L2: ボタン・入力・チップ・ドロップダウン */
     --radius-badge:   9999px; /* L3: バッジ・優先度トークン・ピル形状 */
+    /* Mondrian 3原色 — 派生・alpha 乗算禁止の固定値 */
+    --mondrian-red:    #D7282F;
+    --mondrian-yellow: #F1C40F;
+    --mondrian-blue:   #1F3A93;
+    --mondrian-black:  #0A0A0A;
+    --mondrian-canvas: #FAFAF7;
     /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義 */
-    --page-bg: var(--page-bg, #F7F6F3);
-    --shadow-sm: 0 1px 2px rgba(27, 29, 27, 0.05);
-    --shadow-md: 0 1px 3px rgba(27, 29, 27, 0.1), 0 1px 2px -1px rgba(27, 29, 27, 0.1);
-    --shadow-lg: 0 4px 6px -1px rgba(27, 29, 27, 0.1), 0 2px 4px -2px rgba(27, 29, 27, 0.1);
+    --page-bg: var(--page-bg, #FAFAF7);
+    --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.04);
+    --shadow-md: 0 1px 0 rgba(10, 10, 10, 0.06);
+    --shadow-lg: 0 2px 0 rgba(10, 10, 10, 0.08);
     --surface-level-0: #FFFFFF;
-    --surface-level-1: #F7F6F3;
-    --surface-level-2: #EEEDEA;
-    --ink-primary: #2D2F2D;
-    --ink-secondary: #5E5F5D;
-    --ink-muted: #949492;
-    --ink-inverse: #FFFFFF;
-    --icon-default: #5E5F5D;
-    --icon-muted: #949492;
-    --stroke-subtle: rgba(202, 201, 199, 0.48);
-    --stroke-default: rgba(175, 175, 172, 0.7);
-    --stroke-strong: #949492;
-    --stroke-divider: rgba(202, 201, 199, 0.62);
-    --focus-ring: #24426A;
-    --focus-ring-offset: #FFFFFF;
-    --overlay-hover: rgba(45, 47, 45, 0.04);
-    --overlay-active: rgba(45, 47, 45, 0.08);
-    --overlay-scrim: rgba(27, 29, 27, 0.46);
-    --state-success-fg: #203A5B;
-    --state-success-bg: rgba(39, 74, 120, 0.12);
-    --state-success-border: rgba(36, 66, 106, 0.45);
-    --state-warning-fg: #BC8418;
-    --state-warning-bg: rgba(255, 177, 27, 0.14);
-    --state-warning-border: rgba(221, 155, 26, 0.5);
-    --state-danger-fg: #A70818;
-    --state-danger-bg: rgba(226, 4, 27, 0.12);
-    --state-danger-border: rgba(196, 6, 26, 0.45);
-    --state-info-fg: #203A5B;
-    --state-info-bg: rgba(39, 74, 120, 0.12);
-    --state-info-border: rgba(36, 66, 106, 0.45);
-    --text-table-head: #797A77;
-    --text-table-main: #2D2F2D;
-    --text-table-sub: #949492;
-    --text-table-num: #434543;
-    --text-table-micro: #949492;
+    --surface-level-1: #FAFAF7;
+    --surface-level-2: #F0EFEA;
+    --ink-primary: #0A0A0A;
+    --ink-secondary: #2E2E2E;
+    --ink-muted: #6B6B66;
+    --ink-inverse: #FAFAF7;
+    --icon-default: #2E2E2E;
+    --icon-muted: #6B6B66;
+    --stroke-subtle: rgba(10, 10, 10, 0.10);
+    --stroke-default: #0A0A0A;          /* 1px Mondrian 黒線 */
+    --stroke-strong: #0A0A0A;
+    --stroke-divider: rgba(10, 10, 10, 0.14);
+    --focus-ring: #1F3A93;              /* Mondrian Blue */
+    --focus-ring-offset: #FAFAF7;
+    --overlay-hover: rgba(10, 10, 10, 0.04);
+    --overlay-active: rgba(10, 10, 10, 0.08);
+    --overlay-scrim: rgba(10, 10, 10, 0.5);
+    --state-success-fg: #0A0A0A;
+    --state-success-bg: rgba(10, 10, 10, 0.04);
+    --state-success-border: #0A0A0A;
+    --state-warning-fg: #0A0A0A;
+    --state-warning-bg: rgba(241, 196, 15, 0.20);
+    --state-warning-border: #F1C40F;
+    --state-danger-fg: #D7282F;
+    --state-danger-bg: rgba(215, 40, 47, 0.10);
+    --state-danger-border: #D7282F;
+    --state-info-fg: #1F3A93;
+    --state-info-bg: rgba(31, 58, 147, 0.08);
+    --state-info-border: #1F3A93;
+    --text-table-head: #4A4A47;
+    --text-table-main: #0A0A0A;
+    --text-table-sub: #6B6B66;
+    --text-table-num: #0A0A0A;
+    --text-table-micro: #6B6B66;
   }
 
   body {
@@ -90,6 +97,22 @@
     position: relative;
     min-height: 100vh;
     overflow-y: auto;
+  }
+
+  /* 紙質ノイズ — 完全フラットを避けるためのマット質感 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.018;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .dark body::before {
+    opacity: 0.025;
+    mix-blend-mode: screen;
   }
 
   /* モバイル: 行高さ調整 */
@@ -115,28 +138,30 @@
 }
 
 @layer components {
-  /* サーフェス（カード・モーダル） */
+  /* サーフェス（カード・モーダル） — Mondrian 黒線で額装 */
   .glass-surface,
   .card,
   .modal-content {
     @apply relative overflow-hidden;
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
-  /* ヘッダー */
+  /* ヘッダー — 下部に Mondrian 黒線 */
   .glass-header {
-    border-bottom: 1px solid var(--stroke-divider);
+    border-bottom: 1px solid var(--stroke-default);
     background: var(--surface-level-0);
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
 
   /* ヘッダーチップ */
   .glass-header-chip {
     @apply relative overflow-hidden transition-all duration-150;
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     border-radius: var(--radius-badge);
     background: var(--surface-level-0);
     box-shadow: var(--shadow-sm);
@@ -193,18 +218,18 @@
     border-radius: var(--radius-badge);
   }
 
-  /* テーブル */
+  /* テーブル — Mondrian 黒線で額装 */
   .gear-table-shell {
     @apply overflow-hidden;
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .gear-table-head {
-    background: var(--surface-level-1);
-    box-shadow: 0 1px 0 var(--stroke-divider);
+    background: var(--surface-level-2);
+    box-shadow: 0 1px 0 var(--stroke-default);
   }
 
   .gear-table-row > td {
@@ -252,20 +277,20 @@
   /* コントロール */
   .gear-glass-control {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     box-shadow: var(--shadow-sm);
   }
 
   .gear-glass-chip {
     background: var(--surface-level-1);
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     border-radius: var(--radius-control);
   }
 
   /* フラットパネル */
   .card.flat-panel {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-subtle);
+    border: 1px solid var(--stroke-default);
     box-shadow: var(--shadow-sm);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -285,43 +310,43 @@
     /* フラットスタイル: 基底ルールに従う */
   }
 
-  /* ボタン */
+  /* ボタン — De Stijl: solid + Mondrian 黒枠 */
   .btn-primary {
     @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: none;
+    border: 1px solid var(--mondrian-black);
     border-radius: var(--radius-control);
     color: var(--ink-inverse);
-    background: var(--ink-primary);
+    background: var(--mondrian-black);
     box-shadow: var(--shadow-sm);
   }
 
   .btn-primary:hover {
-    opacity: 0.88;
+    background: var(--ink-secondary);
   }
 
   .btn-secondary {
     @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: 1px solid var(--stroke-default);
+    border: 1px solid var(--mondrian-black);
     border-radius: var(--radius-control);
     color: var(--ink-primary);
     background: var(--surface-level-0);
   }
 
   .btn-secondary:hover {
-    background: var(--surface-level-1);
+    background: var(--surface-level-2);
   }
 
   .btn-danger {
     @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: none;
+    border: 1px solid var(--mondrian-black);
     border-radius: var(--radius-control);
-    color: var(--ink-inverse);
-    background: var(--state-danger-fg);
+    color: #FFFFFF;
+    background: var(--mondrian-red);
     box-shadow: var(--shadow-sm);
   }
 
   .btn-danger:hover {
-    opacity: 0.88;
+    background: #B71F25;
   }
 
   /* 小さいボタン */
@@ -330,19 +355,43 @@
     border-radius: var(--radius-control);
   }
 
-  /* 入力フィールド */
+  /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus */
   .input {
     @apply transition-all duration-200;
     border: 1px solid var(--stroke-default);
     border-radius: var(--radius-control);
     color: var(--ink-primary);
-    background: var(--surface-level-1);
+    background: var(--surface-level-0);
   }
 
   .input:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 1px;
   }
+
+  /* Mondrian Grid — レイアウト額装ユーティリティ
+   * ワークスペース等の大区画を Mondrian 風の黒線グリッドで囲う */
+  .mondrian-grid {
+    position: relative;
+    border: 2px solid var(--mondrian-black);
+    background: var(--surface-level-0);
+  }
+  .mondrian-grid::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--mondrian-black);
+    pointer-events: none;
+  }
+
+  /* Mondrian アクセントブロック (汎用) */
+  .mondrian-block-red    { background: var(--mondrian-red);    }
+  .mondrian-block-blue   { background: var(--mondrian-blue);   }
+  .mondrian-block-yellow { background: var(--mondrian-yellow); }
+  .mondrian-block-black  { background: var(--mondrian-black);  }
 
   /* モーダル */
   .modal-overlay {
@@ -370,47 +419,47 @@
     @apply modal-panel max-w-4xl overflow-hidden;
   }
 
-  /* ダークモード: CSS変数 */
+  /* ダークモード — De Stijl Matte (反転) */
   .dark {
-    --page-bg: #2D2F2D;
-    --shadow-sm: 0 1px 2px rgba(27, 29, 27, 0.15);
-    --shadow-md: 0 1px 3px rgba(27, 29, 27, 0.25), 0 1px 2px -1px rgba(27, 29, 27, 0.15);
-    --shadow-lg: 0 4px 6px -1px rgba(27, 29, 27, 0.25), 0 2px 4px -2px rgba(27, 29, 27, 0.15);
-    --surface-level-0: #434543;
-    --surface-level-1: #2D2F2D;
-    --surface-level-2: #1B1D1B;
-    --ink-primary: #F7F6F3;
-    --ink-secondary: #E0DFDD;
-    --ink-muted: #AFAFAC;
-    --ink-inverse: #2D2F2D;
-    --icon-default: #E0DFDD;
-    --icon-muted: #AFAFAC;
-    --stroke-subtle: rgba(148, 148, 146, 0.34);
-    --stroke-default: rgba(175, 175, 172, 0.52);
-    --stroke-strong: #CAC9C7;
-    --stroke-divider: rgba(175, 175, 172, 0.42);
-    --focus-ring: #637D9E;
-    --focus-ring-offset: #2D2F2D;
-    --overlay-hover: rgba(255, 255, 255, 0.06);
-    --overlay-active: rgba(255, 255, 255, 0.12);
-    --overlay-scrim: rgba(27, 29, 27, 0.62);
-    --state-success-fg: #8FA1B9;
-    --state-success-bg: rgba(39, 74, 120, 0.2);
-    --state-success-border: rgba(143, 161, 185, 0.5);
-    --state-warning-fg: #FFD688;
-    --state-warning-bg: rgba(255, 177, 27, 0.2);
-    --state-warning-border: rgba(255, 214, 136, 0.52);
-    --state-danger-fg: #F07C88;
-    --state-danger-bg: rgba(226, 4, 27, 0.2);
-    --state-danger-border: rgba(240, 124, 136, 0.5);
-    --state-info-fg: #8FA1B9;
-    --state-info-bg: rgba(39, 74, 120, 0.2);
-    --state-info-border: rgba(143, 161, 185, 0.5);
-    --text-table-head: #CAC9C7;
-    --text-table-main: #F7F6F3;
-    --text-table-sub: #AFAFAC;
-    --text-table-num: #EEEDEA;
-    --text-table-micro: #AFAFAC;
+    --page-bg: #121212;
+    --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.6);
+    --shadow-md: 0 1px 0 rgba(10, 10, 10, 0.7);
+    --shadow-lg: 0 2px 0 rgba(10, 10, 10, 0.8);
+    --surface-level-0: #1C1C1C;
+    --surface-level-1: #121212;
+    --surface-level-2: #242424;
+    --ink-primary: #FAFAF7;
+    --ink-secondary: #E0E0DC;
+    --ink-muted: #9C9C98;
+    --ink-inverse: #0A0A0A;
+    --icon-default: #E0E0DC;
+    --icon-muted: #9C9C98;
+    --stroke-subtle: rgba(250, 250, 247, 0.12);
+    --stroke-default: #FAFAF7;
+    --stroke-strong: #FAFAF7;
+    --stroke-divider: rgba(250, 250, 247, 0.18);
+    --focus-ring: #5E73A8;
+    --focus-ring-offset: #121212;
+    --overlay-hover: rgba(250, 250, 247, 0.06);
+    --overlay-active: rgba(250, 250, 247, 0.12);
+    --overlay-scrim: rgba(10, 10, 10, 0.7);
+    --state-success-fg: #FAFAF7;
+    --state-success-bg: rgba(250, 250, 247, 0.06);
+    --state-success-border: #FAFAF7;
+    --state-warning-fg: #F1C40F;
+    --state-warning-bg: rgba(241, 196, 15, 0.18);
+    --state-warning-border: #F1C40F;
+    --state-danger-fg: #E15A62;
+    --state-danger-bg: rgba(215, 40, 47, 0.18);
+    --state-danger-border: #E15A62;
+    --state-info-fg: #5E73A8;
+    --state-info-bg: rgba(31, 58, 147, 0.20);
+    --state-info-border: #5E73A8;
+    --text-table-head: #CFCCC2;
+    --text-table-main: #FAFAF7;
+    --text-table-sub: #9C9C98;
+    --text-table-num: #FAFAF7;
+    --text-table-micro: #9C9C98;
   }
 }
 

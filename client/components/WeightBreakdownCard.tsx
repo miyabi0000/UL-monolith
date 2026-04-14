@@ -1,6 +1,6 @@
 import React from 'react'
 import { WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS } from '../utils/types'
-import { STATUS_TONES } from '../utils/designSystem'
+import { mondrian } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
 import { formatWeight, formatWeightLarge } from '../utils/weightUnit'
@@ -44,11 +44,13 @@ const WEIGHT_CLASS_CONFIG = {
 
 const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ulStatus }) => {
   const { unit } = useWeightUnit()
-  const successTone = STATUS_TONES.success
-  const warningTone = STATUS_TONES.warning
-  const errorTone = STATUS_TONES.error
 
   const ulProgress = Math.min(100, (breakdown.baseWeight / UL_THRESHOLDS.ultralight) * 100)
+  // Mondrian 配色: 達成=Blue, 警告=Yellow, 超過=Red
+  const ulBarColor =
+    ulProgress < 85  ? mondrian.blue
+  : ulProgress < 100 ? mondrian.yellow
+                     : mondrian.red
 
   return (
     <Card hover className="p-3">
@@ -134,15 +136,14 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
             {Math.round(ulProgress)}% of UL limit
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="w-full h-2 overflow-hidden"
+          style={{ background: 'var(--surface-level-2)', border: `1px solid ${mondrian.black}` }}
+        >
           <div
             className="h-full transition-all duration-300"
             style={{
-              backgroundColor: ulProgress < 85
-                ? successTone.solid
-                : ulProgress < 100
-                  ? warningTone.solid
-                  : errorTone.solid,
+              backgroundColor: ulBarColor,
               width: `${ulProgress}%`
             }}
           />

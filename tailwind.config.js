@@ -75,28 +75,37 @@ export default {
           800: p.blue[800],
           900: p.blue[900],
         },
-        // セマンティックカラー
+        // Mondrian 3原色 — 派生・alpha 乗算禁止の固定値
+        mondrian: {
+          red:    p.mondrian.red,
+          yellow: p.mondrian.yellow,
+          blue:   p.mondrian.blue,
+          black:  p.mondrian.black,
+          canvas: p.mondrian.canvas,
+        },
+        // セマンティックカラー (Mondrian Matte)
         primary: {
-          DEFAULT: p.gray[700],
-          hover: p.gray[800],
+          DEFAULT: p.mondrian.black,
+          hover:   p.gray[800],
         },
         background: {
-          light: p.gray[50],
-          dark: p.gray[900],
+          light: p.mondrian.canvas,
+          dark:  '#121212',
         },
         surface: {
           light: p.gray.white,
-          dark: p.gray[800],
+          dark:  '#1C1C1C',
         },
         border: {
-          light: p.gray[200],
-          dark: p.gray[700],
+          light: p.mondrian.black,
+          dark:  p.mondrian.canvas,
         },
       },
       boxShadow: {
-        'sm': `0 1px 2px rgba(27, 29, 27, 0.05)`,
-        'md': `0 1px 3px rgba(27, 29, 27, 0.1), 0 1px 2px -1px rgba(27, 29, 27, 0.1)`,
-        'lg': `0 4px 6px -1px rgba(27, 29, 27, 0.1), 0 2px 4px -2px rgba(27, 29, 27, 0.1)`,
+        // マット質感: 多層シャドウ廃止、最小限の 1px 影のみ
+        'sm': `0 1px 0 rgba(10, 10, 10, 0.04)`,
+        'md': `0 1px 0 rgba(10, 10, 10, 0.06)`,
+        'lg': `0 2px 0 rgba(10, 10, 10, 0.08)`,
       },
       borderRadius: {
         sm: '4px',

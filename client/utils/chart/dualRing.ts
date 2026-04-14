@@ -62,16 +62,17 @@ export const calculateBig3Breakdown = (items: GearItemWithCalculated[]): DonutSe
   ].filter((s) => s.value > 0)
 }
 
-/** カテゴリ別内訳 (重量降順) */
+/** カテゴリ別内訳 (重量降順)
+ * Mondrian Matte: カテゴリ色は無視し、Big3 = Mondrian Red、その他 = グレー濃淡を index 順に割当
+ */
 export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): DonutSegment[] => {
-  const byCategory = new Map<string, { items: GearItemWithCalculated[]; color: string; name: string; isBig3: boolean }>()
+  const byCategory = new Map<string, { items: GearItemWithCalculated[]; name: string; isBig3: boolean }>()
 
   for (const item of items) {
     const id = item.categoryId || 'uncategorized'
     if (!byCategory.has(id)) {
       byCategory.set(id, {
         items: [],
-        color: item.category?.color || COLORS.gray[500],
         name:  item.category?.name  || 'Other',
         isBig3: isBig3Category(item.category),
       })
@@ -79,17 +80,24 @@ export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): Don
     byCategory.get(id)!.items.push(item)
   }
 
-  return Array.from(byCategory.entries())
+  // 重量降順でソートしてから index ベースのグレー階調を割当
+  const sorted = Array.from(byCategory.entries())
     .map(([id, bucket]) => ({
       id,
       label:  bucket.name,
       value:  sumWeight(bucket.items),
-      color:  bucket.color,
       isBig3: bucket.isBig3,
       items:  bucket.items,
     }))
     .filter((s) => s.value > 0)
     .sort((a, b) => b.value - a.value)
+
+  // グレー濃→薄 (gray800 → gray300) を index 順に。Big3 のみ Mondrian Red で上書き
+  const palette = [COLORS.gray[800], COLORS.gray[600], COLORS.gray[400], COLORS.gray[700], COLORS.gray[500], COLORS.gray[300]]
+  return sorted.map((seg, index) => ({
+    ...seg,
+    color: seg.isBig3 ? '#D7282F' : palette[index % palette.length],
+  }))
 }
 
 /** Outer ring: focus に応じてカテゴリ or Big3 内訳を返す */

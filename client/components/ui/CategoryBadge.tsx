@@ -1,19 +1,19 @@
 import React from 'react';
-import { COLORS } from '../../utils/designSystem';
+import { COLORS, getCategoryBadgeShade, mondrian } from '../../utils/designSystem';
 
 interface CategoryBadgeProps {
   name: string;
+  /** @deprecated Mondrian Matte ではカテゴリ色を使わずグレー2階調で描画 */
   color?: string;
   className?: string;
   onClick?: () => void;
 }
 
-const CategoryBadge: React.FC<CategoryBadgeProps> = ({ name, color, className = '', onClick }) => {
-  const baseColor = color || COLORS.gray[500];
+const CategoryBadge: React.FC<CategoryBadgeProps> = ({ name, className = '', onClick }) => {
   const style = {
-    backgroundColor: `${baseColor}20`,
-    color: baseColor,
-    border: `1px solid ${baseColor}40`
+    backgroundColor: getCategoryBadgeShade(name),
+    color: COLORS.text.primary,
+    border: `1px solid ${mondrian.black}`,
   };
 
   const classes = `inline-flex w-[100px] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${className}`.trim();

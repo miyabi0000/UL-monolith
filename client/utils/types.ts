@@ -201,11 +201,12 @@ export interface WeightClassChartData {
   items: GearItemWithCalculated[];
 }
 
-// Weight-Class用カラー定義
+// Weight-Class用カラー定義 — Mondrian Matte: グレー3階調で衣装/持ち物/消費を表現
+// (Big3=base のみ Mondrian Red を別途強調)
 export const WEIGHT_CLASS_COLORS = {
-  base: primitiveColors.gray[500],
-  worn: primitiveColors.blue[500],
-  consumable: primitiveColors.orange[500]
+  base:       primitiveColors.gray[800], // 主役(濃)
+  worn:       primitiveColors.gray[600], // 衣装(中)
+  consumable: primitiveColors.gray[400]  // 消費(薄)
 } as const;
 
 export type ChartViewMode = 'weight' | 'cost' | 'weight-class';
@@ -234,15 +235,15 @@ export interface DonutSegment {
   items: GearItemWithCalculated[];
 }
 
-// 二重ドーナツ用カラートークン
+// 二重ドーナツ用カラートークン (Mondrian Matte: Big3=Mondrian Red, Other=グレー)
 export const DUAL_RING_COLORS = {
-  // Inner ring（濃い色でコントラスト強調）
-  big3: primitiveColors.purple[600],
-  other: primitiveColors.gray[600],
-  // Big3内訳（Outer ring when focus='big3'）
-  big3_pack: primitiveColors.purple[700],
-  big3_shelter: primitiveColors.purple[500],
-  big3_sleep: primitiveColors.purple[400]
+  // Inner ring
+  big3:  '#D7282F', // Mondrian Red — Big3 強調
+  other: primitiveColors.gray[500],
+  // Big3内訳 (Outer ring when focus='big3') — Mondrian Red の濃淡で内訳
+  big3_pack:    '#D7282F',
+  big3_shelter: '#94181D',
+  big3_sleep:   '#EA9298'
 } as const;
 
 // ==================== ギア比較機能 ====================

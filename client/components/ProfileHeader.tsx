@@ -53,7 +53,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
-    <section className="rounded-2xl neu-raised bg-white/75 backdrop-blur dark:bg-gray-800/70 overflow-hidden">
+    <section className="card overflow-hidden relative">
+      {/* Mondrian アクセント: 左肩の小さな赤ブロック (装飾) */}
+      <span
+        aria-hidden="true"
+        className="absolute top-0 left-0 z-10 mondrian-block-red"
+        style={{ width: 24, height: 24 }}
+      />
       {profile.headerImageUrl && (
         <div className="h-24 sm:h-32 w-full bg-gray-100 dark:bg-gray-700">
           <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
@@ -62,7 +68,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* 左: プロフィール情報 */}
         <div className="min-w-0 flex items-center gap-3">
-          <span className="h-10 w-10 rounded-full bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 text-sm font-semibold inline-flex items-center justify-center shrink-0">
+          <span className="h-10 w-10 bg-mondrian-black text-mondrian-canvas dark:bg-mondrian-canvas dark:text-mondrian-black text-sm font-semibold inline-flex items-center justify-center shrink-0" style={{ borderRadius: 'var(--radius-control)' }}>
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">

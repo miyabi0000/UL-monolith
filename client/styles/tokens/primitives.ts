@@ -1,9 +1,20 @@
 /**
  * Runtime Primitive Tokens (ESM)
  * ブラウザ実行時はこちらを参照し、Tailwind側は primitives.cjs を参照する
+ *
+ * 値は primitives.cjs と完全一致 (De Stijl Matte palette)
  */
 
-const SUMI_BLACK = '#1B1D1B';
+const MONDRIAN_BLACK = '#0A0A0A';
+
+/** Mondrian 3原色 — 派生・alpha 乗算禁止の固定値 */
+export const mondrian = {
+  red:    '#D7282F',
+  yellow: '#F1C40F',
+  blue:   '#1F3A93',
+  black:  MONDRIAN_BLACK,
+  canvas: '#FAFAF7',
+} as const;
 
 export const alpha = (color: string, opacity: number): string => {
   const o = Math.max(0, Math.min(1, opacity));
@@ -16,17 +27,17 @@ export const alpha = (color: string, opacity: number): string => {
 
 export const gray = {
   white: '#FFFFFF',
-  50: '#F7F6F3',
-  100: '#EEEDEA',
-  200: '#E0DFDD',
-  300: '#CAC9C7',
-  400: '#AFAFAC',
-  500: '#949492',
-  600: '#797A77',
-  700: '#5E5F5D',
-  800: '#434543',
-  900: '#2D2F2D',
-  black: SUMI_BLACK,
+  50:  '#FAFAF7',
+  100: '#F0EFEA',
+  200: '#E4E2DB',
+  300: '#CFCCC2',
+  400: '#ADADA8',
+  500: '#888884',
+  600: '#6B6B66',
+  700: '#4A4A47',
+  800: '#2E2E2E',
+  900: '#171717',
+  black: MONDRIAN_BLACK,
 } as const;
 
 export const lightBlue = {
@@ -43,18 +54,19 @@ export const lightBlue = {
   950: '#0A373A',
 } as const;
 
+/** orange = Mondrian Yellow ramp */
 export const orange = {
-  50: '#FFF9ED',
-  100: '#FFF3DB',
-  200: '#FFE6B6',
-  300: '#FFD688',
-  400: '#FFC75B',
-  500: '#FFB11B',
-  600: '#DD9B1A',
-  700: '#BC8418',
-  800: '#956B17',
-  900: '#6E5115',
-  950: '#4D3B14',
+  50:  '#FEF9E0',
+  100: '#FCF1B8',
+  200: '#F8E380',
+  300: '#F5D448',
+  400: '#F3CC2C',
+  500: '#F1C40F',
+  600: '#CFA70D',
+  700: '#A2840A',
+  800: '#7A6308',
+  900: '#534306',
+  950: '#3A2F04',
 } as const;
 
 export const purple = {
@@ -85,32 +97,34 @@ export const green = {
   950: '#2A371D',
 } as const;
 
+/** red = Mondrian Red ramp */
 export const red = {
-  50: '#FDEBED',
-  100: '#FAD7DB',
-  200: '#F6AFB6',
-  300: '#F07C88',
-  400: '#EA4A5B',
-  500: '#E2041B',
-  600: '#C4061A',
-  700: '#A70818',
-  800: '#850A17',
-  900: '#630C15',
-  950: '#450E14',
+  50:  '#FAE5E6',
+  100: '#F4CACE',
+  200: '#EA9298',
+  300: '#E15A62',
+  400: '#DA3F47',
+  500: '#D7282F',
+  600: '#B71F25',
+  700: '#94181D',
+  800: '#701216',
+  900: '#4D0C0F',
+  950: '#33080B',
 } as const;
 
+/** blue = Mondrian Blue ramp */
 export const blue = {
-  50: '#EEF1F4',
-  100: '#DCE2E9',
-  200: '#BAC5D4',
-  300: '#8FA1B9',
-  400: '#637D9E',
-  500: '#274A78',
-  600: '#24426A',
-  700: '#203A5B',
-  800: '#1B314D',
-  900: '#15273F',
-  950: '#101E30',
+  50:  '#E5E9F2',
+  100: '#C9D1E5',
+  200: '#94A2C7',
+  300: '#5E73A8',
+  400: '#3E558E',
+  500: '#1F3A93',
+  600: '#1A327F',
+  700: '#15296A',
+  800: '#102055',
+  900: '#0C1840',
+  950: '#08102B',
 } as const;
 
 export const blueGray = {

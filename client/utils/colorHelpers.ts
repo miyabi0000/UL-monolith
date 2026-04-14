@@ -42,44 +42,17 @@ export const darkenHslColor = (hslColor: string, amount: number = 0.2): string =
 }
 
 /**
- * カテゴリの基本色からアイテム用のグラデーション色を生成
- * @param baseColor カテゴリの基本色（HEX形式）
+ * アイテム用のグレースケール色を生成 (Mondrian Matte 配色)
+ * カテゴリ色 (baseColor) は無視し、index/total から濃淡を決める。
+ * 最も大きいアイテム (index=0) が濃く、小さいものが薄くなる。
+ *
+ * @param _baseColor 互換のため受け取るが使用しない
  * @param index アイテムのインデックス
  * @param total アイテムの総数
- * @returns HSL形式の色
+ * @returns HSL grayscale 形式の色 (lightness 25% → 70%)
  */
-export const generateItemColor = (baseColor: string, index: number, total: number): string => {
-  // HEXからRGBに変換
-  const hex = baseColor.replace('#', '')
-  const r = parseInt(hex.substr(0, 2), 16)
-  const g = parseInt(hex.substr(2, 2), 16)
-  const b = parseInt(hex.substr(4, 2), 16)
-
-  // RGBからHSLに変換
-  const rNorm = r / 255
-  const gNorm = g / 255
-  const bNorm = b / 255
-
-  const max = Math.max(rNorm, gNorm, bNorm)
-  const min = Math.min(rNorm, gNorm, bNorm)
-  const diff = max - min
-
-  let h = 0
-  if (diff !== 0) {
-    if (max === rNorm) h = ((gNorm - bNorm) / diff) % 6
-    else if (max === gNorm) h = (bNorm - rNorm) / diff + 2
-    else h = (rNorm - gNorm) / diff + 4
-  }
-  h = Math.round(h * 60)
-  if (h < 0) h += 360
-
-  const l = (max + min) / 2
-  const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1))
-
-  // アイテムごとにグラデーションを適用
-  const progress = index / total
-  const newSaturation = Math.max(0.3, Math.min(0.9, s * (1 - progress * 0.7)))
-  const newLightness = Math.max(0.4, Math.min(0.7, l + progress * 0.2))
-
-  return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`
+export const generateItemColor = (_baseColor: string, index: number, total: number): string => {
+  const denom = Math.max(1, total - 1)
+  const lightness = 25 + (index / denom) * 45 // 25% (濃) → 70% (薄)
+  return `hsl(0, 0%, ${Math.round(lightness)}%)`
 }

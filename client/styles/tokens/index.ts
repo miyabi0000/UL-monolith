@@ -19,4 +19,4 @@ export type {
 } from './types';
 
 // カラートークン
-export { primitiveColors, semanticColors, colors, alpha, theme, themeCssVariables } from './colors';
+export { primitiveColors, semanticColors, colors, alpha, theme, themeCssVariables, mondrian } from './colors';

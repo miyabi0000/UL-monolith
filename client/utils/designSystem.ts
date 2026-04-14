@@ -6,7 +6,10 @@
  * スケール値（白銀比）は現在の値を維持
  */
 
-import { primitiveColors, alpha } from '../styles/tokens';
+import { primitiveColors, alpha, mondrian } from '../styles/tokens';
+
+// Mondrian 3原色を designSystem 経由で再エクスポート（コンポーネント側 import を一本化）
+export { mondrian };
 
 // 白銀比（Silver Ratio）定数
 export const SILVER_RATIO = 1.414;
@@ -95,26 +98,29 @@ export const COLORS = {
     900: primitiveColors.gray[900],
   },
 
-  // Accent for interactive elements only
+  // Accent — Mondrian 3色 + 黒
   accent: {
-    primary: primitiveColors.gray[700],
-    red: primitiveColors.red[500],
+    primary: mondrian.black,
+    red:     mondrian.red,
+    blue:    mondrian.blue,
+    yellow:  mondrian.yellow,
   },
 
   // Semantic Colors (Minimal)
-  background: primitiveColors.gray[50],
-  surface: primitiveColors.gray.white,
+  background: mondrian.canvas,
+  surface:    primitiveColors.gray.white,
   text: {
-    primary: primitiveColors.gray.black,
-    secondary: primitiveColors.gray[600],
-    muted: primitiveColors.gray[400],
+    primary:   mondrian.black,
+    secondary: primitiveColors.gray[800],
+    muted:     primitiveColors.gray[600],
   },
 
-  // State Colors
-  error: primitiveColors.red[500],
-  danger: primitiveColors.red[500],
-  warning: primitiveColors.orange[500],
-  success: primitiveColors.blue[500],
+  // State Colors — Mondrian 3色に縮退（success は黒 + "OK"）
+  error:   mondrian.red,
+  danger:  mondrian.red,
+  warning: mondrian.yellow,
+  success: mondrian.black,
+  info:    mondrian.blue,
 } as const;
 
 type StatusTone = {
@@ -124,30 +130,35 @@ type StatusTone = {
   solid: string
 }
 
+/**
+ * STATUS_TONES — De Stijl 配色
+ * 背景塗りは最小（ドット/ラベルだけで意味を伝える設計）
+ * success は黒 + "OK"。緑は De Stijl にないため排除
+ */
 export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', StatusTone> = {
   success: {
-    text: primitiveColors.blue[700],
-    background: alpha(primitiveColors.blue[500], 0.08),
-    border: alpha(primitiveColors.blue[500], 0.28),
-    solid: primitiveColors.blue[500]
+    text:       mondrian.black,
+    background: alpha(mondrian.black, 0.04),
+    border:     mondrian.black,
+    solid:      mondrian.black
   },
   warning: {
-    text: primitiveColors.orange[700],
-    background: alpha(primitiveColors.orange[500], 0.08),
-    border: alpha(primitiveColors.orange[500], 0.28),
-    solid: primitiveColors.orange[500]
+    text:       mondrian.black,
+    background: alpha(mondrian.yellow, 0.18),
+    border:     mondrian.yellow,
+    solid:      mondrian.yellow
   },
   info: {
-    text: primitiveColors.blue[700],
-    background: alpha(primitiveColors.blue[500], 0.08),
-    border: alpha(primitiveColors.blue[500], 0.28),
-    solid: primitiveColors.blue[500]
+    text:       mondrian.blue,
+    background: alpha(mondrian.blue, 0.08),
+    border:     mondrian.blue,
+    solid:      mondrian.blue
   },
   error: {
-    text: primitiveColors.red[700],
-    background: alpha(primitiveColors.red[500], 0.08),
-    border: alpha(primitiveColors.red[500], 0.28),
-    solid: primitiveColors.red[500]
+    text:       mondrian.red,
+    background: alpha(mondrian.red, 0.10),
+    border:     mondrian.red,
+    solid:      mondrian.red
   }
 } as const
 
@@ -155,62 +166,60 @@ export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', Stat
 export const SHADOW = `0 1px 3px 0 ${alpha(primitiveColors.gray.black, 0.1)}, 0 1px 2px -1px ${alpha(primitiveColors.gray.black, 0.1)}` as const;
 
 // Utility functions
+/** Mondrian 配色: priority 1-2 = 赤, 3 = 黄, 4-5 = ミュート灰 */
 export const getPriorityColor = (priority: number) => {
-  if (priority <= 2) return COLORS.accent.red; // High priority: Red
-  if (priority <= 3) return COLORS.warning; // Medium priority: Yellow
-  return COLORS.gray[400]; // Low priority: Gray
+  if (priority <= 2) return mondrian.red;
+  if (priority <= 3) return mondrian.yellow;
+  return COLORS.gray[500];
 };
 
-export const getCategoryBadgeStyle = (categoryColor?: string) => {
-  const baseColor = categoryColor || COLORS.gray[400];
-  return {
-    backgroundColor: `${baseColor}20`, // 20% opacity
-    color: baseColor,
-  };
+/**
+ * @deprecated CategoryBadge は category.color を使わずグレー2階調で描画する。
+ * 互換目的のシムとして残置（将来削除）。
+ */
+export const getCategoryBadgeStyle = (_categoryColor?: string) => ({
+  backgroundColor: COLORS.gray[200],
+  color: COLORS.text.primary,
+});
+
+/**
+ * @deprecated colorHelpers.ts に同名関数あり。新コードはそちらを使用。
+ * 互換のため値を返すが、Mondrian 配色では grayscale を返す。
+ */
+export const generateItemColor = (_baseColor: string, index: number, total: number) => {
+  const lightness = 30 + (index / Math.max(1, total)) * 40; // 30% → 70%
+  return `hsl(0, 0%, ${Math.round(lightness)}%)`;
 };
 
-// Color generation utility (extracted from GearChart)
-export const generateItemColor = (baseColor: string, index: number, total: number) => {
-  // HEXからRGBに変換
-  const hex = baseColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-
-  // RGBからHSLに変換
-  const rNorm = r / 255;
-  const gNorm = g / 255;
-  const bNorm = b / 255;
-
-  const max = Math.max(rNorm, gNorm, bNorm);
-  const min = Math.min(rNorm, gNorm, bNorm);
-  const diff = max - min;
-
-  let h = 0;
-  if (diff !== 0) {
-    if (max === rNorm) h = ((gNorm - bNorm) / diff) % 6;
-    else if (max === gNorm) h = (bNorm - rNorm) / diff + 2;
-    else h = (rNorm - gNorm) / diff + 4;
-  }
-  h = Math.round(h * 60);
-  if (h < 0) h += 360;
-
-  const l = (max + min) / 2;
-  const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1));
-
-  // 時計回りに彩度を落とす
-  const progress = index / total; // 0から1の進行度
-  const newSaturation = Math.max(0.3, Math.min(0.9, s * (1 - progress * 0.7))); // 彩度を徐々に下げる
-  const newLightness = Math.max(0.4, Math.min(0.7, l + progress * 0.2)); // 明度を徐々に上げる
-
-  return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`;
-};
-
-// Chart.js color palette
+// Chart palette — グレー濃淡 + Mondrian アクセント
 export const chartColors = {
-  primary: COLORS.gray[700],
-  secondary: COLORS.gray[500],
-  accent: COLORS.gray[400],
-  background: COLORS.gray[50],
-  text: COLORS.text.primary,
+  primary:    COLORS.gray[800],
+  secondary:  COLORS.gray[600],
+  accent:     COLORS.gray[400],
+  background: mondrian.canvas,
+  text:       COLORS.text.primary,
+};
+
+/**
+ * チャートのカテゴリ別グレースケールパレット (循環使用)
+ * 濃 → 中 → 薄 を循環。インデックス順に視覚的に判別しやすい順序
+ */
+export const CHART_GRAYSCALE = [
+  COLORS.gray[800],
+  COLORS.gray[500],
+  COLORS.gray[300],
+  COLORS.gray[700],
+  COLORS.gray[400],
+  COLORS.gray[600],
+] as const;
+
+/** カテゴリ index → グレー階調 (6 階調を循環) */
+export const getChartGrayShade = (index: number): string =>
+  CHART_GRAYSCALE[index % CHART_GRAYSCALE.length];
+
+/** カテゴリ name → グレー2階調 (CategoryBadge の偶奇背景用) */
+export const getCategoryBadgeShade = (name: string): string => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return Math.abs(hash) % 2 === 0 ? COLORS.gray[200] : COLORS.gray[300];
 };

@@ -7,7 +7,9 @@
 
 import type { PrimitiveColors, SemanticColors, ThemeColors } from './types';
 
-import { gray, lightBlue, orange, purple, green, red, blue, blueGray } from './primitives';
+import { gray, lightBlue, orange, purple, green, red, blue, blueGray, mondrian } from './primitives';
+
+export { mondrian };
 
 /**
  * Alpha helper - 色に透明度を追加 (#RRGGBB -> #RRGGBBAA)
@@ -221,142 +223,144 @@ export const colors = {
 export const theme: { light: ThemeColors; dark: ThemeColors } = {
   light: {
     page: {
-      bg: gray[50],
+      bg: mondrian.canvas, // flat warm off-white
     },
     surface: {
-      border: 'transparent',
+      border: mondrian.black, // 1px Mondrian 黒線で額装
     },
+    // 影は最小限。マット質感のため強い shadow は禁止
     shadow: {
-      sm: `0 1px 2px ${alpha(gray.black, 0.05)}`,
-      md: `0 1px 3px ${alpha(gray.black, 0.1)}, 0 1px 2px -1px ${alpha(gray.black, 0.1)}`,
-      lg: `0 4px 6px -1px ${alpha(gray.black, 0.1)}, 0 2px 4px -2px ${alpha(gray.black, 0.1)}`,
+      sm: `0 1px 0 ${alpha(mondrian.black, 0.04)}`,
+      md: `0 1px 0 ${alpha(mondrian.black, 0.06)}`,
+      lg: `0 2px 0 ${alpha(mondrian.black, 0.08)}`,
     },
     surfaceLevel: {
-      0: gray.white,
-      1: gray[50],
-      2: gray[100],
+      0: gray.white,        // L1: card / modal
+      1: mondrian.canvas,   // L0: page / nest 薄
+      2: gray[100],         // L2: テーブル偶数行 / nest 濃
     },
     ink: {
-      primary: gray[900],
-      secondary: gray[700],
-      muted: gray[500],
-      inverse: gray.white,
-      icon: gray[700],
-      iconMuted: gray[500],
+      primary:   mondrian.black,
+      secondary: gray[800],
+      muted:     gray[600],
+      inverse:   mondrian.canvas,
+      icon:      gray[800],
+      iconMuted: gray[600],
     },
     stroke: {
-      subtle: alpha(gray[300], 0.48),
-      default: alpha(gray[400], 0.7),
-      strong: gray[500],
-      divider: alpha(gray[300], 0.62),
+      subtle:  alpha(mondrian.black, 0.10),
+      default: mondrian.black, // 1px Mondrian 黒線（カード枠・セル）
+      strong:  mondrian.black,
+      divider: alpha(mondrian.black, 0.14),
     },
     focus: {
-      ring: blue[600],
-      ringOffset: gray.white,
+      ring:       mondrian.blue,
+      ringOffset: mondrian.canvas,
     },
     overlay: {
-      hover: alpha(gray[900], 0.04),
-      active: alpha(gray[900], 0.08),
-      scrim: alpha(gray.black, 0.46),
+      hover:  alpha(mondrian.black, 0.04),
+      active: alpha(mondrian.black, 0.08),
+      scrim:  alpha(mondrian.black, 0.5),
     },
     state: {
+      // success: 黒 + "OK"。緑は De Stijl にないため排除
       success: {
-        fg: blue[700],
-        bg: alpha(blue[500], 0.12),
-        border: alpha(blue[600], 0.45),
+        fg:     mondrian.black,
+        bg:     alpha(mondrian.black, 0.04),
+        border: mondrian.black,
       },
       warning: {
-        fg: orange[700],
-        bg: alpha(orange[500], 0.14),
-        border: alpha(orange[600], 0.5),
+        fg:     mondrian.black,
+        bg:     alpha(mondrian.yellow, 0.20),
+        border: mondrian.yellow,
       },
       danger: {
-        fg: red[700],
-        bg: alpha(red[500], 0.12),
-        border: alpha(red[600], 0.45),
+        fg:     mondrian.red,
+        bg:     alpha(mondrian.red, 0.10),
+        border: mondrian.red,
       },
       info: {
-        fg: blue[700],
-        bg: alpha(blue[500], 0.12),
-        border: alpha(blue[600], 0.45),
+        fg:     mondrian.blue,
+        bg:     alpha(mondrian.blue, 0.08),
+        border: mondrian.blue,
       },
     },
     text: {
-      tableHead: gray[600],
-      tableMain: gray[900],
-      tableSub: gray[500],
-      tableNum: gray[800],
-      tableMicro: gray[500],
+      tableHead:  gray[700],
+      tableMain:  mondrian.black,
+      tableSub:   gray[600],
+      tableNum:   mondrian.black,
+      tableMicro: gray[600],
     },
   },
   dark: {
     page: {
-      bg: gray[900],
+      bg: '#121212', // pure dark canvas
     },
     surface: {
-      border: 'transparent',
+      border: mondrian.canvas,
     },
     shadow: {
-      sm: `0 1px 2px ${alpha(gray.black, 0.15)}`,
-      md: `0 1px 3px ${alpha(gray.black, 0.25)}, 0 1px 2px -1px ${alpha(gray.black, 0.15)}`,
-      lg: `0 4px 6px -1px ${alpha(gray.black, 0.25)}, 0 2px 4px -2px ${alpha(gray.black, 0.15)}`,
+      sm: `0 1px 0 ${alpha(mondrian.black, 0.6)}`,
+      md: `0 1px 0 ${alpha(mondrian.black, 0.7)}`,
+      lg: `0 2px 0 ${alpha(mondrian.black, 0.8)}`,
     },
     surfaceLevel: {
-      0: gray[800],
-      1: gray[900],
-      2: gray.black,
+      0: '#1C1C1C', // L1: card / modal
+      1: '#121212', // L0: page bg
+      2: '#242424', // L2: テーブル偶数行
     },
     ink: {
-      primary: gray[50],
-      secondary: gray[200],
-      muted: gray[400],
-      inverse: gray[900],
-      icon: gray[200],
-      iconMuted: gray[400],
+      primary:   mondrian.canvas,
+      secondary: '#E0E0DC',
+      muted:     '#9C9C98',
+      inverse:   mondrian.black,
+      icon:      '#E0E0DC',
+      iconMuted: '#9C9C98',
     },
     stroke: {
-      subtle: alpha(gray[500], 0.34),
-      default: alpha(gray[400], 0.52),
-      strong: gray[300],
-      divider: alpha(gray[400], 0.42),
+      subtle:  alpha(mondrian.canvas, 0.12),
+      default: mondrian.canvas,
+      strong:  mondrian.canvas,
+      divider: alpha(mondrian.canvas, 0.18),
     },
     focus: {
-      ring: blue[400],
-      ringOffset: gray[900],
+      ring:       '#5E73A8', // mondrian blue は dark で見えにくいので明るめ
+      ringOffset: '#121212',
     },
     overlay: {
-      hover: alpha(gray.white, 0.06),
-      active: alpha(gray.white, 0.12),
-      scrim: alpha(gray.black, 0.62),
+      hover:  alpha(mondrian.canvas, 0.06),
+      active: alpha(mondrian.canvas, 0.12),
+      scrim:  alpha(mondrian.black, 0.7),
     },
     state: {
       success: {
-        fg: blue[300],
-        bg: alpha(blue[500], 0.2),
-        border: alpha(blue[300], 0.5),
+        fg:     mondrian.canvas,
+        bg:     alpha(mondrian.canvas, 0.06),
+        border: mondrian.canvas,
       },
       warning: {
-        fg: orange[300],
-        bg: alpha(orange[500], 0.2),
-        border: alpha(orange[300], 0.52),
+        fg:     mondrian.yellow,
+        bg:     alpha(mondrian.yellow, 0.18),
+        border: mondrian.yellow,
       },
       danger: {
-        fg: red[300],
-        bg: alpha(red[500], 0.2),
-        border: alpha(red[300], 0.5),
+        fg:     '#E15A62', // dark で読める明るめ Mondrian Red
+        bg:     alpha(mondrian.red, 0.18),
+        border: '#E15A62',
       },
       info: {
-        fg: blue[300],
-        bg: alpha(blue[500], 0.2),
-        border: alpha(blue[300], 0.5),
+        fg:     '#5E73A8',
+        bg:     alpha(mondrian.blue, 0.20),
+        border: '#5E73A8',
       },
     },
     text: {
-      tableHead: gray[300],
-      tableMain: gray[50],
-      tableSub: gray[400],
-      tableNum: gray[100],
-      tableMicro: gray[400],
+      tableHead:  '#CFCCC2',
+      tableMain:  mondrian.canvas,
+      tableSub:   '#9C9C98',
+      tableNum:   mondrian.canvas,
+      tableMicro: '#9C9C98',
     },
   },
 };

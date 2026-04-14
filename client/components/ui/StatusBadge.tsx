@@ -20,7 +20,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) =>
     return (
       <span
         className="status-priority-token"
-        style={{ backgroundColor: config.bgColor, color: config.color }}
+        style={{
+          backgroundColor: config.bgColor,
+          color: config.color,
+          border: `1px solid ${STATUS_TONES[status === 'owned' ? 'success' : status === 'partial' ? 'warning' : 'error'].border}`,
+        }}
         title={config.label}
       >
         {config.icon}
@@ -31,7 +35,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) =>
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{ backgroundColor: config.bgColor, color: config.color }}
+      style={{
+        backgroundColor: config.bgColor,
+        color: config.color,
+        border: `1px solid ${STATUS_TONES[status === 'owned' ? 'success' : status === 'partial' ? 'warning' : 'error'].border}`,
+      }}
     >
       <span className="mr-1">{config.icon}</span>
       {config.label}
