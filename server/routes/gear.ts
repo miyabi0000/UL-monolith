@@ -6,7 +6,7 @@ import {
   handleCreateGear, 
   handleUpdateGear, 
   handleDeleteGear 
-} from './gear/basicOperations';
+} from './gear/basicOperations.js';
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import { cognitoAuth } from '../middleware/cognitoAuth';
+import { cognitoAuth } from '../middleware/cognitoAuth.js';
 
 const router = Router();
 

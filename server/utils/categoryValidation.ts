@@ -1,4 +1,4 @@
-import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_SET } from './japaneseColors';
+import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_SET } from './japaneseColors.js';
 
 /**
  * カテゴリバリデーションユーティリティ

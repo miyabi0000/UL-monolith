@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
-import { buildPoolConfig } from '../database/poolConfig';
+import { buildPoolConfig } from '../database/poolConfig.js';
 
 config();
 
@@ -24,12 +24,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // database ディレクトリの解決: tsx 実行時は ../database、tsc コンパイル後は ../../database
+// 本番 (コンパイル後) の ../database は dist/database/ になり JS のみで init.sql が無いので、
+// init.sql の存在でディレクトリを判定する
 function resolveDatabaseDir(): string {
   const candidates = [
     path.resolve(__dirname, '../database'),
     path.resolve(__dirname, '../../database'),
   ];
-  const found = candidates.find((p) => fs.existsSync(p));
+  const found = candidates.find((p) => fs.existsSync(path.join(p, 'init.sql')));
   if (!found) {
     throw new Error(`database directory not found. Checked: ${candidates.join(', ')}`);
   }
