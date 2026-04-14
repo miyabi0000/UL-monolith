@@ -5,8 +5,9 @@ import StandardPieBody from './StandardPieBody'
 import DualRingPieBody from './DualRingPieBody'
 import ChartCenterOverlay from './ChartCenterOverlay'
 import type { BarItem } from './HorizontalBarChart'
-import type { ChartViewMode, ChartFocus, DonutSegment, WeightBreakdown, ULStatus } from '../../utils/types'
+import type { ChartViewMode, DonutSegment, WeightBreakdown, ULStatus } from '../../utils/types'
 import type { SortedChartCategory, OuterPieEntry } from '../../utils/chart/pipeline'
+import type { ChartSelection } from '../../utils/chart/chartTypes'
 import { useChartGeometry } from './context/ChartGeometryContext'
 
 interface ChartBodyProps {
@@ -14,19 +15,18 @@ interface ChartBodyProps {
   viewMode: ChartViewMode
   totalValue: number
 
-  // 通常モード用
+  /** Chart の選択状態 (3 系統の散在 state を集約した union) */
+  selection: ChartSelection
+  /** 親が保持するカテゴリフィルタ (Bar / Pie の highlight 用) */
+  selectedCategories: string[]
+
+  // データ
   sortedData: SortedChartCategory[]
   outerPieData: OuterPieEntry[]
   selectedCategory: SortedChartCategory | null
-  selectedCategoryName: string | null
-  selectedItemId: string | null
   barData: BarItem[]
-
-  // weight-class モード用
   dualRingInnerData: DonutSegment[] | null
   dualRingOuterData: DonutSegment[] | null
-  chartFocus: ChartFocus
-  selectedCategories: string[]
 
   // 中央表示
   selectedItemData: OuterPieEntry | null
@@ -48,12 +48,22 @@ interface ChartBodyProps {
 /**
  * チャート本体の orchestrator。
  * chartDisplayMode と viewMode の組み合わせで適切な body を選ぶ。
- * ジオメトリは ChartGeometryContext から取得。
+ *
+ * 選択状態は ChartSelection union で受け取り、内部で各子コンポーネントが
+ * 必要とする legacy 値 (selectedCategoryName / selectedItemId / chartFocus) に
+ * 派生させる。
  */
 const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const geometry = useChartGeometry()
   const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
   const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
+
+  // ChartSelection union → 子コンポーネント用の派生値
+  const { selection } = props
+  const selectedCategoryName =
+    selection.kind === 'category' || selection.kind === 'item' ? selection.categoryName : null
+  const selectedItemId = selection.kind === 'item' ? selection.itemId : null
+  const chartFocus = selection.kind === 'classFocus' ? selection.focus : 'all'
 
   if (props.chartDisplayMode === 'bar') {
     return (
@@ -63,7 +73,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
         viewMode={props.viewMode}
         selectedCategories={props.selectedCategories}
         selectedCategoryColor={props.selectedCategory?.color}
-        selectedCategoryName={props.selectedCategoryName}
+        selectedCategoryName={selectedCategoryName}
         onCategoryClick={props.onCategoryClick}
         onItemClick={props.onItemClick}
         onItemHover={props.onItemHover}
@@ -73,7 +83,8 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
     )
   }
 
-  const isClassMode = props.viewMode === 'weight-class' && props.dualRingInnerData && props.dualRingOuterData
+  const isClassMode =
+    props.viewMode === 'weight-class' && props.dualRingInnerData && props.dualRingOuterData
 
   return (
     <div
@@ -87,7 +98,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
               innerData={props.dualRingInnerData!}
               outerData={props.dualRingOuterData!}
               selectedCategories={props.selectedCategories}
-              chartFocus={props.chartFocus}
+              chartFocus={chartFocus}
               outerActiveIndex={outerActiveIndex}
               innerActiveIndex={innerActiveIndex}
               setOuterActiveIndex={setOuterActiveIndex}
@@ -100,8 +111,8 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
               sortedData={props.sortedData}
               outerPieData={props.outerPieData}
               selectedCategory={props.selectedCategory}
-              selectedCategoryName={props.selectedCategoryName}
-              selectedItemId={props.selectedItemId}
+              selectedCategoryName={selectedCategoryName}
+              selectedItemId={selectedItemId}
               outerActiveIndex={outerActiveIndex}
               innerActiveIndex={innerActiveIndex}
               setOuterActiveIndex={setOuterActiveIndex}
@@ -116,7 +127,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
 
       <ChartCenterOverlay
         selectedItemData={props.selectedItemData}
-        selectedCategoryName={props.selectedCategoryName}
+        selectedCategoryName={selectedCategoryName}
         selectedCategoryData={
           props.selectedCategory
             ? {
@@ -127,7 +138,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
             : null
         }
         viewMode={props.viewMode}
-        chartFocus={props.chartFocus}
+        chartFocus={chartFocus}
         weightBreakdown={props.weightBreakdown}
         ulStatus={props.ulStatus}
         totalValue={props.totalValue}

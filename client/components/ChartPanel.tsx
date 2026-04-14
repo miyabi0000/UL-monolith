@@ -1,15 +1,8 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { useResponsiveSize } from '../hooks/useResponsiveSize'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, ChartFocus, ChartScope } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
-import { generateItemColor } from '../utils/colorHelpers'
-import {
-  calculateInnerRingData,
-  calculateOuterRingData,
-  prepareSortedChartData,
-  buildOuterPieData,
-  getPayloadUnit,
-} from '../utils/chartHelpers'
+import { deriveChartSelection } from '../utils/chart/chartTypes'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
@@ -21,6 +14,7 @@ import ChartBreadcrumb from './charts/ChartBreadcrumb'
 import GearActionMenu from './charts/GearActionMenu'
 import GearViewToggle from './charts/GearViewToggle'
 import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
+import { useChartCalculations } from './charts/hooks/useChartCalculations'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
 const DEFAULT_COLOR = COLORS.gray[500]
@@ -152,67 +146,33 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   const chartScope: ChartScope = 'base'
   // hover callout 用 activeIndex は ChartBody 内に局在化済み
 
-  // ジオメトリは ChartGeometryProvider 経由で配下コンポーネントに配布
+  // ==================== データ処理 (useChartCalculations に集約) ====================
 
-  // ==================== データ処理 ====================
-
-  // 二重ドーナツ: Inner ring (Big3 vs Other) - ratioを含む
-  const dualRingInnerData = useMemo(() => {
-    if (viewMode !== 'weight-class') return null
-    const data = calculateInnerRingData(analysisItems, chartScope)
-    const total = data.reduce((sum, d) => sum + d.value, 0)
-    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: weightUnit }))
-  }, [viewMode, analysisItems, chartScope, weightUnit])
-
-  // 二重ドーナツ: Outer ring (カテゴリ or Big3内訳) - ratioを含む
-  const dualRingOuterData = useMemo(() => {
-    if (viewMode !== 'weight-class') return null
-    const data = calculateOuterRingData(analysisItems, chartScope, chartFocus)
-    const total = data.reduce((sum, d) => sum + d.value, 0)
-    return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: weightUnit }))
-  }, [viewMode, analysisItems, chartScope, chartFocus, categories, weightUnit])
-
-  const totalValue = viewMode === 'cost' ? totalCost : totalWeight
-  const payloadUnit = getPayloadUnit(viewMode, weightUnit)
-
-  // カテゴリ別ソート + 各アイテムの percentage 計算 (helpers に集約)
-  const sortedData = useMemo(
-    () => prepareSortedChartData(data, viewMode, quantityDisplayMode, totalValue, payloadUnit),
-    [data, viewMode, quantityDisplayMode, totalValue, payloadUnit],
-  )
-
-  // チャートで選択中のカテゴリ
-  const selectedCategoryFromChart = selectedCategories.length === 1 ? selectedCategories[0] : null
-  const selectedData = useMemo(
-    () => (selectedCategoryFromChart ? sortedData.find(d => d.name === selectedCategoryFromChart) : null),
-    [sortedData, selectedCategoryFromChart]
-  )
-
-  // バーチャート用データ: カテゴリ選択時はそのアイテム一覧、未選択時はカテゴリ一覧
-  const barData = useMemo(() => {
-    if (selectedData && selectedData.sortedItems.length > 0) {
-      return selectedData.sortedItems.map((item, index) => ({
-        id: item.id,
-        name: item.name,
-        value: item.displayValue,
-        color: generateItemColor(selectedData.color, index, selectedData.sortedItems.length),
-        percentage: item.systemPercentage,
-        unit: payloadUnit,
-      }))
-    }
-    return sortedData.map(cat => ({
-      name: cat.name,
-      value: cat.value,
-      color: cat.color,
-      percentage: cat.percentage,
-      unit: payloadUnit,
-    }))
-  }, [selectedData, sortedData, payloadUnit])
-
-  const outerPieData = useMemo(
-    () => buildOuterPieData(selectedData, payloadUnit, DEFAULT_COLOR),
-    [selectedData, payloadUnit],
-  )
+  const {
+    totalValue,
+    sortedData,
+    selectedCategoryFromChart,
+    selectedData,
+    outerPieData,
+    selectedItemData,
+    barData,
+    dualRingInnerData,
+    dualRingOuterData,
+  } = useChartCalculations({
+    data,
+    analysisItems,
+    categories,
+    viewMode,
+    quantityDisplayMode,
+    selectedCategories,
+    selectedItem,
+    chartFocus,
+    chartScope,
+    totalWeight,
+    totalCost,
+    weightUnit,
+    defaultColor: DEFAULT_COLOR,
+  })
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
@@ -256,16 +216,26 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
     setSelectedItem(null)
   }, [dualRingOuterData, selectedCategories, onCategorySelect])
 
-  // パンくずリスト用の選択中アイテム名を取得
+  // パンくずリスト用の選択中アイテム名を取得 (items prop から検索)
   const selectedItemName = useMemo(() => {
     if (!selectedItem || !items) return null
-    const item = items.find(i => i.id === selectedItem)
-    return item?.name || null
+    return items.find((i) => i.id === selectedItem)?.name ?? null
   }, [selectedItem, items])
 
-  const selectedItemData = useMemo(
-    () => (selectedItem ? outerPieData.find(item => item.id === selectedItem) || null : null),
-    [selectedItem, outerPieData]
+  // 散在した選択ソースを 1 つの ChartSelection union に集約
+  // (下流コンポーネントでは selection.kind の switch で網羅判定可能に)
+  // selectedItem は必ず selectedCategoryFromChart の文脈下で発生するため
+  // categoryName は単一カテゴリ選択値をそのまま使う
+  const chartSelection = useMemo(
+    () =>
+      deriveChartSelection(
+        selectedCategories,
+        selectedItem ?? null,
+        selectedCategoryFromChart,
+        chartFocus,
+        viewMode === 'weight-class',
+      ),
+    [selectedCategories, selectedItem, selectedCategoryFromChart, chartFocus, viewMode],
   )
 
   const weightClassSummaryCards = useMemo(() => {
@@ -330,16 +300,14 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
             chartDisplayMode={chartDisplayMode}
             viewMode={viewMode}
             totalValue={totalValue}
+            selection={chartSelection}
+            selectedCategories={selectedCategories}
             sortedData={sortedData}
             outerPieData={outerPieData}
             selectedCategory={selectedData ?? null}
-            selectedCategoryName={selectedCategoryFromChart}
-            selectedItemId={selectedItem}
             barData={barData}
             dualRingInnerData={dualRingInnerData}
             dualRingOuterData={dualRingOuterData}
-            chartFocus={chartFocus}
-            selectedCategories={selectedCategories}
             selectedItemData={selectedItemData}
             centerPulse={centerPulse}
             onCenterClick={handleCenterClick}

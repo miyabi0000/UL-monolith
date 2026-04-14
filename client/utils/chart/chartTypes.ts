@@ -54,3 +54,37 @@ export type ChartSelection =
   | { readonly kind: 'classFocus'; readonly focus: 'big3' | 'other' }
 
 export const SELECTION_NONE: ChartSelection = { kind: 'none' }
+
+// ==================== 派生関数 ====================
+
+/**
+ * 既存の散在した選択ソース (selectedCategories[], selectedItem, chartFocus, viewMode)
+ * から ChartSelection union を導出する。
+ *
+ * 優先度:
+ *   1. selectedItem あり → item (categoryName が必要)
+ *   2. weight-class モード × chartFocus !== 'all' → classFocus
+ *   3. selectedCategories.length === 1 → category
+ *   4. その他 → none
+ *
+ * 移行期に「外部 props は今まで通り、ただし下流コンポーネントは union を消費する」
+ * 形を可能にする。
+ */
+export function deriveChartSelection(
+  selectedCategories: readonly string[],
+  selectedItemId: string | null,
+  selectedItemCategoryName: string | null,
+  chartFocus: 'all' | 'big3' | 'other',
+  isClassMode: boolean,
+): ChartSelection {
+  if (selectedItemId && selectedItemCategoryName) {
+    return { kind: 'item', itemId: selectedItemId as ItemId, categoryName: selectedItemCategoryName }
+  }
+  if (isClassMode && chartFocus !== 'all') {
+    return { kind: 'classFocus', focus: chartFocus }
+  }
+  if (selectedCategories.length === 1) {
+    return { kind: 'category', categoryName: selectedCategories[0] }
+  }
+  return SELECTION_NONE
+}
