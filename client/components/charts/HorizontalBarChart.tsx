@@ -31,6 +31,10 @@ export interface HorizontalBarChartProps {
   selectedCategories: string[]
   onCategoryClick: (name: string) => void
   onItemClick?: (id: string) => void
+  /** Bar hover で Table/Card 側にアイテム id を通知 */
+  onItemHover?: (id: string | null) => void
+  /** Table/Card 側からの hover を受けて該当バーを強調表示 */
+  hoveredItemId?: string | null
 }
 
 // カスタムツールチップ（recharts が content として要素を受け取る）
@@ -92,6 +96,8 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   selectedCategories,
   onCategoryClick,
   onItemClick,
+  onItemHover,
+  hoveredItemId,
 }) => {
   const { unit } = useWeightUnit()
   const hasSelection = selectedCategories.length > 0
@@ -143,17 +149,24 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
                 onCategoryClick(entry.name)
               }
             }}
+            onMouseEnter={(entry: BarItem) => {
+              if (onItemHover && entry.id) onItemHover(entry.id)
+            }}
+            onMouseLeave={() => {
+              if (onItemHover) onItemHover(null)
+            }}
             style={{ cursor: 'pointer' }}
           >
             {data.map((entry) => {
               const isSelected = selectedCategories.includes(entry.name)
+              const isHovered = Boolean(hoveredItemId && entry.id === hoveredItemId)
               const opacity = calcBarOpacity(hasSelection, isSelected, Boolean(entry.id))
               return (
                 <Cell
                   key={entry.id ?? entry.name}
-                  fill={isSelected ? darkenColor(entry.color, 0.15) : entry.color}
+                  fill={isSelected || isHovered ? darkenColor(entry.color, 0.15) : entry.color}
                   opacity={opacity}
-                  style={{ transition: 'opacity 0.15s ease' }}
+                  style={{ transition: 'opacity 0.15s ease, fill 0.15s ease' }}
                 />
               )
             })}

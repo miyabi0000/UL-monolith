@@ -11,6 +11,9 @@ interface CardGridViewProps {
   viewMode: 'weight' | 'cost';
   quantityDisplayMode: QuantityDisplayMode;
   selectedItemId?: string | null;
+  hoveredItemId?: string | null;
+  onItemSelect?: (id: string | null) => void;
+  onItemHover?: (id: string | null) => void;
   disableSort?: boolean;
   activePackName?: string;
   activePackItemIds?: string[];
@@ -52,6 +55,9 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   viewMode,
   quantityDisplayMode,
   selectedItemId,
+  hoveredItemId,
+  onItemSelect,
+  onItemHover,
   disableSort,
   activePackName,
   activePackItemIds = [],
@@ -91,16 +97,24 @@ const CardGridView: React.FC<CardGridViewProps> = ({
           {sortedItems.map(item => {
             const isExpanded = expandedId === item.id;
             const isHighlighted = selectedItemId === item.id;
+            const isHovered = hoveredItemId === item.id;
             const isInActivePack = activePackItemIds.includes(item.id);
 
             return (
               <div
                 key={item.id}
                 className="relative overflow-hidden select-none"
+                onMouseEnter={() => onItemHover?.(item.id)}
+                onMouseLeave={() => onItemHover?.(null)}
                 style={{
                   borderRadius: COMPONENT_RADIUS.surface,
-                  boxShadow: isHighlighted ? `0 0 0 2px ${COLORS.gray[500]}` : SHADOW,
+                  boxShadow: isHighlighted
+                    ? `0 0 0 2px ${COLORS.gray[500]}`
+                    : isHovered
+                      ? `0 0 0 1px ${COLORS.gray[400]}`
+                      : SHADOW,
                   backgroundColor: COLORS.surface,
+                  transition: 'box-shadow 120ms ease',
                 }}
               >
                 {/* パックトグル */}
@@ -130,10 +144,13 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   ) : null}
                 </div>
 
-                {/* タップ領域 */}
+                {/* タップ領域: 展開トグル + Chart へ selection 通知 */}
                 <button
                   type="button"
-                  onClick={() => handleToggle(item.id)}
+                  onClick={() => {
+                    handleToggle(item.id);
+                    onItemSelect?.(item.id);
+                  }}
                   className="w-full text-left px-2.5 py-2 focus:outline-none"
                 >
                   {/* 1行目: 名前 + 優先度 */}

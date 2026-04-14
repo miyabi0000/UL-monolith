@@ -94,6 +94,17 @@ export default function InventoryWorkspace({
   const [showUrlImport, setShowUrlImport] = useState(false);
   const [showBulkReview, setShowBulkReview] = useState(false);
 
+  // Chart ↔ Table/Card の双方向連動用: クリック選択 / ホバー強調
+  // 同一 id の更新を skip する change-detection で hot-path 対策
+  const [selectedItemId, setSelectedItemIdRaw] = useState<string | null>(null);
+  const [hoveredItemId, setHoveredItemIdRaw] = useState<string | null>(null);
+  const setSelectedItemId = useCallback((id: string | null) => {
+    setSelectedItemIdRaw((prev) => (prev === id ? prev : id));
+  }, []);
+  const setHoveredItemId = useCallback((id: string | null) => {
+    setHoveredItemIdRaw((prev) => (prev === id ? prev : id));
+  }, []);
+
   const {
     extractGears,
     extractedGears,
@@ -251,6 +262,10 @@ export default function InventoryWorkspace({
       activePackItemIds={activePackItemIds}
       onTogglePackItem={onTogglePackItem}
       onAddItemsToPack={handleAddItemsToActivePack}
+      selectedItemId={selectedItemId}
+      onItemSelect={setSelectedItemId}
+      hoveredItemId={hoveredItemId}
+      onItemHover={setHoveredItemId}
     />
   );
 

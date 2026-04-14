@@ -6,13 +6,19 @@ import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalcula
 import { COLORS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
-import { calculateInnerRingData, calculateOuterRingData } from '../utils/chartHelpers'
+import {
+  calculateInnerRingData,
+  calculateOuterRingData,
+  prepareSortedChartData,
+  buildOuterPieData,
+  getPayloadUnit,
+} from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ActiveCalloutShape from './charts/ActiveCalloutShape'
 import SegmentedControl from './ui/SegmentedControl'
 import ChartCenterDisplay from './charts/ChartCenterDisplay'
-import { CHART_CONFIG, getItemValue } from '../utils/chartConfig'
+import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
@@ -70,6 +76,11 @@ interface GearChartProps {
   onSelectPack?: (packId: string | null) => void
   onCreatePack?: (name: string) => void
   onOpenPackSettings?: () => void
+  // Chart ↔ Table/Card の双方向連動
+  selectedItemId?: string | null
+  onItemSelect?: (id: string | null) => void
+  hoveredItemId?: string | null
+  onItemHover?: (id: string | null) => void
 }
 
 const GearChart: React.FC<GearChartProps> = React.memo(({
@@ -106,9 +117,29 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   onSelectPack,
   onCreatePack,
   onOpenPackSettings,
+  selectedItemId = null,
+  onItemSelect,
+  hoveredItemId = null,
+  onItemHover,
 }) => {
   const { unit: weightUnit } = useWeightUnit()
-  const [selectedItem, setSelectedItem] = useState<string | null>(null)
+  // 親 (InventoryWorkspace) から制御される選択 ID。onItemSelect が無ければ local state にフォールバック
+  // (旧来の呼び出し元の後方互換)
+  const [localSelectedItem, setLocalSelectedItem] = useState<string | null>(null)
+  const selectedItem = onItemSelect ? selectedItemId : localSelectedItem
+  const selectedItemRef = useRef(selectedItem)
+  selectedItemRef.current = selectedItem
+  const setSelectedItem = useCallback(
+    (next: string | null | ((prev: string | null) => string | null)) => {
+      const resolved = typeof next === 'function' ? next(selectedItemRef.current ?? null) : next
+      if (onItemSelect) {
+        onItemSelect(resolved)
+      } else {
+        setLocalSelectedItem(resolved)
+      }
+    },
+    [onItemSelect],
+  )
   const [showNewPackInput, setShowNewPackInput] = useState(false)
   const [newPackName, setNewPackName] = useState('')
   const newPackInputRef = useRef<HTMLInputElement>(null)
@@ -177,39 +208,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     return data.map(d => ({ ...d, ratio: total > 0 ? d.value / total : 0, unit: weightUnit }))
   }, [viewMode, analysisItems, chartScope, chartFocus, categories, weightUnit])
 
-  const displayData = useMemo(() => {
-    return data.map(category => ({
-      ...category,
-      value: viewMode === 'cost' ? category.cost : category.weight
-    }))
-  }, [data, viewMode])
-
   const totalValue = viewMode === 'cost' ? totalCost : totalWeight
+  const payloadUnit = getPayloadUnit(viewMode, weightUnit)
 
-  // チャート payload に載せる単位記号（cost モードでは ¥、それ以外は g/oz）
-  const payloadUnit = viewMode === 'cost' ? '¥' : weightUnit
-
-  const sortedData = useMemo(() => {
-    return [...displayData].sort((a, b) => b.value - a.value).map(category => ({
-      ...category,
-      percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
-      ratio: totalValue > 0 ? category.value / totalValue : 0,
-      label: category.name,
-      unit: payloadUnit,
-      sortedItems: (category.items || [])
-        .map(item => ({ item, itemValue: getItemValue(item, viewMode, quantityDisplayMode) }))
-        .filter(({ itemValue }) => itemValue > 0)
-        .sort((a, b) => b.itemValue - a.itemValue)
-        .map(({ item, itemValue }) => {
-          return {
-            ...item,
-            systemPercentage: category.value > 0 ? Math.round((itemValue / category.value) * 100) : 0,
-            totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0,
-            displayValue: itemValue
-          } satisfies GearItemWithPercentages
-        }) as GearItemWithPercentages[]
-    }))
-  }, [displayData, totalValue, viewMode, quantityDisplayMode, payloadUnit])
+  // カテゴリ別ソート + 各アイテムの percentage 計算 (helpers に集約)
+  const sortedData = useMemo(
+    () => prepareSortedChartData(data, viewMode, quantityDisplayMode, totalValue, payloadUnit),
+    [data, viewMode, quantityDisplayMode, totalValue, payloadUnit],
+  )
 
   // チャートで選択中のカテゴリ
   const selectedCategoryFromChart = selectedCategories.length === 1 ? selectedCategories[0] : null
@@ -239,34 +245,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
     }))
   }, [selectedData, sortedData, payloadUnit])
 
-  const outerPieData = useMemo(() => {
-    const items = selectedData?.sortedItems || []
-    const categoryTotal = items.reduce((sum, item) => sum + item.displayValue, 0)
-    return items.map((item, index) => {
-      const itemValue = item.displayValue
-      const fillColor = generateItemColor(
-        selectedData?.color || DEFAULT_COLOR,
-        index,
-        selectedData?.sortedItems?.length || 1
-      )
-      return {
-        name: item.name,
-        value: itemValue,
-        id: item.id,
-        color: fillColor,
-        brand: item.brand,
-        ownedQuantity: item.ownedQuantity,
-        requiredQuantity: item.requiredQuantity,
-        shortage: item.shortage,
-        priority: item.priority,
-        percentage: item.totalPercentage,
-        systemPercentage: item.systemPercentage,
-        ratio: categoryTotal > 0 ? itemValue / categoryTotal : 0,
-        label: item.name,
-        unit: payloadUnit
-      }
-    })
-  }, [selectedData, payloadUnit])
+  const outerPieData = useMemo(
+    () => buildOuterPieData(selectedData, payloadUnit, DEFAULT_COLOR),
+    [selectedData, payloadUnit],
+  )
 
   // ==================== イベントハンドラー（memo化） ====================
   const handleCategoryClick = useCallback((categoryName: string) => {
@@ -483,6 +465,8 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 selectedCategories={selectedCategories}
                 onCategoryClick={handleCategoryClick}
                 onItemClick={handleItemClick}
+                onItemHover={onItemHover}
+                hoveredItemId={hoveredItemId}
               />
             </div>
           </div>
@@ -579,8 +563,14 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       onClick={(entry) => handleItemClick(entry.id)}
                       activeIndex={outerActiveIndex ?? undefined}
                       activeShape={ActiveCalloutShape as any}
-                      onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
-                      onMouseLeave={() => setOuterActiveIndex(null)}
+                      onMouseEnter={(entry, idx) => {
+                        setOuterActiveIndex(idx)
+                        if (entry?.id) onItemHover?.(entry.id)
+                      }}
+                      onMouseLeave={() => {
+                        setOuterActiveIndex(null)
+                        onItemHover?.(null)
+                      }}
                       className="cursor-pointer"
                     >
                       {outerPieData.map((item, index) => {
@@ -1015,6 +1005,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
                 selectedItemId={selectedItem}
+                hoveredItemId={hoveredItemId}
+                onItemSelect={onItemSelect ? onItemSelect : setSelectedItem}
+                onItemHover={onItemHover}
                 activePack={activePack}
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}

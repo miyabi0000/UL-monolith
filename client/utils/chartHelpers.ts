@@ -10,24 +10,44 @@ import {
   ChartViewMode
 } from './types';
 import { COLORS } from './designSystem';
-import { convertFromGrams, WeightUnit } from './weightUnit';
+import { generateItemColor } from './colorHelpers';
+import { convertFromGrams, formatWeight, WeightUnit } from './weightUnit';
 
 /**
- * チャート軸ラベル用コンパクトフォーマット
- * 重量: g モードでは 1000g以上で kg、oz モードでは 16oz 以上で lb 表示
- * コスト: 10000円以上は 万 表示
+ * チャート値表示用フォーマット
+ *
+ * - compact=false (デフォルト): そのままの値 (例: "420g", "¥12,000")
+ * - compact=true: 軸ラベル用のコンパクト化 (例: "1.5kg", "¥1.2万", "2.3lb")
+ *
+ * 旧 formatValue (chartConfig.ts) と formatChartAxisValue を統合。
  */
-export const formatChartAxisValue = (value: number, viewMode: ChartViewMode, unit: WeightUnit = 'g'): string => {
+export const formatChartValue = (
+  value: number,
+  viewMode: ChartViewMode,
+  unit: WeightUnit = 'g',
+  options: { compact?: boolean } = {}
+): string => {
+  const { compact = false } = options
   if (viewMode === 'cost') {
     const yen = Math.round(value / 100)
-    return yen >= 10000 ? `¥${(yen / 10000).toFixed(1)}万` : `¥${yen.toLocaleString()}`
+    if (compact && yen >= 10000) return `¥${(yen / 10000).toFixed(1)}万`
+    return `¥${yen.toLocaleString()}`
   }
-  if (unit === 'oz') {
-    const oz = convertFromGrams(value, 'oz')
-    return oz >= 16 ? `${(oz / 16).toFixed(1)}lb` : `${oz}oz`
+  if (compact) {
+    if (unit === 'oz') {
+      const oz = convertFromGrams(value, 'oz')
+      return oz >= 16 ? `${(oz / 16).toFixed(1)}lb` : `${oz}oz`
+    }
+    return value >= 1000 ? `${(value / 1000).toFixed(1)}kg` : `${value}g`
   }
-  return value >= 1000 ? `${(value / 1000).toFixed(1)}kg` : `${value}g`
+  return formatWeight(value, unit)
 }
+
+/**
+ * @deprecated formatChartValue(value, viewMode, unit, { compact: true }) を使ってください
+ */
+export const formatChartAxisValue = (value: number, viewMode: ChartViewMode, unit: WeightUnit = 'g'): string =>
+  formatChartValue(value, viewMode, unit, { compact: true })
 
 export const getQuantityForDisplayMode = (
   item: GearItemWithCalculated,
@@ -122,9 +142,18 @@ export function filterByScope(
 
 /**
  * アイテムの重量合計を計算
+ * @param quantityDisplayMode 指定時は owned / need / all に応じた数量で集計 (未指定は requiredQuantity)
  */
-export function sumWeight(items: GearItemWithCalculated[]): number {
-  return items.reduce((sum, i) => sum + (i.weightGrams || 0) * i.requiredQuantity, 0);
+export function sumWeight(
+  items: GearItemWithCalculated[],
+  quantityDisplayMode?: QuantityDisplayMode
+): number {
+  return items.reduce((sum, i) => {
+    const qty = quantityDisplayMode
+      ? getQuantityForDisplayMode(i, quantityDisplayMode)
+      : i.requiredQuantity;
+    return sum + (i.weightGrams || 0) * qty;
+  }, 0);
 }
 
 /**
@@ -260,4 +289,125 @@ export function calculateOuterRingData(
   }
 
   return calculateCategoryBreakdown(scopedItems);
+}
+
+// ==================== メインチャート用データ変換 ====================
+
+/** チャート payload に載せる単位記号 (cost は ¥、それ以外は g/oz) */
+export const getPayloadUnit = (viewMode: ChartViewMode, unit: WeightUnit): string =>
+  viewMode === 'cost' ? '¥' : unit
+
+/** 1 アイテムあたりの weight/cost 値 (quantityDisplayMode 考慮) */
+export const getItemDisplayValue = (
+  item: GearItemWithCalculated,
+  viewMode: ChartViewMode,
+  quantityMode: QuantityDisplayMode
+): number => {
+  const qty = getQuantityForDisplayMode(item, quantityMode)
+  const unitValue = viewMode === 'cost' ? (item.priceCents || 0) : (item.weightGrams || 0)
+  return unitValue * qty
+}
+
+export type ChartItemWithPercentages = GearItemWithCalculated & {
+  systemPercentage: number
+  totalPercentage: number
+  displayValue: number
+}
+
+export type SortedChartCategory = ChartData & {
+  value: number
+  percentage: number
+  ratio: number
+  label: string
+  unit: string
+  sortedItems: ChartItemWithPercentages[]
+}
+
+/**
+ * カテゴリ別データを value 降順でソートし、各アイテムの percentage を計算。
+ * GearChart の内部 useMemo チェーンから抽出。
+ */
+export const prepareSortedChartData = (
+  data: ChartData[],
+  viewMode: ChartViewMode,
+  quantityDisplayMode: QuantityDisplayMode,
+  totalValue: number,
+  payloadUnit: string
+): SortedChartCategory[] => {
+  const displayData = data.map((category) => ({
+    ...category,
+    value: viewMode === 'cost' ? category.cost : category.weight,
+  }))
+
+  return [...displayData]
+    .sort((a, b) => b.value - a.value)
+    .map((category) => ({
+      ...category,
+      percentage: totalValue > 0 ? Math.round((category.value / totalValue) * 100) : 0,
+      ratio: totalValue > 0 ? category.value / totalValue : 0,
+      label: category.name,
+      unit: payloadUnit,
+      sortedItems: (category.items || [])
+        .map((item) => ({
+          item,
+          itemValue: getItemDisplayValue(item, viewMode, quantityDisplayMode),
+        }))
+        .filter(({ itemValue }) => itemValue > 0)
+        .sort((a, b) => b.itemValue - a.itemValue)
+        .map(({ item, itemValue }) => ({
+          ...item,
+          systemPercentage: category.value > 0 ? Math.round((itemValue / category.value) * 100) : 0,
+          totalPercentage: totalValue > 0 ? Math.round((itemValue / totalValue) * 100) : 0,
+          displayValue: itemValue,
+        })) as ChartItemWithPercentages[],
+    }))
+}
+
+export type OuterPieEntry = {
+  id: string
+  name: string
+  label: string
+  value: number
+  color: string
+  brand?: string
+  ownedQuantity: number
+  requiredQuantity: number
+  shortage: number
+  priority: number
+  percentage: number
+  systemPercentage: number
+  ratio: number
+  unit: string
+}
+
+/**
+ * 選択中カテゴリの中身を外輪 Pie 用データに変換。
+ * generateItemColor() で各アイテムに色を割り当てる。
+ */
+export const buildOuterPieData = (
+  selectedCategory: SortedChartCategory | null | undefined,
+  payloadUnit: string,
+  defaultColor: string
+): OuterPieEntry[] => {
+  const items = selectedCategory?.sortedItems || []
+  const categoryTotal = items.reduce((sum, item) => sum + item.displayValue, 0)
+  const baseColor = selectedCategory?.color || defaultColor
+  const total = selectedCategory?.sortedItems?.length || 1
+
+  return items.map((item, index) => ({
+    id: item.id,
+    name: item.name,
+    label: item.name,
+    value: item.displayValue,
+    color: generateItemColor(baseColor, index, total),
+    brand: item.brand,
+    ownedQuantity: item.ownedQuantity,
+    requiredQuantity: item.requiredQuantity,
+    shortage: item.shortage,
+    priority: item.priority,
+    percentage: item.totalPercentage,
+    systemPercentage: item.systemPercentage,
+    ratio: categoryTotal > 0 ? item.displayValue / categoryTotal : 0,
+    unit: payloadUnit,
+  }))
 }

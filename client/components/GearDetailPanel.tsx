@@ -29,6 +29,9 @@ interface GearDetailPanelProps {
   filteredByCategory?: string[];
   chartFocusFilter?: ChartFocus;
   selectedItemId?: string | null;
+  hoveredItemId?: string | null;
+  onItemSelect?: (id: string | null) => void;
+  onItemHover?: (id: string | null) => void;
   activePack?: Pack | null;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
@@ -52,6 +55,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   filteredByCategory = [],
   chartFocusFilter = 'all',
   selectedItemId,
+  hoveredItemId,
+  onItemSelect,
+  onItemHover,
   activePack = null,
   activePackItemIds = [],
   onTogglePackItem,
@@ -215,6 +221,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
           viewMode={viewMode === 'cost' ? 'cost' : 'weight'}
           quantityDisplayMode={quantityDisplayMode}
           selectedItemId={selectedItemId}
+          hoveredItemId={hoveredItemId}
+          onItemSelect={onItemSelect}
+          onItemHover={onItemHover}
           activePackName={activePack?.name}
           activePackItemIds={activePackItemIds}
           onTogglePackItem={onTogglePackItem}
@@ -263,12 +272,15 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
                   categories={categories}
                   isSelected={selectedIds.includes(item.id)}
                   isHighlighted={selectedItemId === item.id}
+                  isHovered={hoveredItemId === item.id}
                   activePackName={activePack?.name}
                   isInActivePack={activePackItemIds.includes(item.id)}
                   changedFields={changedFields[item.id]}
                   onSelectItem={handleSelectItem}
                   onUpdateItem={handleFieldChange}
                   onTogglePackItem={onTogglePackItem}
+                  onItemSelect={onItemSelect}
+                  onItemHover={onItemHover}
                 />
               ))}
             </tbody>

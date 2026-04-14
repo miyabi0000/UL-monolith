@@ -1,7 +1,8 @@
 import React from 'react'
 import { ChartViewMode, ChartFocus, WeightBreakdown, ULStatus, UL_THRESHOLDS, DUAL_RING_COLORS } from '../../utils/types'
 import { COLORS } from '../../utils/designSystem'
-import { FONT_SIZES, UL_BADGE_COLORS, formatValue } from '../../utils/chartConfig'
+import { FONT_SIZES, UL_BADGE_COLORS } from '../../utils/chartConfig'
+import { formatChartValue } from '../../utils/chartHelpers'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
 import { formatWeightLarge } from '../../utils/weightUnit'
 
@@ -57,7 +58,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
         >
-          {formatValue(selectedItemData.value, viewMode, unit)}
+          {formatChartValue(selectedItemData.value, viewMode, unit)}
         </div>
         <div
           className="font-semibold mb-0.5 px-1 text-center overflow-hidden"
@@ -108,7 +109,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
             fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
           }}
         >
-          {formatValue(selectedCategoryData.value, viewMode, unit)}
+          {formatChartValue(selectedCategoryData.value, viewMode, unit)}
         </div>
         <div
           className="uppercase tracking-wide font-bold mb-1"
@@ -222,7 +223,7 @@ const ChartCenterDisplay: React.FC<ChartCenterDisplayProps> = ({
           fontSize: screenSize === 'mobile' ? FONT_SIZES.center.primary.mobile : FONT_SIZES.center.primary.desktop
         }}
       >
-        {formatValue(totalValue, viewMode, unit)}
+        {formatChartValue(totalValue, viewMode, unit)}
       </div>
       <div
         className="uppercase tracking-wide font-bold text-gray-500 dark:text-gray-400"
