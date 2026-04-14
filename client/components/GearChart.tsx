@@ -376,7 +376,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               <div className="flex items-center justify-center w-full">
                 <button
                   onClick={() => setIsChartCollapsed(false)}
-                  className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors ${screenSize === 'mobile' ? 'flex-row gap-2 py-2 px-3' : 'flex-col py-2'}`}
+                  className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded transition-colors ${screenSize === 'mobile' ? 'flex-row gap-2 py-2 px-3' : 'flex-col py-2'}`}
                   aria-label="Expand chart"
                 >
                   <svg
@@ -397,13 +397,13 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
               <>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
-                  <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-slate-700 rounded-md p-0.5">
+                  <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
                     <button
                       type="button"
                       onClick={() => setChartDisplayMode('pie')}
                       className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
                         chartDisplayMode === 'pie'
-                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
+                          ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                       }`}
                       aria-label="Pie chart"
@@ -418,7 +418,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       onClick={() => setChartDisplayMode('bar')}
                       className={`h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
                         chartDisplayMode === 'bar'
-                          ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
+                          ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm'
                           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                       }`}
                       aria-label="Bar chart"
@@ -434,7 +434,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 </div>
                 <button
                   onClick={() => setIsChartCollapsed(true)}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded transition-colors"
                   aria-label="Collapse chart"
                 >
                   <svg
@@ -723,7 +723,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     className={[
                       'flex-shrink-0 h-7 px-2.5 rounded-lg font-medium transition-colors',
                       !selectedPackId
-                        ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                     ].join(' ')}
                   >
@@ -742,7 +742,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                             'h-7 font-medium transition-colors',
                             isActive && onOpenPackSettings ? 'pl-2.5 pr-1.5 rounded-l-lg' : 'pl-2.5 pr-2.5 rounded-lg',
                             isActive
-                              ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
                               : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                           ].join(' ')}
                         >
@@ -752,7 +752,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                           <button
                             type="button"
                             onClick={onOpenPackSettings}
-                            className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
+                            className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-gray-600"
                             title="Pack settings"
                             aria-label="Pack settings"
                           >
@@ -770,7 +770,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                     <form onSubmit={handleCreateNewPack} className="flex items-center gap-1 flex-shrink-0">
                       <input
                         ref={newPackInputRef}
-                        className="h-7 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-28"
+                        className="h-7 rounded-lg border-0 bg-white dark:bg-gray-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 w-28"
                         placeholder="Pack name"
                         value={newPackName}
                         onChange={(e) => setNewPackName(e.target.value)}
@@ -900,7 +900,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                       },
                       isActive: gearViewMode === 'compare',
                       isDisabled: showCheckboxes && gearViewMode !== 'compare',
-                      activeClassName: 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm',
+                      activeClassName: 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm',
                       ariaLabel: 'Compare view',
                       title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
                     },
@@ -913,7 +913,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 <div className="relative add-menu-container z-[200] isolate">
                   <button
                     onClick={() => setShowAddMenu(!showAddMenu)}
-                    className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
+                    className="p-1.5 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-400"
                     aria-label="Actions menu"
                     title="Actions"
                   >
@@ -924,9 +924,9 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
                   {/* ドロップダウンメニュー */}
                   {showAddMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg neu-raised py-1 z-[1000]">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg neu-raised py-1 z-[1000]">
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowForm()
                           setShowAddMenu(false)
@@ -938,7 +938,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                         Add Manually
                       </button>
                       <button
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                         onClick={() => {
                           onShowUrlImport?.()
                           setShowAddMenu(false)
@@ -953,7 +953,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                         <>
                           <div className="my-1 neu-divider"></div>
                           <button
-                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
                             onClick={() => {
                               onShowCategoryManager()
                               setShowAddMenu(false)
@@ -983,10 +983,10 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
                 disabled={gearViewMode === 'compare'}
                 className={`p-1.5 rounded-md transition-all duration-200 ${
                   showCheckboxes
-                    ? 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
+                    ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
                     : gearViewMode === 'compare'
-                      ? 'bg-gray-100 dark:bg-slate-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
                 title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}

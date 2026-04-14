@@ -56,9 +56,9 @@ const GearRefChip: React.FC<{ ref_: GearRef; onClick: (gearId: string) => void }
     onClick={() => onClick(ref_.gearId)}
     title={`Jump to ${ref_.gearName}`}
     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-               bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200
-               border border-gray-200 dark:border-slate-600
-               hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+               bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
+               border border-gray-200 dark:border-gray-600
+               hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
   >
     <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="11" cy="11" r="8" />
@@ -82,8 +82,8 @@ const SuggestedEditCard: React.FC<{
   return (
     <div className={`p-3 rounded-xl mt-2 shadow-sm border text-xs
                      ${isApplied
-                       ? 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700'
-                       : 'bg-white dark:bg-slate-800/80 border-gray-200 dark:border-slate-600'}`}>
+                       ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                       : 'bg-white dark:bg-gray-800/80 border-gray-200 dark:border-gray-600'}`}>
       <p className="font-semibold mb-1 text-gray-500 dark:text-gray-400">
         Suggestion: {edit.gearName}
       </p>
@@ -100,7 +100,7 @@ const SuggestedEditCard: React.FC<{
         className={`w-full py-1.5 rounded-lg text-xs font-medium transition-opacity
                     hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed
                     ${isApplied
-                      ? 'bg-gray-300 dark:bg-slate-600 text-gray-600 dark:text-gray-300'
+                      ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
                       : 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'}`}
       >
         {isApplied ? 'Applied' : isApplying ? 'Applying…' : 'Apply change'}
@@ -151,16 +151,16 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       )}
       <div
         className="fixed top-0 right-0 h-full z-40 flex flex-col
-                   bg-white/92 dark:bg-slate-900/95 backdrop-blur
-                   border-l border-gray-200 dark:border-slate-700
+                   bg-white/92 dark:bg-gray-900/95 backdrop-blur
+                   border-l border-gray-200 dark:border-gray-700
                    shadow-xl
                    transition-transform duration-300 ease-in-out"
         style={{ width: isMobile ? '100%' : '420px', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0
-                      bg-white/80 dark:bg-slate-800/80 backdrop-blur
-                      border-b border-gray-200 dark:border-slate-700">
+                      bg-white/80 dark:bg-gray-800/80 backdrop-blur
+                      border-b border-gray-200 dark:border-gray-700">
         <div>
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
             UL Gear Advisor
@@ -177,7 +177,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           aria-label="Close advisor"
           className="glass-header-chip h-8 w-8 inline-flex items-center justify-center
                      text-gray-500 dark:text-gray-400
-                     hover:bg-white/70 dark:hover:bg-slate-700/60 transition-colors"
+                     hover:bg-white/70 dark:hover:bg-gray-700/60 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -196,7 +196,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
               <div className={`p-3 text-xs leading-relaxed shadow-sm
                                ${message.role === 'user'
                                  ? 'rounded-2xl rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                                 : 'rounded-2xl rounded-bl-sm bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-slate-700'}`}>
+                                 : 'rounded-2xl rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
                 <div className="whitespace-pre-wrap">{message.content}</div>
                 <div className={`text-2xs mt-1 opacity-50 select-none
                                  ${message.role === 'user' ? 'text-right' : ''}`}>
@@ -235,7 +235,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
         {isLoading && (
           <div className="flex justify-start">
             <div className="p-3 rounded-2xl rounded-bl-sm flex items-center gap-2
-                            bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm">
+                            bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
               <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 dark:border-gray-500 border-t-transparent animate-spin" />
               <span className="text-xs text-gray-500 dark:text-gray-400">Analyzing…</span>
             </div>
@@ -247,8 +247,8 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
 
       {/* 入力エリア */}
       <div className="shrink-0 px-4 py-3
-                      bg-white/80 dark:bg-slate-800/80 backdrop-blur
-                      border-t border-gray-200 dark:border-slate-700">
+                      bg-white/80 dark:bg-gray-800/80 backdrop-blur
+                      border-t border-gray-200 dark:border-gray-700">
         {/* クイックプロンプトボタン */}
         <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 scrollbar-thin">
           {QUICK_PROMPTS.map((qp) => (
@@ -259,10 +259,10 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
               onClick={() => sendText(qp.prompt)}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
                          whitespace-nowrap shrink-0
-                         bg-white/60 dark:bg-slate-700/60 backdrop-blur
+                         bg-white/60 dark:bg-gray-700/60 backdrop-blur
                          text-gray-700 dark:text-gray-200
-                         border border-gray-200 dark:border-slate-600
-                         hover:bg-gray-100 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-slate-500
+                         border border-gray-200 dark:border-gray-600
+                         hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500
                          disabled:opacity-40 disabled:cursor-not-allowed
                          transition-all"
             >
@@ -286,11 +286,11 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
             disabled={isLoading}
             rows={2}
             className="flex-1 px-3 py-2 text-xs rounded-lg resize-none
-                       bg-white dark:bg-slate-900
+                       bg-white dark:bg-gray-900
                        text-gray-800 dark:text-gray-100
-                       border border-gray-200 dark:border-slate-600
+                       border border-gray-200 dark:border-gray-600
                        placeholder:text-gray-400 dark:placeholder:text-gray-500
-                       focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400
+                       focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-400
                        disabled:opacity-50 transition-all"
           />
           <button

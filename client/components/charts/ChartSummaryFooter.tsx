@@ -33,8 +33,8 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
 }) => {
   const cardClass = `flex flex-col items-center justify-center px-1 py-2 rounded-md transition-all duration-200 ${
     isActive
-      ? 'bg-gray-200 dark:bg-slate-600 ring-1 ring-gray-400 dark:ring-slate-500'
-      : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600'
+      ? 'bg-gray-200 dark:bg-gray-600 ring-1 ring-gray-400 dark:ring-gray-500'
+      : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
   }`
 
   const content = (

@@ -268,7 +268,7 @@ export default function InventoryWorkspace({
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
             {packList !== undefined && (
-              <div className="mb-3 rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800 neu-raised overflow-hidden">
+              <div className="mb-3 rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 neu-raised overflow-hidden">
                 <PackTabBar
                   packList={packList}
                   selectedPackId={selectedPackId ?? null}
@@ -286,7 +286,7 @@ export default function InventoryWorkspace({
                           {onOpenPackSettings && (
                             <button
                               type="button"
-                              className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+                              className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                               onClick={onOpenPackSettings}
                               title="Edit pack"
                               aria-label="Edit pack"
@@ -324,9 +324,9 @@ export default function InventoryWorkspace({
                     </section>
 
                     {mapEmbedUrl && (
-                      <section className="rounded-2xl bg-white/80 dark:bg-slate-800/80 p-3 neu-inset border border-gray-200/70 dark:border-slate-700/70">
+                      <section className="rounded-2xl bg-white/80 dark:bg-gray-800/80 p-3 neu-inset border border-gray-200/70 dark:border-gray-700/70">
                         <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
-                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-slate-700/80">
+                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-gray-700/80">
                           <iframe
                             title="Route map"
                             src={mapEmbedUrl}

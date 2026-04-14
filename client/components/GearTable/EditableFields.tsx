@@ -55,7 +55,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
     if (!value) {
       return (
         <div
-          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded' : ''}`}
+          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded' : ''}`}
           onClick={clickable ? () => setShowModal(true) : undefined}
         >
           <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +108,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+                className="w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
               />
             </div>
 
@@ -126,7 +126,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 rounded transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -141,7 +141,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preview
                 </label>
-                <div className="flex items-center justify-center h-40 neu-inset rounded bg-gray-50 dark:bg-slate-800">
+                <div className="flex items-center justify-center h-40 neu-inset rounded bg-gray-50 dark:bg-gray-800">
                   <img
                     src={urlInput}
                     alt="Preview"
@@ -168,7 +168,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded"
+                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 rounded"
               >
                 Cancel
               </button>
@@ -216,7 +216,7 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400 box-border`}
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 box-border`}
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
@@ -246,7 +246,7 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="">No Category</option>
@@ -530,7 +530,7 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>

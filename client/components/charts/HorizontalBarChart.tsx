@@ -43,7 +43,7 @@ const ChartTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload 
     ? `¥${Math.round(item.value / 100).toLocaleString()}`
     : formatWeight(item.value, unit)
   return (
-    <div className="bg-white dark:bg-slate-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
+    <div className="bg-white dark:bg-gray-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
       <div className="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">{item.name}</div>
       <div className="text-gray-500 dark:text-gray-400">{formattedValue} · {item.percentage}%</div>
     </div>

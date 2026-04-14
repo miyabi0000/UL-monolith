@@ -119,7 +119,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                 )}
 
                 {/* 上カバー画像（imageUrl 無しはグレー無地フォールバック） */}
-                <div className="w-full h-20 bg-gray-100 dark:bg-slate-700 flex-shrink-0">
+                <div className="w-full h-20 bg-gray-100 dark:bg-gray-700 flex-shrink-0">
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
