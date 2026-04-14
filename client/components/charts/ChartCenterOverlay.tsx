@@ -4,15 +4,13 @@ import { alpha } from '../../styles/tokens'
 import ChartCenterDisplay from './ChartCenterDisplay'
 import type { ChartViewMode, ChartFocus, WeightBreakdown, ULStatus } from '../../utils/types'
 import type { OuterPieEntry, SortedChartCategory } from '../../utils/chart/pipeline'
+import { useChartGeometry } from './context/ChartGeometryContext'
 
 interface ChartCenterOverlayProps {
   selectedItemData: OuterPieEntry | null
   selectedCategoryName: string | null
   selectedCategoryData: Pick<SortedChartCategory, 'value' | 'color' | 'percentage'> | null
   viewMode: ChartViewMode
-  screenSize: 'mobile' | 'tablet' | 'desktop'
-  centerMaxWidth: number
-  innerRadius: number
   chartFocus: ChartFocus
   weightBreakdown?: WeightBreakdown | null
   ulStatus?: ULStatus | null
@@ -29,22 +27,21 @@ const ChartCenterOverlay: React.FC<ChartCenterOverlayProps> = ({
   selectedCategoryName,
   selectedCategoryData,
   viewMode,
-  screenSize,
-  centerMaxWidth,
-  innerRadius,
   chartFocus,
   weightBreakdown,
   ulStatus,
   totalValue,
   isPulsing,
   onClick,
-}) => (
+}) => {
+  const { screenSize, centerMaxWidth, innerRadiusConfig } = useChartGeometry()
+  return (
   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
     <div
       className="text-center cursor-pointer pointer-events-auto flex flex-col items-center justify-center"
       style={{
-        width:           innerRadius * 2,
-        height:          innerRadius * 2,
+        width:           innerRadiusConfig.inner * 2,
+        height:          innerRadiusConfig.inner * 2,
         borderRadius:    '50%',
         transition:      'all 0.3s ease',
         backgroundColor: isPulsing ? alpha(COLORS.gray[800], 0.05) : 'transparent',
@@ -67,6 +64,7 @@ const ChartCenterOverlay: React.FC<ChartCenterOverlayProps> = ({
       />
     </div>
   </div>
-)
+  )
+}
 
 export default ChartCenterOverlay

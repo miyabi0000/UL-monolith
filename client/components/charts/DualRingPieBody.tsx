@@ -2,6 +2,7 @@ import React from 'react'
 import type { DonutSegment, ChartFocus } from '../../utils/types'
 import InteractivePie from './InteractivePie'
 import ChartPieCell from './ChartPieCell'
+import { useChartGeometry } from './context/ChartGeometryContext'
 
 interface DualRingPieBodyProps {
   innerData: DonutSegment[]
@@ -14,8 +15,6 @@ interface DualRingPieBodyProps {
   setInnerActiveIndex: (idx: number | null) => void
   onInnerClick: (segmentId: string) => void
   onOuterClick: (segmentId: string) => void
-  outerRadiusConfig: { outer: number; inner: number }
-  innerRadiusConfig: { outer: number; inner: number }
 }
 
 /**
@@ -34,9 +33,8 @@ const DualRingPieBody: React.FC<DualRingPieBodyProps> = ({
   setInnerActiveIndex,
   onInnerClick,
   onOuterClick,
-  outerRadiusConfig,
-  innerRadiusConfig,
 }) => {
+  const { outerRadiusConfig, innerRadiusConfig } = useChartGeometry()
   const hasFocus = chartFocus !== 'all'
 
   return (

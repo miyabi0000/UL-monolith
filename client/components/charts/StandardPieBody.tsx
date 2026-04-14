@@ -4,6 +4,7 @@ import { COLORS } from '../../utils/designSystem'
 import type { SortedChartCategory, OuterPieEntry } from '../../utils/chart/pipeline'
 import InteractivePie from './InteractivePie'
 import ChartPieCell from './ChartPieCell'
+import { useChartGeometry } from './context/ChartGeometryContext'
 
 const DEFAULT_COLOR = COLORS.gray[500]
 
@@ -20,8 +21,6 @@ interface StandardPieBodyProps {
   onCategoryClick: (name: string) => void
   onItemClick: (id: string) => void
   onItemHover?: (id: string | null) => void
-  outerRadiusConfig: { outer: number; inner: number }
-  innerRadiusConfig: { outer: number; inner: number }
 }
 
 /**
@@ -41,9 +40,8 @@ const StandardPieBody: React.FC<StandardPieBodyProps> = ({
   onCategoryClick,
   onItemClick,
   onItemHover,
-  outerRadiusConfig,
-  innerRadiusConfig,
 }) => {
+  const { outerRadiusConfig, innerRadiusConfig } = useChartGeometry()
   const hasCategorySelection = selectedCategoryName !== null
   const baseColor            = selectedCategory?.color ?? DEFAULT_COLOR
   const itemCount            = selectedCategory?.sortedItems?.length ?? 1

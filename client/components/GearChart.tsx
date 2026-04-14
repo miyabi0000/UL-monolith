@@ -12,11 +12,11 @@ import {
 } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
-import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
 import PackTabSection from './charts/PackTabSection'
 import ChartHeader from './charts/ChartHeader'
 import ChartBody from './charts/ChartBody'
+import { ChartGeometryProvider } from './charts/context/ChartGeometryContext'
 import ChartBreadcrumb from './charts/ChartBreadcrumb'
 import GearActionMenu from './charts/GearActionMenu'
 import GearViewToggle from './charts/GearViewToggle'
@@ -152,11 +152,7 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   const chartScope: ChartScope = 'base'
   // hover callout 用 activeIndex は ChartBody 内に局在化済み
 
-  // チャート設定を画面サイズに応じて取得
-  const chartHeight = CHART_CONFIG.height[screenSize]
-  const outerRadiusConfig = CHART_CONFIG.outerRadius[screenSize]
-  const innerRadiusConfig = CHART_CONFIG.innerRadius[screenSize]
-  const centerMaxWidth = CHART_CONFIG.centerMaxWidth[screenSize]
+  // ジオメトリは ChartGeometryProvider 経由で配下コンポーネントに配布
 
   // ==================== データ処理 ====================
 
@@ -329,38 +325,35 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
           {!isChartCollapsed && (
             <>
-        <ChartBody
-          chartDisplayMode={chartDisplayMode}
-          viewMode={viewMode}
-          totalValue={totalValue}
-          chartHeight={chartHeight}
-          sortedData={sortedData}
-          outerPieData={outerPieData}
-          selectedCategory={selectedData ?? null}
-          selectedCategoryName={selectedCategoryFromChart}
-          selectedItemId={selectedItem}
-          barData={barData}
-          dualRingInnerData={dualRingInnerData}
-          dualRingOuterData={dualRingOuterData}
-          chartFocus={chartFocus}
-          selectedCategories={selectedCategories}
-          outerRadiusConfig={outerRadiusConfig}
-          innerRadiusConfig={innerRadiusConfig}
-          centerMaxWidth={centerMaxWidth}
-          selectedItemData={selectedItemData}
-          centerPulse={centerPulse}
-          onCenterClick={handleCenterClick}
-          screenSize={screenSize}
-          weightBreakdown={weightBreakdown}
-          ulStatus={ulStatus}
-          onCategoryClick={handleCategoryClick}
-          onItemClick={handleItemClick}
-          onItemHover={onItemHover}
-          onInnerRingClick={handleInnerRingClick}
-          onDualRingOuterClick={handleDualRingOuterClick}
-          onClearCategorySelection={() => selectedData && handleCategoryClick(selectedData.name)}
-          hoveredItemId={hoveredItemId ?? null}
-        />
+        <ChartGeometryProvider screenSize={screenSize}>
+          <ChartBody
+            chartDisplayMode={chartDisplayMode}
+            viewMode={viewMode}
+            totalValue={totalValue}
+            sortedData={sortedData}
+            outerPieData={outerPieData}
+            selectedCategory={selectedData ?? null}
+            selectedCategoryName={selectedCategoryFromChart}
+            selectedItemId={selectedItem}
+            barData={barData}
+            dualRingInnerData={dualRingInnerData}
+            dualRingOuterData={dualRingOuterData}
+            chartFocus={chartFocus}
+            selectedCategories={selectedCategories}
+            selectedItemData={selectedItemData}
+            centerPulse={centerPulse}
+            onCenterClick={handleCenterClick}
+            weightBreakdown={weightBreakdown}
+            ulStatus={ulStatus}
+            onCategoryClick={handleCategoryClick}
+            onItemClick={handleItemClick}
+            onItemHover={onItemHover}
+            onInnerRingClick={handleInnerRingClick}
+            onDualRingOuterClick={handleDualRingOuterClick}
+            onClearCategorySelection={() => selectedData && handleCategoryClick(selectedData.name)}
+            hoveredItemId={hoveredItemId ?? null}
+          />
+        </ChartGeometryProvider>
 
 
         <ChartSummaryFooter

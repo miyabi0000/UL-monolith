@@ -7,12 +7,12 @@ import ChartCenterOverlay from './ChartCenterOverlay'
 import type { BarItem } from './HorizontalBarChart'
 import type { ChartViewMode, ChartFocus, DonutSegment, WeightBreakdown, ULStatus } from '../../utils/types'
 import type { SortedChartCategory, OuterPieEntry } from '../../utils/chart/pipeline'
+import { useChartGeometry } from './context/ChartGeometryContext'
 
 interface ChartBodyProps {
   chartDisplayMode: 'pie' | 'bar'
   viewMode: ChartViewMode
   totalValue: number
-  chartHeight: number
 
   // 通常モード用
   sortedData: SortedChartCategory[]
@@ -28,16 +28,10 @@ interface ChartBodyProps {
   chartFocus: ChartFocus
   selectedCategories: string[]
 
-  // ジオメトリ
-  outerRadiusConfig: { outer: number; inner: number }
-  innerRadiusConfig: { outer: number; inner: number }
-  centerMaxWidth: number
-
   // 中央表示
   selectedItemData: OuterPieEntry | null
   centerPulse: boolean
   onCenterClick: () => void
-  screenSize: 'mobile' | 'tablet' | 'desktop'
   weightBreakdown?: WeightBreakdown | null
   ulStatus?: ULStatus | null
 
@@ -54,8 +48,10 @@ interface ChartBodyProps {
 /**
  * チャート本体の orchestrator。
  * chartDisplayMode と viewMode の組み合わせで適切な body を選ぶ。
+ * ジオメトリは ChartGeometryContext から取得。
  */
 const ChartBody: React.FC<ChartBodyProps> = (props) => {
+  const geometry = useChartGeometry()
   const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
   const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
 
@@ -82,7 +78,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
   return (
     <div
       className="relative flex items-center justify-center p-2 flex-1"
-      style={{ minHeight: props.chartHeight }}
+      style={{ minHeight: geometry.chartHeight }}
     >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -98,8 +94,6 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
               setInnerActiveIndex={setInnerActiveIndex}
               onInnerClick={props.onInnerRingClick}
               onOuterClick={props.onDualRingOuterClick}
-              outerRadiusConfig={props.outerRadiusConfig}
-              innerRadiusConfig={props.innerRadiusConfig}
             />
           ) : (
             <StandardPieBody
@@ -115,8 +109,6 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
               onCategoryClick={props.onCategoryClick}
               onItemClick={props.onItemClick}
               onItemHover={props.onItemHover}
-              outerRadiusConfig={props.outerRadiusConfig}
-              innerRadiusConfig={props.innerRadiusConfig}
             />
           )}
         </PieChart>
@@ -135,9 +127,6 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
             : null
         }
         viewMode={props.viewMode}
-        screenSize={props.screenSize}
-        centerMaxWidth={props.centerMaxWidth}
-        innerRadius={props.innerRadiusConfig.inner}
         chartFocus={props.chartFocus}
         weightBreakdown={props.weightBreakdown}
         ulStatus={props.ulStatus}
