@@ -33,7 +33,8 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, className 
           disabled={option.isDisabled}
           title={option.title}
           aria-label={option.ariaLabel}
-          className={`gear-glass-chip h-6 px-2 rounded-md text-2xs font-medium transition-all duration-200 inline-flex items-center gap-1 ${stateClass}`}
+          className={`gear-glass-chip px-3 rounded-md text-xs font-medium transition-all duration-200 inline-flex items-center gap-1 ${stateClass}`}
+          style={{ height: 'var(--control-h-md)' }}
         >
           {option.label}
         </button>

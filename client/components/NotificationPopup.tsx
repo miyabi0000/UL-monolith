@@ -47,12 +47,12 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
     }, 300);
   };
 
-  // De Stijl: 各通知の左 4px ボーダーを Mondrian 3色 + 黒 で意味付け
+  // De Stijl: 通知の枠線は Mondrian Orange で統一、左 4px は Mondrian 3色+黒で意味付け
   const getMessageStyles = (type: string): React.CSSProperties => {
     const base: React.CSSProperties = {
       backgroundColor: COLORS.white,
       color: COLORS.text.primary,
-      border: `1px solid ${mondrian.black}`,
+      border: `1px solid ${mondrian.orange}`,
     };
     switch (type) {
       case 'error':

@@ -77,11 +77,13 @@ export default {
         },
         // Mondrian 3原色 — 派生・alpha 乗算禁止の固定値
         mondrian: {
-          red:    p.mondrian.red,
-          yellow: p.mondrian.yellow,
-          blue:   p.mondrian.blue,
-          black:  p.mondrian.black,
-          canvas: p.mondrian.canvas,
+          red:         p.mondrian.red,
+          yellow:      p.mondrian.yellow,
+          blue:        p.mondrian.blue,
+          black:       p.mondrian.black,
+          canvas:      p.mondrian.canvas,
+          orange:      p.mondrian.orange,
+          orangeLight: p.mondrian.orangeLight,
         },
         // セマンティックカラー (Mondrian Matte)
         primary: {

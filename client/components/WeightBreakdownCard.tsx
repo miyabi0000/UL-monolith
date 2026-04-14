@@ -138,7 +138,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         </div>
         <div
           className="w-full h-2 overflow-hidden"
-          style={{ background: 'var(--surface-level-2)', border: `1px solid ${mondrian.black}` }}
+          style={{ background: 'var(--surface-level-2)', border: `1px solid ${mondrian.orange}` }}
         >
           <div
             className="h-full transition-all duration-300"

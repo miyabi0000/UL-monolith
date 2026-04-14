@@ -14,11 +14,14 @@ const MONDRIAN_BLACK = '#0A0A0A';
 
 /** Mondrian 3原色 — 派生・alpha 乗算禁止の固定値 */
 const mondrian = {
-  red: '#D7282F',
+  red:    '#D7282F',
   yellow: '#F1C40F',
-  blue: '#1F3A93',
-  black: MONDRIAN_BLACK,
+  blue:   '#1F3A93',
+  black:  MONDRIAN_BLACK,
   canvas: '#FAFAF7',
+  /** UI 枠線専用 — 全コンポーネントの 1px 線をこの色で統一 */
+  orange:      '#C2410C', // light theme stroke
+  orangeLight: '#FB923C', // dark theme stroke (反転で読みやすく)
 };
 
 /**

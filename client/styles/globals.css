@@ -61,6 +61,8 @@
     --mondrian-blue:   #1F3A93;
     --mondrian-black:  #0A0A0A;
     --mondrian-canvas: #FAFAF7;
+    /** UI 枠線専用 — 全コンポーネントの 1px 線はこの色 */
+    --mondrian-orange: #C2410C;
     /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義 */
     --page-bg: var(--page-bg, #FAFAF7);
     --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.04);
@@ -75,10 +77,10 @@
     --ink-inverse: #FAFAF7;
     --icon-default: #2E2E2E;
     --icon-muted: #6B6B66;
-    --stroke-subtle: rgba(10, 10, 10, 0.10);
-    --stroke-default: #0A0A0A;          /* 1px Mondrian 黒線 */
-    --stroke-strong: #0A0A0A;
-    --stroke-divider: rgba(10, 10, 10, 0.14);
+    --stroke-subtle: rgba(194, 65, 12, 0.20);
+    --stroke-default: #C2410C;           /* Mondrian Orange — 全枠線統一 */
+    --stroke-strong:  #C2410C;
+    --stroke-divider: rgba(194, 65, 12, 0.28);
     --focus-ring: #1F3A93;              /* Mondrian Blue */
     --focus-ring-offset: #FAFAF7;
     --overlay-hover: rgba(10, 10, 10, 0.04);
@@ -377,7 +379,7 @@
     min-height: var(--control-h-md);
     border-radius: var(--radius-control);
     box-shadow: var(--shadow-sm);
-    border: 1px solid var(--mondrian-black);
+    border: 1px solid var(--stroke-default);
   }
 
   .btn-primary {
@@ -422,10 +424,10 @@
   }
 
   /* Mondrian Grid — レイアウト額装ユーティリティ
-   * ワークスペース等の大区画を Mondrian 風の黒線グリッドで囲う */
+   * ワークスペース等の大区画を Mondrian Orange の枠線で囲う */
   .mondrian-grid {
     position: relative;
-    border: 2px solid var(--mondrian-black);
+    border: 2px solid var(--stroke-default);
     background: var(--surface-level-0);
   }
   .mondrian-grid::before {
@@ -435,7 +437,7 @@
     top: 0;
     bottom: 0;
     width: 6px;
-    background: var(--mondrian-black);
+    background: var(--stroke-default);
     pointer-events: none;
   }
 
@@ -486,10 +488,10 @@
     --ink-inverse: #0A0A0A;
     --icon-default: #E0E0DC;
     --icon-muted: #9C9C98;
-    --stroke-subtle: rgba(250, 250, 247, 0.12);
-    --stroke-default: #FAFAF7;
-    --stroke-strong: #FAFAF7;
-    --stroke-divider: rgba(250, 250, 247, 0.18);
+    --stroke-subtle: rgba(251, 146, 60, 0.25);
+    --stroke-default: #FB923C;           /* Mondrian Orange (Dark theme: 明るめ) */
+    --stroke-strong:  #FB923C;
+    --stroke-divider: rgba(251, 146, 60, 0.32);
     --focus-ring: #5E73A8;
     --focus-ring-offset: #121212;
     --overlay-hover: rgba(250, 250, 247, 0.06);
@@ -570,6 +572,15 @@
   .dark .border-gray-100:not([class*='dark:border-']) { border-color: var(--surface-level-2); }
   .dark .border-gray-200:not([class*='dark:border-']) { border-color: var(--stroke-subtle); }
   .dark .border-gray-300:not([class*='dark:border-']) { border-color: var(--stroke-default); }
+
+  /* Mondrian Orange 全枠線統一 — Tailwind の border-gray-* / border-l-* / border-b-*
+   * を一律 Mondrian Orange に上書き (Light / Dark 共通) */
+  .border-gray-100:not([class*='dark:border-']),
+  .border-gray-200:not([class*='dark:border-']),
+  .border-gray-300:not([class*='dark:border-']),
+  .border-gray-400:not([class*='dark:border-']) {
+    border-color: var(--stroke-default);
+  }
 
   .dark .hover\:bg-gray-50:not([class*='dark:hover:bg-']):hover { background-color: var(--surface-level-2); }
   .dark .hover\:bg-gray-100:not([class*='dark:hover:bg-']):hover { background-color: var(--surface-level-2); }

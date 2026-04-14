@@ -14,6 +14,9 @@ export const mondrian = {
   blue:   '#1F3A93',
   black:  MONDRIAN_BLACK,
   canvas: '#FAFAF7',
+  /** UI 枠線専用 — 全コンポーネントの 1px 線をこの色で統一 */
+  orange:      '#C2410C', // light theme stroke
+  orangeLight: '#FB923C', // dark theme stroke (反転で読みやすく)
 } as const;
 
 export const alpha = (color: string, opacity: number): string => {

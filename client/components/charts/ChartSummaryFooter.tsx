@@ -85,7 +85,9 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   const { unit } = useWeightUnit()
   return (
     <div className="px-2 py-1.5 neu-divider">
-      <div className="flex justify-center mb-1">
+      {/* Weight/Cost/Class と g/oz を同一 Y 軸 (1 行) に配置。
+       * justify-between で左右に振り分け、items-center でベースラインも揃える */}
+      <div className="flex items-center justify-between gap-2 mb-1.5">
         <SegmentedControl
           options={VIEW_MODE_OPTIONS.map(({ mode, label, icon: Icon }) => ({
             key: mode,
@@ -100,9 +102,6 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
             ),
           }))}
         />
-      </div>
-      {/* 重量単位トグル：折り返さないよう独立行に配置 */}
-      <div className="flex justify-end mb-1.5">
         <WeightUnitToggle />
       </div>
 

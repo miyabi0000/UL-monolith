@@ -23,8 +23,13 @@ const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeigh
 
   return (
     <span
-      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold"
-      style={{ backgroundColor: config.bgColor, color: config.color, border: `1px solid ${mondrian.black}` }}
+      className="inline-flex items-center justify-center px-2 rounded-full text-xs font-bold"
+      style={{
+        height: 'var(--badge-h)',
+        backgroundColor: config.bgColor,
+        color: config.color,
+        border: `1px solid ${mondrian.orange}`,
+      }}
       title={baseWeight ? `Base Weight: ${formatWeightLarge(baseWeight, unit)}` : undefined}
     >
       {config.label}
