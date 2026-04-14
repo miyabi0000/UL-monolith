@@ -75,15 +75,16 @@ const WeightClassBadge: React.FC<WeightClassBadgeProps> = ({ weightClass, isBig3
   return (
     <span className="inline-flex items-center gap-1">
       <span
-        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium gap-0.5"
-        style={{ backgroundColor: config.bgColor, color: config.color }}
+        className="inline-flex items-center px-1.5 rounded text-xs font-medium gap-0.5"
+        style={{ height: 'var(--badge-h)', backgroundColor: config.bgColor, color: config.color }}
       >
         <IconComponent className="w-3 h-3" />
         {config.label}
       </span>
       {isBig3 && (
         <span
-          className="px-1.5 py-0.5 text-2xs font-bold rounded bg-gray-200 text-gray-700"
+          className="inline-flex items-center px-1.5 text-2xs font-bold rounded bg-gray-200 text-gray-700"
+          style={{ height: 'var(--badge-h)' }}
           title="Big3: Backpack / Shelter / Sleep"
         >
           Big3

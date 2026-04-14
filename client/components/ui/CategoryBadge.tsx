@@ -1,22 +1,26 @@
 import React from 'react';
-import { COLORS, getCategoryBadgeShade, mondrian } from '../../utils/designSystem';
+import { getCategoryColor } from '../../utils/designSystem';
+import { alpha } from '../../styles/tokens';
 
 interface CategoryBadgeProps {
   name: string;
-  /** @deprecated Mondrian Matte ではカテゴリ色を使わずグレー2階調で描画 */
+  /** @deprecated Mondrian Matte では client が name から決定論的に色を決める */
   color?: string;
   className?: string;
   onClick?: () => void;
 }
 
 const CategoryBadge: React.FC<CategoryBadgeProps> = ({ name, className = '', onClick }) => {
-  const style = {
-    backgroundColor: getCategoryBadgeShade(name),
-    color: COLORS.text.primary,
-    border: `1px solid ${mondrian.black}`,
+  const accent = getCategoryColor(name);
+  const style: React.CSSProperties = {
+    backgroundColor: alpha(accent, 0.12),
+    color: accent,
+    border: `1px solid ${alpha(accent, 0.5)}`,
+    height: 'var(--badge-h)',
+    lineHeight: 1,
   };
 
-  const classes = `inline-flex w-[100px] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${className}`.trim();
+  const classes = `inline-flex w-[100px] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full px-2 text-xs font-medium ${className}`.trim();
 
   if (onClick) {
     return (

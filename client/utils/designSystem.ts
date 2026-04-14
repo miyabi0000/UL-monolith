@@ -201,25 +201,38 @@ export const chartColors = {
 };
 
 /**
- * チャートのカテゴリ別グレースケールパレット (循環使用)
- * 濃 → 中 → 薄 を循環。インデックス順に視覚的に判別しやすい順序
+ * Mondrian 風カテゴリパレット
+ * グレースケールではなく、De Stijl 拡張パレット (Mondrian primary 3色 + その派生)
+ * を 8 色循環。彩度を抑えた中明度に揃え、隣接カテゴリの判別性と全体の調和を両立。
  */
-export const CHART_GRAYSCALE = [
-  COLORS.gray[800],
-  COLORS.gray[500],
-  COLORS.gray[300],
-  COLORS.gray[700],
-  COLORS.gray[400],
-  COLORS.gray[600],
+export const CATEGORY_PALETTE = [
+  mondrian.red,        // #D7282F  純赤
+  mondrian.blue,       // #1F3A93  純青
+  mondrian.yellow,     // #F1C40F  純黄
+  '#5E73A8',           // muted blue (slate)
+  '#A2840A',           // muted yellow (mustard)
+  '#94181D',           // muted red (brick)
+  COLORS.gray[800],    // charcoal
+  COLORS.gray[500],    // dove gray
 ] as const;
 
-/** カテゴリ index → グレー階調 (6 階調を循環) */
-export const getChartGrayShade = (index: number): string =>
-  CHART_GRAYSCALE[index % CHART_GRAYSCALE.length];
-
-/** カテゴリ name → グレー2階調 (CategoryBadge の偶奇背景用) */
-export const getCategoryBadgeShade = (name: string): string => {
+/** カテゴリ name → Mondrian パレットから決定論的に色を割当 */
+export const getCategoryColor = (name: string): string => {
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  return Math.abs(hash) % 2 === 0 ? COLORS.gray[200] : COLORS.gray[300];
+  return CATEGORY_PALETTE[Math.abs(hash) % CATEGORY_PALETTE.length];
 };
+
+/** カテゴリ index → Mondrian パレットから順次割当 (チャート用) */
+export const getCategoryColorByIndex = (index: number): string =>
+  CATEGORY_PALETTE[index % CATEGORY_PALETTE.length];
+
+/**
+ * @deprecated getCategoryColor を使用。グレー2階調実装は廃止。
+ */
+export const getCategoryBadgeShade = (name: string): string => getCategoryColor(name);
+
+/** @deprecated チャートのグレースケール循環パレット。新コードは CATEGORY_PALETTE を使用 */
+export const CHART_GRAYSCALE = CATEGORY_PALETTE;
+/** @deprecated getCategoryColorByIndex を使用 */
+export const getChartGrayShade = (index: number): string => getCategoryColorByIndex(index);

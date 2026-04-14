@@ -35,8 +35,21 @@
     --gear-font-lg: 16px;
     --gear-font-xl: 18px;
     --gear-font-2xl: 20px;
-    --gear-badge-size: 20px;
     --gear-row-height: 60px;
+    /* コントロール高さスケール — ボタン/入力/チップを 4 段階に統一
+     * 4px グリッド準拠。アイコン専用 24, 補助 28, デフォルト 36, CTA 44 */
+    --control-h-xs:   24px; /* アイコンのみボタン・小チップ */
+    --control-h-sm:   28px; /* 補助操作・サブナビ */
+    --control-h-md:   36px; /* デフォルトボタン・ヘッダーチップ・タブ */
+    --control-h-lg:   44px; /* 主要 CTA・モーダルアクション (タップ目標) */
+    --badge-h:        20px; /* CategoryBadge / StatusBadge / 優先度トークン */
+    --badge-h-sm:     16px; /* インライン使用 (テーブル内など) */
+    --avatar-h:       40px; /* プロフィールアバター・ユーザーアイコン */
+    --avatar-h-sm:    24px; /* インラインアバター */
+    --field-h:        var(--control-h-md); /* 入力フィールド既定 */
+    --header-chip-h:  var(--control-h-md);
+    /* 後方互換: gear-badge-size は --badge-h を参照 */
+    --gear-badge-size: var(--badge-h);
     /* 角丸階層: 3層ルール (De Stijl Matte: 角は控えめ。Mondrian は本来角ナシだが、
      * 既存 Tailwind rounded-* との折衷で 4-6px に抑える) */
     --radius-surface: 6px;    /* L1: カード・モーダル・パネル・テーブルシェル */
@@ -158,12 +171,57 @@
     box-shadow: none;
   }
 
-  /* ヘッダーチップ */
+  /* ヘッダーチップ — 高さを --header-chip-h で統一 */
   .glass-header-chip {
-    @apply relative overflow-hidden transition-all duration-150;
+    @apply inline-flex items-center justify-center relative overflow-hidden transition-all duration-150;
+    min-height: var(--header-chip-h);
     border: 1px solid var(--stroke-default);
     border-radius: var(--radius-badge);
     background: var(--surface-level-0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* アイコン専用ボタン (横並びコントロール群の高さ揃え用)
+   * 正方形 36x36 のデフォルト。"flex items-center gap-1" の中で必ずこのクラスを
+   * 付与し、文字ラベル付きチップ (.glass-header-chip / .btn-*) と高さを揃える。 */
+  .icon-btn {
+    @apply inline-flex items-center justify-center transition-all duration-200;
+    height: var(--control-h-md);
+    width:  var(--control-h-md);
+    border-radius: var(--radius-control);
+    color: var(--ink-secondary);
+    background: var(--surface-level-2);
+    border: 1px solid transparent;
+  }
+  .icon-btn:hover {
+    background: var(--surface-level-1);
+    border-color: var(--stroke-subtle);
+  }
+  .icon-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .icon-btn-sm { height: var(--control-h-sm); width: var(--control-h-sm); }
+  .icon-btn-xs { height: var(--control-h-xs); width: var(--control-h-xs); }
+
+  /* セグメンテッドコントロール (タブ風トグル)
+   * 内側ボタンの高さを揃え、横並び全体の高さを --control-h-md に固定 */
+  .segmented {
+    @apply inline-flex p-0.5;
+    height: var(--control-h-md);
+    background: var(--surface-level-2);
+    border: 1px solid var(--stroke-default);
+    border-radius: var(--radius-control);
+  }
+  .segmented > button {
+    @apply inline-flex items-center justify-center px-3 text-sm font-medium transition-all duration-200;
+    border-radius: calc(var(--radius-control) - 1px);
+    color: var(--ink-muted);
+  }
+  .segmented > button[aria-pressed="true"],
+  .segmented > button.is-active {
+    background: var(--surface-level-0);
+    color: var(--ink-primary);
     box-shadow: var(--shadow-sm);
   }
 
@@ -310,44 +368,36 @@
     /* フラットスタイル: 基底ルールに従う */
   }
 
-  /* ボタン — De Stijl: solid + Mondrian 黒枠 */
-  .btn-primary {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: 1px solid var(--mondrian-black);
+  /* ボタン — De Stijl: solid + Mondrian 黒枠
+   * 高さは --control-h-md (36px) をデフォルトに、Button.tsx の size prop で上書き */
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex items-center justify-center text-sm font-medium px-4 transition-all duration-200;
+    min-height: var(--control-h-md);
     border-radius: var(--radius-control);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--mondrian-black);
+  }
+
+  .btn-primary {
     color: var(--ink-inverse);
     background: var(--mondrian-black);
-    box-shadow: var(--shadow-sm);
   }
-
-  .btn-primary:hover {
-    background: var(--ink-secondary);
-  }
+  .btn-primary:hover { background: var(--ink-secondary); }
 
   .btn-secondary {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: 1px solid var(--mondrian-black);
-    border-radius: var(--radius-control);
     color: var(--ink-primary);
     background: var(--surface-level-0);
+    box-shadow: none;
   }
-
-  .btn-secondary:hover {
-    background: var(--surface-level-2);
-  }
+  .btn-secondary:hover { background: var(--surface-level-2); }
 
   .btn-danger {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: 1px solid var(--mondrian-black);
-    border-radius: var(--radius-control);
     color: #FFFFFF;
     background: var(--mondrian-red);
-    box-shadow: var(--shadow-sm);
   }
-
-  .btn-danger:hover {
-    background: #B71F25;
-  }
+  .btn-danger:hover { background: #B71F25; }
 
   /* 小さいボタン */
   .btn-xs {
@@ -355,9 +405,11 @@
     border-radius: var(--radius-control);
   }
 
-  /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus */
+  /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus
+   * 高さは --field-h (= --control-h-md) で統一 */
   .input {
-    @apply transition-all duration-200;
+    @apply inline-flex items-center px-2 transition-all duration-200;
+    min-height: var(--field-h);
     border: 1px solid var(--stroke-default);
     border-radius: var(--radius-control);
     color: var(--ink-primary);

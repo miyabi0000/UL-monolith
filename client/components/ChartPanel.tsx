@@ -416,12 +416,12 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                   onToggleCheckboxes()
                 }}
                 disabled={gearViewMode === 'compare'}
-                className={`p-1.5 rounded-md transition-all duration-200 ${
+                className={`icon-btn ${
                   showCheckboxes
                     ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
                     : gearViewMode === 'compare'
-                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
                 }`}
                 aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
                 title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}

@@ -42,7 +42,7 @@ const GearActionMenu: React.FC<GearActionMenuProps> = ({
     <div ref={containerRef} className="relative add-menu-container z-[200] isolate">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="p-1.5 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-400"
+        className="icon-btn"
         aria-label="Actions menu"
         title="Actions"
       >

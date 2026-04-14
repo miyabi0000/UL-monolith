@@ -53,13 +53,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
-    <section className="card overflow-hidden relative">
-      {/* Mondrian アクセント: 左肩の小さな赤ブロック (装飾) */}
-      <span
-        aria-hidden="true"
-        className="absolute top-0 left-0 z-10 mondrian-block-red"
-        style={{ width: 24, height: 24 }}
-      />
+    <section className="card overflow-hidden">
       {profile.headerImageUrl && (
         <div className="h-24 sm:h-32 w-full bg-gray-100 dark:bg-gray-700">
           <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
@@ -67,8 +61,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       )}
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* 左: プロフィール情報 */}
-        <div className="min-w-0 flex items-center gap-3">
-          <span className="h-10 w-10 bg-mondrian-black text-mondrian-canvas dark:bg-mondrian-canvas dark:text-mondrian-black text-sm font-semibold inline-flex items-center justify-center shrink-0" style={{ borderRadius: 'var(--radius-control)' }}>
+        <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--avatar-h)' }}>
+          <span
+            className="bg-mondrian-black text-mondrian-canvas dark:bg-mondrian-canvas dark:text-mondrian-black text-sm font-semibold inline-flex items-center justify-center shrink-0"
+            style={{ height: 'var(--avatar-h)', width: 'var(--avatar-h)', borderRadius: 'var(--radius-control)' }}
+          >
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">
@@ -86,7 +83,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <button
               type="button"
               onClick={onShowAdvisor}
-              className="glass-header-chip h-9 px-3 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-700/60 text-xs font-medium"
+              className="glass-header-chip px-3 text-xs font-medium"
               aria-label="UL Advisor"
               title="ULギアアドバイザー"
             >
@@ -97,7 +94,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button
             type="button"
             onClick={onEditProfile}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="Edit Profile"
             title="Edit Profile"
           >
@@ -109,7 +106,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button
             type="button"
             onClick={toggleDarkMode}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="Toggle dark mode"
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
@@ -127,7 +124,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setUserMenuOpen((p) => !p)}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="User menu"
           >
             {isAuthenticated ? (

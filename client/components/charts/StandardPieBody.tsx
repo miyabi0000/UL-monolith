@@ -1,6 +1,6 @@
 import React from 'react'
 import { generateItemColor } from '../../utils/colorHelpers'
-import { COLORS, getChartGrayShade } from '../../utils/designSystem'
+import { COLORS, getCategoryColor } from '../../utils/designSystem'
 import type { SortedChartCategory, OuterPieEntry } from '../../utils/chart/pipeline'
 import InteractivePie from './InteractivePie'
 import ChartPieCell from './ChartPieCell'
@@ -73,7 +73,7 @@ const StandardPieBody: React.FC<StandardPieBodyProps> = ({
       )}
 
       {/* 内側円: カテゴリ (最後に描画して前面配置)
-       * Mondrian Matte: カテゴリ色は無視し、index ベースのグレー階調を割当 */}
+       * Mondrian Matte: name から決定論的に Mondrian パレットの色を割当 */}
       <InteractivePie
         data={sortedData}
         dataKey="value"
@@ -82,12 +82,12 @@ const StandardPieBody: React.FC<StandardPieBodyProps> = ({
         activeIndex={innerActiveIndex}
         onActiveIndexChange={setInnerActiveIndex}
         onEntryClick={(entry) => onCategoryClick(entry.name)}
-        renderCell={(entry, index) => (
+        renderCell={(entry) => (
           <ChartPieCell
             key={`category-${entry.name}`}
             cellKey={`category-${entry.name}`}
             variant="category"
-            color={getChartGrayShade(index)}
+            color={getCategoryColor(entry.name)}
             isSelected={selectedCategoryName === entry.name}
             hasOtherSelection={hasCategorySelection}
           />

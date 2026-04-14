@@ -34,8 +34,9 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) =>
 
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+      className="inline-flex items-center justify-center px-2 rounded-full text-xs font-medium"
       style={{
+        height: 'var(--badge-h)',
         backgroundColor: config.bgColor,
         color: config.color,
         border: `1px solid ${STATUS_TONES[status === 'owned' ? 'success' : status === 'partial' ? 'warning' : 'error'].border}`,

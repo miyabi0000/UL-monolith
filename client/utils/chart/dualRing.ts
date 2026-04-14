@@ -6,7 +6,7 @@ import {
   isBig3Category,
   DUAL_RING_COLORS,
 } from '../types'
-import { COLORS } from '../designSystem'
+import { getCategoryColor, mondrian } from '../designSystem'
 import { sumWeight } from './categoryBuckets'
 
 /**
@@ -63,7 +63,8 @@ export const calculateBig3Breakdown = (items: GearItemWithCalculated[]): DonutSe
 }
 
 /** カテゴリ別内訳 (重量降順)
- * Mondrian Matte: カテゴリ色は無視し、Big3 = Mondrian Red、その他 = グレー濃淡を index 順に割当
+ * Mondrian Matte: カテゴリ名から決定論的に Mondrian パレットの色を割当。
+ * Big3 のみ Mondrian Red で固定強調。
  */
 export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): DonutSegment[] => {
   const byCategory = new Map<string, { items: GearItemWithCalculated[]; name: string; isBig3: boolean }>()
@@ -80,24 +81,17 @@ export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): Don
     byCategory.get(id)!.items.push(item)
   }
 
-  // 重量降順でソートしてから index ベースのグレー階調を割当
-  const sorted = Array.from(byCategory.entries())
+  return Array.from(byCategory.entries())
     .map(([id, bucket]) => ({
       id,
       label:  bucket.name,
       value:  sumWeight(bucket.items),
+      color:  bucket.isBig3 ? mondrian.red : getCategoryColor(bucket.name),
       isBig3: bucket.isBig3,
       items:  bucket.items,
     }))
     .filter((s) => s.value > 0)
     .sort((a, b) => b.value - a.value)
-
-  // グレー濃→薄 (gray800 → gray300) を index 順に。Big3 のみ Mondrian Red で上書き
-  const palette = [COLORS.gray[800], COLORS.gray[600], COLORS.gray[400], COLORS.gray[700], COLORS.gray[500], COLORS.gray[300]]
-  return sorted.map((seg, index) => ({
-    ...seg,
-    color: seg.isBig3 ? '#D7282F' : palette[index % palette.length],
-  }))
 }
 
 /** Outer ring: focus に応じてカテゴリ or Big3 内訳を返す */
