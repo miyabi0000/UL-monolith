@@ -106,17 +106,17 @@ const TableRow: React.FC<TableRowProps> = ({
       onClick={onItemSelect ? () => onItemSelect(item.id) : undefined}
       onMouseEnter={onItemHover ? () => onItemHover(item.id) : undefined}
       onMouseLeave={onItemHover ? () => onItemHover(null) : undefined}
-      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-slate-700/45 ${
+      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-gray-700/45 ${
         onItemSelect ? 'cursor-pointer' : ''
       } ${
         isSelected
-          ? 'bg-gray-50 dark:bg-slate-700/55 ring-2 ring-gray-400 dark:ring-slate-500 ring-inset'
+          ? 'bg-gray-50 dark:bg-gray-700/55 ring-2 ring-gray-400 dark:ring-gray-500 ring-inset'
           : activePackName && isInActivePack
-            ? 'bg-emerald-50/55 dark:bg-emerald-900/20'
+            ? 'bg-blue-50/55 dark:bg-blue-900/20'
           : isHighlighted
             ? 'border-l-2'
           : isHovered
-            ? 'bg-gray-50/60 dark:bg-slate-700/30'
+            ? 'bg-gray-50/60 dark:bg-gray-700/30'
             : 'bg-transparent'
       }`}
       style={isHighlighted && !isSelected
@@ -135,7 +135,7 @@ const TableRow: React.FC<TableRowProps> = ({
             className={[
               'p-0.5 rounded transition-colors',
               isInActivePack
-                ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200'
+                ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200'
                 : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'
             ].join(' ')}
             title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}

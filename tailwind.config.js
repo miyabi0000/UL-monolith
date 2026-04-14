@@ -8,26 +8,25 @@ export default {
     "./client/index.html",
     "./client/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // ダークモードをクラスベースで有効化
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
       // Typography scale — --gear-font-* (globals.css) と整合
-      // Tailwind 組み込み値 (text-xs=12px / text-sm=14px ...) を 1 段下にずらして上書き
       fontSize: {
-        '3xs':  ['9px',  { lineHeight: '1'    }],  // 新規: バッジ最小
-        '2xs':  ['10px', { lineHeight: '1'    }],  // 新規: ラベル・キャプション
-        'xs':   ['11px', { lineHeight: '1.5'  }],  // 上書き (旧 12px)
-        'sm':   ['12px', { lineHeight: '1.5'  }],  // 上書き (旧 14px)
-        'base': ['14px', { lineHeight: '1.5'  }],  // 上書き (旧 16px)
-        'lg':   ['16px', { lineHeight: '1.35' }],  // 上書き (旧 18px)
-        'xl':   ['18px', { lineHeight: '1.2'  }],  // 上書き (旧 20px)
-        '2xl':  ['20px', { lineHeight: '1.2'  }],  // 上書き (旧 24px)
+        '3xs':  ['9px',  { lineHeight: '1'    }],
+        '2xs':  ['10px', { lineHeight: '1'    }],
+        'xs':   ['11px', { lineHeight: '1.5'  }],
+        'sm':   ['12px', { lineHeight: '1.5'  }],
+        'base': ['14px', { lineHeight: '1.5'  }],
+        'lg':   ['16px', { lineHeight: '1.35' }],
+        'xl':   ['18px', { lineHeight: '1.2'  }],
+        '2xl':  ['20px', { lineHeight: '1.2'  }],
       },
       colors: {
-        // Tailwind 標準クラス（text-gray-900 など）をトークンへ一致させる
+        // 使用色ファミリー: gray, red, blue, orange のみ
         gray: {
           50: p.gray[50],
           100: p.gray[100],
@@ -51,18 +50,6 @@ export default {
           700: p.red[700],
           800: p.red[800],
           900: p.red[900],
-        },
-        green: {
-          50: p.green[50],
-          100: p.green[100],
-          200: p.green[200],
-          300: p.green[300],
-          400: p.green[400],
-          500: p.green[500],
-          600: p.green[600],
-          700: p.green[700],
-          800: p.green[800],
-          900: p.green[900],
         },
         orange: {
           50: p.orange[50],
@@ -88,24 +75,11 @@ export default {
           800: p.blue[800],
           900: p.blue[900],
         },
-        purple: {
-          50: p.purple[50],
-          100: p.purple[100],
-          200: p.purple[200],
-          300: p.purple[300],
-          400: p.purple[400],
-          500: p.purple[500],
-          600: p.purple[600],
-          700: p.purple[700],
-          800: p.purple[800],
-          900: p.purple[900],
-        },
-        // トークンから取得（designSystem.ts の COLORS と整合）
+        // セマンティックカラー
         primary: {
           DEFAULT: p.gray[700],
           hover: p.gray[800],
         },
-        // セマンティックカラー
         background: {
           light: p.gray[50],
           dark: p.gray[900],
@@ -120,16 +94,9 @@ export default {
         },
       },
       boxShadow: {
-        'sm': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
-        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
-        'dark-sm': '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3)',
-        'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4)',
-        'glass-sm': '0 4px 14px rgba(20, 28, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.42)',
-        'glass-md': '0 10px 28px rgba(20, 28, 40, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.46)',
-      },
-      backdropBlur: {
-        glass: '14px',
-        'glass-strong': '22px',
+        'sm': `0 1px 2px rgba(27, 29, 27, 0.05)`,
+        'md': `0 1px 3px rgba(27, 29, 27, 0.1), 0 1px 2px -1px rgba(27, 29, 27, 0.1)`,
+        'lg': `0 4px 6px -1px rgba(27, 29, 27, 0.1), 0 2px 4px -2px rgba(27, 29, 27, 0.1)`,
       },
       borderRadius: {
         sm: '4px',

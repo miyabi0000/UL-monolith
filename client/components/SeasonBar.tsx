@@ -23,18 +23,18 @@ const SEASON_LABELS_SHORT: Record<string, string> = {
   winter: 'Wi'
 }
 
-// 選択時のTailwindクラス（ライト/ダーク対応）
+// 選択時のTailwindクラス（gray / orange / blue の3色に収束）
 const SEASON_SELECTED_CLASSES: Record<string, string> = {
-  spring: 'bg-green-100 dark:bg-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-200',
-  summer: 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200',
-  fall:   'bg-orange-100 dark:bg-orange-900/40 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200',
+  spring: 'bg-gray-100 dark:bg-gray-700/40 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200',
+  summer: 'bg-orange-100 dark:bg-orange-900/40 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-200',
+  fall:   'bg-orange-100 dark:bg-orange-900/40 border-orange-400 dark:border-orange-600 text-orange-900 dark:text-orange-200',
   winter: 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200',
 }
 
 // 非選択時のアイコン色クラス
 const SEASON_ICON_CLASSES: Record<string, string> = {
-  spring: 'text-green-600 dark:text-green-500',
-  summer: 'text-amber-500 dark:text-amber-400',
+  spring: 'text-gray-600 dark:text-gray-400',
+  summer: 'text-orange-500 dark:text-orange-400',
   fall:   'text-orange-600 dark:text-orange-500',
   winter: 'text-blue-600 dark:text-blue-500',
 }
@@ -146,7 +146,7 @@ const SeasonBar: React.FC<SeasonBarProps> = ({
                 ${selected
                   ? `shadow-sm ${SEASON_SELECTED_CLASSES[season]}`
                   : isEditing
-                    ? `${SEASON_ICON_CLASSES[season]} border-slate-300/60 dark:border-slate-600/60 bg-white/45 dark:bg-slate-700/30 hover:brightness-95`
+                    ? `${SEASON_ICON_CLASSES[season]} border-gray-300/60 dark:border-gray-600/60 bg-white/45 dark:bg-gray-700/30 hover:brightness-95`
                     : `${SEASON_ICON_CLASSES[season]} border-transparent bg-transparent opacity-75`
                 }
               `}

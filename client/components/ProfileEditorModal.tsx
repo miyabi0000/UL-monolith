@@ -35,7 +35,7 @@ const ImageDropZone: React.FC<{
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, onSelect)}
       className={`border-2 border-dashed rounded-md p-2 text-center transition-colors ${
-        isDragging ? 'border-gray-700 bg-gray-50 dark:bg-slate-700' : 'border-gray-300 dark:border-slate-600'
+        isDragging ? 'border-gray-700 bg-gray-50 dark:bg-gray-700' : 'border-gray-300 dark:border-gray-600'
       }`}
     >
       {preview ? (

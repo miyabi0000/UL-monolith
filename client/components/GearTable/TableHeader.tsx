@@ -65,7 +65,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   const { unit } = useWeightUnit()
   const COLUMNS = React.useMemo(() => buildColumns(unit), [unit])
 
-  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur'
+  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-gray-800/95 backdrop-blur'
   const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-xs leading-none font-medium'
   const inactiveText = 'text-gray-500 dark:text-gray-300'
   const hoverText = 'hover:text-gray-700 dark:hover:text-gray-100'
@@ -145,7 +145,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                 labelBase,
                 'justify-center',
                 isAllVisibleInPack
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-blue-600 dark:text-blue-400'
                   : inactiveText,
                 onAddAllToPack ? `${hoverText} cursor-pointer` : 'cursor-default'
               ].join(' ')}
@@ -169,7 +169,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                 if (input) input.indeterminate = isPartiallySelected
               }}
               onChange={(e) => onSelectAll(e.target.checked)}
-              className="rounded border-gray-300 dark:border-slate-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 focus:ring-gray-500 dark:focus:ring-slate-400 w-3 h-3"
+              className="rounded border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 focus:ring-gray-500 dark:focus:ring-gray-400 w-3 h-3"
             />
           </th>
         )}

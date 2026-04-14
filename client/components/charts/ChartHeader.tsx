@@ -11,7 +11,7 @@ interface ChartHeaderProps {
 const displayModeButtonClass = (active: boolean) =>
   `h-5 px-1.5 rounded text-2xs font-medium transition-all duration-150 inline-flex items-center gap-1 ${
     active
-      ? 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-200 shadow-sm'
+      ? 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 shadow-sm'
       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
   }`
 
@@ -31,7 +31,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
         <div className="flex items-center justify-center w-full">
           <button
             onClick={() => onToggleCollapsed(false)}
-            className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors ${
+            className={`w-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded transition-colors ${
               screenSize === 'mobile' ? 'flex-row gap-2 py-2 px-3' : 'flex-col py-2'
             }`}
             aria-label="Expand chart"
@@ -61,7 +61,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
     <div className="flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 h-11">
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
-        <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-slate-700 rounded-md p-0.5">
+        <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
           <button
             type="button"
             onClick={() => onChartDisplayModeChange('pie')}
@@ -90,7 +90,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
       </div>
       <button
         onClick={() => onToggleCollapsed(true)}
-        className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-700 rounded transition-colors"
+        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-700 rounded transition-colors"
         aria-label="Collapse chart"
       >
         <svg

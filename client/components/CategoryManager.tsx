@@ -22,7 +22,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ name: string; color: string }>({
     name: '',
     color: DEFAULT_JAPANESE_COLOR
   })

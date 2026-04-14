@@ -60,11 +60,11 @@ const AppDock: React.FC<AppDockProps> = ({
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-2xl neu-raised bg-white/78 px-1.5 py-1.5 backdrop-blur dark:bg-slate-900/72">
+      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-2xl neu-raised bg-white/78 px-1.5 py-1.5 backdrop-blur dark:bg-gray-900/72">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
-            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/55 dark:hover:bg-slate-700/50 inline-flex items-center gap-1.5 transition-colors"
+            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white/55 dark:hover:bg-gray-700/50 inline-flex items-center gap-1.5 transition-colors"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -76,7 +76,7 @@ const AppDock: React.FC<AppDockProps> = ({
         {onShowAdvisor && (
           <button
             type="button"
-            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60 text-xs font-medium"
+            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-700/60 text-xs font-medium"
             onClick={onShowAdvisor}
             aria-label="UL Advisor"
             title="ULギアアドバイザー"
@@ -90,7 +90,7 @@ const AppDock: React.FC<AppDockProps> = ({
 
         <button
           type="button"
-          className="glass-header-chip h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
+          className="glass-header-chip h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-700/60"
           onClick={toggleDarkMode}
           aria-label="Toggle dark mode"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -110,7 +110,7 @@ const AppDock: React.FC<AppDockProps> = ({
         <div className="hidden sm:block relative">
           <button
             type="button"
-            className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-slate-700/60"
+            className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-700/60"
             onClick={() => setUserMenuOpen((prev) => !prev)}
             aria-label="User menu"
           >
@@ -126,7 +126,7 @@ const AppDock: React.FC<AppDockProps> = ({
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-slate-800 neu-raised overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 neu-raised overflow-hidden">
               {isAuthenticated ? (
                 <>
                   {userName && (
@@ -136,7 +136,7 @@ const AppDock: React.FC<AppDockProps> = ({
                   )}
                   <button
                     type="button"
-                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => {
                       onLogout();
                       setUserMenuOpen(false);
@@ -148,7 +148,7 @@ const AppDock: React.FC<AppDockProps> = ({
               ) : (
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => {
                     onShowLogin();
                     setUserMenuOpen(false);

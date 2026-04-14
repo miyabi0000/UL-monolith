@@ -55,7 +55,7 @@ const PackTabSection: React.FC<PackTabSectionProps> = ({
         className={[
           'flex-shrink-0 h-7 px-2.5 rounded-lg font-medium transition-colors',
           !selectedPackId
-            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
             : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100',
         ].join(' ')}
       >
@@ -74,7 +74,7 @@ const PackTabSection: React.FC<PackTabSectionProps> = ({
                 'h-7 font-medium transition-colors',
                 isActive && onOpenPackSettings ? 'pl-2.5 pr-1.5 rounded-l-lg' : 'pl-2.5 pr-2.5 rounded-lg',
                 isActive
-                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100',
               ].join(' ')}
             >
@@ -84,7 +84,7 @@ const PackTabSection: React.FC<PackTabSectionProps> = ({
               <button
                 type="button"
                 onClick={onOpenPackSettings}
-                className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-slate-600"
+                className="h-7 w-6 flex items-center justify-center rounded-r-lg bg-white dark:bg-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 shadow-sm transition-colors border-l border-gray-100 dark:border-gray-600"
                 title="Pack settings"
                 aria-label="Pack settings"
               >
@@ -102,7 +102,7 @@ const PackTabSection: React.FC<PackTabSectionProps> = ({
         <form onSubmit={handleCreateNewPack} className="flex items-center gap-1 flex-shrink-0">
           <input
             ref={newPackInputRef}
-            className="h-7 rounded-lg border-0 bg-white dark:bg-slate-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-slate-500 w-28"
+            className="h-7 rounded-lg border-0 bg-white dark:bg-gray-700 px-2 text-xs font-medium text-gray-900 dark:text-gray-100 shadow-sm focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500 w-28"
             placeholder="Pack name"
             value={newPackName}
             onChange={(e) => setNewPackName(e.target.value)}

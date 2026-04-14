@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { Category, WeightClass } from '../../utils/types'
 import { COLORS, STATUS_TONES, getPriorityColor } from '../../utils/designSystem'
+import { alpha } from '../../styles/tokens'
+import { blue, orange, red, gray } from '../../styles/tokens/primitives'
 import SeasonBar from '../SeasonBar'
 import WeightClassBadge from '../ui/WeightClassBadge'
 import CategoryBadge from '../ui/CategoryBadge'
@@ -53,7 +55,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
     if (!value) {
       return (
         <div
-          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded' : ''}`}
+          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded' : ''}`}
           onClick={clickable ? () => setShowModal(true) : undefined}
         >
           <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,7 +108,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+                className="w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
               />
             </div>
 
@@ -124,7 +126,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 rounded transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -139,7 +141,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preview
                 </label>
-                <div className="flex items-center justify-center h-40 neu-inset rounded bg-gray-50 dark:bg-slate-800">
+                <div className="flex items-center justify-center h-40 neu-inset rounded bg-gray-50 dark:bg-gray-800">
                   <img
                     src={urlInput}
                     alt="Preview"
@@ -166,7 +168,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-100 rounded"
+                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 rounded"
               >
                 Cancel
               </button>
@@ -214,7 +216,7 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400 box-border`}
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 box-border`}
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
@@ -244,7 +246,7 @@ export const EditableCategoryField: React.FC<EditableCategoryFieldProps> = ({
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+        className="gear-text-num gear-glass-control px-2 py-1 rounded-md border text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="">No Category</option>
@@ -476,11 +478,11 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
   onChange
 }) => {
   const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
-    1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
-    2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
-    3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
-    4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
-    5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' }
+    1: { color: blue[700], bg: alpha(blue[500], 0.12), border: alpha(blue[500], 0.3) },
+    2: { color: blue[600], bg: alpha(blue[500], 0.08), border: alpha(blue[500], 0.2) },
+    3: { color: orange[700], bg: alpha(orange[500], 0.12), border: alpha(orange[500], 0.3) },
+    4: { color: orange[800], bg: alpha(orange[500], 0.18), border: alpha(orange[500], 0.4) },
+    5: { color: red[700], bg: alpha(red[500], 0.12), border: alpha(red[500], 0.3) },
   }
   const style = PRIORITY_STYLE[priority] ?? PRIORITY_STYLE[3]
 
@@ -528,7 +530,7 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400"
+        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>

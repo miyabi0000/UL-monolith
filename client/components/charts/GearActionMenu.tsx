@@ -36,13 +36,13 @@ const GearActionMenu: React.FC<GearActionMenuProps> = ({
   if (!onShowForm) return null
 
   const itemClass =
-    'w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2'
+    'w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2'
 
   return (
     <div ref={containerRef} className="relative add-menu-container z-[200] isolate">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="p-1.5 rounded-md bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-slate-400"
+        className="p-1.5 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 neu-raised hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-400"
         aria-label="Actions menu"
         title="Actions"
       >
@@ -52,7 +52,7 @@ const GearActionMenu: React.FC<GearActionMenuProps> = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg neu-raised py-1 z-[1000]">
+        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg neu-raised py-1 z-[1000]">
           <button
             className={itemClass}
             onClick={() => { onShowForm(); setOpen(false) }}

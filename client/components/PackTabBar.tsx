@@ -35,7 +35,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
   ].join(' ');
 
   return (
-    <div className="px-4 pt-2 border-b border-gray-200 dark:border-slate-700">
+    <div className="px-4 pt-2 border-b border-gray-200 dark:border-gray-700">
       <div
         role="tablist"
         aria-label="Pack Tabs"
@@ -70,7 +70,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
         {showCreateInput ? (
           <form
             onSubmit={handleSubmit}
-            className="pack-tab-shape -mb-px h-8 px-4 flex items-center gap-1.5 bg-white border border-gray-200 border-b-white dark:bg-slate-800 dark:border-slate-600 dark:border-b-slate-800"
+            className="pack-tab-shape -mb-px h-8 px-4 flex items-center gap-1.5 bg-white border border-gray-200 border-b-white dark:bg-gray-800 dark:border-gray-600 dark:border-b-gray-800"
           >
             <input
               className="h-5 w-28 text-xs font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400"
@@ -106,7 +106,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
         ) : onCreatePack ? (
           <button
             type="button"
-            className="-mb-px ml-1 w-6 h-6 self-end mb-0.5 rounded-full flex items-center justify-center bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-500 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
+            className="-mb-px ml-1 w-6 h-6 self-end mb-0.5 rounded-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
             onClick={() => setShowCreateInput(true)}
             title="New pack"
             aria-label="New pack"

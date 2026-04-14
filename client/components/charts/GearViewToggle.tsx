@@ -58,7 +58,7 @@ const GearViewToggle: React.FC<GearViewToggleProps> = ({
           },
           isActive: gearViewMode === 'compare',
           isDisabled: showCheckboxes && gearViewMode !== 'compare',
-          activeClassName: 'bg-gray-700 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm',
+          activeClassName: 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm',
           ariaLabel: 'Compare view',
           title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
         },

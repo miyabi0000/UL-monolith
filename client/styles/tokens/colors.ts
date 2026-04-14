@@ -1,6 +1,8 @@
 /**
  * Design Tokens - Colors (Japanese palette / Zen garden oriented)
  * カラートークンの定義（Single Source of Truth）
+ *
+ * 使用色ファミリー: gray, red, blue, orange のみ
  */
 
 import type { PrimitiveColors, SemanticColors, ThemeColors } from './types';
@@ -21,6 +23,8 @@ export const alpha = (color: string, opacity: number): string => {
 
 /**
  * Primitive Colors（8色ファミリー）
+ * ※ UI で使用するのは gray, red, blue, orange のみ。
+ *   残りはチャート・カテゴリバッジ等のデータ可視化用に保持。
  */
 export const primitiveColors: PrimitiveColors = {
   gray: {
@@ -50,9 +54,9 @@ export const primitiveColors: PrimitiveColors = {
  * Semantic Colors
  * 用途に基づいたカラートークン
  *
- * Stone-garden rule:
- * - 通常は neutral(text/background/border) が主役
- * - 色は "意味" と "選択" に限定（primary=苔、error=朱 など）
+ * 使用色ルール:
+ * - モノクロ(gray) が主役
+ * - 色は "意味" に限定: error=赤, warning=橙, info/success=藍, primary=藍
  */
 export const semanticColors: SemanticColors = {
   // テキストカラー
@@ -63,10 +67,10 @@ export const semanticColors: SemanticColors = {
     white: gray.white,
     disable: gray[400],
     placeholder: gray[500],
-    primary: green[700],
+    primary: blue[700],
     error: red[600],
     warning: orange[700],
-    success: green[700],
+    success: blue[600],
     info: blue[600],
   },
 
@@ -100,46 +104,46 @@ export const semanticColors: SemanticColors = {
     focusVisible: blue[500],
   },
 
-  // Success (萌黄)
+  // Success (藍 — green 廃止のため blue で代替)
   success: {
-    main: green[500],
-    background: alpha(green[500], 0.08),
-    hover: alpha(green[500], 0.04),
-    outlinedBorder: green[500],
-    focusVisible: green[500],
-  },
-
-  // Primary (苔=萌黄) — 石庭の"苔"アクセント
-  primary: {
-    main: green[500],
-    background: alpha(green[500], 0.06),
-    hover: alpha(green[500], 0.04),
-    focus: alpha(green[500], 0.12),
-    outlinedBorder: green[400],
-    dark: green[700],
-    selected: alpha(green[500], 0.08),
-    focusVisible: green[500],
-  },
-
-  // Secondary (藍)
-  secondary: {
     main: blue[500],
+    background: alpha(blue[500], 0.08),
+    hover: alpha(blue[500], 0.04),
     outlinedBorder: blue[500],
-    background: alpha(blue[500], 0.06),
+    focusVisible: blue[500],
   },
 
-  // Tertiary (山吹)
-  tertiary: {
+  // Primary (藍)
+  primary: {
+    main: blue[500],
+    background: alpha(blue[500], 0.06),
+    hover: alpha(blue[500], 0.04),
+    focus: alpha(blue[500], 0.12),
+    outlinedBorder: blue[400],
+    dark: blue[700],
+    selected: alpha(blue[500], 0.08),
+    focusVisible: blue[500],
+  },
+
+  // Secondary (橙)
+  secondary: {
     main: orange[500],
     outlinedBorder: orange[500],
     background: alpha(orange[500], 0.06),
   },
 
-  // Quaternary (紫)
+  // Tertiary (赤)
+  tertiary: {
+    main: red[500],
+    outlinedBorder: red[500],
+    background: alpha(red[500], 0.06),
+  },
+
+  // Quaternary (gray)
   quaternary: {
-    main: purple[500],
-    outlinedBorder: purple[500],
-    background: alpha(purple[500], 0.06),
+    main: gray[500],
+    outlinedBorder: gray[500],
+    background: alpha(gray[500], 0.06),
   },
 
   // 共通カラー
@@ -176,28 +180,28 @@ export const semanticColors: SemanticColors = {
 
   // チャートグラデーション（垂直）
   chart: {
-    primaryVertical: `linear-gradient(180deg, ${green[400]} 0%, ${green[300]} 100%)`,
-    secondaryVertical: `linear-gradient(180deg, ${blue[400]} 0%, ${blue[300]} 100%)`,
-    tertiaryVertical: `linear-gradient(180deg, ${orange[400]} 0%, ${orange[300]} 100%)`,
-    quaternaryVertical: `linear-gradient(180deg, ${purple[400]} 0%, ${purple[300]} 100%)`,
-    quinaryVertical: `linear-gradient(180deg, ${red[400]} 0%, ${red[300]} 100%)`,
-    senaryVertical: `linear-gradient(180deg, ${lightBlue[400]} 0%, ${lightBlue[300]} 100%)`,
+    primaryVertical: `linear-gradient(180deg, ${blue[400]} 0%, ${blue[300]} 100%)`,
+    secondaryVertical: `linear-gradient(180deg, ${orange[400]} 0%, ${orange[300]} 100%)`,
+    tertiaryVertical: `linear-gradient(180deg, ${red[400]} 0%, ${red[300]} 100%)`,
+    quaternaryVertical: `linear-gradient(180deg, ${gray[400]} 0%, ${gray[300]} 100%)`,
+    quinaryVertical: `linear-gradient(180deg, ${gray[600]} 0%, ${gray[500]} 100%)`,
+    senaryVertical: `linear-gradient(180deg, ${gray[300]} 0%, ${gray[200]} 100%)`,
   },
 
   // プログレスグラデーション（水平）
   progress: {
-    primaryHorizontal: `linear-gradient(90deg, ${green[500]} 0%, ${green[300]} 100%)`,
-    secondaryHorizontal: `linear-gradient(90deg, ${blue[500]} 0%, ${blue[300]} 100%)`,
-    tertiaryHorizontal: `linear-gradient(90deg, ${orange[500]} 0%, ${orange[300]} 100%)`,
-    lightSecondary: `linear-gradient(90deg, ${lightBlue[500]} 0%, ${lightBlue[300]} 100%)`,
-    lightTertiary: `linear-gradient(90deg, ${purple[500]} 0%, ${purple[300]} 100%)`,
+    primaryHorizontal: `linear-gradient(90deg, ${blue[500]} 0%, ${blue[300]} 100%)`,
+    secondaryHorizontal: `linear-gradient(90deg, ${orange[500]} 0%, ${orange[300]} 100%)`,
+    tertiaryHorizontal: `linear-gradient(90deg, ${red[500]} 0%, ${red[300]} 100%)`,
+    lightSecondary: `linear-gradient(90deg, ${gray[500]} 0%, ${gray[300]} 100%)`,
+    lightTertiary: `linear-gradient(90deg, ${gray[700]} 0%, ${gray[500]} 100%)`,
     lightPrimary: `linear-gradient(90deg, ${gray[700]} 0%, ${gray[300]} 100%)`,
   },
 
   // 共進化グラデーション
   evolution: {
-    coEvolutionVertical: `linear-gradient(180deg, ${green[300]} 0%, ${blue[300]} 100%)`,
-    coEvolutionHorizontal: `linear-gradient(90deg, ${green[300]} 0%, ${blue[300]} 100%)`,
+    coEvolutionVertical: `linear-gradient(180deg, ${blue[300]} 0%, ${orange[300]} 100%)`,
+    coEvolutionHorizontal: `linear-gradient(90deg, ${blue[300]} 0%, ${orange[300]} 100%)`,
   },
 };
 
@@ -212,49 +216,20 @@ export const colors = {
 /**
  * UI Theme Tokens
  * CSS変数へ投影する色定義（light/dark）
+ * フラット+影デザイン
  */
 export const theme: { light: ThemeColors; dark: ThemeColors } = {
   light: {
     page: {
-      bg: `linear-gradient(180deg, ${gray[50]} 0%, ${gray[100]} 100%)`,
-      noiseOpacity: '0.025',
-      noiseBlendMode: 'overlay',
+      bg: gray[50],
     },
     surface: {
       border: 'transparent',
-      bgStart: 'rgba(255, 255, 255, 0.82)',
-      bgEnd: 'rgba(240, 240, 238, 0.68)',
-      beforeGloss: 'rgba(255, 255, 255, 0.07)',
-      fallbackBg: 'rgba(255, 255, 255, 0.92)',
     },
-    headerChip: {
-      border: 'transparent',
-      bgStart: 'rgba(255, 255, 255, 0.75)',
-      bgEnd: 'rgba(240, 240, 238, 0.55)',
-    },
-    table: {
-      shellBorder: 'transparent',
-      shellBgStart: 'rgba(255, 255, 255, 0.58)',
-      shellBgEnd: 'rgba(245, 245, 243, 0.36)',
-      headBg: 'rgba(255, 255, 255, 0.85)',
-      headShadowBottom: 'rgba(20, 28, 40, 0.06)',
-      headShadowTop: 'rgba(255, 255, 255, 0.6)',
-      rowBg: 'rgba(255, 255, 255, 0.52)',
-      rowEvenBg: 'rgba(248, 248, 246, 0.48)',
-      borderVert: 'transparent',
-      borderHead: 'transparent',
-      borderRow: 'transparent',
-    },
-    control: {
-      glassBg: 'rgba(255, 255, 255, 0.72)',
-      glassBorder: 'transparent',
-      chipBg: 'rgba(255, 255, 255, 0.65)',
-      chipBorder: 'transparent',
-    },
-    panel: {
-      flatBg: 'rgba(255, 255, 255, 0.90)',
-      flatBorder: 'transparent',
-      flatShadow: 'rgba(15, 23, 42, 0.08)',
+    shadow: {
+      sm: `0 1px 2px ${alpha(gray.black, 0.05)}`,
+      md: `0 1px 3px ${alpha(gray.black, 0.1)}, 0 1px 2px -1px ${alpha(gray.black, 0.1)}`,
+      lg: `0 4px 6px -1px ${alpha(gray.black, 0.1)}, 0 2px 4px -2px ${alpha(gray.black, 0.1)}`,
     },
     surfaceLevel: {
       0: gray.white,
@@ -286,9 +261,9 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
     },
     state: {
       success: {
-        fg: green[700],
-        bg: alpha(green[500], 0.12),
-        border: alpha(green[600], 0.45),
+        fg: blue[700],
+        bg: alpha(blue[500], 0.12),
+        border: alpha(blue[600], 0.45),
       },
       warning: {
         fg: orange[700],
@@ -316,50 +291,20 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
   },
   dark: {
     page: {
-      bg: 'linear-gradient(180deg, #0b1017 0%, #111827 55%, #0b1017 100%)',
-      noiseOpacity: '0.03',
-      noiseBlendMode: 'soft-light',
+      bg: gray[900],
     },
     surface: {
       border: 'transparent',
-      bgStart: 'rgba(30, 41, 59, 0.78)',
-      bgEnd: 'rgba(15, 23, 42, 0.68)',
-      beforeGloss: 'rgba(255, 255, 255, 0.06)',
-      fallbackBg: 'rgba(17, 24, 39, 0.95)',
     },
-    headerChip: {
-      border: 'transparent',
-      bgStart: 'rgba(51, 65, 85, 0.86)',
-      bgEnd: 'rgba(30, 41, 59, 0.74)',
-    },
-    table: {
-      shellBorder: 'transparent',
-      shellBgStart: 'rgba(30, 41, 59, 0.74)',
-      shellBgEnd: 'rgba(15, 23, 42, 0.64)',
-      headBg: 'rgba(30, 41, 59, 0.88)',
-      headShadowBottom: 'rgba(0, 0, 0, 0.15)',
-      headShadowTop: 'rgba(255, 255, 255, 0.05)',
-      rowBg: 'rgba(30, 41, 59, 0.5)',
-      rowEvenBg: 'rgba(30, 41, 59, 0.38)',
-      borderVert: 'transparent',
-      borderHead: 'transparent',
-      borderRow: 'transparent',
-    },
-    control: {
-      glassBg: 'rgba(30, 41, 59, 0.70)',
-      glassBorder: 'transparent',
-      chipBg: 'rgba(30, 41, 59, 0.60)',
-      chipBorder: 'transparent',
-    },
-    panel: {
-      flatBg: 'rgba(15, 23, 42, 0.85)',
-      flatBorder: 'transparent',
-      flatShadow: 'rgba(2, 6, 23, 0.35)',
+    shadow: {
+      sm: `0 1px 2px ${alpha(gray.black, 0.15)}`,
+      md: `0 1px 3px ${alpha(gray.black, 0.25)}, 0 1px 2px -1px ${alpha(gray.black, 0.15)}`,
+      lg: `0 4px 6px -1px ${alpha(gray.black, 0.25)}, 0 2px 4px -2px ${alpha(gray.black, 0.15)}`,
     },
     surfaceLevel: {
-      0: '#0f172a',
-      1: '#111827',
-      2: '#1f2937',
+      0: gray[800],
+      1: gray[900],
+      2: gray.black,
     },
     ink: {
       primary: gray[50],
@@ -377,7 +322,7 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
     },
     focus: {
       ring: blue[400],
-      ringOffset: '#111827',
+      ringOffset: gray[900],
     },
     overlay: {
       hover: alpha(gray.white, 0.06),
@@ -386,9 +331,9 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
     },
     state: {
       success: {
-        fg: green[300],
-        bg: alpha(green[500], 0.2),
-        border: alpha(green[300], 0.5),
+        fg: blue[300],
+        bg: alpha(blue[500], 0.2),
+        border: alpha(blue[300], 0.5),
       },
       warning: {
         fg: orange[300],
@@ -418,34 +363,10 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
 
 const toThemeCssVariables = (tokens: ThemeColors): Record<string, string> => ({
   '--page-bg': tokens.page.bg,
-  '--body-noise-opacity': tokens.page.noiseOpacity,
-  '--noise-blend-mode': tokens.page.noiseBlendMode,
   '--surface-border': tokens.surface.border,
-  '--surface-bg-start': tokens.surface.bgStart,
-  '--surface-bg-end': tokens.surface.bgEnd,
-  '--surface-before-gloss': tokens.surface.beforeGloss,
-  '--surface-fallback-bg': tokens.surface.fallbackBg,
-  '--header-chip-border': tokens.headerChip.border,
-  '--header-chip-bg-start': tokens.headerChip.bgStart,
-  '--header-chip-bg-end': tokens.headerChip.bgEnd,
-  '--table-shell-border': tokens.table.shellBorder,
-  '--table-shell-bg-start': tokens.table.shellBgStart,
-  '--table-shell-bg-end': tokens.table.shellBgEnd,
-  '--table-head-bg': tokens.table.headBg,
-  '--table-head-shadow-bottom': tokens.table.headShadowBottom,
-  '--table-head-shadow-top': tokens.table.headShadowTop,
-  '--table-row-bg': tokens.table.rowBg,
-  '--table-row-even-bg': tokens.table.rowEvenBg,
-  '--table-border-vert': tokens.table.borderVert,
-  '--table-border-head': tokens.table.borderHead,
-  '--table-border-row': tokens.table.borderRow,
-  '--glass-control-bg': tokens.control.glassBg,
-  '--glass-control-border': tokens.control.glassBorder,
-  '--glass-chip-bg': tokens.control.chipBg,
-  '--glass-chip-border': tokens.control.chipBorder,
-  '--flat-panel-bg': tokens.panel.flatBg,
-  '--flat-panel-border': tokens.panel.flatBorder,
-  '--flat-panel-shadow': tokens.panel.flatShadow,
+  '--shadow-sm': tokens.shadow.sm,
+  '--shadow-md': tokens.shadow.md,
+  '--shadow-lg': tokens.shadow.lg,
   '--surface-level-0': tokens.surfaceLevel[0],
   '--surface-level-1': tokens.surfaceLevel[1],
   '--surface-level-2': tokens.surfaceLevel[2],

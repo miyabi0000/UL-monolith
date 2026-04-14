@@ -15,7 +15,8 @@
       "Bash(npm install:*)",
       "Bash(lsof:*)",
       "Bash(npm run server:dev:*)",
-      "Read(//Users/shimizumasaya/pr16-work/**)"
+      "Read(//Users/shimizumasaya/pr16-work/**)",
+      "Bash(git status:*)"
     ],
     "deny": [],
     "additionalDirectories": [

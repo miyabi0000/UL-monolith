@@ -13,6 +13,7 @@ import type { ChartViewMode } from '../../utils/types'
 import { darkenColor } from '../../utils/colorHelpers'
 import { formatChartAxisValue } from '../../utils/chartHelpers'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
+import { primitiveColors, alpha } from '../../styles/tokens'
 import { formatWeight } from '../../utils/weightUnit'
 
 export interface BarItem {
@@ -46,7 +47,7 @@ const ChartTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload 
     ? `¥${Math.round(item.value / 100).toLocaleString()}`
     : formatWeight(item.value, unit)
   return (
-    <div className="bg-white dark:bg-slate-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
+    <div className="bg-white dark:bg-gray-800 neu-raised rounded-md px-2.5 py-1.5 text-xs pointer-events-none">
       <div className="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">{item.name}</div>
       <div className="text-gray-500 dark:text-gray-400">{formattedValue} · {item.percentage}%</div>
     </div>
@@ -73,7 +74,7 @@ const CategoryTick: React.FC<{
       dominantBaseline="middle"
       style={{
         fontSize: 10,
-        fill: isSelected ? '#374151' : '#6b7280',
+        fill: isSelected ? primitiveColors.gray[700] : primitiveColors.gray[500],
         fontWeight: isSelected ? 600 : 400,
       }}
     >
@@ -116,7 +117,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
           <XAxis
             type="number"
             tickFormatter={(value: number) => formatChartAxisValue(value, viewMode, unit)}
-            tick={{ fontSize: 9, fill: '#9ca3af' }}
+            tick={{ fontSize: 9, fill: primitiveColors.gray[400] }}
             axisLine={false}
             tickLine={false}
           />
@@ -137,7 +138,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
           />
           <Tooltip
             content={<ChartTooltip />}
-            cursor={{ fill: 'rgba(156, 163, 175, 0.08)' }}
+            cursor={{ fill: alpha(primitiveColors.gray[400], 0.08) }}
           />
           <Bar
             dataKey="value"
