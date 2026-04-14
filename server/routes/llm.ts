@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { handleExtractUrl, handleExtractPrompt, handleEnhancePrompt } from './llm/extractHandlers';
-import { handleExtractCategory } from './llm/categoryHandlers';
-import { handleHealthCheck } from './llm/healthHandlers';
-import { handleAdvisorChat } from './llm/advisorHandlers';
+import { handleExtractUrl, handleExtractPrompt, handleEnhancePrompt } from './llm/extractHandlers.js';
+import { handleExtractCategory } from './llm/categoryHandlers.js';
+import { handleHealthCheck } from './llm/healthHandlers.js';
+import { handleAdvisorChat } from './llm/advisorHandlers.js';
 
 const router = Router();
 

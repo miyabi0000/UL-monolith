@@ -1,4 +1,4 @@
-import { GearItemForm, GearItem, DEFAULT_GEAR_VALUES } from '../models/types';
+import { GearItemForm, GearItem, DEFAULT_GEAR_VALUES } from '../models/types.js';
 
 // リクエストボディの型（any入力を受け付ける）
 interface RawGearInput {

@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { db } from '../database/connection';
-import { sendError, sendSuccess } from './shared/httpResponse';
-import { DEMO_USER_ID } from './shared/userContext';
+import { db } from '../database/connection.js';
+import { sendError, sendSuccess } from './shared/httpResponse.js';
+import { DEMO_USER_ID } from './shared/userContext.js';
 import { 
   validateCategoryInput, 
   normalizeCategoryName, 
   DEFAULT_CATEGORY_COLOR 
-} from '../utils/categoryValidation';
+} from '../utils/categoryValidation.js';
 
 const router = Router();
 

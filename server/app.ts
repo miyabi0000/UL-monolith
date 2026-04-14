@@ -9,16 +9,16 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 // Import routes
-import gearRoutes from './routes/gear';
-import categoryRoutes from './routes/categories';
-import analyticsRoutes from './routes/analytics';
-import llmRoutes from './routes/llm';
-import authRoutes from './routes/auth';
-import imageProxyRoutes from './routes/imageProxy';
-import packRoutes from './routes/packs';
-import profileRoutes from './routes/profile';
-import advisorRoutes from './routes/advisor';
-import { cognitoAuth } from './middleware/cognitoAuth';
+import gearRoutes from './routes/gear.js';
+import categoryRoutes from './routes/categories.js';
+import analyticsRoutes from './routes/analytics.js';
+import llmRoutes from './routes/llm.js';
+import authRoutes from './routes/auth.js';
+import imageProxyRoutes from './routes/imageProxy.js';
+import packRoutes from './routes/packs.js';
+import profileRoutes from './routes/profile.js';
+import advisorRoutes from './routes/advisor.js';
+import { cognitoAuth } from './middleware/cognitoAuth.js';
 
 // Load environment variables
 config();

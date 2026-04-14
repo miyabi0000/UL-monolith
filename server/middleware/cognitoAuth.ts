@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
-import { resolveUserIdFromSub } from '../routes/shared/userProvisioning';
+import { resolveUserIdFromSub } from '../routes/shared/userProvisioning.js';
 
 // Cognito JWT 検証ミドルウェア
 // 開発時は COGNITO_USER_POOL_ID が未設定なら認証をスキップ（DEMO_USER_ID を使用）

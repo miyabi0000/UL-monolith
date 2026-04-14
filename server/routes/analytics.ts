@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { db } from '../database/connection';
-import { sendError, sendSuccess } from './shared/httpResponse';
-import { getRequestUserId } from './shared/userContext';
+import { db } from '../database/connection.js';
+import { sendError, sendSuccess } from './shared/httpResponse.js';
+import { getRequestUserId } from './shared/userContext.js';
 
 const router = Router();
 
