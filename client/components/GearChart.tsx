@@ -1,11 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import HorizontalBarChart from './charts/HorizontalBarChart'
 import { useResponsiveSize } from '../hooks/useResponsiveSize'
 import { Category, ChartData, ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode, WeightBreakdown, ULStatus, ChartFocus, ChartScope } from '../utils/types'
 import { COLORS } from '../utils/designSystem'
-import { alpha } from '../styles/tokens'
-import { darkenColor, darkenHslColor, generateItemColor } from '../utils/colorHelpers'
+import { generateItemColor } from '../utils/colorHelpers'
 import {
   calculateInnerRingData,
   calculateOuterRingData,
@@ -15,13 +12,12 @@ import {
 } from '../utils/chartHelpers'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
-import ActiveCalloutShape from './charts/ActiveCalloutShape'
 import SegmentedControl from './ui/SegmentedControl'
-import ChartCenterDisplay from './charts/ChartCenterDisplay'
 import { CHART_CONFIG } from '../utils/chartConfig'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
 import PackTabSection from './charts/PackTabSection'
 import ChartHeader from './charts/ChartHeader'
+import ChartBody from './charts/ChartBody'
 import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 
@@ -346,253 +342,39 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
 
           {!isChartCollapsed && (
             <>
-        {/* チャートエリア */}
-        {chartDisplayMode === 'bar' ? (
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            {/* ドリルダウン時のブレッドクラム */}
-            {selectedData && (
-              <div className="flex items-center gap-1.5 px-3 pt-2 pb-0">
-                <button
-                  type="button"
-                  onClick={() => handleCategoryClick(selectedData.name)}
-                  className="flex items-center gap-0.5 text-2xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                >
-                  <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 12L6 8l4-4"/>
-                  </svg>
-                  All
-                </button>
-                <span className="text-2xs text-gray-400 dark:text-gray-500">/</span>
-                <span className="text-2xs font-medium truncate" style={{ color: selectedData.color }}>
-                  {selectedData.name}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 w-full px-3 py-2 flex flex-col justify-center">
-              <HorizontalBarChart
-                data={barData}
-                totalValue={totalValue}
-                viewMode={viewMode}
-                selectedCategories={selectedCategories}
-                onCategoryClick={handleCategoryClick}
-                onItemClick={handleItemClick}
-                onItemHover={onItemHover}
-                hoveredItemId={hoveredItemId}
-              />
-            </div>
-          </div>
-        ) : (
-        <div className="relative flex items-center justify-center p-2 flex-1" style={{ minHeight: chartHeight }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              {/* Weight-Classモード: 二重ドーナツ */}
-              {viewMode === 'weight-class' && dualRingInnerData && dualRingOuterData ? (
-                <>
-                  {/* Outer ring: カテゴリ or Big3内訳 */}
-                  <Pie
-                    data={dualRingOuterData}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={outerRadiusConfig.outer}
-                    innerRadius={outerRadiusConfig.inner}
-                    onClick={(entry) => handleDualRingOuterClick(entry.id)}
-                    activeIndex={outerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape as any}
-                    onMouseEnter={(_, idx) => setOuterActiveIndex(idx)}
-                    onMouseLeave={() => setOuterActiveIndex(null)}
-                    className="cursor-pointer"
-                  >
-                    {dualRingOuterData.map((entry, index) => {
-                      const isSelected = selectedCategories.includes(entry.label)
-                      const darkenedFill = darkenColor(entry.color, 0.15)
-                      // Outer ringは薄めに表示してInner ringを強調
-                      const baseOpacity = chartFocus !== 'all' ? 0.5 : 0.7
-                      return (
-                        <Cell
-                          key={`dual-outer-${index}`}
-                          fill={isSelected ? darkenedFill : entry.color}
-                          stroke={COLORS.white}
-                          strokeWidth={isSelected ? 2 : 1}
-                          opacity={isSelected ? 0.95 : baseOpacity}
-                          style={{
-                            transition: 'all 0.2s ease',
-                            outline: 'none',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      )
-                    })}
-                  </Pie>
-                  {/* Inner ring: Big3 vs Other */}
-                  <Pie
-                    data={dualRingInnerData}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={innerRadiusConfig.outer}
-                    innerRadius={innerRadiusConfig.inner}
-                    onClick={(entry) => handleInnerRingClick(entry.id)}
-                    activeIndex={innerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape as any}
-                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
-                    onMouseLeave={() => setInnerActiveIndex(null)}
-                    className="cursor-pointer"
-                  >
-                    {dualRingInnerData.map((entry, index) => {
-                      const isFocused = chartFocus === entry.id || chartFocus === 'all'
-                      const darkenedFill = darkenColor(entry.color, 0.25)
-                      return (
-                        <Cell
-                          key={`dual-inner-${index}`}
-                          fill={chartFocus === entry.id ? darkenedFill : entry.color}
-                          stroke={chartFocus === entry.id ? darkenedFill : COLORS.white}
-                          strokeWidth={chartFocus === entry.id ? 3 : 2}
-                          opacity={isFocused ? 1 : 0.35}
-                          style={{
-                            filter: chartFocus === entry.id ? `drop-shadow(0 0 8px ${entry.color}aa)` : 'none',
-                            transition: 'all 0.2s ease',
-                            outline: 'none',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      )
-                    })}
-                  </Pie>
-                </>
-              ) : (
-                <>
-                  {/* 外側円 - アイテム（先に描画） */}
-                  {selectedCategoryFromChart && (
-                    <Pie
-                      data={outerPieData}
-                      dataKey="value"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={outerRadiusConfig.outer}
-                      innerRadius={outerRadiusConfig.inner}
-                      onClick={(entry) => handleItemClick(entry.id)}
-                      activeIndex={outerActiveIndex ?? undefined}
-                      activeShape={ActiveCalloutShape as any}
-                      onMouseEnter={(entry, idx) => {
-                        setOuterActiveIndex(idx)
-                        if (entry?.id) onItemHover?.(entry.id)
-                      }}
-                      onMouseLeave={() => {
-                        setOuterActiveIndex(null)
-                        onItemHover?.(null)
-                      }}
-                      className="cursor-pointer"
-                    >
-                      {outerPieData.map((item, index) => {
-                        const fillColor = generateItemColor(
-                          selectedData?.color || DEFAULT_COLOR,
-                          index,
-                          selectedData?.sortedItems?.length || 1
-                        )
-                        const isSelected = selectedItem === item.id
-                        const darkenedFillColor = darkenHslColor(fillColor, 0.2)
-                        const darkenedStrokeColor = darkenColor(selectedData?.color || DEFAULT_COLOR, 0.2)
-                        return (
-                          <Cell
-                            key={`item-${index}`}
-                            fill={isSelected ? darkenedFillColor : fillColor}
-                            opacity={isSelected ? 1 : 0.85}
-                            stroke={isSelected ? darkenedStrokeColor : COLORS.white}
-                            strokeWidth={isSelected ? 2 : 1}
-                            style={{
-                              filter: isSelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
-                              transition: 'all 0.2s ease',
-                              outline: 'none'
-                            }}
-                          />
-                        )
-                      })}
-                    </Pie>
-                  )}
+        <ChartBody
+          chartDisplayMode={chartDisplayMode}
+          viewMode={viewMode}
+          totalValue={totalValue}
+          chartHeight={chartHeight}
+          sortedData={sortedData}
+          outerPieData={outerPieData}
+          selectedCategory={selectedData ?? null}
+          selectedCategoryName={selectedCategoryFromChart}
+          selectedItemId={selectedItem}
+          barData={barData}
+          dualRingInnerData={dualRingInnerData}
+          dualRingOuterData={dualRingOuterData}
+          chartFocus={chartFocus}
+          selectedCategories={selectedCategories}
+          outerRadiusConfig={outerRadiusConfig}
+          innerRadiusConfig={innerRadiusConfig}
+          centerMaxWidth={centerMaxWidth}
+          selectedItemData={selectedItemData}
+          centerPulse={centerPulse}
+          onCenterClick={handleCenterClick}
+          screenSize={screenSize}
+          weightBreakdown={weightBreakdown}
+          ulStatus={ulStatus}
+          onCategoryClick={handleCategoryClick}
+          onItemClick={handleItemClick}
+          onItemHover={onItemHover}
+          onInnerRingClick={handleInnerRingClick}
+          onDualRingOuterClick={handleDualRingOuterClick}
+          onClearCategorySelection={() => selectedData && handleCategoryClick(selectedData.name)}
+          hoveredItemId={hoveredItemId ?? null}
+        />
 
-                  {/* 内側円 - カテゴリ（最後に描画して最上面に） */}
-                  <Pie
-                    data={sortedData.map(d => ({ ...d, color: d.color }))}
-                    dataKey="value"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={innerRadiusConfig.outer}
-                    innerRadius={innerRadiusConfig.inner}
-                    onClick={(entry) => handleCategoryClick(entry.name)}
-                    activeIndex={innerActiveIndex ?? undefined}
-                    activeShape={ActiveCalloutShape as any}
-                    onMouseEnter={(_, idx) => setInnerActiveIndex(idx)}
-                    onMouseLeave={() => setInnerActiveIndex(null)}
-                    className="cursor-pointer"
-                  >
-                    {sortedData.map((entry, index) => {
-                      const isCategorySelected = selectedCategoryFromChart === entry.name
-                      const hasSelection = selectedCategoryFromChart !== null
-                      const darkenedFillColor = darkenColor(entry.color, 0.15)
-                      const darkenedStrokeColor = darkenColor(entry.color, 0.2)
-                      return (
-                        <Cell
-                          key={`category-${entry.name}`}
-                          fill={isCategorySelected ? darkenedFillColor : entry.color}
-                          stroke={isCategorySelected ? darkenedStrokeColor : COLORS.white}
-                          strokeWidth={isCategorySelected ? 2 : 1}
-                          opacity={hasSelection && !isCategorySelected ? 0.4 : 1}
-                          className={hasSelection && !isCategorySelected ? 'hover:opacity-60' : ''}
-                          style={{
-                            filter: isCategorySelected ? `drop-shadow(0 0 6px ${darkenedStrokeColor}99)` : 'none',
-                            transition: 'all 0.2s ease',
-                            outline: 'none',
-                            cursor: 'pointer'
-                          }}
-                        />
-                      )
-                    })}
-                  </Pie>
-                </>
-              )}
-            </PieChart>
-          </ResponsiveContainer>
-
-          {/* 中央表示 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div
-              className="text-center cursor-pointer pointer-events-auto flex flex-col items-center justify-center"
-              style={{
-                width: innerRadiusConfig.inner * 2,
-                height: innerRadiusConfig.inner * 2,
-                borderRadius: '50%',
-                transition: 'all 0.3s ease',
-                backgroundColor: centerPulse ? alpha(COLORS.gray[800], 0.05) : 'transparent',
-                transform: centerPulse ? 'scale(1.05)' : 'scale(1)',
-                boxShadow: centerPulse ? `0 0 20px ${alpha(COLORS.gray[800], 0.3)}` : 'none'
-              }}
-              onClick={handleCenterClick}
-            >
-              <ChartCenterDisplay
-                selectedItemData={selectedItemData}
-                selectedCategoryFromChart={selectedCategoryFromChart}
-                selectedCategoryData={
-                  selectedData
-                    ? {
-                      value: selectedData.value,
-                      color: selectedData.color,
-                      percentage: selectedData.percentage
-                    }
-                    : null
-                }
-                viewMode={viewMode}
-                screenSize={screenSize}
-                centerMaxWidth={centerMaxWidth}
-                chartFocus={chartFocus}
-                weightBreakdown={weightBreakdown}
-                ulStatus={ulStatus}
-                totalValue={totalValue}
-              />
-            </div>
-          </div>
-        </div>
-        )}
 
         <ChartSummaryFooter
           viewMode={viewMode}
