@@ -32,13 +32,15 @@ const defaultLlmMax = isDevelopment ? 120 : 10;
 // dist/ ディレクトリの解決
 // 開発時 (tsx): __dirname = .../UL-monolith/server → ../dist
 // 本番 (tsc コンパイル後): __dirname = .../UL-monolith/server/dist → ../../dist
+// 注意: 本番では ../dist が server/dist (JS 出力) を指すので、
+// index.html の存在でフロント dist かを判定する
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const candidates = [
   path.resolve(__dirname, '../dist'),       // tsx watch (server/app.ts から)
   path.resolve(__dirname, '../../dist'),    // production (server/dist/app.js から)
 ];
-const distPath = candidates.find((p) => fs.existsSync(p)) ?? null;
+const distPath = candidates.find((p) => fs.existsSync(path.join(p, 'index.html'))) ?? null;
 
 // Rate Limiting設定
 const limiter = rateLimit({
