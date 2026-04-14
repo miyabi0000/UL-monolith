@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "server:dev": "tsx watch server/app.ts",
     "server:build": "tsc --project server/tsconfig.json",
+    "start": "node server/dist/app.js",
+    "migrate": "tsx server/scripts/migrate.ts",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit && tsc --noEmit --project server/tsconfig.json"
   },
