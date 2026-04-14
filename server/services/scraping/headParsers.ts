@@ -13,7 +13,7 @@ export interface OgpData {
 }
 
 /** JSON-LD構造化データを抽出 */
-export function extractJsonLd($: cheerio.Root): Record<string, unknown> | null {
+export function extractJsonLd($: cheerio.CheerioAPI): Record<string, unknown> | null {
   try {
     const jsonLdScript = $('script[type="application/ld+json"]').html();
     if (jsonLdScript) {
@@ -26,7 +26,7 @@ export function extractJsonLd($: cheerio.Root): Record<string, unknown> | null {
 }
 
 /** OGPメタタグを一括抽出 */
-export function extractOgp($: cheerio.Root): OgpData {
+export function extractOgp($: cheerio.CheerioAPI): OgpData {
   return {
     title: $('meta[property="og:title"]').attr('content') || undefined,
     image: $('meta[property="og:image"]').attr('content') || undefined,
