@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { Category, WeightClass } from '../../utils/types'
-import { COLORS, STATUS_TONES, getPriorityColor } from '../../utils/designSystem'
+import { COLORS, STATUS_TONES, getPriorityColor, BORDERS } from '../../utils/designSystem'
 import { alpha } from '../../styles/tokens'
 import { blue, orange, red, gray } from '../../styles/tokens/primitives'
 import SeasonBar from '../SeasonBar'
@@ -495,7 +495,8 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({
         style={{
           color: style.color,
           backgroundColor: style.bg,
-          border: `1px solid ${style.border}`
+          border: BORDERS.default,
+          borderColor: style.border,
         }}
         aria-label="Priority"
         title={`Priority ${priority}`}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { COLORS, SHADOW } from '../../utils/designSystem';
+import { COLORS, SHADOW, BORDERS } from '../../utils/designSystem';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import GearInfoSummary from './GearInfoSummary';
 
@@ -30,7 +30,7 @@ const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value })
 /** Edit / Link ボタン */
 const actionButtonStyle = {
   color: COLORS.text.secondary,
-  border: `1px solid ${COLORS.gray[200]}`,
+  border: BORDERS.default,
 } as const;
 
 const actionButtonClass = 'text-2xs font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';

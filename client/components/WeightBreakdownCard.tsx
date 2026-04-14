@@ -1,6 +1,6 @@
 import React from 'react'
 import { WeightBreakdown, ULStatus, UL_THRESHOLDS, WEIGHT_CLASS_COLORS } from '../utils/types'
-import { mondrian } from '../utils/designSystem'
+import { mondrian, BORDERS } from '../utils/designSystem'
 import Card from './ui/Card'
 import ULStatusBadge from './ui/ULStatusBadge'
 import { formatWeight, formatWeightLarge } from '../utils/weightUnit'
@@ -138,7 +138,7 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         </div>
         <div
           className="w-full h-2 overflow-hidden"
-          style={{ background: 'var(--surface-level-2)', border: `1px solid ${mondrian.orange}` }}
+          style={{ background: 'var(--surface-level-2)', border: BORDERS.default }}
         >
           <div
             className="h-full transition-all duration-300"

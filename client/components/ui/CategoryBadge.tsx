@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCategoryColor } from '../../utils/designSystem';
+import { getCategoryColor, BORDERS } from '../../utils/designSystem';
 import { alpha } from '../../styles/tokens';
 
 interface CategoryBadgeProps {
@@ -12,10 +12,12 @@ interface CategoryBadgeProps {
 
 const CategoryBadge: React.FC<CategoryBadgeProps> = ({ name, className = '', onClick }) => {
   const accent = getCategoryColor(name);
+  // BORDERS.default で width/style を継承し、color のみカテゴリ固有 accent で上書き
   const style: React.CSSProperties = {
     backgroundColor: alpha(accent, 0.12),
     color: accent,
-    border: `1px solid ${alpha(accent, 0.5)}`,
+    border: BORDERS.default,
+    borderColor: alpha(accent, 0.5),
     height: 'var(--badge-h)',
     lineHeight: 1,
   };

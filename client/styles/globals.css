@@ -63,6 +63,16 @@
     --mondrian-canvas: #FAFAF7;
     /** UI 枠線専用 — 全コンポーネントの 1px 線はこの色 */
     --mondrian-orange: #C2410C;
+    /** 枠線トークン — width / shorthand を一元管理。色は --stroke-default を参照 */
+    --border-width-thin:  1px;
+    --border-width-bold:  2px;
+    --border-width-thick: 4px;
+    --border-default:  var(--border-width-thin)  solid var(--stroke-default);
+    --border-bold:     var(--border-width-bold)  solid var(--stroke-default);
+    --border-thick:    var(--border-width-thick) solid var(--stroke-default);
+    --border-faint:    var(--border-width-thin)  solid var(--stroke-subtle);
+    --border-divider:  var(--border-width-thin)  solid var(--stroke-divider);
+    --border-focus:    var(--border-width-bold)  solid var(--focus-ring);
     /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義 */
     --page-bg: var(--page-bg, #FAFAF7);
     --shadow-sm: 0 1px 0 rgba(10, 10, 10, 0.04);
@@ -158,7 +168,7 @@
   .card,
   .modal-content {
     @apply relative overflow-hidden;
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
     box-shadow: var(--shadow-sm);
@@ -168,7 +178,7 @@
 
   /* ヘッダー — 下部に Mondrian 黒線 */
   .glass-header {
-    border-bottom: 1px solid var(--stroke-default);
+    border-bottom: var(--border-default);
     background: var(--surface-level-0);
     box-shadow: none;
   }
@@ -177,7 +187,7 @@
   .glass-header-chip {
     @apply inline-flex items-center justify-center relative overflow-hidden transition-all duration-150;
     min-height: var(--header-chip-h);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-badge);
     background: var(--surface-level-0);
     box-shadow: var(--shadow-sm);
@@ -200,7 +210,7 @@
     border-color: var(--stroke-subtle);
   }
   .icon-btn:focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: var(--border-focus);
     outline-offset: 1px;
   }
   .icon-btn-sm { height: var(--control-h-sm); width: var(--control-h-sm); }
@@ -212,7 +222,7 @@
     @apply inline-flex p-0.5;
     height: var(--control-h-md);
     background: var(--surface-level-2);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-control);
   }
   .segmented > button {
@@ -281,7 +291,7 @@
   /* テーブル — Mondrian 黒線で額装 */
   .gear-table-shell {
     @apply overflow-hidden;
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
     box-shadow: var(--shadow-sm);
@@ -337,20 +347,20 @@
   /* コントロール */
   .gear-glass-control {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     box-shadow: var(--shadow-sm);
   }
 
   .gear-glass-chip {
     background: var(--surface-level-1);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-control);
   }
 
   /* フラットパネル */
   .card.flat-panel {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     box-shadow: var(--shadow-sm);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -379,7 +389,7 @@
     min-height: var(--control-h-md);
     border-radius: var(--radius-control);
     box-shadow: var(--shadow-sm);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
   }
 
   .btn-primary {
@@ -412,14 +422,14 @@
   .input {
     @apply inline-flex items-center px-2 transition-all duration-200;
     min-height: var(--field-h);
-    border: 1px solid var(--stroke-default);
+    border: var(--border-default);
     border-radius: var(--radius-control);
     color: var(--ink-primary);
     background: var(--surface-level-0);
   }
 
   .input:focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: var(--border-focus);
     outline-offset: 1px;
   }
 
@@ -427,7 +437,7 @@
    * ワークスペース等の大区画を Mondrian Orange の枠線で囲う */
   .mondrian-grid {
     position: relative;
-    border: 2px solid var(--stroke-default);
+    border: var(--border-bold);
     background: var(--surface-level-0);
   }
   .mondrian-grid::before {

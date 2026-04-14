@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { COLORS, STATUS_TONES, mondrian } from '../utils/designSystem';
+import { COLORS, STATUS_TONES, mondrian, BORDERS, BORDER_WIDTHS } from '../utils/designSystem';
 
 export interface NotificationMessage {
   id: string;
@@ -47,24 +47,28 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
     }, 300);
   };
 
-  // De Stijl: 通知の枠線は Mondrian Orange で統一、左 4px は Mondrian 3色+黒で意味付け
+  // De Stijl: 通知の枠線は BORDERS.default、左帯のみ Mondrian 3色+黒で意味付け
   const getMessageStyles = (type: string): React.CSSProperties => {
     const base: React.CSSProperties = {
       backgroundColor: COLORS.white,
       color: COLORS.text.primary,
-      border: `1px solid ${mondrian.orange}`,
+      border: BORDERS.default,
     };
+    const accentLeft = (color: string): React.CSSProperties => ({
+      borderLeftWidth: BORDER_WIDTHS.thick,
+      borderLeftColor: color,
+    });
     switch (type) {
       case 'error':
-        return { ...base, backgroundColor: errorTone.background, color: errorTone.text, borderLeftWidth: 4, borderLeftColor: mondrian.red };
+        return { ...base, backgroundColor: errorTone.background, color: errorTone.text, ...accentLeft(mondrian.red) };
       case 'success':
-        return { ...base, backgroundColor: successTone.background, color: successTone.text, borderLeftWidth: 4, borderLeftColor: mondrian.black };
+        return { ...base, backgroundColor: successTone.background, color: successTone.text, ...accentLeft(mondrian.black) };
       case 'info':
-        return { ...base, borderLeftWidth: 4, borderLeftColor: mondrian.blue };
+        return { ...base, ...accentLeft(mondrian.blue) };
       case 'loading':
-        return { ...base, borderLeftWidth: 4, borderLeftColor: mondrian.yellow };
+        return { ...base, ...accentLeft(mondrian.yellow) };
       default:
-        return { ...base, borderLeftWidth: 4, borderLeftColor: mondrian.black };
+        return { ...base, ...accentLeft(mondrian.black) };
     }
   };
 

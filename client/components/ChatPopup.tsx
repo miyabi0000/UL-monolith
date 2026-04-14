@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
-import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
+import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE, BORDERS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 import { formatWeight } from '../utils/weightUnit'
@@ -401,7 +401,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           className="flex justify-between items-center"
           style={{
             padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
-            borderBottom: `1px solid ${COLORS.gray[200]}`,
+            borderBottom: BORDERS.default,
           }}
         >
           <div>
@@ -492,7 +492,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         <div
           style={{
             padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
-            borderTop: `1px solid ${COLORS.gray[200]}`,
+            borderTop: BORDERS.default,
             backgroundColor: COLORS.gray[50]
           }}
         >

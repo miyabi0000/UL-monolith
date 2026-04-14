@@ -1,6 +1,6 @@
 import React from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
-import { COLORS } from '../../utils/designSystem';
+import { COLORS, BORDERS } from '../../utils/designSystem';
 import { formatWeight } from '../../utils/weightUnit';
 import { formatPrice } from '../../utils/formatters';
 import { useWeightUnit } from '../../contexts/WeightUnitContext';
@@ -67,7 +67,8 @@ const GearInfoSummary: React.FC<GearInfoSummaryProps> = ({ item }) => {
           style={{
             color: pStyle.color,
             backgroundColor: pStyle.bg,
-            border: `1px solid ${pStyle.border}`,
+            border: BORDERS.default,
+            borderColor: pStyle.border,
           }}
         >
           {item.priority}

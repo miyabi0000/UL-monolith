@@ -165,6 +165,37 @@ export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', Stat
 // Unified shadow system (single shadow variant)
 export const SHADOW = `0 1px 3px 0 ${alpha(primitiveColors.gray.black, 0.1)}, 0 1px 2px -1px ${alpha(primitiveColors.gray.black, 0.1)}` as const;
 
+/**
+ * Border tokens — JS inline-style 用 (CSS 変数参照)
+ *
+ * 必ずこの定数を介して border を指定する。色のみ上書きする場合も
+ * `border: BORDERS.default` をベースにし、必要に応じて borderColor で上書き。
+ *
+ * 対応する CSS 変数は globals.css の :root に定義 (--border-*)。
+ * テーマや色変更は CSS 変数側で行うため、JS 側は触らない。
+ */
+export const BORDERS = {
+  /** 1px solid var(--stroke-default) — 全コンポーネントの既定枠線 */
+  default: 'var(--border-default)',
+  /** 2px solid var(--stroke-default) — 強調枠線 (大区画の額装) */
+  bold:    'var(--border-bold)',
+  /** 4px solid var(--stroke-default) — 通知の左帯など */
+  thick:   'var(--border-thick)',
+  /** 1px solid var(--stroke-subtle) — 控えめな仕切り */
+  faint:   'var(--border-faint)',
+  /** 1px solid var(--stroke-divider) — テーブル行間など */
+  divider: 'var(--border-divider)',
+  /** 2px solid var(--focus-ring) — focus outline */
+  focus:   'var(--border-focus)',
+} as const;
+
+/** width 単独を必要とする場合 (border-bottom など) */
+export const BORDER_WIDTHS = {
+  thin:  'var(--border-width-thin)',
+  bold:  'var(--border-width-bold)',
+  thick: 'var(--border-width-thick)',
+} as const;
+
 // Utility functions
 /** Mondrian 配色: priority 1-2 = 赤, 3 = 黄, 4-5 = ミュート灰 */
 export const getPriorityColor = (priority: number) => {

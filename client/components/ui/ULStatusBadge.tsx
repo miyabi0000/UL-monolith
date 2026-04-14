@@ -1,6 +1,6 @@
 import React from 'react'
 import { ULClassification } from '../../utils/types'
-import { COLORS, mondrian } from '../../utils/designSystem'
+import { COLORS, mondrian, BORDERS } from '../../utils/designSystem'
 import { alpha } from '../../styles/tokens'
 import { formatWeightLarge } from '../../utils/weightUnit'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
@@ -28,7 +28,7 @@ const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeigh
         height: 'var(--badge-h)',
         backgroundColor: config.bgColor,
         color: config.color,
-        border: `1px solid ${mondrian.orange}`,
+        border: BORDERS.default,
       }}
       title={baseWeight ? `Base Weight: ${formatWeightLarge(baseWeight, unit)}` : undefined}
     >
