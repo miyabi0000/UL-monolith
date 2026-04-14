@@ -41,7 +41,7 @@ type OuterPieDataItem = {
 }
 
 // ==================== メインコンポーネント ====================
-interface GearChartProps {
+interface ChartPanelProps {
   data: ChartData[]
   totalWeight: number
   totalCost: number
@@ -84,7 +84,7 @@ interface GearChartProps {
   onItemHover?: (id: string | null) => void
 }
 
-const GearChart: React.FC<GearChartProps> = React.memo(({
+const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   data,
   totalWeight,
   totalCost,
@@ -482,6 +482,6 @@ const GearChart: React.FC<GearChartProps> = React.memo(({
   )
 })
 
-GearChart.displayName = 'GearChart'
+ChartPanel.displayName = 'ChartPanel'
 
-export default GearChart
+export default ChartPanel

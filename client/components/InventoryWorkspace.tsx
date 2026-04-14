@@ -7,7 +7,7 @@ import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { useIsMobile } from '../hooks/useResponsiveSize';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
-import GearChart from './GearChart';
+import ChartPanel from './ChartPanel';
 import PackTabBar from './PackTabBar';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
@@ -233,7 +233,7 @@ export default function InventoryWorkspace({
       };
 
   const gearChartPanel = (
-    <GearChart
+    <ChartPanel
       data={chartData}
       totalWeight={totals.weight}
       totalCost={totals.price}
