@@ -69,21 +69,23 @@
     --border-faint:    var(--border-width-thin)  solid var(--stroke-subtle);
     --border-divider:  var(--border-width-thin)  solid var(--stroke-divider);
     --border-focus:    var(--border-width-bold)  solid var(--focus-ring);
-    /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義
-     * Borderless 方針: --stroke-default は transparent。構造は背景コントラスト + shadow で表現 */
-    --page-bg: var(--page-bg, #FAFAF7);
-    --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.04), 0 1px 3px rgba(10, 10, 10, 0.03);
-    --shadow-md: 0 2px 4px rgba(10, 10, 10, 0.06), 0 4px 8px rgba(10, 10, 10, 0.04);
-    --shadow-lg: 0 4px 12px rgba(10, 10, 10, 0.08), 0 8px 20px rgba(10, 10, 10, 0.05);
-    --surface-level-0: #FFFFFF;
-    --surface-level-1: #FAFAF7;
-    --surface-level-2: #F0EFEA;
+    /* Borderless hierarchy: 枠線ではなく「背景コントラスト + shadow」で階層を表現
+     * page (L0, 最暗) < nest (L1.5) < card (L2, 純白) < raised (L3, white + shadow)
+     * カードは page より明るく、shadow で浮く。枠線はなくても階層が成立する */
+    --page-bg: var(--page-bg, #ECEAE2);         /* L0 page bg (やや暗めのキャンバス) */
+    --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.05), 0 1px 3px rgba(10, 10, 10, 0.04);
+    --shadow-md: 0 2px 6px rgba(10, 10, 10, 0.07), 0 4px 12px rgba(10, 10, 10, 0.05);
+    --shadow-lg: 0 6px 16px rgba(10, 10, 10, 0.10), 0 12px 28px rgba(10, 10, 10, 0.06);
+    --surface-level-0: #FFFFFF;   /* L2 card / modal (最も明るい = "浮く") */
+    --surface-level-1: #F7F5EE;   /* L1 nest / inset (card 内のネスト) */
+    --surface-level-2: #E3E0D6;   /* L3 hover / selected (明示的に沈む) */
     --ink-primary: #0A0A0A;
-    --ink-secondary: #2E2E2E;
-    --ink-muted: #6B6B66;
+    --ink-secondary: #3A3A38;
+    --ink-muted: #757570;
+    --ink-disabled: #A8A8A3;
     --ink-inverse: #FAFAF7;
-    --icon-default: #2E2E2E;
-    --icon-muted: #6B6B66;
+    --icon-default: #3A3A38;
+    --icon-muted: #757570;
     --stroke-subtle:  rgba(10, 10, 10, 0.06);   /* hairline (input / divider) */
     --stroke-default: transparent;               /* borderless 既定: 枠線は描画しない */
     --stroke-strong:  rgba(10, 10, 10, 0.14);    /* 明示的な額装 (mondrian-grid 等) */
