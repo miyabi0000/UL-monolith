@@ -68,16 +68,17 @@ const GearRefChip: React.FC<{ ref_: GearRef; onClick: (gearId: string) => void }
   </button>
 );
 
-/** 編集提案カード */
+/** 編集提案カード（Apply + Undo 対応） */
 const SuggestedEditCard: React.FC<{
   edit: SuggestedEditWithState;
   editKey: string;
   applyingKey: string | null;
   onApply: () => void;
+  onUndo: () => void;
   weightUnit: 'g' | 'oz';
-}> = ({ edit, editKey, applyingKey, onApply, weightUnit }) => {
+}> = ({ edit, editKey, applyingKey, onApply, onUndo, weightUnit }) => {
   const isApplied = edit._applied === true;
-  const isApplying = applyingKey === editKey;
+  const isBusy = applyingKey === editKey;
 
   return (
     <div className={`p-3 rounded-xl mt-2 shadow-sm border text-xs
@@ -94,17 +95,38 @@ const SuggestedEditCard: React.FC<{
         <span className="font-medium">{formatEditValue(edit.field, edit.suggestedValue, weightUnit)}</span>
       </p>
       <p className="mb-2 text-gray-500 dark:text-gray-400">{edit.reason}</p>
-      <button
-        disabled={isApplied || isApplying}
-        onClick={onApply}
-        className={`w-full py-1.5 rounded-lg text-xs font-medium transition-opacity
-                    hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed
-                    ${isApplied
-                      ? 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-                      : 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'}`}
-      >
-        {isApplied ? 'Applied' : isApplying ? 'Applying…' : 'Apply change'}
-      </button>
+
+      {isApplied ? (
+        <div className="flex gap-2">
+          <span className="flex-1 py-1.5 rounded-lg text-xs font-medium text-center
+                           bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+            Applied
+          </span>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={onUndo}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium
+                       text-gray-600 dark:text-gray-300
+                       border border-gray-300 dark:border-gray-600
+                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isBusy ? 'Undoing…' : 'Undo'}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={isBusy}
+          onClick={onApply}
+          className="w-full py-1.5 rounded-lg text-xs font-medium transition-opacity
+                     hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed
+                     bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900"
+        >
+          {isBusy ? 'Applying…' : 'Apply change'}
+        </button>
+      )}
     </div>
   );
 };
@@ -123,10 +145,12 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
     input,
     setInput,
     isLoading,
+    isStreaming,
     applyingEdit,
     handleSend,
     sendText,
     handleApplyEdit,
+    handleUndoEdit,
   } = useAdvisorChat(gearContext, onApplyEdit);
 
   const { messagesEndRef, inputRef } = useAdvisorPanel(isOpen, messages);
@@ -140,6 +164,9 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
   const scopeLabel = gearContext.packName
     ? `Pack: ${gearContext.packName}`
     : `${gearContext.items.length} items`;
+
+  // 最後のアシスタントメッセージID（ストリーミングカーソル表示用）
+  const lastAssistantId = messages.filter((m) => m.role === 'assistant').at(-1)?.id;
 
   return (
     <>
@@ -197,11 +224,20 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                                ${message.role === 'user'
                                  ? 'rounded-2xl rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
                                  : 'rounded-2xl rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
-                <div className="whitespace-pre-wrap">{message.content}</div>
-                <div className={`text-2xs mt-1 opacity-50 select-none
-                                 ${message.role === 'user' ? 'text-right' : ''}`}>
-                  {TIME_FMT.format(message.timestamp)}
+                <div className="whitespace-pre-wrap">
+                  {message.content}
+                  {/* ストリーミング中のブリンクカーソル */}
+                  {isStreaming && message.id === lastAssistantId && (
+                    <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-gray-500 dark:bg-gray-400 animate-pulse align-text-bottom" />
+                  )}
                 </div>
+                {/* タイムスタンプ（空メッセージのストリーミング中は非表示） */}
+                {message.content && (
+                  <div className={`text-2xs mt-1 opacity-50 select-none
+                                   ${message.role === 'user' ? 'text-right' : ''}`}>
+                    {TIME_FMT.format(message.timestamp)}
+                  </div>
+                )}
               </div>
 
               {/* Gear reference chips */}
@@ -223,6 +259,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
                       editKey={`${message.id}-${index}`}
                       applyingKey={applyingEdit}
                       onApply={() => handleApplyEdit(edit, message.id, index)}
+                      onUndo={() => handleUndoEdit(edit, message.id, index)}
                       weightUnit={weightUnit}
                     />
                   ))}
@@ -232,7 +269,8 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           </div>
         ))}
 
-        {isLoading && (
+        {/* 最初のトークン待ちスピナー（ストリーミング開始前のみ） */}
+        {isLoading && !isStreaming && (
           <div className="flex justify-start">
             <div className="p-3 rounded-2xl rounded-bl-sm flex items-center gap-2
                             bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">

@@ -5,9 +5,8 @@ import type {
   AdvisorRequestBody,
   AdvisorResponseData,
   GearContext,
-  GearRef,
-  SuggestedEdit,
 } from './advisorTypes.js';
+import { ADVISOR_TOOLS, parseToolCalls } from './advisorTools.js';
 
 // ==================== バリデーション ====================
 
@@ -60,18 +59,11 @@ const buildSystemPrompt = (ctx: GearContext): string => {
     ...gearLines,
     '--- ここまで ---',
     '',
-    '## 回答フォーマット',
-    '必ず以下のJSONのみを返してください（コードブロック不要）:',
-    '{',
-    '  "message": "アドバイスのメッセージ（改行は\\nで表現）",',
-    '  "gearRefs": [{ "gearId": "IDをそのまま", "gearName": "ギア名" }],',
-    '  "suggestedEdits": [',
-    '    { "gearId": "ID", "gearName": "名前", "field": "weightGrams|priceCents|isInKit|weightClass", "currentValue": 現在値, "suggestedValue": 提案値, "reason": "理由" }',
-    '  ]',
-    '}',
-    '',
-    'gearRefs: メッセージで具体的に言及したギアのID/名前（最大5件、不要なら空配列）',
-    'suggestedEdits: 実際に数値・状態の変更を提案する場合のみ含める（不要なら空配列）',
+    '## 回答ルール',
+    '- 自然な文章でアドバイスを提供してください',
+    '- ギアを具体的に言及する場合は reference_gear ツールを呼んでください（最大5件）',
+    '- 重量・価格・キット状態・重量クラスの変更を提案する場合は suggest_edits ツールを呼んでください',
+    '- ツール呼び出しは任意です。情報のみの返答ではツール呼び出し不要です',
   ]
     .filter((line) => line !== null)
     .join('\n');
@@ -99,46 +91,24 @@ const buildFallbackResponse = (ctx: GearContext): AdvisorResponseData => {
   return { message: lines, gearRefs: [], suggestedEdits: [] };
 };
 
-// ==================== JSONパース ====================
+// ==================== バリデーションヘルパー（ストリーミングハンドラーと共有） ====================
 
-const parseAdvisorResponse = (raw: string): AdvisorResponseData => {
-  // JSONコードブロックを除去してからパース
-  const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+export const validateAdvisorRequest = (
+  body: AdvisorRequestBody,
+): { conversation: AdvisorMessage[]; gearContext: GearContext } | { error: string } => {
+  const { conversation, gearContext } = body;
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    // JSON抽出を試みる
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('JSON not found in response');
-    parsed = JSON.parse(match[0]);
+  if (!Array.isArray(conversation) || conversation.length === 0) {
+    return { error: 'conversation（非空配列）は必須です' };
+  }
+  if (!conversation.every(isAdvisorMessage)) {
+    return { error: '各メッセージには role ("user"|"assistant") と content (string) が必要です' };
+  }
+  if (!isGearContext(gearContext)) {
+    return { error: 'gearContext.items（配列）は必須です' };
   }
 
-  if (!parsed || typeof parsed !== 'object') {
-    throw new Error('Invalid response structure');
-  }
-
-  const obj = parsed as Record<string, unknown>;
-
-  return {
-    message: typeof obj.message === 'string' ? obj.message : '回答を生成できませんでした。',
-    gearRefs: Array.isArray(obj.gearRefs)
-      ? obj.gearRefs.filter(
-          (r): r is GearRef =>
-            r != null && typeof r === 'object' &&
-            typeof (r as GearRef).gearId === 'string' &&
-            typeof (r as GearRef).gearName === 'string'
-        )
-      : [],
-    suggestedEdits: Array.isArray(obj.suggestedEdits)
-      ? obj.suggestedEdits.filter(
-          (e): e is SuggestedEdit =>
-            e != null && typeof e === 'object' &&
-            typeof (e as SuggestedEdit).gearId === 'string'
-        )
-      : [],
-  };
+  return { conversation: conversation as AdvisorMessage[], gearContext: gearContext as GearContext };
 };
 
 // ==================== ハンドラー ====================
@@ -148,29 +118,12 @@ const parseAdvisorResponse = (raw: string): AdvisorResponseData => {
  * ギアアドバイザーとの多ターン会話
  */
 export const handleAdvisorChat = async (req: Request, res: Response) => {
-  const { conversation, gearContext } = req.body as AdvisorRequestBody;
-
-  // バリデーション
-  if (!Array.isArray(conversation) || conversation.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'conversation（非空配列）は必須です',
-    });
+  const validated = validateAdvisorRequest(req.body as AdvisorRequestBody);
+  if ('error' in validated) {
+    return res.status(400).json({ success: false, message: validated.error });
   }
 
-  if (!conversation.every(isAdvisorMessage)) {
-    return res.status(400).json({
-      success: false,
-      message: '各メッセージには role ("user"|"assistant") と content (string) が必要です',
-    });
-  }
-
-  if (!isGearContext(gearContext)) {
-    return res.status(400).json({
-      success: false,
-      message: 'gearContext.items（配列）は必須です',
-    });
-  }
+  const { conversation, gearContext } = validated;
 
   // OpenAI 非利用時はフォールバック
   if (!openaiClient.isAvailable()) {
@@ -184,15 +137,17 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
 
   try {
     const systemPrompt = buildSystemPrompt(gearContext);
-    console.log(`[Advisor] Calling OpenAI (${conversation.length} messages, ${gearContext.items.length} gear items)`);
+    console.log(`[Advisor] Calling OpenAI with tools (${conversation.length} messages, ${gearContext.items.length} gear items)`);
 
-    const raw = await openaiClient.chatWithHistory(systemPrompt, conversation, 1500);
-    const data = parseAdvisorResponse(raw);
+    const completion = await openaiClient.chatWithTools(systemPrompt, conversation, ADVISOR_TOOLS, 1500);
+    const choice = completion.choices[0];
+    const message = choice?.message?.content ?? '回答を生成できませんでした。';
+    const { gearRefs, suggestedEdits } = parseToolCalls(choice?.message?.tool_calls);
+    const data: AdvisorResponseData = { message, gearRefs, suggestedEdits };
 
     return res.json({ success: true, data, message: 'Advisor response generated' });
   } catch (error) {
     console.error('[Advisor] OpenAI call failed:', error);
-    // API呼び出し失敗時もフォールバックを返す（500にせずUXを維持）
     return res.json({
       success: true,
       data: {
@@ -201,5 +156,123 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
       },
       message: 'Fallback response (API error)',
     });
+  }
+};
+
+// ==================== SSE ストリーミングハンドラー ====================
+
+/** SSE イベントを書き込むヘルパー */
+const sendSSE = (res: Response, event: string, data: unknown) => {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+};
+
+/**
+ * POST /api/v1/llm/advisor/stream
+ * SSE でトークンを逐次送信するストリーミング版アドバイザー
+ */
+export const handleAdvisorChatStream = async (req: Request, res: Response) => {
+  const validated = validateAdvisorRequest(req.body as AdvisorRequestBody);
+  if ('error' in validated) {
+    return res.status(400).json({ success: false, message: validated.error });
+  }
+
+  const { conversation, gearContext } = validated;
+
+  // OpenAI 非利用時は通常JSONレスポンスにフォールバック（SSEヘッダーを書かない）
+  if (!openaiClient.isAvailable()) {
+    return res.json({
+      success: true,
+      data: buildFallbackResponse(gearContext),
+      message: 'Fallback response (no API key)',
+    });
+  }
+
+  // SSE ヘッダー設定
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+
+  let aborted = false;
+  req.on('close', () => { aborted = true; });
+
+  try {
+    const systemPrompt = buildSystemPrompt(gearContext);
+    console.log(`[Advisor/Stream] Calling OpenAI (${conversation.length} messages, ${gearContext.items.length} gear items)`);
+
+    const stream = await openaiClient.chatWithToolsStream(systemPrompt, conversation, ADVISOR_TOOLS, 1500);
+
+    // tool_calls の引数を手動蓄積
+    const toolCallBuffers: Map<number, { name: string; arguments: string }> = new Map();
+
+    for await (const chunk of stream) {
+      if (aborted) break;
+
+      const delta = chunk.choices[0]?.delta;
+      if (!delta) continue;
+
+      // テキストコンテンツ → token イベントで即送信
+      if (delta.content) {
+        sendSSE(res, 'token', { text: delta.content });
+      }
+
+      // tool_calls delta → バッファに蓄積
+      if (delta.tool_calls) {
+        for (const tc of delta.tool_calls) {
+          const existing = toolCallBuffers.get(tc.index);
+          if (existing) {
+            existing.arguments += tc.function?.arguments ?? '';
+          } else {
+            toolCallBuffers.set(tc.index, {
+              name: tc.function?.name ?? '',
+              arguments: tc.function?.arguments ?? '',
+            });
+          }
+        }
+      }
+    }
+
+    if (aborted) {
+      res.end();
+      return;
+    }
+
+    // ストリーム完了: 蓄積したtool_callsをパースして送信
+    if (toolCallBuffers.size > 0) {
+      const toolCalls = Array.from(toolCallBuffers.values()).map((buf, i) => ({
+        id: `call_${i}`,
+        type: 'function' as const,
+        function: { name: buf.name, arguments: buf.arguments },
+      }));
+      const { gearRefs, suggestedEdits } = parseToolCalls(toolCalls);
+
+      if (gearRefs.length > 0) {
+        sendSSE(res, 'tool', { name: 'reference_gear', data: gearRefs });
+      }
+      if (suggestedEdits.length > 0) {
+        sendSSE(res, 'tool', { name: 'suggest_edits', data: suggestedEdits });
+      }
+    }
+
+    sendSSE(res, 'done', {});
+    res.end();
+  } catch (error) {
+    console.error('[Advisor/Stream] OpenAI call failed:', error);
+    if (!res.headersSent) {
+      // ヘッダー未送信ならJSONフォールバック
+      return res.json({
+        success: true,
+        data: {
+          ...buildFallbackResponse(gearContext),
+          message: `The AI request failed. Please try again in a moment.\n\n${error instanceof Error ? error.message : 'Unknown error'}`,
+        },
+        message: 'Fallback response (API error)',
+      });
+    }
+    // SSE送信中のエラー
+    sendSSE(res, 'error', { message: error instanceof Error ? error.message : 'Unknown error' });
+    res.end();
   }
 };
