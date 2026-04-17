@@ -5,6 +5,7 @@ import ComparisonTable from './ComparisonTable';
 import TableHeader from './GearTable/TableHeader';
 import TableRow from './GearTable/TableRow';
 import BulkActionBar from './BulkActionBar';
+import EmptyState from './ui/EmptyState';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { filterByCategories, sortItems } from '../utils/sortHelpers';
 import { useItemSelection } from '../hooks/useItemSelection';
@@ -36,6 +37,10 @@ interface GearDetailPanelProps {
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
   onAddItemsToPack?: (itemIds: string[]) => void;
+  /** 新規ギア追加フォームを開く（空状態の CTA 用） */
+  onShowForm?: () => void;
+  /** URL インポートを開く（空状態の二次 CTA 用） */
+  onShowUrlImport?: () => void;
 }
 
 const MAX_COMPARE_ITEMS = 4;
@@ -62,6 +67,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   activePackItemIds = [],
   onTogglePackItem,
   onAddItemsToPack,
+  onShowForm,
+  onShowUrlImport,
 }) => {
   const { sortField, sortDirection, handleSort, forceSort } = useGearSort();
   const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
@@ -221,23 +228,53 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     );
   }
 
+  // 全体で 0 件 / フィルタ後に 0 件を判別
+  const hasAnyItem = items.length > 0;
+  const hasFilteredItem = chartFilteredItems.length > 0;
+  const showGlobalEmpty = !hasAnyItem;
+  const showFilteredEmpty = hasAnyItem && !hasFilteredItem;
+
+  // 全体 0 件: 初回ユーザー向けの CTA を含む空状態
+  if (showGlobalEmpty) {
+    return (
+      <div className="w-full h-full min-w-0 flex items-center justify-center">
+        <EmptyState
+          title="まだギアがありません"
+          description="最初のアイテムを登録して、パックの重量管理を始めましょう。"
+          actionLabel={onShowForm ? '+ ギアを追加' : undefined}
+          onAction={onShowForm}
+          secondaryActionLabel={onShowUrlImport ? 'URL から取り込む' : undefined}
+          onSecondaryAction={onShowUrlImport}
+        />
+      </div>
+    );
+  }
+
   // Cardモード
   if (gearViewMode === 'card') {
     return (
       <div className="w-full h-full min-w-0 overflow-hidden">
-        <CardGridView
-          items={chartFilteredItems}
-          viewMode={viewMode === 'cost' ? 'cost' : 'weight'}
-          quantityDisplayMode={quantityDisplayMode}
-          selectedItemId={selectedItemId}
-          hoveredItemId={hoveredItemId}
-          onItemSelect={onItemSelect}
-          onItemHover={onItemHover}
-          activePackName={activePack?.name}
-          activePackItemIds={activePackItemIds}
-          onTogglePackItem={onTogglePackItem}
-          onEdit={onEdit}
-        />
+        {showFilteredEmpty ? (
+          <EmptyState
+            compact
+            title="該当するギアがありません"
+            description="カテゴリや表示モードのフィルタを変更すると結果が表示されます。"
+          />
+        ) : (
+          <CardGridView
+            items={chartFilteredItems}
+            viewMode={viewMode === 'cost' ? 'cost' : 'weight'}
+            quantityDisplayMode={quantityDisplayMode}
+            selectedItemId={selectedItemId}
+            hoveredItemId={hoveredItemId}
+            onItemSelect={onItemSelect}
+            onItemHover={onItemHover}
+            activePackName={activePack?.name}
+            activePackItemIds={activePackItemIds}
+            onTogglePackItem={onTogglePackItem}
+            onEdit={onEdit}
+          />
+        )}
       </div>
     );
   }
@@ -273,7 +310,18 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               onSelectAll={handleSelectAll}
             />
             <tbody>
-              {processedItems.map((item) => (
+              {showFilteredEmpty && (
+                <tr>
+                  <td colSpan={99}>
+                    <EmptyState
+                      compact
+                      title="該当するギアがありません"
+                      description="カテゴリや表示モードのフィルタを変更すると結果が表示されます。"
+                    />
+                  </td>
+                </tr>
+              )}
+              {!showFilteredEmpty && processedItems.map((item) => (
                 <TableRow
                   key={item.id}
                   id={`gear-item-${item.id}`}
