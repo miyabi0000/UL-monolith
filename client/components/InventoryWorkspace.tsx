@@ -1,5 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
 import { useAuth } from '../utils/AuthContext';
@@ -11,13 +10,10 @@ import ChartPanel from './ChartPanel';
 import PackTabBar from './PackTabBar';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
+import ChatSidebar from './ChatSidebar';
 
-const GearForm = React.lazy(() => import('./GearForm'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
 const Login = React.lazy(() => import('./Login'));
-const ChatPopup = React.lazy(() => import('./ChatPopup'));
-const UrlBulkImportModal = React.lazy(() => import('./gear-input/UrlBulkImportModal'));
-const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
 
 interface InventoryWorkspaceProps {
   appState: ReturnType<typeof useAppState>;
@@ -56,8 +52,6 @@ export default function InventoryWorkspace({
 }: InventoryWorkspaceProps) {
   const { login } = useAuth();
   const {
-    showForm, setShowForm,
-    editingGear, setEditingGear,
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
@@ -91,11 +85,8 @@ export default function InventoryWorkspace({
     return saved === 'table' || saved === 'card' || saved === 'compare' ? saved : 'table';
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [showUrlImport, setShowUrlImport] = useState(false);
-  const [showBulkReview, setShowBulkReview] = useState(false);
 
   // Chart ↔ Table/Card の双方向連動用: クリック選択 / ホバー強調
-  // 同一 id の更新を skip する change-detection で hot-path 対策
   const [selectedItemId, setSelectedItemIdRaw] = useState<string | null>(null);
   const [hoveredItemId, setHoveredItemIdRaw] = useState<string | null>(null);
   const setSelectedItemId = useCallback((id: string | null) => {
@@ -105,19 +96,20 @@ export default function InventoryWorkspace({
     setHoveredItemIdRaw((prev) => (prev === id ? prev : id));
   }, []);
 
-  const {
-    extractGears,
-    extractedGears,
-    failedUrls,
-    isExtracting,
-    progress,
-    reset: resetExtraction
-  } = useBulkGearExtraction();
-
   useEffect(() => {
     localStorage.setItem('gearViewMode', gearViewMode);
   }, [gearViewMode]);
 
+  // 初回: リストが空なら Chat を自動で開く（Chat 中心 UX の入口誘導）
+  const chatAutoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (chatAutoOpenedRef.current) return;
+    if (isLoading) return;
+    if (gearItems.length === 0) {
+      setShowChat(true);
+      chatAutoOpenedRef.current = true;
+    }
+  }, [isLoading, gearItems.length, setShowChat]);
 
   const scopedItems = items ?? gearItems;
   const activePackItems = useMemo(() => {
@@ -139,32 +131,28 @@ export default function InventoryWorkspace({
     [analysisItems, quantityDisplayMode]
   );
 
-  const handleSaveGear = async (gearItem: any) => {
-    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
-
+  /** ChatSidebar からギア抽出データが届いたら DB に保存する */
+  const handleGearExtracted = useCallback(async (gearItem: any) => {
+    const loadingId = showLoading('アイテムを作成中...');
     try {
-      if (editingGear) {
-        await handleUpdateGear(editingGear.id, gearItem);
-        showSuccess('アイテムが正常に更新されました');
-      } else {
-        await handleCreateGear(gearItem);
-        showSuccess('アイテムが正常に作成されました');
-      }
-
-      setShowForm(false);
-      setEditingGear(null);
+      await handleCreateGear(gearItem);
+      showSuccess('アイテムが追加されました');
     } catch (err) {
-      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
-      console.error('Error saving gear:', err);
+      showError('アイテムの作成に失敗しました');
+      console.error('Error creating gear:', err);
     } finally {
       removeNotification(loadingId);
     }
-  };
+  }, [handleCreateGear, showLoading, showSuccess, showError, removeNotification]);
 
-  const handleEditGear = (gear: any) => {
-    setEditingGear(gear);
-    setShowForm(true);
-  };
+  /**
+   * "Edit" アイコンが押された時の挙動。
+   * ギアは既にインライン編集（EditableFields）で直接編集できるため、
+   * ここでは対象行を selected にしてハイライトするだけ。
+   */
+  const handleEditGear = useCallback((gear: GearItemWithCalculated) => {
+    setSelectedItemId(gear.id);
+  }, [setSelectedItemId]);
 
   const handleUpdateItem = useCallback(async (id: string, field: string, value: GearFieldValue) => {
     try {
@@ -190,29 +178,14 @@ export default function InventoryWorkspace({
     setShowLogin(false);
   };
 
-  const handleExtractUrls = async (urls: string[]) => {
-    const loadingId = showLoading(`Extracting ${urls.length} URLs...`);
+  /** ChatSidebar の "+" / URL 入口の代替: Chat を開く */
+  const handleOpenChat = useCallback(() => setShowChat(true), [setShowChat]);
 
-    try {
-      await extractGears(urls, categories);
-      removeNotification(loadingId);
-    } catch (err) {
-      showError('Failed to extract gear information');
-      console.error('Error extracting URLs:', err);
-      removeNotification(loadingId);
-    }
-  };
-
-  const handleProceedToReview = () => {
-    setShowUrlImport(false);
-    setShowBulkReview(true);
-  };
-
-  const handleBulkReviewComplete = (savedCount: number, skippedCount: number) => {
-    setShowBulkReview(false);
-    resetExtraction();
-    showSuccess(`${savedCount} items added, ${skippedCount} skipped`);
-  };
+  /** Compare アイコン押下: リストを compare モードにして選択 UI を起こす */
+  const handleEnterCompareMode = useCallback(() => {
+    setGearViewMode('compare');
+    setShowCheckboxes(true);
+  }, [setShowCheckboxes]);
 
   const routeMapQuery = (activePack?.routeName || activePack?.name || '').trim();
   const mapEmbedUrl = routeMapQuery
@@ -249,8 +222,8 @@ export default function InventoryWorkspace({
       onEdit={handleEditGear}
       onDelete={handleDeleteGear}
       onUpdateItem={handleUpdateItem}
-      onShowForm={() => setShowForm(true)}
-      onShowUrlImport={() => setShowUrlImport(true)}
+      onShowForm={handleOpenChat}
+      onShowUrlImport={handleOpenChat}
       onShowCategoryManager={() => setShowCategoryManager(true)}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}
@@ -367,19 +340,6 @@ export default function InventoryWorkspace({
       </div>
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {showForm && (
-          <GearForm
-            isOpen={showForm}
-            onClose={() => {
-              setShowForm(false);
-              setEditingGear(null);
-            }}
-            onSave={handleSaveGear}
-            categories={categories}
-            editingGear={editingGear}
-          />
-        )}
-
         {showCategoryManager && (
           <CategoryManager
             onClose={() => setShowCategoryManager(false)}
@@ -398,47 +358,17 @@ export default function InventoryWorkspace({
             onLoginSuccess={handleLoginSuccess}
           />
         )}
-
-        {showChat && (
-          <ChatPopup
-            isOpen={showChat}
-            onClose={() => setShowChat(false)}
-            categories={categories}
-            onGearExtracted={handleSaveGear}
-          />
-        )}
-
-        {showUrlImport && (
-          <UrlBulkImportModal
-            isOpen={showUrlImport}
-            onClose={() => {
-              setShowUrlImport(false);
-              resetExtraction();
-            }}
-            onExtract={handleExtractUrls}
-            onProceed={handleProceedToReview}
-            isExtracting={isExtracting}
-            progress={progress}
-            extractedCount={extractedGears.length}
-            failedCount={failedUrls.length}
-          />
-        )}
-
-        {showBulkReview && extractedGears.length > 0 && (
-          <GearInputModal
-            isOpen={showBulkReview}
-            onClose={() => {
-              setShowBulkReview(false);
-              resetExtraction();
-            }}
-            onSave={handleSaveGear}
-            categories={categories}
-            bulkMode={true}
-            bulkGears={extractedGears}
-            onBulkComplete={handleBulkReviewComplete}
-          />
-        )}
       </Suspense>
+
+      {/* Chat 中心 UX: 常駐サイドバー */}
+      <ChatSidebar
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        onGearExtracted={handleGearExtracted}
+        onEnterCompareMode={handleEnterCompareMode}
+        categories={categories}
+        existingItemCount={gearItems.length}
+      />
 
       <NotificationPopup
         messages={messages}
