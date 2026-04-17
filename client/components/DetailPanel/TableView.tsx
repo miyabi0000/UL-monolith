@@ -108,7 +108,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
                     hover:bg-gray-50 transition-colors"
                 >
                   {/* Grid layout: Image | Name+Brand | Weight+Meta | Edit */}
-                  <div className="grid gap-3 items-center" style={{ gridTemplateColumns: '48px minmax(100px, 1fr) 80px 24px' }}>
+                  <div className="grid gap-3 items-center grid-cols-[48px_minmax(100px,1fr)_80px_24px]">
                     {/* Image - clickable */}
                     <button
                       onClick={() => onItemClick?.(item.id)}
