@@ -53,14 +53,15 @@ const ExpandedPanel: React.FC<{
   onEdit?: (item: GearItemWithCalculated) => void;
 }> = ({ item, onEdit }) => (
   <div
-    className="animate-fade-in"
+    className="animate-fade-in overflow-hidden"
     style={{
       gridColumn: '1 / -1',
+      gridRow: 'span 2',
       borderTop: `1px solid ${COLORS.gray[200]}`,
       backgroundColor: COLORS.gray[50],
     }}
   >
-    <div className="flex gap-3 p-3">
+    <div className="flex gap-3 p-3 h-full overflow-y-auto">
       {/* 左: 大きい画像 */}
       <div className="flex-shrink-0 w-40 sm:w-52">
         {item.imageUrl ? (
@@ -116,9 +117,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   items,
   viewMode,
   quantityDisplayMode,
-  selectedItemId,
   hoveredItemId,
-  onItemSelect,
   onItemHover,
   disableSort,
   activePackName,
@@ -139,10 +138,13 @@ const CardGridView: React.FC<CardGridViewProps> = ({
     });
   }, [items, quantityDisplayMode, viewMode, disableSort]);
 
+  // 展開はローカル UI 状態に閉じる。
+  // onItemSelect を発火させると親の selectedItemId 経由で ChartPanel のカテゴリ自動選択
+  // 副作用が走り、他カードが画面から消える不具合があるため呼ばない。
+  // Chart↔Card の視覚連動は onItemHover が担う。
   const handleToggle = useCallback((itemId: string) => {
     setExpandedId(prev => (prev === itemId ? null : itemId));
-    onItemSelect?.(itemId);
-  }, [onItemSelect]);
+  }, []);
 
   return (
     <div className="p-2 sm:p-3 space-y-2 w-full min-w-0">
@@ -154,7 +156,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
       {sortedItems.length === 0 ? (
         <p className="text-xs text-gray-500 text-center py-4">No items</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
+        <div className="grid grid-cols-3 sm:grid-cols-4 grid-flow-row-dense gap-1">
           {sortedItems.map(item => {
             const isExpanded = expandedId === item.id;
             const isInActivePack = activePackItemIds.includes(item.id);
@@ -168,11 +170,9 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                   onMouseLeave={() => onItemHover?.(null)}
                   onClick={() => handleToggle(item.id)}
                   style={{
-                    boxShadow: isExpanded
-                      ? `0 0 0 2px ${COLORS.gray[500]}`
-                      : hoveredItemId === item.id
-                        ? `0 0 0 1px ${COLORS.gray[400]}`
-                        : 'none',
+                    boxShadow: hoveredItemId === item.id
+                      ? `0 0 0 1px ${COLORS.gray[400]}`
+                      : 'none',
                     backgroundColor: COLORS.surface,
                     transition: 'box-shadow 120ms ease',
                   }}
