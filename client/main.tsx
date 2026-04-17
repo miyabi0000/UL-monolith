@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './styles/globals.css'
 import { themeCssVariables } from './styles/tokens'
 import App from './components/App'
+import ErrorBoundary from './components/ErrorBoundary'
 import { AuthProvider } from './utils/AuthContext'
 import { WeightUnitProvider } from './contexts/WeightUnitContext'
 import { CurrencyProvider } from './contexts/CurrencyContext'
@@ -43,14 +44,16 @@ observer.observe(document.documentElement, { attributes: true, attributeFilter: 
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <WeightUnitProvider>
-          <CurrencyProvider>
-            <App />
-          </CurrencyProvider>
-        </WeightUnitProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <WeightUnitProvider>
+            <CurrencyProvider>
+              <App />
+            </CurrencyProvider>
+          </WeightUnitProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 )
