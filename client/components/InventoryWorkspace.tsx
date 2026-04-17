@@ -283,7 +283,7 @@ export default function InventoryWorkspace({
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
             {packList !== undefined && (
-              <div className="mb-3 rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 neu-raised overflow-hidden">
+              <div className="mb-3">
                 <PackTabBar
                   packList={packList}
                   selectedPackId={selectedPackId ?? null}
