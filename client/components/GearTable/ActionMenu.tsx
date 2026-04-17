@@ -43,7 +43,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
             className="fixed inset-0 z-[9998]"
             onClick={onClose}
           />
-          <div className="absolute right-0 mt-1 min-w-[100px] bg-white dark:bg-gray-800 neu-raised rounded-md py-1 z-[9999]">
+          <div className="absolute right-0 mt-1 min-w-[100px] bg-white dark:bg-gray-800 shadow-sm rounded-md py-1 z-[9999]">
             <button
               onClick={() => {
                 onEdit(item)
@@ -64,7 +64,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
                 Duplicate
               </button>
             )}
-            <div className="neu-divider my-1" />
+            <div className="border-b border-gray-200 my-1" />
             <button
               onClick={() => {
                 onDelete([item.id])

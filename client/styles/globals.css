@@ -605,19 +605,6 @@
 }
 
 @layer utilities {
-  /* Elevation ユーティリティ（旧ニューモーフィズムからの移行） */
-  .neu-raised {
-    box-shadow: var(--shadow-sm);
-  }
-
-  .neu-inset {
-    background: var(--surface-level-1);
-  }
-
-  .neu-divider {
-    box-shadow: 0 1px 0 var(--stroke-divider);
-  }
-
   /* Dark utility bridge: Tailwind ユーティリティクラスのダーク反転 */
   .dark .text-gray-900:not([class*='dark:text-']) { color: var(--ink-primary); }
   .dark .text-gray-800:not([class*='dark:text-']) { color: var(--ink-primary); }

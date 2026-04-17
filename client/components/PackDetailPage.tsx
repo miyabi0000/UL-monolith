@@ -55,15 +55,15 @@ export default function PackDetailPage() {
         {pack.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{pack.description}</p>}
 
         <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-          <div className="rounded-md px-2 py-2 neu-inset">
+          <div className="rounded-md px-2 py-2 bg-gray-50">
             <p className="text-gray-500 dark:text-gray-400">Items</p>
             <p className="font-semibold text-gray-900 dark:text-gray-100">{items.length}</p>
           </div>
-          <div className="rounded-md px-2 py-2 neu-inset">
+          <div className="rounded-md px-2 py-2 bg-gray-50">
             <p className="text-gray-500 dark:text-gray-400">Weight</p>
             <p className="font-semibold text-gray-900 dark:text-gray-100">{formatWeightLarge(totalWeight, unit)}</p>
           </div>
-          <div className="rounded-md px-2 py-2 neu-inset">
+          <div className="rounded-md px-2 py-2 bg-gray-50">
             <p className="text-gray-500 dark:text-gray-400">Cost</p>
             <p className="font-semibold text-gray-900 dark:text-gray-100">{formatPrice(totalPrice)}</p>
           </div>
@@ -71,7 +71,7 @@ export default function PackDetailPage() {
       </section>
 
       <section className="glass-surface p-0 overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 neu-divider">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200">
           <span>Item</span>
           <span>Weight</span>
           <span>Price</span>
@@ -84,7 +84,7 @@ export default function PackDetailPage() {
           items.map((item) => (
             <div
               key={item.id}
-              className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-2 text-sm neu-divider last:[box-shadow:none]"
+              className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-2 text-sm border-b border-gray-200 last:[box-shadow:none]"
             >
               <span className="flex items-center gap-2 min-w-0">
                 <img

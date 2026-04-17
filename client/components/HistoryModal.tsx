@@ -96,7 +96,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-panel-xl max-h-[80vh]">
-        <div className="p-6 neu-divider flex justify-between items-center">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">
             変更履歴: {gearName}
           </h2>
@@ -130,7 +130,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
           ) : (
             <div className="space-y-4">
               {history.map((entry, index) => (
-                <div key={entry.id} className="neu-raised rounded-lg p-4">
+                <div key={entry.id} className="shadow-sm rounded-lg p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-3">
                       <span
@@ -198,7 +198,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
           )}
         </div>
 
-        <div className="p-6 neu-divider flex justify-end">
+        <div className="p-6 border-b border-gray-200 flex justify-end">
           <Button
             onClick={onClose}
             variant="secondary"

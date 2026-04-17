@@ -16,7 +16,10 @@
       "Bash(lsof:*)",
       "Bash(npm run server:dev:*)",
       "Read(//Users/shimizumasaya/pr16-work/**)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(cat /Users/shimizumasaya/ULモノリス/server/database/migrations/*.sql)",
+      "Bash(grep:*)",
+      "Bash(ls -la /Users/shimizumasaya/ULモノリス/server/*.ts)"
     ],
     "deny": [],
     "additionalDirectories": [

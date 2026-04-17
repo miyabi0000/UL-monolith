@@ -141,7 +141,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 neu-raised overflow-hidden z-50">
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
               {isAuthenticated ? (
                 <>
                   {userName && (

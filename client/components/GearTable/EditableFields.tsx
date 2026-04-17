@@ -108,7 +108,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
+                className="w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
               />
             </div>
 
@@ -141,7 +141,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preview
                 </label>
-                <div className="flex items-center justify-center h-40 neu-inset rounded bg-gray-50 dark:bg-gray-800">
+                <div className="flex items-center justify-center h-40 bg-gray-50 rounded bg-gray-50 dark:bg-gray-800">
                   <img
                     src={urlInput}
                     alt="Preview"
@@ -216,7 +216,7 @@ export const EditableTextField: React.FC<EditableTextFieldProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 box-border`}
+        className={`w-full max-w-full ${className} px-1.5 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 box-border`}
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       />
     )
@@ -531,7 +531,7 @@ export const EditableWeightClassField: React.FC<EditableWeightClassFieldProps> =
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as WeightClass)}
-        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 neu-inset focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
+        className="gear-text-num px-1 py-0.5 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
         style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
       >
         <option value="base">Base</option>

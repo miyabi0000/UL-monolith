@@ -357,7 +357,7 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
         {/* Gear Detail Panel（右側パネル） */}
         <Card className="flat-panel flex-1 flex flex-col min-w-0 overflow-visible">
           {/* パネルヘッダー */}
-          <div className="relative z-[60] flex items-center justify-between px-3 py-2 neu-divider flex-shrink-0 h-11 overflow-visible">
+          <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11 overflow-visible">
             <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto">
               {packList !== undefined ? (
                 /* Pack タブモード */

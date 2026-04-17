@@ -307,7 +307,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
   return (
     <div className="modal-overlay p-4">
       <div className="modal-panel-lg">
-        <div className="p-6 neu-divider">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">
               {bulkMode && `Review Gear (${currentBulkIndex + 1} of ${bulkGears.length})`}
@@ -644,7 +644,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
 
           {/* ボタン */}
           {bulkMode && (
-            <div className="flex justify-between pt-4 neu-divider">
+            <div className="flex justify-between pt-4 border-b border-gray-200">
               <div className="flex space-x-2">
                 <Button
                   type="button"
@@ -682,7 +682,7 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
             </div>
           )}
           {!bulkMode && (
-            <div className="flex justify-end space-x-3 pt-4 neu-divider">
+            <div className="flex justify-end space-x-3 pt-4 border-b border-gray-200">
               <Button
                 type="button"
                 onClick={onClose}

@@ -78,7 +78,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
       </div>
 
       {/* 区切り線 */}
-      <div className="neu-divider" />
+      <div className="border-b border-gray-200" />
 
       {/* アイテムリスト */}
       <div>
@@ -101,7 +101,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
               return (
                 <div
                   key={item.id}
-                  className="w-full px-3 py-3 rounded neu-raised
+                  className="w-full px-3 py-3 rounded shadow-sm
                     hover:bg-gray-50 transition-colors"
                 >
                   {/* Grid layout: Image | Name+Brand | Weight+Meta | Edit */}

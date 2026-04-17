@@ -101,7 +101,7 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   const { unit } = useWeightUnit()
   const { currency } = useCurrency()
   return (
-    <div className="px-2 py-1.5 neu-divider">
+    <div className="px-2 py-1.5 border-b border-gray-200">
       {/* view-mode toggle は中央、右端は viewMode に応じて g/oz or ¥/$ を出し分け */}
       <div className="grid grid-cols-3 items-center mb-1.5">
         <div />

@@ -60,7 +60,7 @@ const AppDock: React.FC<AppDockProps> = ({
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-2xl neu-raised bg-white/78 px-1.5 py-1.5 backdrop-blur dark:bg-gray-900/72">
+      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-2xl shadow-sm bg-white/78 px-1.5 py-1.5 backdrop-blur dark:bg-gray-900/72">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
@@ -126,11 +126,11 @@ const AppDock: React.FC<AppDockProps> = ({
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 neu-raised overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
               {isAuthenticated ? (
                 <>
                   {userName && (
-                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 neu-divider truncate">
+                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
                       {userName}
                     </div>
                   )}

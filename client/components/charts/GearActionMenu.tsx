@@ -52,7 +52,7 @@ const GearActionMenu: React.FC<GearActionMenuProps> = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg neu-raised py-1 z-[1000]">
+        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-sm py-1 z-[1000]">
           <button
             className={itemClass}
             onClick={() => { onShowForm(); setOpen(false) }}
@@ -75,7 +75,7 @@ const GearActionMenu: React.FC<GearActionMenuProps> = ({
           )}
           {onShowCategoryManager && (
             <>
-              <div className="my-1 neu-divider" />
+              <div className="my-1 border-b border-gray-200" />
               <button
                 className={itemClass}
                 onClick={() => { onShowCategoryManager(); setOpen(false) }}

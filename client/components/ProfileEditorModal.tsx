@@ -76,7 +76,7 @@ const ImageDropZone: React.FC<{
 const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpdate, onClose }) => (
   <div className="modal-overlay" onClick={onClose}>
     <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
-      <div className="px-4 py-3 neu-divider flex justify-between items-center">
+      <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Edit Profile</h3>
         <button type="button" className="text-gray-400 hover:text-gray-600" onClick={onClose}>✕</button>
       </div>
