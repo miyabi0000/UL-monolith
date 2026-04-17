@@ -4,6 +4,7 @@ import { ExtractedGearWithUrl } from '../../utils/gearExtractionHelpers'
 import { extractFromUrl } from '../../services/llmService'
 import { sanitizeGearForm } from '../../utils/helpers'
 import { useImageUpload } from '../../hooks/useImageUpload'
+import { useWeightInput } from '../../hooks/useWeightInput'
 import { STATUS_TONES } from '../../utils/designSystem'
 import Button from '../ui/Button'
 
@@ -57,6 +58,9 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
 
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionResult, setExtractionResult] = useState<LLMExtractionResult | null>(null)
+
+  // 重量入力は単位対応（g/oz）。form.weightGrams は初期値/外部更新のトリガーとして使用
+  const { inputValue: weightInput, setInputValue: setWeightInput, toGrams, unit } = useWeightInput(form.weightGrams ?? null)
 
   // バルクモード用の状態
   const [currentBulkIndex, setCurrentBulkIndex] = useState(0)
@@ -211,8 +215,8 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // フォームデータをサニタイズ
-    const sanitizedForm = sanitizeGearForm(form)
+    // 重量は単位対応入力から確定値（グラム）を取得
+    const sanitizedForm = sanitizeGearForm({ ...form, weightGrams: toGrams() })
 
     // 必須フィールドのバリデーション
     if (!sanitizedForm.name.trim()) {
@@ -518,13 +522,14 @@ const GearInputModal: React.FC<GearInputModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClassName}>
-                Weight (grams) {bulkMode && emptyFields.includes('weightGrams') && <span style={{ color: errorTone.text }}>!</span>}
+                Weight ({unit}) {bulkMode && emptyFields.includes('weightGrams') && <span style={{ color: errorTone.text }}>!</span>}
               </label>
               <input
                 type="number"
                 min="0"
-                value={form.weightGrams || ''}
-                onChange={(e) => handleChange('weightGrams', e.target.value ? parseInt(e.target.value) : undefined)}
+                step={unit === 'oz' ? 0.1 : 1}
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
                 className={getFieldClassName('weightGrams')}
                 style={getFieldStyle('weightGrams')}
               />

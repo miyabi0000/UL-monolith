@@ -3,6 +3,8 @@ import { GearItemWithCalculated } from '../../utils/types';
 import { COLORS, STATUS_TONES } from '../../utils/designSystem';
 import CategoryBadge from '../ui/CategoryBadge';
 import { formatPrice } from '../../utils/formatters';
+import { formatWeight } from '../../utils/weightUnit';
+import { useWeightUnit } from '../../contexts/WeightUnitContext';
 import TruncatedText from '../TruncatedText';
 
 interface CompareViewProps {
@@ -15,6 +17,7 @@ interface CompareViewProps {
 const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDelete }) => {
   const successTone = STATUS_TONES.success;
   const errorTone = STATUS_TONES.error;
+  const { unit } = useWeightUnit();
 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -113,7 +116,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                           className="font-semibold text-gray-900"
                           style={isMin ? { color: successTone.text } : isMax ? { color: errorTone.text } : undefined}
                         >
-                          {weight}g
+                          {formatWeight(weight, unit)}
                           {isMin && <span className="ml-0.5 text-3xs">★</span>}
                         </span>
                       </td>
@@ -186,7 +189,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
           {/* Difference summary */}
           {analysis && (
             <div className="flex gap-3 text-xs text-gray-500">
-              <span>Δ Weight: <span className="font-semibold text-gray-700">{analysis.weightDiff}g</span></span>
+              <span>Δ Weight: <span className="font-semibold text-gray-700">{formatWeight(analysis.weightDiff, unit)}</span></span>
               <span>Δ Price: <span className="font-semibold text-gray-700">{formatPrice(analysis.priceDiff)}</span></span>
             </div>
           )}
@@ -267,7 +270,7 @@ const CompareView: React.FC<CompareViewProps> = ({ items, viewMode, onEdit, onDe
                     {/* Weight and price */}
                     <div className="text-right flex flex-col justify-center">
                       <div className="text-xs font-semibold text-gray-900 leading-tight whitespace-nowrap">
-                        {item.totalWeight}g
+                        {formatWeight(item.totalWeight, unit)}
                       </div>
                       <div className="text-xs text-gray-500 mt-1 leading-tight whitespace-nowrap">
                         {formatPrice(item.totalPrice || 0)}

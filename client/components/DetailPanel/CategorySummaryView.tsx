@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
 import { COLORS } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
+import { formatWeight } from '../../utils/weightUnit';
+import { useWeightUnit } from '../../contexts/WeightUnitContext';
 import ItemListCard from './ItemListCard';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import CategoryBadge from '../ui/CategoryBadge';
@@ -21,6 +23,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
   onItemClick,
   quantityDisplayMode,
 }) => {
+  const { unit } = useWeightUnit();
   const getItemValue = (item: GearItemWithCalculated) => {
     const quantity = getQuantityForDisplayMode(item, quantityDisplayMode);
     return viewMode === 'cost'
@@ -84,7 +87,7 @@ const CategorySummaryView: React.FC<CategorySummaryViewProps> = ({
         <div className="space-y-2 text-xs">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Weight:</span>
-            <span className="font-semibold text-gray-900">{stats.totalWeight}g</span>
+            <span className="font-semibold text-gray-900">{formatWeight(stats.totalWeight, unit)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Price:</span>

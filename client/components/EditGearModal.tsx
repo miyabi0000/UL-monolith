@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { GearItemWithCalculated, Category } from '../utils/types'
 import SeasonBar from './SeasonBar'
 import { getPriorityColor } from '../utils/designSystem'
+import { useWeightInput } from '../hooks/useWeightInput'
 
 interface EditGearModalProps {
   isOpen: boolean
@@ -31,11 +32,12 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
     imageUrl: gear.imageUrl || '',
     requiredQuantity: gear.requiredQuantity,
     ownedQuantity: gear.ownedQuantity,
-    weightGrams: gear.weightGrams || '',
     priceCents: gear.priceCents || '',
     seasons: gear.seasons || [],
     priority: gear.priority
   })
+
+  const { inputValue: weightInput, setInputValue: setWeightInput, toGrams, unit } = useWeightInput(gear.weightGrams)
 
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +49,6 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
         imageUrl: gear.imageUrl || '',
         requiredQuantity: gear.requiredQuantity,
         ownedQuantity: gear.ownedQuantity,
-        weightGrams: gear.weightGrams || '',
         priceCents: gear.priceCents || '',
         seasons: gear.seasons || [],
         priority: gear.priority
@@ -66,7 +67,7 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
       imageUrl: formData.imageUrl || undefined,
       requiredQuantity: formData.requiredQuantity,
       ownedQuantity: formData.ownedQuantity,
-      weightGrams: formData.weightGrams ? parseInt(String(formData.weightGrams)) : undefined,
+      weightGrams: toGrams(),
       priceCents: formData.priceCents ? parseInt(String(formData.priceCents)) : undefined,
       seasons: formData.seasons,
       priority: formData.priority
@@ -215,15 +216,16 @@ const EditGearModal: React.FC<EditGearModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClassName}>
-                Weight (grams)
+                Weight ({unit})
               </label>
               <input
                 type="number"
                 min="0"
-                value={formData.weightGrams}
-                onChange={(e) => setFormData({ ...formData, weightGrams: e.target.value })}
+                step={unit === 'oz' ? 0.1 : 1}
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
                 className={fieldClassName}
-                placeholder="0"
+                placeholder={unit === 'oz' ? '0.0' : '0'}
               />
             </div>
             <div>

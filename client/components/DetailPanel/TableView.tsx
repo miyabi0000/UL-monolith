@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
 import { COLORS } from '../../utils/designSystem';
 import { formatPrice } from '../../utils/formatters';
+import { formatWeight } from '../../utils/weightUnit';
+import { useWeightUnit } from '../../contexts/WeightUnitContext';
 import TruncatedText from '../TruncatedText';
 
 interface TableViewProps {
@@ -13,6 +15,7 @@ interface TableViewProps {
 }
 
 const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete, onItemClick }) => {
+  const { unit } = useWeightUnit();
   // アイテムを重さ昇順でソート
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => (a.totalWeight || 0) - (b.totalWeight || 0));
@@ -68,7 +71,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Weight</span>
-            <span className="font-semibold text-gray-900">{stats.totalWeight}g</span>
+            <span className="font-semibold text-gray-900">{formatWeight(stats.totalWeight, unit)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-500">Price</span>
@@ -139,7 +142,7 @@ const TableView: React.FC<TableViewProps> = ({ items, viewMode, onEdit, onDelete
                     {/* Weight and meta */}
                     <div className="text-right flex flex-col justify-center">
                       <div className="text-xs font-semibold text-gray-900 leading-tight whitespace-nowrap">
-                        {item.totalWeight}g
+                        {formatWeight(item.totalWeight, unit)}
                       </div>
                       <div className="text-xs text-gray-500 mt-1 leading-tight whitespace-nowrap">
                         <span className="font-medium">{weightPercentage}%</span>
