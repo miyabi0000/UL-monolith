@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Category } from '../utils/types';
 import { STATUS_TONES } from '../utils/designSystem';
+import { useWeightUnit } from '../contexts/WeightUnitContext';
+import { convertToGrams } from '../utils/weightUnit';
 import SeasonBar from './SeasonBar';
 
 interface BulkActionModalProps {
@@ -21,6 +23,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
   onBulkDelete
 }) => {
   const errorTone = STATUS_TONES.error;
+  const { unit } = useWeightUnit();
 
   const [action, setAction] = useState<'update' | 'delete'>('update');
   const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required' | 'seasons' | 'weight' | 'price'>('category');
@@ -58,9 +61,11 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
         case 'seasons':
           data.seasons = selectedSeasons;
           break;
-        case 'weight':
-          data.weightGrams = parseInt(updateValue);
+        case 'weight': {
+          const num = parseFloat(updateValue);
+          data.weightGrams = isNaN(num) ? undefined : convertToGrams(num, unit);
           break;
+        }
         case 'price':
           data.priceCents = parseInt(updateValue);
           break;
@@ -198,10 +203,11 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   <input
                     type="number"
                     min="0"
+                    step={unit === 'oz' ? 0.1 : 1}
                     value={updateValue}
                     onChange={(e) => setUpdateValue(e.target.value)}
                     className="input w-full"
-                    placeholder="Weight (grams)"
+                    placeholder={`Weight (${unit})`}
                     required
                   />
                 ) : updateField === 'price' ? (

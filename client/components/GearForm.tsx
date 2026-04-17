@@ -3,6 +3,8 @@ import { GearItemWithCalculated, GearItemForm, LLMExtractionResult, Category, We
 import { extractFromUrl } from '../services/llmService'
 import { sanitizeGearForm } from '../utils/helpers'
 import { useImageUpload } from '../hooks/useImageUpload'
+import { useWeightInput } from '../hooks/useWeightInput'
+import { convertFromGrams } from '../utils/weightUnit'
 import { STATUS_TONES } from '../utils/designSystem'
 import Button from './ui/Button'
 
@@ -20,6 +22,9 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
   const inputClassName = 'input w-full px-3 py-2 rounded-md focus:outline-none'
   const successTone = STATUS_TONES.success
   const errorTone = STATUS_TONES.error
+
+  const initialWeight = editingGear?.weightGrams ?? gear?.weightGrams ?? null
+  const { inputValue: weightInput, setInputValue: setWeightInput, toGrams, unit } = useWeightInput(initialWeight)
 
   const [form, setForm] = useState<GearItemForm>({
     name: '',
@@ -126,6 +131,11 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
         categoryId: categories.find(cat => cat.name === extractedData.suggestedCategory)?.id || prev.categoryId
       }))
 
+      // 重量入力欄を抽出値で更新（単位付き表示）
+      if (extractedData.weightGrams) {
+        setWeightInput(String(convertFromGrams(extractedData.weightGrams, unit)))
+      }
+
       // 画像プレビューも更新
       if (extractedData.imageUrl) {
         setPreview(extractedData.imageUrl)
@@ -147,16 +157,16 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // フォームデータをサニタイズ
-    const sanitizedForm = sanitizeGearForm(form)
-    
+
+    // 重量は単位対応入力から確定値（グラム）を取得
+    const sanitizedForm = sanitizeGearForm({ ...form, weightGrams: toGrams() })
+
     // 必須フィールドのバリデーション
     if (!sanitizedForm.name.trim()) {
       alert('Product name is required')
       return
     }
-    
+
     onSave(sanitizedForm)
   }
 
@@ -353,13 +363,14 @@ const GearForm: React.FC<GearFormProps> = ({ gear, editingGear, categories = [],
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClassName}>
-                Weight (grams)
+                Weight ({unit})
               </label>
               <input
                 type="number"
                 min="0"
-                value={form.weightGrams || ''}
-                onChange={(e) => handleChange('weightGrams', e.target.value ? parseInt(e.target.value) : undefined)}
+                step={unit === 'oz' ? 0.1 : 1}
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
                 className={inputClassName}
               />
             </div>

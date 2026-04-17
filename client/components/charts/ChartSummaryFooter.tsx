@@ -8,7 +8,7 @@ import YenIcon from '../icons/YenIcon'
 import BackpackIcon from '../icons/BackpackIcon'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
 import { useCurrency } from '../../contexts/CurrencyContext'
-import { formatWeight } from '../../utils/weightUnit'
+import { formatWeight, formatWeightLarge } from '../../utils/weightUnit'
 import { formatPriceWithCurrency } from '../../utils/formatters'
 
 const VIEW_MODE_OPTIONS = [
@@ -153,8 +153,8 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
           <div className="flex justify-center">
             <SummaryStatCard
               label="Weight"
-              value={`${(totalWeight / 1000).toFixed(3)} kg`}
-              subValue={`${totalWeight}g`}
+              value={formatWeightLarge(totalWeight, unit)}
+              subValue={formatWeight(totalWeight, unit)}
               isActive
               wide
               icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
