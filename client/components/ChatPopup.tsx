@@ -429,7 +429,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex items-end ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-[85%] p-4 rounded-lg transition-all duration-200 hover:scale-[1.02] ${
@@ -465,7 +465,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           ))}
           
           {isLoading && (
-            <div className="flex justify-start">
+            <div className="flex items-end justify-start">
               <div
                 className="p-4 rounded-lg rounded-bl-md transition-all duration-200"
                 style={{
@@ -474,11 +474,8 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
                   boxShadow: SHADOW
                 }}
               >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-full"
-                    style={{ borderColor: COLORS.gray[700] }}
-                  ></div>
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin h-5 w-5 border-2 border-t-transparent rounded-badge border-gray-700"></div>
                   <span className="text-sm font-medium">Analyzing...</span>
                 </div>
               </div>
