@@ -22,6 +22,7 @@ export default function App() {
     setShowLogin,
     showAdvisor,
     setShowAdvisor,
+    setShowChat,
     gearItems,
     weightBreakdown,
     ulStatus,
@@ -74,6 +75,7 @@ export default function App() {
               onShowLogin={() => setShowLogin(true)}
               onLogout={logout}
               onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
+              onShowChat={() => setShowChat((prev) => !prev)}
             />
           }
         />
@@ -90,6 +92,7 @@ export default function App() {
           isAuthenticated={isAuthenticated}
           userName={user?.name}
           onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
+          onShowChat={() => setShowChat((prev) => !prev)}
         />
       )}
 

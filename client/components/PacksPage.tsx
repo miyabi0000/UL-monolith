@@ -27,6 +27,7 @@ interface PacksPageProps {
   onShowLogin: () => void;
   onLogout: () => void;
   onShowAdvisor?: () => void;
+  onShowChat?: () => void;
 }
 
 export default function PacksPage({
@@ -37,6 +38,7 @@ export default function PacksPage({
   onShowLogin,
   onLogout,
   onShowAdvisor,
+  onShowChat,
 }: PacksPageProps) {
   const { user } = useAuth();
   const { gearItems } = appState;
@@ -99,6 +101,7 @@ export default function PacksPage({
           onShowLogin={onShowLogin}
           onLogout={onLogout}
           onShowAdvisor={onShowAdvisor}
+          onShowChat={onShowChat}
         />
 
         <div className="min-h-0 flex-1">
