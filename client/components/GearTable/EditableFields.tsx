@@ -55,7 +55,7 @@ export const EditableImageField: React.FC<EditableImageFieldProps> = ({
     if (!value) {
       return (
         <div
-          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded' : ''}`}
+          className={`flex items-center justify-center h-[48px] ${clickable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded' : ''}`}
           onClick={clickable ? () => setShowModal(true) : undefined}
         >
           <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

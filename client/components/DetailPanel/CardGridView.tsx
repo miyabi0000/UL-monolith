@@ -184,7 +184,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                       onClick={(e) => { e.stopPropagation(); onTogglePackItem(item.id); }}
                       className={[
                         'absolute top-1 right-1 z-10 h-5 min-w-[34px] px-1.5 text-3xs font-semibold transition-colors',
-                        isInActivePack ? 'bg-gray-800 text-white' : 'bg-white/90 text-gray-600',
+                        isInActivePack ? 'bg-gray-800 text-white' : 'bg-white text-gray-600',
                       ].join(' ')}
                       title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
                     >

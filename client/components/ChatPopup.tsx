@@ -384,7 +384,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
       <div
-        className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-150"
+        className="flex-1 bg-black bg-opacity-20 transition-all duration-150"
         onClick={onClose}
       />
 
@@ -425,7 +425,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         </div>
 
         {/* Message Area */}
-        <div className="flex-1 p-5 overflow-y-auto space-y-4 backdrop-blur-sm">
+        <div className="flex-1 p-5 overflow-y-auto space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}

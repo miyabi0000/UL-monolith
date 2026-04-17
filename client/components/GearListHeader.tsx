@@ -79,7 +79,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
       </div>
 
       <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
-        <div className="inline-flex rounded-md p-0.5 bg-white/50 bg-gray-50">
+        <div className="inline-flex rounded-md p-0.5 bg-white bg-gray-50">
           <button
             onClick={() => onViewChange('card')}
             className={`w-7 h-7 rounded inline-flex items-center justify-center transition-all duration-200 ${

@@ -84,7 +84,7 @@ const SuggestedEditCard: React.FC<{
     <div className={`p-3 rounded-xl mt-2 shadow-sm border text-xs
                      ${isApplied
                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                       : 'bg-white dark:bg-gray-800/80 border-gray-200 dark:border-gray-600'}`}>
+                       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}>
       <p className="font-semibold mb-1 text-gray-500 dark:text-gray-400">
         Suggestion: {edit.gearName}
       </p>
@@ -178,7 +178,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       )}
       <div
         className="fixed top-0 right-0 h-full z-40 flex flex-col
-                   bg-white/92 dark:bg-gray-900/95 backdrop-blur
+                   bg-white dark:bg-gray-900
                    border-l border-gray-200 dark:border-gray-700
                    shadow-xl
                    transition-transform duration-300 ease-in-out"
@@ -186,7 +186,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
       >
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0
-                      bg-white/80 dark:bg-gray-800/80 backdrop-blur
+                      bg-white dark:bg-gray-800
                       border-b border-gray-200 dark:border-gray-700">
         <div>
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
@@ -204,7 +204,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
           aria-label="Close advisor"
           className="glass-header-chip h-8 w-8 inline-flex items-center justify-center
                      text-gray-500 dark:text-gray-400
-                     hover:bg-white/70 dark:hover:bg-gray-700/60 transition-colors"
+                     hover:bg-white dark:hover:bg-gray-700 transition-colors"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -285,7 +285,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
 
       {/* 入力エリア */}
       <div className="shrink-0 px-4 py-3
-                      bg-white/80 dark:bg-gray-800/80 backdrop-blur
+                      bg-white dark:bg-gray-800
                       border-t border-gray-200 dark:border-gray-700">
         {/* クイックプロンプトボタン */}
         <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 scrollbar-thin">
@@ -297,7 +297,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
               onClick={() => sendText(qp.prompt)}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
                          whitespace-nowrap shrink-0
-                         bg-white/60 dark:bg-gray-700/60 backdrop-blur
+                         bg-white dark:bg-gray-700
                          text-gray-700 dark:text-gray-200
                          border border-gray-200 dark:border-gray-600
                          hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500

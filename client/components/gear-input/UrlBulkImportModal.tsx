@@ -99,7 +99,7 @@ const UrlBulkImportModal: React.FC<UrlBulkImportModalProps> = ({
 
   return (
     <div className="modal-overlay p-4">
-      <div className="modal-panel-lg bg-white/90">
+      <div className="modal-panel-lg bg-white">
         {/* Header */}
         <div className="p-6 border-b border-gray-300">
           <h2 className="text-xl font-semibold text-gray-900">

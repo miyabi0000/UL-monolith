@@ -54,7 +54,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-3 rounded-md mb-4 bg-gray-100/25 shadow-sm">
+      <div className="flex items-center justify-between px-4 py-3 rounded-md mb-4 bg-gray-100 shadow-sm">
       {/* 左側: 選択情報 */}
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 cursor-pointer">
