@@ -57,7 +57,7 @@ const ExpandedPanel: React.FC<{
     style={{
       gridColumn: '1 / -1',
       gridRow: 'span 2',
-      borderTop: `1px solid ${COLORS.gray[200]}`,
+      borderTop: BORDERS.divider,
       backgroundColor: COLORS.gray[50],
     }}
   >
