@@ -5,13 +5,12 @@ import { GearService } from '../services/gearService';
 import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [editingGear, setEditingGear] = useState<GearItemWithCalculated | null>(null);
+  // 旧 showForm / editingGear / showGearDropdown は ChatSidebar 一本化で不要に
+  // なったため削除済み。ギア追加は ChatSidebar、編集はインラインで行う。
   const [showLogin, setShowLogin] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(false);
-  const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   // データ読み込み状態
@@ -141,13 +140,10 @@ export const useAppState = () => {
 
   return {
     // UI状態
-    showForm, setShowForm,
-    editingGear, setEditingGear,
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
     showAdvisor, setShowAdvisor,
-    showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
 
     // データ状態
