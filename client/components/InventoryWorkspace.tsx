@@ -222,8 +222,7 @@ export default function InventoryWorkspace({
       onEdit={handleEditGear}
       onDelete={handleDeleteGear}
       onUpdateItem={handleUpdateItem}
-      onShowForm={handleOpenChat}
-      onShowUrlImport={handleOpenChat}
+      onOpenChat={handleOpenChat}
       onShowCategoryManager={() => setShowCategoryManager(true)}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}

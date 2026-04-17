@@ -37,10 +37,8 @@ interface GearDetailPanelProps {
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
   onAddItemsToPack?: (itemIds: string[]) => void;
-  /** 新規ギア追加フォームを開く（空状態の CTA 用） */
-  onShowForm?: () => void;
-  /** URL インポートを開く（空状態の二次 CTA 用） */
-  onShowUrlImport?: () => void;
+  /** 空状態 CTA から ChatSidebar を開く */
+  onOpenChat?: () => void;
 }
 
 const MAX_COMPARE_ITEMS = 4;
@@ -67,8 +65,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   activePackItemIds = [],
   onTogglePackItem,
   onAddItemsToPack,
-  onShowForm,
-  onShowUrlImport,
+  onOpenChat,
 }) => {
   const { sortField, sortDirection, handleSort, forceSort } = useGearSort();
   const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
@@ -240,11 +237,9 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
       <div className="w-full h-full min-w-0 flex items-center justify-center">
         <EmptyState
           title="まだギアがありません"
-          description="最初のアイテムを登録して、パックの重量管理を始めましょう。"
-          actionLabel={onShowForm ? '+ ギアを追加' : undefined}
-          onAction={onShowForm}
-          secondaryActionLabel={onShowUrlImport ? 'URL から取り込む' : undefined}
-          onSecondaryAction={onShowUrlImport}
+          description="右上の Chat ボタン、または下のボタンから AI と対話してギアを追加しましょう。URL を貼るだけで自動抽出できます。"
+          actionLabel={onOpenChat ? 'Chat でギアを追加' : undefined}
+          onAction={onOpenChat}
         />
       </div>
     );

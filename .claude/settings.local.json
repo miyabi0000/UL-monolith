@@ -20,7 +20,7 @@
       "Bash(cat /Users/shimizumasaya/ULモノリス/server/database/migrations/*.sql)",
       "Bash(grep:*)",
       "Bash(ls -la /Users/shimizumasaya/ULモノリス/server/*.ts)",
-      "Bash(rg -l \"EditGearModal|CategorySummaryView\" client/ --type-add 'tsx:*.tsx' --type-add 'ts:*.ts' -t tsx -t ts)"
+      "Bash(rg \"onShowForm|onShowUrlImport|GearActionMenu\" client/ --type-add 'tsx:*.tsx' -ttsx -tts)"
     ],
     "deny": [],
     "additionalDirectories": [

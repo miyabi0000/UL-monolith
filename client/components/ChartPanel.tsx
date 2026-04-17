@@ -11,7 +11,7 @@ import ChartHeader from './charts/ChartHeader'
 import ChartBody from './charts/ChartBody'
 import { ChartGeometryProvider } from './charts/context/ChartGeometryContext'
 import ChartBreadcrumb from './charts/ChartBreadcrumb'
-import GearActionMenu from './charts/GearActionMenu'
+import GearManageMenu from './charts/GearManageMenu'
 import GearViewToggle from './charts/GearViewToggle'
 import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
 import { useChartCalculations } from './charts/hooks/useChartCalculations'
@@ -51,8 +51,7 @@ interface ChartPanelProps {
   onEdit: (item: GearItemWithCalculated) => void
   onDelete: (id: string) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void // フィールド更新用
-  onShowForm?: () => void // + ADDボタン用（Manual Add）
-  onShowUrlImport?: () => void // + ADDボタン用（From URL）
+  onOpenChat?: () => void // 空状態 CTA から ChatSidebar を開く
   onShowCategoryManager?: () => void // カテゴリ管理用
   gearViewMode?: 'table' | 'card' | 'compare' // ギア表示モード
   onGearViewModeChange?: (mode: 'table' | 'card' | 'compare') => void // モード変更ハンドラ
@@ -94,8 +93,7 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   onEdit,
   onDelete,
   onUpdateItem,
-  onShowForm,
-  onShowUrlImport,
+  onOpenChat,
   onShowCategoryManager,
   gearViewMode,
   onGearViewModeChange,
@@ -400,9 +398,7 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                 />
               )}
 
-              <GearActionMenu
-                onShowForm={onShowForm}
-                onShowUrlImport={onShowUrlImport}
+              <GearManageMenu
                 onShowCategoryManager={onShowCategoryManager}
               />
 
@@ -457,8 +453,7 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
                 onAddItemsToPack={onAddItemsToPack}
-                onShowForm={onShowForm}
-                onShowUrlImport={onShowUrlImport}
+                onOpenChat={onOpenChat}
               />
           </div>
         </Card>
