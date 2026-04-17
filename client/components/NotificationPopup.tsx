@@ -84,8 +84,8 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
             key={message.id}
             className={`p-4 transition-all duration-300 transform ${
               isAnimatingOut
-                ? 'trangray-x-full opacity-0'
-                : 'trangray-x-0 opacity-100'
+                ? 'translate-x-full opacity-0'
+                : 'translate-x-0 opacity-100'
             } ${
               message.type === 'loading' ? 'animate-pulse' : ''
             }`}
