@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { db } from '../database/connection.js';
 import { sendError, sendSuccess } from './shared/httpResponse.js';
-import { DEMO_USER_ID } from './shared/userContext.js';
-import { 
-  validateCategoryInput, 
-  normalizeCategoryName, 
-  DEFAULT_CATEGORY_COLOR 
+import { getRequestUserId } from './shared/userContext.js';
+import {
+  validateCategoryInput,
+  normalizeCategoryName,
+  DEFAULT_CATEGORY_COLOR
 } from '../utils/categoryValidation.js';
 
 const router = Router();
@@ -15,7 +15,7 @@ const router = Router();
  */
 router.get('/', async (req, res) => {
   try {
-    const categories = await db.getCategories(DEMO_USER_ID);
+    const categories = await db.getCategories(getRequestUserId(req));
 
     return sendSuccess(res, {
       success: true,
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const categories = await db.getCategories(DEMO_USER_ID);
+    const categories = await db.getCategories(getRequestUserId(req));
     const category = categories.find(c => c.id === id);
 
     if (!category) {
@@ -64,9 +64,10 @@ router.post('/', async (req, res) => {
     }
 
     const normalizedName = normalizeCategoryName(name);
+    const userId = getRequestUserId(req);
 
     // 重複チェック
-    const existingCategories = await db.getCategories(DEMO_USER_ID);
+    const existingCategories = await db.getCategories(userId);
     if (existingCategories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
       return sendError(res, 'Category with this name already exists', undefined, 409);
     }
@@ -74,7 +75,7 @@ router.post('/', async (req, res) => {
     const newCategory = await db.createCategory(
       normalizedName,
       color || DEFAULT_CATEGORY_COLOR,
-      DEMO_USER_ID
+      userId
     );
 
     return sendSuccess(res, {
@@ -97,9 +98,9 @@ router.put('/:id', async (req, res) => {
     const { name, color } = req.body;
 
     // 存在確認
-    const categories = await db.getCategories(DEMO_USER_ID);
+    const categories = await db.getCategories(getRequestUserId(req));
     const category = categories.find(c => c.id === id);
-    
+
     if (!category) {
       return sendError(res, 'Category not found', undefined, 404);
     }
@@ -156,9 +157,9 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
     // 存在確認
-    const categories = await db.getCategories(DEMO_USER_ID);
+    const categories = await db.getCategories(getRequestUserId(req));
     const category = categories.find(c => c.id === id);
-    
+
     if (!category) {
       return sendError(res, 'Category not found', undefined, 404);
     }
