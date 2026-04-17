@@ -72,7 +72,7 @@
     /* Borderless hierarchy: 枠線ではなく「背景コントラスト + shadow」で階層を表現
      * page (L0, 最暗) < nest (L1.5) < card (L2, 純白) < raised (L3, white + shadow)
      * カードは page より明るく、shadow で浮く。枠線はなくても階層が成立する */
-    --page-bg: var(--page-bg, #ECEAE2);         /* L0 page bg (やや暗めのキャンバス) */
+    --page-bg: #ECEAE2;         /* L0 page bg (やや暗めのキャンバス) */
     --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.05), 0 1px 3px rgba(10, 10, 10, 0.04);
     --shadow-md: 0 2px 6px rgba(10, 10, 10, 0.07), 0 4px 12px rgba(10, 10, 10, 0.05);
     --shadow-lg: 0 6px 16px rgba(10, 10, 10, 0.10), 0 12px 28px rgba(10, 10, 10, 0.06);
@@ -147,6 +147,49 @@
     body {
       padding-bottom: env(safe-area-inset-bottom);
     }
+  }
+
+  /* ダークモード: CSS変数（@layer base で :root と同レイヤーに） */
+  .dark {
+    --page-bg: #2D2F2D;
+    --shadow-sm: 0 1px 2px rgba(27, 29, 27, 0.15);
+    --shadow-md: 0 1px 3px rgba(27, 29, 27, 0.25), 0 1px 2px -1px rgba(27, 29, 27, 0.15);
+    --shadow-lg: 0 4px 6px -1px rgba(27, 29, 27, 0.25), 0 2px 4px -2px rgba(27, 29, 27, 0.15);
+    --surface-level-0: #434543;
+    --surface-level-1: #2D2F2D;
+    --surface-level-2: #1B1D1B;
+    --ink-primary: #F7F6F3;
+    --ink-secondary: #E0DFDD;
+    --ink-muted: #AFAFAC;
+    --ink-inverse: #2D2F2D;
+    --icon-default: #E0DFDD;
+    --icon-muted: #AFAFAC;
+    --stroke-subtle: rgba(148, 148, 146, 0.34);
+    --stroke-default: rgba(175, 175, 172, 0.52);
+    --stroke-strong: #CAC9C7;
+    --stroke-divider: rgba(175, 175, 172, 0.42);
+    --focus-ring: #637D9E;
+    --focus-ring-offset: #2D2F2D;
+    --overlay-hover: rgba(255, 255, 255, 0.06);
+    --overlay-active: rgba(255, 255, 255, 0.12);
+    --overlay-scrim: rgba(27, 29, 27, 0.62);
+    --state-success-fg: #8FA1B9;
+    --state-success-bg: rgba(39, 74, 120, 0.2);
+    --state-success-border: rgba(143, 161, 185, 0.5);
+    --state-warning-fg: #FFD688;
+    --state-warning-bg: rgba(255, 177, 27, 0.2);
+    --state-warning-border: rgba(255, 214, 136, 0.52);
+    --state-danger-fg: #F07C88;
+    --state-danger-bg: rgba(226, 4, 27, 0.2);
+    --state-danger-border: rgba(240, 124, 136, 0.5);
+    --state-info-fg: #8FA1B9;
+    --state-info-bg: rgba(39, 74, 120, 0.2);
+    --state-info-border: rgba(143, 161, 185, 0.5);
+    --text-table-head: #CAC9C7;
+    --text-table-main: #F7F6F3;
+    --text-table-sub: #AFAFAC;
+    --text-table-num: #EEEDEA;
+    --text-table-micro: #AFAFAC;
   }
 
   /* コントラスト強調 */
@@ -544,6 +587,21 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease forwards;
 }
 
 @layer utilities {

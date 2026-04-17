@@ -1,4 +1,6 @@
 import OpenAI from 'openai';
+import type { ChatCompletion, ChatCompletionChunk, ChatCompletionTool } from 'openai/resources/chat/completions';
+import type { Stream } from 'openai/streaming';
 
 /**
  * シンプルなOpenAI Client
@@ -76,6 +78,61 @@ export class OpenAIClient {
     }
 
     return content;
+  }
+
+  /**
+   * ツール付きチャート完了API呼び出し（Function Calling）
+   */
+  async chatWithTools(
+    systemPrompt: string,
+    messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+    tools: ChatCompletionTool[],
+    maxTokens = 1500,
+  ): Promise<ChatCompletion> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not available');
+    }
+
+    return this.openai.chat.completions.create({
+      model: this.defaultModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages,
+      ],
+      tools,
+      tool_choice: 'auto',
+      parallel_tool_calls: true,
+      temperature: 0.3,
+      max_tokens: maxTokens,
+    });
+  }
+
+  /**
+   * ツール付きストリーミングAPI呼び出し（SSE用）
+   */
+  chatWithToolsStream(
+    systemPrompt: string,
+    messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+    tools: ChatCompletionTool[],
+    maxTokens = 1500,
+  ): Promise<Stream<ChatCompletionChunk>> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not available');
+    }
+
+    return this.openai.chat.completions.create({
+      model: this.defaultModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages,
+      ],
+      tools,
+      tool_choice: 'auto',
+      parallel_tool_calls: true,
+      temperature: 0.3,
+      max_tokens: maxTokens,
+      stream: true,
+    });
   }
 
   /**
