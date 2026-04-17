@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { COLORS, STATUS_TONES } from '../utils/designSystem';
+import { COLORS, STATUS_TONES, mondrian, BORDERS, BORDER_WIDTHS } from '../utils/designSystem';
 
 export interface NotificationMessage {
   id: string;
@@ -47,38 +47,28 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
     }, 300);
   };
 
+  // De Stijl: 通知の枠線は BORDERS.default、左帯のみ Mondrian 3色+黒で意味付け
   const getMessageStyles = (type: string): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      backgroundColor: COLORS.white,
+      color: COLORS.text.primary,
+      border: BORDERS.default,
+    };
+    const accentLeft = (color: string): React.CSSProperties => ({
+      borderLeftWidth: BORDER_WIDTHS.thick,
+      borderLeftColor: color,
+    });
     switch (type) {
       case 'error':
-        return {
-          backgroundColor: errorTone.background,
-          color: errorTone.text,
-          borderLeftColor: errorTone.solid
-        };
+        return { ...base, backgroundColor: errorTone.background, color: errorTone.text, ...accentLeft(mondrian.red) };
       case 'success':
-        return {
-          backgroundColor: successTone.background,
-          color: successTone.text,
-          borderLeftColor: successTone.solid
-        };
+        return { ...base, backgroundColor: successTone.background, color: successTone.text, ...accentLeft(mondrian.black) };
       case 'info':
-        return {
-          backgroundColor: COLORS.white,
-          color: COLORS.gray[700],
-          borderLeftColor: COLORS.gray[500]
-        };
+        return { ...base, ...accentLeft(mondrian.blue) };
       case 'loading':
-        return {
-          backgroundColor: COLORS.white,
-          color: COLORS.gray[700],
-          borderLeftColor: COLORS.gray[500]
-        };
+        return { ...base, ...accentLeft(mondrian.yellow) };
       default:
-        return {
-          backgroundColor: COLORS.white,
-          color: COLORS.gray[700],
-          borderLeftColor: COLORS.gray[500]
-        };
+        return { ...base, ...accentLeft(mondrian.black) };
     }
   };
 
@@ -92,14 +82,14 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ messages, onRemov
         return (
           <div
             key={message.id}
-            className={`p-4 rounded-lg border-l-4 backdrop-blur-sm shadow-md transition-all duration-300 transform ${
+            className={`p-4 transition-all duration-300 transform ${
               isAnimatingOut
                 ? 'trangray-x-full opacity-0'
                 : 'trangray-x-0 opacity-100'
             } ${
               message.type === 'loading' ? 'animate-pulse' : ''
             }`}
-            style={getMessageStyles(message.type)}
+            style={{ ...getMessageStyles(message.type), borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-sm)' }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 flex-1">

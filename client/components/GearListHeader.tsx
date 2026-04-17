@@ -1,6 +1,9 @@
 import React from 'react'
 import BulkActionMenu from './BulkActionMenu'
 import { ViewMode } from '../utils/types'
+import CardIcon from './icons/CardIcon'
+import TableIcon from './icons/TableIcon'
+import CompareIcon from './icons/CompareIcon'
 
 type SortDirection = 'asc' | 'desc'
 
@@ -28,7 +31,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
   onSort
 }) => {
   return (
-    <div className="relative z-20 flex items-center justify-between px-3 py-2 neu-divider h-11">
+    <div className="relative z-20 flex items-center justify-between px-3 py-2 border-b border-gray-200 h-11">
       <div className="flex items-center gap-3">
         <h3 className="font-semibold text-sm text-gray-900 tracking-tight">
           GEAR LIST
@@ -45,7 +48,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
               onClick={() => onSort('name')}
               className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'name'
-                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  ? 'bg-gray-100 text-gray-700 shadow-sm'
                   : 'bg-transparent text-gray-500'
               }`}
             >
@@ -55,7 +58,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
               onClick={() => onSort('weight')}
               className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'weight'
-                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  ? 'bg-gray-100 text-gray-700 shadow-sm'
                   : 'bg-transparent text-gray-500'
               }`}
             >
@@ -65,7 +68,7 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
               onClick={() => onSort('price')}
               className={`px-2.5 py-1 text-xs rounded transition-colors ${
                 sortField === 'price'
-                  ? 'bg-gray-100 text-gray-700 neu-raised'
+                  ? 'bg-gray-100 text-gray-700 shadow-sm'
                   : 'bg-transparent text-gray-500'
               }`}
             >
@@ -76,38 +79,41 @@ const GearListHeader: React.FC<GearListHeaderProps> = ({
       </div>
 
       <div className="gear-glass-chip inline-flex items-center gap-1 rounded-md px-1 py-1">
-        <div className="inline-flex rounded-md p-0.5 bg-white/50 neu-inset">
+        <div className="inline-flex rounded-md p-0.5 bg-white bg-gray-50">
           <button
             onClick={() => onViewChange('card')}
-            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
+            className={`w-7 h-7 rounded inline-flex items-center justify-center transition-all duration-200 ${
               currentView === 'card' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Card view"
+            title="Card"
           >
-            Card
+            <CardIcon className="w-4 h-4" />
           </button>
           <button
             onClick={() => onViewChange('table')}
-            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
+            className={`w-7 h-7 rounded inline-flex items-center justify-center transition-all duration-200 ${
               currentView === 'table' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Table view"
+            title="Table"
           >
-            Table
+            <TableIcon className="w-4 h-4" />
           </button>
           <button
             onClick={() => onViewChange('compare')}
-            className={`px-1.5 py-0.5 rounded text-2xs font-medium transition-all duration-200 ${
+            className={`w-7 h-7 rounded inline-flex items-center justify-center transition-all duration-200 ${
               currentView === 'compare' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500'
             }`}
             aria-label="Comparison view"
+            title="Compare"
           >
-            A|B
+            <CompareIcon className="w-4 h-4" />
           </button>
         </div>
         <button
           onClick={onShowForm}
-          className="p-1.5 rounded-md bg-gray-200 text-gray-800 neu-raised hover:bg-gray-300 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          className="icon-btn"
           aria-label="Add item"
           title="Add"
         >

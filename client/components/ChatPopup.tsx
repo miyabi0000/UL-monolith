@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { extractFromPrompt, enhanceUrlDataWithPrompt, extractCategoryFromPrompt, extractFromUrl, APIError } from '../services/llmService'
-import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE } from '../utils/designSystem'
+import { COLORS, SHADOW, FONT_SCALE, SPACING_SCALE, RADIUS_SCALE, BORDERS } from '../utils/designSystem'
 import { alpha } from '../styles/tokens'
 import { useWeightUnit } from '../contexts/WeightUnitContext'
 import { formatWeight } from '../utils/weightUnit'
@@ -384,7 +384,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
       <div
-        className="flex-1 bg-black bg-opacity-20 backdrop-blur-sm transition-all duration-150"
+        className="flex-1 bg-black bg-opacity-20 transition-all duration-150"
         onClick={onClose}
       />
 
@@ -401,7 +401,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           className="flex justify-between items-center"
           style={{
             padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
-            borderBottom: `1px solid ${COLORS.gray[200]}`,
+            borderBottom: BORDERS.default,
           }}
         >
           <div>
@@ -425,14 +425,14 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         </div>
 
         {/* Message Area */}
-        <div className="flex-1 p-5 overflow-y-auto space-y-4 backdrop-blur-sm">
+        <div className="flex-1 p-5 overflow-y-auto space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] p-4 rounded-2xl transition-all duration-200 hover:scale-[1.02] ${
+                className={`max-w-[85%] p-4 rounded-lg transition-all duration-200 hover:scale-[1.02] ${
                   message.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'
                 }`}
                 style={{
@@ -467,7 +467,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           {isLoading && (
             <div className="flex justify-start">
               <div
-                className="p-4 rounded-2xl rounded-bl-md transition-all duration-200"
+                className="p-4 rounded-lg rounded-bl-md transition-all duration-200"
                 style={{
                   backgroundColor: COLORS.white,
                   color: COLORS.text.primary,
@@ -492,7 +492,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
         <div
           style={{
             padding: `${SPACING_SCALE.md}px ${SPACING_SCALE.lg}px`,
-            borderTop: `1px solid ${COLORS.gray[200]}`,
+            borderTop: BORDERS.default,
             backgroundColor: COLORS.gray[50]
           }}
         >

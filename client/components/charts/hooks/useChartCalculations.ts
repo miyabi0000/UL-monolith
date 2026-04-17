@@ -7,6 +7,7 @@ import {
   getPayloadUnit,
 } from '../../../utils/chartHelpers'
 import { generateItemColor } from '../../../utils/colorHelpers'
+import { getCategoryColor } from '../../../utils/designSystem'
 import type {
   ChartData,
   ChartViewMode,
@@ -121,10 +122,11 @@ export const useChartCalculations = ({
         unit:       payloadUnit,
       }))
     }
+    // Mondrian Matte: name から決定論的に Mondrian パレットの色を割当
     return sortedData.map((cat) => ({
       name:       cat.name,
       value:      cat.value,
-      color:      cat.color,
+      color:      getCategoryColor(cat.name),
       percentage: cat.percentage,
       unit:       payloadUnit,
     }))

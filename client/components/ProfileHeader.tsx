@@ -53,7 +53,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
-    <section className="rounded-2xl neu-raised bg-white/75 backdrop-blur dark:bg-gray-800/70 overflow-hidden">
+    <section className="card overflow-hidden">
       {profile.headerImageUrl && (
         <div className="h-24 sm:h-32 w-full bg-gray-100 dark:bg-gray-700">
           <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
@@ -61,8 +61,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       )}
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* 左: プロフィール情報 */}
-        <div className="min-w-0 flex items-center gap-3">
-          <span className="h-10 w-10 rounded-full bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 text-sm font-semibold inline-flex items-center justify-center shrink-0">
+        <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--control-h)' }}>
+          <span
+            className="bg-mondrian-black text-mondrian-canvas dark:bg-mondrian-canvas dark:text-mondrian-black text-sm font-semibold inline-flex items-center justify-center shrink-0"
+            style={{ height: 'var(--control-h)', width: 'var(--control-h)', borderRadius: 'var(--radius-control)' }}
+          >
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">
@@ -80,18 +83,20 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <button
               type="button"
               onClick={onShowAdvisor}
-              className="glass-header-chip h-9 px-3 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-700/60 text-xs font-medium"
+              className="icon-btn"
               aria-label="UL Advisor"
               title="ULギアアドバイザー"
             >
-              Advisor
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
             </button>
           )}
 
           <button
             type="button"
             onClick={onEditProfile}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="Edit Profile"
             title="Edit Profile"
           >
@@ -103,7 +108,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button
             type="button"
             onClick={toggleDarkMode}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="Toggle dark mode"
             title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
@@ -121,7 +126,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setUserMenuOpen((p) => !p)}
-            className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="icon-btn"
             aria-label="User menu"
           >
             {isAuthenticated ? (
@@ -136,7 +141,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 neu-raised overflow-hidden z-50">
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
               {isAuthenticated ? (
                 <>
                   {userName && (

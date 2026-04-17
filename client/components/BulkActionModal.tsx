@@ -91,7 +91,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-panel-md">
-        <div className="p-6 neu-divider">
+        <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
             Bulk Actions ({selectedCount} items)
           </h2>
@@ -255,7 +255,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           )}
 
           {/* Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 neu-divider">
+          <div className="flex justify-end space-x-3 pt-4 border-b border-gray-200">
             <button
               type="button"
               onClick={onClose}

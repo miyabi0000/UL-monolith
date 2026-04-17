@@ -6,7 +6,7 @@ import {
   isBig3Category,
   DUAL_RING_COLORS,
 } from '../types'
-import { COLORS } from '../designSystem'
+import { getCategoryColor, mondrian } from '../designSystem'
 import { sumWeight } from './categoryBuckets'
 
 /**
@@ -62,16 +62,18 @@ export const calculateBig3Breakdown = (items: GearItemWithCalculated[]): DonutSe
   ].filter((s) => s.value > 0)
 }
 
-/** カテゴリ別内訳 (重量降順) */
+/** カテゴリ別内訳 (重量降順)
+ * Mondrian Matte: カテゴリ名から決定論的に Mondrian パレットの色を割当。
+ * Big3 のみ Mondrian Red で固定強調。
+ */
 export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): DonutSegment[] => {
-  const byCategory = new Map<string, { items: GearItemWithCalculated[]; color: string; name: string; isBig3: boolean }>()
+  const byCategory = new Map<string, { items: GearItemWithCalculated[]; name: string; isBig3: boolean }>()
 
   for (const item of items) {
     const id = item.categoryId || 'uncategorized'
     if (!byCategory.has(id)) {
       byCategory.set(id, {
         items: [],
-        color: item.category?.color || COLORS.gray[500],
         name:  item.category?.name  || 'Other',
         isBig3: isBig3Category(item.category),
       })
@@ -84,7 +86,7 @@ export const calculateCategoryBreakdown = (items: GearItemWithCalculated[]): Don
       id,
       label:  bucket.name,
       value:  sumWeight(bucket.items),
-      color:  bucket.color,
+      color:  bucket.isBig3 ? mondrian.red : getCategoryColor(bucket.name),
       isBig3: bucket.isBig3,
       items:  bucket.items,
     }))

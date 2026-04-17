@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
-import { COLORS } from '../../utils/designSystem';
+import { COLORS, BORDERS } from '../../utils/designSystem';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
 import GearInfoSummary from './GearInfoSummary';
 
@@ -30,7 +30,7 @@ const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value })
 /** Edit / Link ボタン */
 const actionButtonStyle = {
   color: COLORS.text.secondary,
-  border: `1px solid ${COLORS.gray[200]}`,
+  border: BORDERS.default,
 } as const;
 
 const actionButtonClass = 'text-2xs font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';
@@ -184,7 +184,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                       onClick={(e) => { e.stopPropagation(); onTogglePackItem(item.id); }}
                       className={[
                         'absolute top-1 right-1 z-10 h-5 min-w-[34px] px-1.5 text-3xs font-semibold transition-colors',
-                        isInActivePack ? 'bg-gray-800 text-white' : 'bg-white/90 text-gray-600',
+                        isInActivePack ? 'bg-gray-800 text-white' : 'bg-white text-gray-600',
                       ].join(' ')}
                       title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
                     >

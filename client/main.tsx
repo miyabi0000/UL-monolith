@@ -6,6 +6,7 @@ import { themeCssVariables } from './styles/tokens'
 import App from './components/App'
 import { AuthProvider } from './utils/AuthContext'
 import { WeightUnitProvider } from './contexts/WeightUnitContext'
+import { CurrencyProvider } from './contexts/CurrencyContext'
 
 type ThemeMode = 'light' | 'dark'
 
@@ -45,7 +46,9 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <AuthProvider>
         <WeightUnitProvider>
-          <App />
+          <CurrencyProvider>
+            <App />
+          </CurrencyProvider>
         </WeightUnitProvider>
       </AuthProvider>
     </BrowserRouter>

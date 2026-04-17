@@ -3,7 +3,7 @@ import {
   ChartData,
   QuantityDisplayMode,
 } from '../types'
-import { COLORS } from '../designSystem'
+import { getCategoryColor } from '../designSystem'
 import { getQuantityForDisplayMode } from './quantity'
 
 /**
@@ -18,7 +18,8 @@ export const calculateChartData = (
 ): ChartData[] => {
   const buckets = items.reduce<Record<string, { weight: number; price: number; count: number; items: GearItemWithCalculated[]; color: string }>>((acc, item) => {
     const name  = item.category?.name  || 'Other'
-    const color = item.category?.color || COLORS.gray[500]
+    // Mondrian Matte: DB の category.color は無視し、name から決定論的に Mondrian パレット色を割当
+    const color = getCategoryColor(name)
     if (!acc[name]) acc[name] = { weight: 0, price: 0, count: 0, items: [], color }
 
     const qty = getQuantityForDisplayMode(item, mode)

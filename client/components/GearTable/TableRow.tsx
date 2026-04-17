@@ -106,17 +106,17 @@ const TableRow: React.FC<TableRowProps> = ({
       onClick={onItemSelect ? () => onItemSelect(item.id) : undefined}
       onMouseEnter={onItemHover ? () => onItemHover(item.id) : undefined}
       onMouseLeave={onItemHover ? () => onItemHover(null) : undefined}
-      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50/80 dark:hover:bg-gray-700/45 ${
+      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
         onItemSelect ? 'cursor-pointer' : ''
       } ${
         isSelected
-          ? 'bg-gray-50 dark:bg-gray-700/55 ring-2 ring-gray-400 dark:ring-gray-500 ring-inset'
+          ? 'bg-gray-50 dark:bg-gray-700 ring-2 ring-gray-400 dark:ring-gray-500 ring-inset'
           : activePackName && isInActivePack
             ? 'bg-blue-50/55 dark:bg-blue-900/20'
           : isHighlighted
             ? 'border-l-2'
           : isHovered
-            ? 'bg-gray-50/60 dark:bg-gray-700/30'
+            ? 'bg-gray-50 dark:bg-gray-700'
             : 'bg-transparent'
       }`}
       style={isHighlighted && !isSelected

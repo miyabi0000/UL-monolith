@@ -65,7 +65,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   const { unit } = useWeightUnit()
   const COLUMNS = React.useMemo(() => buildColumns(unit), [unit])
 
-  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white/95 dark:bg-gray-800/95 backdrop-blur'
+  const thBase = 'gear-th px-1.5 py-1 sticky top-0 z-20 bg-white dark:bg-gray-800'
   const labelBase = 'inline-flex h-6 w-full items-center rounded px-1.5 text-xs leading-none font-medium'
   const inactiveText = 'text-gray-500 dark:text-gray-300'
   const hoverText = 'hover:text-gray-700 dark:hover:text-gray-100'

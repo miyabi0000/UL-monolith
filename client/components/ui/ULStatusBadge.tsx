@@ -1,6 +1,6 @@
 import React from 'react'
 import { ULClassification } from '../../utils/types'
-import { STATUS_TONES, COLORS } from '../../utils/designSystem'
+import { COLORS, mondrian, BORDERS } from '../../utils/designSystem'
 import { alpha } from '../../styles/tokens'
 import { formatWeightLarge } from '../../utils/weightUnit'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
@@ -10,10 +10,11 @@ interface ULStatusBadgeProps {
   baseWeight?: number
 }
 
+// De Stijl: UL = Blue (達成), LW = Yellow (警告), Trad = 黒枠グレー
 const UL_STATUS_CONFIG = {
-  ultralight: { label: '⚡ UL', color: STATUS_TONES.success.text, bgColor: STATUS_TONES.success.background },
-  lightweight: { label: 'LW', color: STATUS_TONES.warning.text, bgColor: STATUS_TONES.warning.background },
-  traditional: { label: 'Trad', color: COLORS.gray[500], bgColor: alpha(COLORS.gray[500], 0.08) }
+  ultralight:  { label: '⚡ UL',  color: '#FFFFFF',           bgColor: mondrian.blue },
+  lightweight: { label: 'LW',     color: mondrian.black,      bgColor: alpha(mondrian.yellow, 0.4) },
+  traditional: { label: 'Trad',   color: COLORS.text.primary, bgColor: COLORS.gray[200] }
 } as const
 
 const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeight }) => {
@@ -22,8 +23,13 @@ const ULStatusBadge: React.FC<ULStatusBadgeProps> = ({ classification, baseWeigh
 
   return (
     <span
-      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold"
-      style={{ backgroundColor: config.bgColor, color: config.color }}
+      className="inline-flex items-center justify-center px-2 rounded-full text-xs font-bold"
+      style={{
+        height: 'var(--badge-h)',
+        backgroundColor: config.bgColor,
+        color: config.color,
+        border: BORDERS.default,
+      }}
       title={baseWeight ? `Base Weight: ${formatWeightLarge(baseWeight, unit)}` : undefined}
     >
       {config.label}

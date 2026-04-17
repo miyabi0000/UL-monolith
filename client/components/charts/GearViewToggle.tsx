@@ -1,5 +1,8 @@
 import React from 'react'
 import SegmentedControl from '../ui/SegmentedControl'
+import CardIcon from '../icons/CardIcon'
+import TableIcon from '../icons/TableIcon'
+import CompareIcon from '../icons/CompareIcon'
 
 type GearViewMode = 'table' | 'card' | 'compare'
 
@@ -11,7 +14,7 @@ interface GearViewToggleProps {
 }
 
 /**
- * Card / Table / Compare (A|B) ビューモード切替。
+ * Card / Table / Compare ビューモード切替 (icon only, 正方形)
  *
  * Compare モードと showCheckboxes (Edit モード) が排他なので、
  * compare 選択時に Edit が有効なら先に抜ける副作用を持つ。
@@ -28,26 +31,29 @@ const GearViewToggle: React.FC<GearViewToggleProps> = ({
 
   return (
     <SegmentedControl
+      shape="square"
       options={[
         {
           key: 'card',
-          label: 'Card',
+          label: <CardIcon className="w-4 h-4" />,
           onClick: () => onGearViewModeChange('card'),
           isActive: gearViewMode === 'card',
           inactiveClassName: inactive,
           ariaLabel: 'Card view',
+          title: 'Card',
         },
         {
           key: 'table',
-          label: 'Table',
+          label: <TableIcon className="w-4 h-4" />,
           onClick: () => onGearViewModeChange('table'),
           isActive: gearViewMode === 'table',
           inactiveClassName: inactive,
           ariaLabel: 'Table view',
+          title: 'Table',
         },
         {
           key: 'compare',
-          label: 'A|B',
+          label: <CompareIcon className="w-4 h-4" />,
           onClick: () => {
             if (gearViewMode === 'compare') {
               onGearViewModeChange('table')

@@ -6,7 +6,10 @@
  * スケール値（白銀比）は現在の値を維持
  */
 
-import { primitiveColors, alpha } from '../styles/tokens';
+import { primitiveColors, alpha, mondrian } from '../styles/tokens';
+
+// Mondrian 3原色を designSystem 経由で再エクスポート（コンポーネント側 import を一本化）
+export { mondrian };
 
 // 白銀比（Silver Ratio）定数
 export const SILVER_RATIO = 1.414;
@@ -95,26 +98,29 @@ export const COLORS = {
     900: primitiveColors.gray[900],
   },
 
-  // Accent for interactive elements only
+  // Accent — Mondrian 3色 + 黒
   accent: {
-    primary: primitiveColors.gray[700],
-    red: primitiveColors.red[500],
+    primary: mondrian.black,
+    red:     mondrian.red,
+    blue:    mondrian.blue,
+    yellow:  mondrian.yellow,
   },
 
   // Semantic Colors (Minimal)
-  background: primitiveColors.gray[50],
-  surface: primitiveColors.gray.white,
+  background: mondrian.canvas,
+  surface:    primitiveColors.gray.white,
   text: {
-    primary: primitiveColors.gray.black,
-    secondary: primitiveColors.gray[600],
-    muted: primitiveColors.gray[400],
+    primary:   mondrian.black,
+    secondary: primitiveColors.gray[800],
+    muted:     primitiveColors.gray[600],
   },
 
-  // State Colors
-  error: primitiveColors.red[500],
-  danger: primitiveColors.red[500],
-  warning: primitiveColors.orange[500],
-  success: primitiveColors.blue[500],
+  // State Colors — Mondrian 3色に縮退（success は黒 + "OK"）
+  error:   mondrian.red,
+  danger:  mondrian.red,
+  warning: mondrian.yellow,
+  success: mondrian.black,
+  info:    mondrian.blue,
 } as const;
 
 type StatusTone = {
@@ -124,93 +130,140 @@ type StatusTone = {
   solid: string
 }
 
+/**
+ * STATUS_TONES — Borderless De Stijl
+ * 区別は背景 tint と前景色 (text) のみで表現。枠線は透明。
+ * success は黒 + "OK"。緑は De Stijl にないため排除
+ */
 export const STATUS_TONES: Record<'success' | 'warning' | 'info' | 'error', StatusTone> = {
   success: {
-    text: primitiveColors.blue[700],
-    background: alpha(primitiveColors.blue[500], 0.08),
-    border: alpha(primitiveColors.blue[500], 0.28),
-    solid: primitiveColors.blue[500]
+    text:       mondrian.black,
+    background: alpha(mondrian.black, 0.04),
+    border:     'transparent',
+    solid:      mondrian.black
   },
   warning: {
-    text: primitiveColors.orange[700],
-    background: alpha(primitiveColors.orange[500], 0.08),
-    border: alpha(primitiveColors.orange[500], 0.28),
-    solid: primitiveColors.orange[500]
+    text:       mondrian.black,
+    background: alpha(mondrian.yellow, 0.20),
+    border:     'transparent',
+    solid:      mondrian.yellow
   },
   info: {
-    text: primitiveColors.blue[700],
-    background: alpha(primitiveColors.blue[500], 0.08),
-    border: alpha(primitiveColors.blue[500], 0.28),
-    solid: primitiveColors.blue[500]
+    text:       mondrian.blue,
+    background: alpha(mondrian.blue, 0.10),
+    border:     'transparent',
+    solid:      mondrian.blue
   },
   error: {
-    text: primitiveColors.red[700],
-    background: alpha(primitiveColors.red[500], 0.08),
-    border: alpha(primitiveColors.red[500], 0.28),
-    solid: primitiveColors.red[500]
+    text:       mondrian.red,
+    background: alpha(mondrian.red, 0.12),
+    border:     'transparent',
+    solid:      mondrian.red
   }
 } as const
 
 // Unified shadow system (single shadow variant)
 export const SHADOW = `0 1px 3px 0 ${alpha(primitiveColors.gray.black, 0.1)}, 0 1px 2px -1px ${alpha(primitiveColors.gray.black, 0.1)}` as const;
 
+/**
+ * Border tokens — JS inline-style 用 (CSS 変数参照)
+ *
+ * 必ずこの定数を介して border を指定する。色のみ上書きする場合も
+ * `border: BORDERS.default` をベースにし、必要に応じて borderColor で上書き。
+ *
+ * 対応する CSS 変数は globals.css の :root に定義 (--border-*)。
+ * テーマや色変更は CSS 変数側で行うため、JS 側は触らない。
+ */
+export const BORDERS = {
+  /** 1px solid var(--stroke-default) — 全コンポーネントの既定枠線 */
+  default: 'var(--border-default)',
+  /** 2px solid var(--stroke-default) — 強調枠線 (大区画の額装) */
+  bold:    'var(--border-bold)',
+  /** 4px solid var(--stroke-default) — 通知の左帯など */
+  thick:   'var(--border-thick)',
+  /** 1px solid var(--stroke-subtle) — 控えめな仕切り */
+  faint:   'var(--border-faint)',
+  /** 1px solid var(--stroke-divider) — テーブル行間など */
+  divider: 'var(--border-divider)',
+  /** 2px solid var(--focus-ring) — focus outline */
+  focus:   'var(--border-focus)',
+} as const;
+
+/** width 単独を必要とする場合 (border-bottom など) */
+export const BORDER_WIDTHS = {
+  thin:  'var(--border-width-thin)',
+  bold:  'var(--border-width-bold)',
+  thick: 'var(--border-width-thick)',
+} as const;
+
 // Utility functions
+/** Mondrian 配色: priority 1-2 = 赤, 3 = 黄, 4-5 = ミュート灰 */
 export const getPriorityColor = (priority: number) => {
-  if (priority <= 2) return COLORS.accent.red; // High priority: Red
-  if (priority <= 3) return COLORS.warning; // Medium priority: Yellow
-  return COLORS.gray[400]; // Low priority: Gray
+  if (priority <= 2) return mondrian.red;
+  if (priority <= 3) return mondrian.yellow;
+  return COLORS.gray[500];
 };
 
-export const getCategoryBadgeStyle = (categoryColor?: string) => {
-  const baseColor = categoryColor || COLORS.gray[400];
-  return {
-    backgroundColor: `${baseColor}20`, // 20% opacity
-    color: baseColor,
-  };
+/**
+ * @deprecated CategoryBadge は category.color を使わずグレー2階調で描画する。
+ * 互換目的のシムとして残置（将来削除）。
+ */
+export const getCategoryBadgeStyle = (_categoryColor?: string) => ({
+  backgroundColor: COLORS.gray[200],
+  color: COLORS.text.primary,
+});
+
+/**
+ * @deprecated colorHelpers.ts に同名関数あり。新コードはそちらを使用。
+ * 互換のため値を返すが、Mondrian 配色では grayscale を返す。
+ */
+export const generateItemColor = (_baseColor: string, index: number, total: number) => {
+  const lightness = 30 + (index / Math.max(1, total)) * 40; // 30% → 70%
+  return `hsl(0, 0%, ${Math.round(lightness)}%)`;
 };
 
-// Color generation utility (extracted from GearChart)
-export const generateItemColor = (baseColor: string, index: number, total: number) => {
-  // HEXからRGBに変換
-  const hex = baseColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-
-  // RGBからHSLに変換
-  const rNorm = r / 255;
-  const gNorm = g / 255;
-  const bNorm = b / 255;
-
-  const max = Math.max(rNorm, gNorm, bNorm);
-  const min = Math.min(rNorm, gNorm, bNorm);
-  const diff = max - min;
-
-  let h = 0;
-  if (diff !== 0) {
-    if (max === rNorm) h = ((gNorm - bNorm) / diff) % 6;
-    else if (max === gNorm) h = (bNorm - rNorm) / diff + 2;
-    else h = (rNorm - gNorm) / diff + 4;
-  }
-  h = Math.round(h * 60);
-  if (h < 0) h += 360;
-
-  const l = (max + min) / 2;
-  const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1));
-
-  // 時計回りに彩度を落とす
-  const progress = index / total; // 0から1の進行度
-  const newSaturation = Math.max(0.3, Math.min(0.9, s * (1 - progress * 0.7))); // 彩度を徐々に下げる
-  const newLightness = Math.max(0.4, Math.min(0.7, l + progress * 0.2)); // 明度を徐々に上げる
-
-  return `hsl(${h}, ${Math.round(newSaturation * 100)}%, ${Math.round(newLightness * 100)}%)`;
-};
-
-// Chart.js color palette
+// Chart palette — グレー濃淡 + Mondrian アクセント
 export const chartColors = {
-  primary: COLORS.gray[700],
-  secondary: COLORS.gray[500],
-  accent: COLORS.gray[400],
-  background: COLORS.gray[50],
-  text: COLORS.text.primary,
+  primary:    COLORS.gray[800],
+  secondary:  COLORS.gray[600],
+  accent:     COLORS.gray[400],
+  background: mondrian.canvas,
+  text:       COLORS.text.primary,
 };
+
+/**
+ * Mondrian 風カテゴリパレット
+ * グレースケールではなく、De Stijl 拡張パレット (Mondrian primary 3色 + その派生)
+ * を 8 色循環。彩度を抑えた中明度に揃え、隣接カテゴリの判別性と全体の調和を両立。
+ */
+export const CATEGORY_PALETTE = [
+  mondrian.red,        // #D7282F  純赤
+  mondrian.blue,       // #1F3A93  純青
+  mondrian.yellow,     // #F1C40F  純黄
+  '#5E73A8',           // muted blue (slate)
+  '#A2840A',           // muted yellow (mustard)
+  '#94181D',           // muted red (brick)
+  COLORS.gray[800],    // charcoal
+  COLORS.gray[500],    // dove gray
+] as const;
+
+/** カテゴリ name → Mondrian パレットから決定論的に色を割当 */
+export const getCategoryColor = (name: string): string => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return CATEGORY_PALETTE[Math.abs(hash) % CATEGORY_PALETTE.length];
+};
+
+/** カテゴリ index → Mondrian パレットから順次割当 (チャート用) */
+export const getCategoryColorByIndex = (index: number): string =>
+  CATEGORY_PALETTE[index % CATEGORY_PALETTE.length];
+
+/**
+ * @deprecated getCategoryColor を使用。グレー2階調実装は廃止。
+ */
+export const getCategoryBadgeShade = (name: string): string => getCategoryColor(name);
+
+/** @deprecated チャートのグレースケール循環パレット。新コードは CATEGORY_PALETTE を使用 */
+export const CHART_GRAYSCALE = CATEGORY_PALETTE;
+/** @deprecated getCategoryColorByIndex を使用 */
+export const getChartGrayShade = (index: number): string => getCategoryColorByIndex(index);

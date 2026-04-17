@@ -59,7 +59,7 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
     >
       <div className="modal-panel-md">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 neu-divider">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Pack Settings</h2>
           <button
             type="button"
@@ -116,7 +116,7 @@ const PackSettingsModal: React.FC<PackSettingsModalProps> = ({
             </button>
             <button
               type="button"
-              className="h-8 px-3 rounded-md text-xs text-red-600 dark:text-red-400 neu-raised hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="h-8 px-3 rounded-md text-xs text-red-600 dark:text-red-400 shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               onClick={handleDelete}
             >
               Delete

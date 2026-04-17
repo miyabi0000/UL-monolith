@@ -1,6 +1,6 @@
 import React from 'react'
 import { ProcurementStatus } from '../../utils/types'
-import { STATUS_TONES } from '../../utils/designSystem'
+import { STATUS_TONES, BORDERS } from '../../utils/designSystem'
 
 interface StatusBadgeProps {
   status: ProcurementStatus
@@ -16,11 +16,17 @@ const STATUS_CONFIG = {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) => {
   const config = STATUS_CONFIG[status]
 
+  // STATUS_TONES.*.border は Mondrian Orange (= --stroke-default) で統一済みのため
+  // BORDERS.default をそのまま使用 (将来 STATUS ごとに色を分けたくなったら override)
   if (compact) {
     return (
       <span
         className="status-priority-token"
-        style={{ backgroundColor: config.bgColor, color: config.color }}
+        style={{
+          backgroundColor: config.bgColor,
+          color: config.color,
+          border: BORDERS.default,
+        }}
         title={config.label}
       >
         {config.icon}
@@ -30,8 +36,13 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) =>
 
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{ backgroundColor: config.bgColor, color: config.color }}
+      className="inline-flex items-center justify-center px-2 rounded-full text-xs font-medium"
+      style={{
+        height: 'var(--badge-h)',
+        backgroundColor: config.bgColor,
+        color: config.color,
+        border: BORDERS.default,
+      }}
     >
       <span className="mr-1">{config.icon}</span>
       {config.label}

@@ -283,7 +283,7 @@ export default function InventoryWorkspace({
         ) : (
           <div className={embedded ? 'w-full' : 'mb-16'}>
             {packList !== undefined && (
-              <div className="mb-3 rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 neu-raised overflow-hidden">
+              <div className="mb-3">
                 <PackTabBar
                   packList={packList}
                   selectedPackId={selectedPackId ?? null}
@@ -301,7 +301,7 @@ export default function InventoryWorkspace({
                           {onOpenPackSettings && (
                             <button
                               type="button"
-                              className="p-1.5 rounded-md transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              className="icon-btn"
                               onClick={onOpenPackSettings}
                               title="Edit pack"
                               aria-label="Edit pack"
@@ -314,7 +314,7 @@ export default function InventoryWorkspace({
                           {onDeletePack && (
                             <button
                               type="button"
-                              className="p-1 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                              className="icon-btn"
                               onClick={() => {
                                 if (window.confirm('Delete this pack?')) {
                                   onDeletePack(selectedPackId);
@@ -323,7 +323,7 @@ export default function InventoryWorkspace({
                               title="Delete pack"
                               aria-label="Delete pack"
                             >
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
@@ -339,9 +339,9 @@ export default function InventoryWorkspace({
                     </section>
 
                     {mapEmbedUrl && (
-                      <section className="rounded-2xl bg-white/80 dark:bg-gray-800/80 p-3 neu-inset border border-gray-200/70 dark:border-gray-700/70">
+                      <section className="rounded-lg p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
                         <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
-                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200/80 dark:border-gray-700/80">
+                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
                           <iframe
                             title="Route map"
                             src={mapEmbedUrl}
@@ -355,7 +355,7 @@ export default function InventoryWorkspace({
                   </div>
                 )}
 
-                <div className="px-3 pb-3 pt-1">
+                <div className="px-1 pb-1">
                   {gearChartPanel}
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import React from 'react';
 import { ViewMode } from '../utils/types';
+import CardIcon from './icons/CardIcon';
+import TableIcon from './icons/TableIcon';
 
 interface ViewSwitcherProps {
   currentView: ViewMode;
@@ -8,28 +10,22 @@ interface ViewSwitcherProps {
 
 const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ currentView, onViewChange }) => {
   return (
-    <div className="inline-flex rounded-lg p-1 bg-gray-100">
+    <div className="segmented" role="tablist">
       <button
         onClick={() => onViewChange('card')}
-        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-          currentView === 'card'
-            ? 'bg-white text-gray-700 shadow-sm'
-            : 'text-gray-500'
-        }`}
+        aria-pressed={currentView === 'card'}
         aria-label="カードビュー"
+        title="Card"
       >
-        Card
+        <CardIcon className="w-4 h-4" />
       </button>
       <button
         onClick={() => onViewChange('table')}
-        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-          currentView === 'table'
-            ? 'bg-white text-gray-700 shadow-sm'
-            : 'text-gray-500'
-        }`}
+        aria-pressed={currentView === 'table'}
         aria-label="テーブルビュー"
+        title="Table"
       >
-        Table
+        <TableIcon className="w-4 h-4" />
       </button>
     </div>
   );

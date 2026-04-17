@@ -42,3 +42,4 @@ Thumbs.db
 *.temp
 .vercel
 .env*.local
+.claude/worktrees/

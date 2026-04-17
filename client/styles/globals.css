@@ -35,52 +35,83 @@
     --gear-font-lg: 16px;
     --gear-font-xl: 18px;
     --gear-font-2xl: 20px;
-    --gear-badge-size: 20px;
     --gear-row-height: 60px;
-    /* 角丸階層: 3層ルール */
-    --radius-surface: 12px;   /* L1: カード・モーダル・パネル・テーブルシェル */
-    --radius-control: 8px;    /* L2: ボタン・入力・チップ・ドロップダウン */
+    /* コントロール高さスケール — 3 ティアに縮退
+     * 長方形/ピル型/正方形 の interactive control は全て --control-h (36px) で
+     * short edge を揃える。data badge のみ別ティア 20px。 */
+    --control-h:      36px; /* 全 interactive control (rect/pill-chip/square 共通) */
+    --control-h-lg:   44px; /* 主要 CTA・モーダルアクション (タップ目標) */
+    --badge-h:        20px; /* pill badge: CategoryBadge / StatusBadge / 優先度トークン */
+    --field-h:        var(--control-h); /* 入力フィールド既定 */
+    --header-chip-h:  var(--control-h);
+    /* 後方互換: gear-badge-size は --badge-h を参照 */
+    --gear-badge-size: var(--badge-h);
+    /* 角丸階層: 3層ルール (De Stijl Matte: 角は控えめ。Mondrian は本来角ナシだが、
+     * 既存 Tailwind rounded-* との折衷で 4-6px に抑える) */
+    --radius-surface: 6px;    /* L1: カード・モーダル・パネル・テーブルシェル */
+    --radius-control: 4px;    /* L2: ボタン・入力・チップ・ドロップダウン */
     --radius-badge:   9999px; /* L3: バッジ・優先度トークン・ピル形状 */
-    /* テーマCSS変数はJS（themeCssVariables）から投影されるが、フォールバック値を定義 */
-    --page-bg: #F7F6F3;
-    --shadow-sm: 0 1px 2px rgba(27, 29, 27, 0.05);
-    --shadow-md: 0 1px 3px rgba(27, 29, 27, 0.1), 0 1px 2px -1px rgba(27, 29, 27, 0.1);
-    --shadow-lg: 0 4px 6px -1px rgba(27, 29, 27, 0.1), 0 2px 4px -2px rgba(27, 29, 27, 0.1);
-    --surface-level-0: #FFFFFF;
-    --surface-level-1: #F7F6F3;
-    --surface-level-2: #EEEDEA;
-    --ink-primary: #2D2F2D;
-    --ink-secondary: #5E5F5D;
-    --ink-muted: #949492;
-    --ink-inverse: #FFFFFF;
-    --icon-default: #5E5F5D;
-    --icon-muted: #949492;
-    --stroke-subtle: rgba(202, 201, 199, 0.48);
-    --stroke-default: rgba(175, 175, 172, 0.7);
-    --stroke-strong: #949492;
-    --stroke-divider: rgba(202, 201, 199, 0.62);
-    --focus-ring: #24426A;
-    --focus-ring-offset: #FFFFFF;
-    --overlay-hover: rgba(45, 47, 45, 0.04);
-    --overlay-active: rgba(45, 47, 45, 0.08);
-    --overlay-scrim: rgba(27, 29, 27, 0.46);
-    --state-success-fg: #203A5B;
-    --state-success-bg: rgba(39, 74, 120, 0.12);
-    --state-success-border: rgba(36, 66, 106, 0.45);
-    --state-warning-fg: #BC8418;
-    --state-warning-bg: rgba(255, 177, 27, 0.14);
-    --state-warning-border: rgba(221, 155, 26, 0.5);
-    --state-danger-fg: #A70818;
-    --state-danger-bg: rgba(226, 4, 27, 0.12);
-    --state-danger-border: rgba(196, 6, 26, 0.45);
-    --state-info-fg: #203A5B;
-    --state-info-bg: rgba(39, 74, 120, 0.12);
-    --state-info-border: rgba(36, 66, 106, 0.45);
-    --text-table-head: #797A77;
-    --text-table-main: #2D2F2D;
-    --text-table-sub: #949492;
-    --text-table-num: #434543;
-    --text-table-micro: #949492;
+    /* Mondrian 3原色 — 派生・alpha 乗算禁止の固定値 */
+    --mondrian-red:    #D7282F;
+    --mondrian-yellow: #F1C40F;
+    --mondrian-blue:   #1F3A93;
+    --mondrian-black:  #0A0A0A;
+    --mondrian-canvas: #FAFAF7;
+    /** UI 枠線専用 — 全コンポーネントの 1px 線はこの色 */
+    --mondrian-orange: #C2410C;
+    /** 枠線トークン — width / shorthand を一元管理。色は --stroke-default を参照 */
+    --border-width-thin:  1px;
+    --border-width-bold:  2px;
+    --border-width-thick: 4px;
+    --border-default:  var(--border-width-thin)  solid var(--stroke-default);
+    --border-bold:     var(--border-width-bold)  solid var(--stroke-default);
+    --border-thick:    var(--border-width-thick) solid var(--stroke-default);
+    --border-faint:    var(--border-width-thin)  solid var(--stroke-subtle);
+    --border-divider:  var(--border-width-thin)  solid var(--stroke-divider);
+    --border-focus:    var(--border-width-bold)  solid var(--focus-ring);
+    /* Borderless hierarchy: 枠線ではなく「背景コントラスト + shadow」で階層を表現
+     * page (L0, 最暗) < nest (L1.5) < card (L2, 純白) < raised (L3, white + shadow)
+     * カードは page より明るく、shadow で浮く。枠線はなくても階層が成立する */
+    --page-bg: #ECEAE2;         /* L0 page bg (やや暗めのキャンバス) */
+    --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.05), 0 1px 3px rgba(10, 10, 10, 0.04);
+    --shadow-md: 0 2px 6px rgba(10, 10, 10, 0.07), 0 4px 12px rgba(10, 10, 10, 0.05);
+    --shadow-lg: 0 6px 16px rgba(10, 10, 10, 0.10), 0 12px 28px rgba(10, 10, 10, 0.06);
+    --surface-level-0: #FFFFFF;   /* L2 card / modal (最も明るい = "浮く") */
+    --surface-level-1: #F7F5EE;   /* L1 nest / inset (card 内のネスト) */
+    --surface-level-2: #E3E0D6;   /* L3 hover / selected (明示的に沈む) */
+    --ink-primary: #0A0A0A;
+    --ink-secondary: #3A3A38;
+    --ink-muted: #757570;
+    --ink-disabled: #A8A8A3;
+    --ink-inverse: #FAFAF7;
+    --icon-default: #3A3A38;
+    --icon-muted: #757570;
+    --stroke-subtle:  rgba(10, 10, 10, 0.06);   /* hairline (input / divider) */
+    --stroke-default: transparent;               /* borderless 既定: 枠線は描画しない */
+    --stroke-strong:  rgba(10, 10, 10, 0.14);    /* 明示的な額装 (mondrian-grid 等) */
+    --stroke-divider: rgba(10, 10, 10, 0.06);
+    --focus-ring: #1F3A93;              /* Mondrian Blue */
+    --focus-ring-offset: #FAFAF7;
+    --overlay-hover: rgba(10, 10, 10, 0.04);
+    --overlay-active: rgba(10, 10, 10, 0.08);
+    --overlay-scrim: rgba(10, 10, 10, 0.5);
+    --state-success-fg: #0A0A0A;
+    --state-success-bg: rgba(10, 10, 10, 0.04);
+    --state-success-border: #0A0A0A;
+    --state-warning-fg: #0A0A0A;
+    --state-warning-bg: rgba(241, 196, 15, 0.20);
+    --state-warning-border: #F1C40F;
+    --state-danger-fg: #D7282F;
+    --state-danger-bg: rgba(215, 40, 47, 0.10);
+    --state-danger-border: #D7282F;
+    --state-info-fg: #1F3A93;
+    --state-info-bg: rgba(31, 58, 147, 0.08);
+    --state-info-border: #1F3A93;
+    --text-table-head: #4A4A47;
+    --text-table-main: #0A0A0A;
+    --text-table-sub: #6B6B66;
+    --text-table-num: #0A0A0A;
+    --text-table-micro: #6B6B66;
   }
 
   body {
@@ -90,6 +121,22 @@
     position: relative;
     min-height: 100vh;
     overflow-y: auto;
+  }
+
+  /* 紙質ノイズ — 完全フラットを避けるためのマット質感 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.018;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .dark body::before {
+    opacity: 0.025;
+    mix-blend-mode: screen;
   }
 
   /* モバイル: 行高さ調整 */
@@ -158,30 +205,74 @@
 }
 
 @layer components {
-  /* サーフェス（カード・モーダル） */
-  .glass-surface,
+  /* サーフェス（カード・モーダル） — Mondrian 黒線で額装 */
   .card,
   .modal-content {
     @apply relative overflow-hidden;
-    border: 1px solid var(--stroke-subtle);
+    border: var(--border-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
-  /* ヘッダー */
+  /* ヘッダー — 下部に Mondrian 黒線 */
   .glass-header {
-    border-bottom: 1px solid var(--stroke-divider);
+    border-bottom: var(--border-default);
+    background: var(--surface-level-0);
+    box-shadow: none;
+  }
+
+  /* ヘッダーチップ — 高さを --header-chip-h で統一 */
+  .glass-header-chip {
+    @apply inline-flex items-center justify-center relative overflow-hidden transition-all duration-150;
+    min-height: var(--header-chip-h);
+    border: var(--border-default);
+    border-radius: var(--radius-badge);
     background: var(--surface-level-0);
     box-shadow: var(--shadow-sm);
   }
 
-  /* ヘッダーチップ */
-  .glass-header-chip {
-    @apply relative overflow-hidden transition-all duration-150;
-    border: 1px solid var(--stroke-subtle);
-    border-radius: var(--radius-badge);
+  /* アイコン専用ボタン (横並びコントロール群の高さ揃え用)
+   * 正方形 36x36 のデフォルト。"flex items-center gap-1" の中で必ずこのクラスを
+   * 付与し、文字ラベル付きチップ (.glass-header-chip / .btn-*) と高さを揃える。 */
+  .icon-btn {
+    @apply inline-flex items-center justify-center transition-all duration-200;
+    height: var(--control-h);
+    width:  var(--control-h);
+    border-radius: var(--radius-control);
+    color: var(--ink-secondary);
+    background: var(--surface-level-2);
+    border: 1px solid transparent;
+  }
+  .icon-btn:hover {
+    background: var(--surface-level-1);
+    border-color: var(--stroke-subtle);
+  }
+  .icon-btn:focus-visible {
+    outline: var(--border-focus);
+    outline-offset: 1px;
+  }
+
+  /* セグメンテッドコントロール (タブ風トグル)
+   * 内側ボタンの高さを揃え、横並び全体の高さを --control-h に固定 */
+  .segmented {
+    @apply inline-flex p-0.5;
+    height: var(--control-h);
+    background: var(--surface-level-2);
+    border: var(--border-default);
+    border-radius: var(--radius-control);
+  }
+  .segmented > button {
+    @apply inline-flex items-center justify-center px-3 text-sm font-medium transition-all duration-200;
+    border-radius: calc(var(--radius-control) - 1px);
+    color: var(--ink-muted);
+  }
+  .segmented > button[aria-pressed="true"],
+  .segmented > button.is-active {
     background: var(--surface-level-0);
+    color: var(--ink-primary);
     box-shadow: var(--shadow-sm);
   }
 
@@ -236,18 +327,18 @@
     border-radius: var(--radius-badge);
   }
 
-  /* テーブル */
+  /* テーブル — Mondrian 黒線で額装 */
   .gear-table-shell {
     @apply overflow-hidden;
-    border: 1px solid var(--stroke-subtle);
+    border: var(--border-default);
     border-radius: var(--radius-surface);
     background: var(--surface-level-0);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .gear-table-head {
-    background: var(--surface-level-1);
-    box-shadow: 0 1px 0 var(--stroke-divider);
+    background: var(--surface-level-2);
+    box-shadow: 0 1px 0 var(--stroke-default);
   }
 
   .gear-table-row > td {
@@ -295,20 +386,20 @@
   /* コントロール */
   .gear-glass-control {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-subtle);
+    border: var(--border-default);
     box-shadow: var(--shadow-sm);
   }
 
   .gear-glass-chip {
     background: var(--surface-level-1);
-    border: 1px solid var(--stroke-subtle);
+    border: var(--border-default);
     border-radius: var(--radius-control);
   }
 
   /* フラットパネル */
   .card.flat-panel {
     background: var(--surface-level-0);
-    border: 1px solid var(--stroke-subtle);
+    border: var(--border-default);
     box-shadow: var(--shadow-sm);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -328,44 +419,36 @@
     /* フラットスタイル: 基底ルールに従う */
   }
 
-  /* ボタン */
-  .btn-primary {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: none;
+  /* ボタン — De Stijl: solid + Mondrian 黒枠
+   * 高さは --control-h (36px) をデフォルトに、Button.tsx の size prop で上書き */
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex items-center justify-center text-sm font-medium px-4 transition-all duration-200;
+    min-height: var(--control-h);
     border-radius: var(--radius-control);
-    color: #FFFFFF;
-    background: #2D2F2D;
     box-shadow: var(--shadow-sm);
+    border: var(--border-default);
   }
 
-  .btn-primary:hover {
-    opacity: 0.88;
+  .btn-primary {
+    color: var(--ink-inverse);
+    background: var(--mondrian-black);
   }
+  .btn-primary:hover { background: var(--ink-secondary); }
 
   .btn-secondary {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: 1px solid var(--stroke-default);
-    border-radius: var(--radius-control);
     color: var(--ink-primary);
     background: var(--surface-level-0);
+    box-shadow: none;
   }
-
-  .btn-secondary:hover {
-    background: var(--surface-level-1);
-  }
+  .btn-secondary:hover { background: var(--surface-level-2); }
 
   .btn-danger {
-    @apply text-sm font-medium px-4 py-2 transition-all duration-200;
-    border: none;
-    border-radius: var(--radius-control);
     color: #FFFFFF;
-    background: #A70818;
-    box-shadow: var(--shadow-sm);
+    background: var(--mondrian-red);
   }
-
-  .btn-danger:hover {
-    opacity: 0.88;
-  }
+  .btn-danger:hover { background: #B71F25; }
 
   /* 小さいボタン */
   .btn-xs {
@@ -373,19 +456,45 @@
     border-radius: var(--radius-control);
   }
 
-  /* 入力フィールド */
+  /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus
+   * 高さは --field-h (= --control-h) で統一 */
   .input {
-    @apply transition-all duration-200;
-    border: 1px solid var(--stroke-default);
+    @apply inline-flex items-center px-2 transition-all duration-200;
+    min-height: var(--field-h);
+    border: var(--border-default);
     border-radius: var(--radius-control);
     color: var(--ink-primary);
-    background: var(--surface-level-1);
+    background: var(--surface-level-0);
   }
 
   .input:focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: var(--border-focus);
     outline-offset: 1px;
   }
+
+  /* Mondrian Grid — レイアウト額装ユーティリティ
+   * ワークスペース等の大区画を Mondrian Orange の枠線で囲う */
+  .mondrian-grid {
+    position: relative;
+    border: var(--border-bold);
+    background: var(--surface-level-0);
+  }
+  .mondrian-grid::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--stroke-default);
+    pointer-events: none;
+  }
+
+  /* Mondrian アクセントブロック (汎用) */
+  .mondrian-block-red    { background: var(--mondrian-red);    }
+  .mondrian-block-blue   { background: var(--mondrian-blue);   }
+  .mondrian-block-yellow { background: var(--mondrian-yellow); }
+  .mondrian-block-black  { background: var(--mondrian-black);  }
 
   /* モーダル */
   .modal-overlay {
@@ -413,6 +522,48 @@
     @apply modal-panel max-w-4xl overflow-hidden;
   }
 
+  /* ダークモード — De Stijl Matte (反転) */
+  .dark {
+    --page-bg: #121212;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.4);
+    --surface-level-0: #1C1C1C;
+    --surface-level-1: #121212;
+    --surface-level-2: #242424;
+    --ink-primary: #FAFAF7;
+    --ink-secondary: #E0E0DC;
+    --ink-muted: #9C9C98;
+    --ink-inverse: #0A0A0A;
+    --icon-default: #E0E0DC;
+    --icon-muted: #9C9C98;
+    --stroke-subtle:  rgba(255, 255, 255, 0.08);
+    --stroke-default: transparent;
+    --stroke-strong:  rgba(255, 255, 255, 0.18);
+    --stroke-divider: rgba(255, 255, 255, 0.08);
+    --focus-ring: #5E73A8;
+    --focus-ring-offset: #121212;
+    --overlay-hover: rgba(250, 250, 247, 0.06);
+    --overlay-active: rgba(250, 250, 247, 0.12);
+    --overlay-scrim: rgba(10, 10, 10, 0.7);
+    --state-success-fg: #FAFAF7;
+    --state-success-bg: rgba(250, 250, 247, 0.06);
+    --state-success-border: #FAFAF7;
+    --state-warning-fg: #F1C40F;
+    --state-warning-bg: rgba(241, 196, 15, 0.18);
+    --state-warning-border: #F1C40F;
+    --state-danger-fg: #E15A62;
+    --state-danger-bg: rgba(215, 40, 47, 0.18);
+    --state-danger-border: #E15A62;
+    --state-info-fg: #5E73A8;
+    --state-info-bg: rgba(31, 58, 147, 0.20);
+    --state-info-border: #5E73A8;
+    --text-table-head: #CFCCC2;
+    --text-table-main: #FAFAF7;
+    --text-table-sub: #9C9C98;
+    --text-table-num: #FAFAF7;
+    --text-table-micro: #9C9C98;
+  }
 }
 
 /* Recharts フォーカスリング非表示 */
@@ -453,19 +604,6 @@
 }
 
 @layer utilities {
-  /* Elevation ユーティリティ（旧ニューモーフィズムからの移行） */
-  .neu-raised {
-    box-shadow: var(--shadow-sm);
-  }
-
-  .neu-inset {
-    background: var(--surface-level-1);
-  }
-
-  .neu-divider {
-    box-shadow: 0 1px 0 var(--stroke-divider);
-  }
-
   /* Dark utility bridge: Tailwind ユーティリティクラスのダーク反転 */
   .dark .text-gray-900:not([class*='dark:text-']) { color: var(--ink-primary); }
   .dark .text-gray-800:not([class*='dark:text-']) { color: var(--ink-primary); }
@@ -485,6 +623,15 @@
   .dark .border-gray-100:not([class*='dark:border-']) { border-color: var(--surface-level-2); }
   .dark .border-gray-200:not([class*='dark:border-']) { border-color: var(--stroke-subtle); }
   .dark .border-gray-300:not([class*='dark:border-']) { border-color: var(--stroke-default); }
+
+  /* Mondrian Orange 全枠線統一 — Tailwind の border-gray-* / border-l-* / border-b-*
+   * を一律 Mondrian Orange に上書き (Light / Dark 共通) */
+  .border-gray-100:not([class*='dark:border-']),
+  .border-gray-200:not([class*='dark:border-']),
+  .border-gray-300:not([class*='dark:border-']),
+  .border-gray-400:not([class*='dark:border-']) {
+    border-color: var(--stroke-default);
+  }
 
   .dark .hover\:bg-gray-50:not([class*='dark:hover:bg-']):hover { background-color: var(--surface-level-2); }
   .dark .hover\:bg-gray-100:not([class*='dark:hover:bg-']):hover { background-color: var(--surface-level-2); }
@@ -514,7 +661,7 @@
   bottom: 0;
   left: -2px;
   z-index: -1;
-  border-radius: 10px 10px 0 0;
+  border-radius: 0;
   border: 1px solid transparent;
   border-bottom: none;
   background-color: var(--surface-level-2) !important;

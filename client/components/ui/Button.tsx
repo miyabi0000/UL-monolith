@@ -2,20 +2,20 @@ import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'md' | 'lg';
   children: React.ReactNode;
 }
 
 const variantClasses = {
-  primary: 'btn-primary',
+  primary:   'btn-primary',
   secondary: 'btn-secondary',
-  danger: 'btn-danger',
+  danger:    'btn-danger',
 };
 
-const sizeClasses = {
-  sm: 'px-2 py-1 text-xs',
-  md: 'px-3 py-1.5 text-sm',
-  lg: 'px-4 py-2 text-base',
+// 高さは globals.css の --control-h / --control-h-lg と整合。ティアは 2 段のみ
+const sizeStyles: Record<NonNullable<ButtonProps['size']>, { height: string; padding: string; fontSize: string }> = {
+  md: { height: 'var(--control-h)',    padding: '0 16px', fontSize: 'var(--gear-font-md)' },
+  lg: { height: 'var(--control-h-lg)', padding: '0 20px', fontSize: 'var(--gear-font-md)' },
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -24,13 +24,14 @@ const Button: React.FC<ButtonProps> = ({
   children,
   className = '',
   disabled,
+  style,
   ...props
 }) => {
+  const s = sizeStyles[size];
   const classes = `
     ${variantClasses[variant]}
-    ${sizeClasses[size]}
+    inline-flex items-center justify-center
     font-medium
-    rounded-md
     disabled:opacity-50
     disabled:cursor-not-allowed
     ${className}
@@ -40,6 +41,7 @@ const Button: React.FC<ButtonProps> = ({
     <button
       className={classes}
       disabled={disabled}
+      style={{ minHeight: s.height, padding: s.padding, fontSize: s.fontSize, ...style }}
       {...props}
     >
       {children}
