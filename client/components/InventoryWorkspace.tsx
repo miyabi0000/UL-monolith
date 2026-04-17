@@ -12,7 +12,6 @@ import PackTabBar from './PackTabBar';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 
-const GearForm = React.lazy(() => import('./GearForm'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
 const Login = React.lazy(() => import('./Login'));
 const ChatPopup = React.lazy(() => import('./ChatPopup'));
@@ -368,7 +367,7 @@ export default function InventoryWorkspace({
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
         {showForm && (
-          <GearForm
+          <GearInputModal
             isOpen={showForm}
             onClose={() => {
               setShowForm(false);
