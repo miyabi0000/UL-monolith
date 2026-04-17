@@ -12,7 +12,7 @@ interface ULStatusBadgeProps {
 
 // De Stijl: UL = Blue (達成), LW = Yellow (警告), Trad = 黒枠グレー
 const UL_STATUS_CONFIG = {
-  ultralight:  { label: '⚡ UL',  color: '#FFFFFF',           bgColor: mondrian.blue },
+  ultralight:  { label: '⚡ UL',  color: COLORS.white,        bgColor: mondrian.blue },
   lightweight: { label: 'LW',     color: mondrian.black,      bgColor: alpha(mondrian.yellow, 0.4) },
   traditional: { label: 'Trad',   color: COLORS.text.primary, bgColor: COLORS.gray[200] }
 } as const
