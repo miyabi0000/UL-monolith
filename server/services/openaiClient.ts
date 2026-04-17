@@ -1,6 +1,12 @@
 import OpenAI from 'openai';
 import type { ChatCompletion, ChatCompletionChunk, ChatCompletionTool } from 'openai/resources/chat/completions';
 import type { Stream } from 'openai/streaming';
+import { recordUsage, QuotaEndpoint } from './quotaService.js';
+
+export interface UsageContext {
+  userId: string;
+  endpoint: QuotaEndpoint;
+}
 
 /**
  * シンプルなOpenAI Client
@@ -20,10 +26,25 @@ export class OpenAIClient {
     }
   }
 
+  private async track(
+    context: UsageContext | undefined,
+    usage: { prompt_tokens?: number; completion_tokens?: number } | null | undefined,
+  ): Promise<void> {
+    if (!context) return;
+    await recordUsage(context, {
+      promptTokens: usage?.prompt_tokens,
+      completionTokens: usage?.completion_tokens,
+    });
+  }
+
   /**
    * チャット完了API呼び出し（シングルターン）
    */
-  async chatCompletion(systemPrompt: string, userMessage: string): Promise<string> {
+  async chatCompletion(
+    systemPrompt: string,
+    userMessage: string,
+    context?: UsageContext,
+  ): Promise<string> {
     if (!this.openai) {
       console.warn('[OpenAI] API key not configured, using fallback response');
       throw new Error('OpenAI client not available');
@@ -39,6 +60,8 @@ export class OpenAIClient {
       max_tokens: 1000
     });
 
+    await this.track(context, completion.usage);
+
     const content = completion.choices[0]?.message?.content;
     if (!content) {
       throw new Error('No response from OpenAI');
@@ -49,14 +72,12 @@ export class OpenAIClient {
 
   /**
    * マルチターン会話API呼び出し
-   * @param systemPrompt システムプロンプト
-   * @param messages 会話履歴（user/assistantの交互メッセージ）
-   * @param maxTokens レスポンスの最大トークン数
    */
   async chatWithHistory(
     systemPrompt: string,
     messages: Array<{ role: 'user' | 'assistant'; content: string }>,
-    maxTokens = 1500
+    maxTokens = 1500,
+    context?: UsageContext,
   ): Promise<string> {
     if (!this.openai) {
       throw new Error('OpenAI client not available');
@@ -71,6 +92,8 @@ export class OpenAIClient {
       temperature: 0.3,
       max_tokens: maxTokens,
     });
+
+    await this.track(context, completion.usage);
 
     const content = completion.choices[0]?.message?.content;
     if (!content) {
@@ -88,12 +111,13 @@ export class OpenAIClient {
     messages: Array<{ role: 'user' | 'assistant'; content: string }>,
     tools: ChatCompletionTool[],
     maxTokens = 1500,
+    context?: UsageContext,
   ): Promise<ChatCompletion> {
     if (!this.openai) {
       throw new Error('OpenAI client not available');
     }
 
-    return this.openai.chat.completions.create({
+    const completion = await this.openai.chat.completions.create({
       model: this.defaultModel,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -105,10 +129,15 @@ export class OpenAIClient {
       temperature: 0.3,
       max_tokens: maxTokens,
     });
+
+    await this.track(context, completion.usage);
+    return completion;
   }
 
   /**
    * ツール付きストリーミングAPI呼び出し（SSE用）
+   * stream_options.include_usage=true で最終チャンクに usage が入る。
+   * 呼び出し側で chunk.usage を検出したら trackStreamUsage() を呼ぶこと。
    */
   chatWithToolsStream(
     systemPrompt: string,
@@ -132,7 +161,18 @@ export class OpenAIClient {
       temperature: 0.3,
       max_tokens: maxTokens,
       stream: true,
+      stream_options: { include_usage: true },
     });
+  }
+
+  /**
+   * ストリーミングで取得した usage を記録（呼び出し側から呼ぶ）
+   */
+  async trackStreamUsage(
+    context: UsageContext | undefined,
+    usage: { prompt_tokens?: number; completion_tokens?: number } | null | undefined,
+  ): Promise<void> {
+    await this.track(context, usage);
   }
 
   /**

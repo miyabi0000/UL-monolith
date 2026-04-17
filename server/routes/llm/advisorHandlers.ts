@@ -124,6 +124,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
   }
 
   const { conversation, gearContext } = validated;
+  const usageContext = req.userId ? { userId: req.userId, endpoint: 'chat' as const } : undefined;
 
   // OpenAI 非利用時はフォールバック
   if (!openaiClient.isAvailable()) {
@@ -139,7 +140,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
     const systemPrompt = buildSystemPrompt(gearContext);
     console.log(`[Advisor] Calling OpenAI with tools (${conversation.length} messages, ${gearContext.items.length} gear items)`);
 
-    const completion = await openaiClient.chatWithTools(systemPrompt, conversation, ADVISOR_TOOLS, 1500);
+    const completion = await openaiClient.chatWithTools(systemPrompt, conversation, ADVISOR_TOOLS, 1500, usageContext);
     const choice = completion.choices[0];
     const message = choice?.message?.content ?? '回答を生成できませんでした。';
     const { gearRefs, suggestedEdits } = parseToolCalls(choice?.message?.tool_calls);
@@ -177,6 +178,7 @@ export const handleAdvisorChatStream = async (req: Request, res: Response) => {
   }
 
   const { conversation, gearContext } = validated;
+  const usageContext = req.userId ? { userId: req.userId, endpoint: 'chat' as const } : undefined;
 
   // OpenAI 非利用時は通常JSONレスポンスにフォールバック（SSEヘッダーを書かない）
   if (!openaiClient.isAvailable()) {
@@ -206,9 +208,15 @@ export const handleAdvisorChatStream = async (req: Request, res: Response) => {
 
     // tool_calls の引数を手動蓄積
     const toolCallBuffers: Map<number, { name: string; arguments: string }> = new Map();
+    let streamUsage: { prompt_tokens?: number; completion_tokens?: number } | null = null;
 
     for await (const chunk of stream) {
       if (aborted) break;
+
+      // stream_options.include_usage=true により最終チャンクに usage が入る
+      if (chunk.usage) {
+        streamUsage = chunk.usage;
+      }
 
       const delta = chunk.choices[0]?.delta;
       if (!delta) continue;
@@ -238,6 +246,9 @@ export const handleAdvisorChatStream = async (req: Request, res: Response) => {
       res.end();
       return;
     }
+
+    // usage 記録は fire-and-forget（SSE レスポンスの完了を遅らせない）
+    void openaiClient.trackStreamUsage(usageContext, streamUsage);
 
     // ストリーム完了: 蓄積したtool_callsをパースして送信
     if (toolCallBuffers.size > 0) {
