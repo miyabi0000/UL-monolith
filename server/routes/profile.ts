@@ -16,7 +16,7 @@ const pool = new Pool({
 router.get('/', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      `SELECT display_name, handle, bio, header_image_url, header_title
+      `SELECT display_name, handle, bio, header_image_url, header_title, plan
        FROM users WHERE id = $1`,
       [req.userId],
     );
@@ -36,6 +36,7 @@ router.get('/', cognitoAuth, async (req: Request, res: Response) => {
         bio: row.bio,
         headerImageUrl: row.header_image_url,
         headerTitle: row.header_title,
+        plan: row.plan ?? 'free',
       },
     });
   } catch (error) {

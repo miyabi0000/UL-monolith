@@ -18,6 +18,7 @@ import imageProxyRoutes from './routes/imageProxy.js';
 import packRoutes from './routes/packs.js';
 import profileRoutes from './routes/profile.js';
 import advisorRoutes from './routes/advisor.js';
+import billingRoutes from './routes/billing.js';
 import { cognitoAuth } from './middleware/cognitoAuth.js';
 
 // Load environment variables
@@ -70,6 +71,10 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined'));
 app.use('/api/', limiter); // 全APIにRate Limiting適用
+
+// Stripe webhook は署名検証のため raw body が必要。express.json より先にマウントする。
+app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' })); // 画像データを含むリクエストのためにリミットを増やす
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -93,6 +98,7 @@ app.use('/api/v1/image', imageProxyRoutes); // 画像プロキシは認証不要
 app.use('/api/v1/packs', packRoutes); // パック（内部で認証制御）
 app.use('/api/v1/profile', profileRoutes); // プロフィール（内部で認証制御）
 app.use('/api/v1/advisor', advisorRoutes); // アドバイザー（内部で認証制御）
+app.use('/api/v1/billing', billingRoutes); // 決済（内部で認証制御。webhook は認証不要）
 
 // 静的フロントエンド配信 (本番のみ: dist/ が存在する場合)
 // dist が無い時は API のみ公開し、開発時はフロントを vite 側で動かす
