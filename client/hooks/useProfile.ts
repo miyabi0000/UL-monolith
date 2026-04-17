@@ -22,7 +22,10 @@ interface ServerProfile {
   displayName: string | null;
   handle: string | null;
   bio: string | null;
+  plan?: 'free' | 'pro' | null;
 }
+
+export type UserPlan = 'free' | 'pro';
 
 const buildDefault = (fallbackName?: string): ProfileSettings => ({
   headerTitle: 'Packboard',
@@ -81,6 +84,7 @@ export function useProfile(fallbackName?: string) {
   const [showEditor, setShowEditor] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [plan, setPlan] = useState<UserPlan>('free');
 
   // デバウンス用 ref
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,6 +128,7 @@ export function useProfile(fallbackName?: string) {
         } else {
           setProfile(fromServer(serverData, fallbackName));
         }
+        setPlan(serverData?.plan === 'pro' ? 'pro' : 'free');
         setError(null);
       } catch (err) {
         console.error('[Profile] 初期化エラー:', err);
@@ -190,5 +195,5 @@ export function useProfile(fallbackName?: string) {
     [isAuthenticated, scheduleSave],
   );
 
-  return { profile, setProfile, updateField, showEditor, setShowEditor, loading, error };
+  return { profile, setProfile, updateField, showEditor, setShowEditor, loading, error, plan };
 }

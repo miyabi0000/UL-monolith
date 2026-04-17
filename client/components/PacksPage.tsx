@@ -41,7 +41,7 @@ export default function PacksPage({
   const { user } = useAuth();
   const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
-  const { profile, updateField, showEditor, setShowEditor } = useProfile(user?.name);
+  const { profile, updateField, showEditor, setShowEditor, plan } = useProfile(user?.name);
 
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [showPackSettings, setShowPackSettings] = useState(false);
@@ -126,6 +126,7 @@ export default function PacksPage({
           profile={profile}
           onUpdate={updateField}
           onClose={() => setShowEditor(false)}
+          plan={plan}
         />
       )}
 
