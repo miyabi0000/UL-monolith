@@ -457,6 +457,8 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
                 onAddItemsToPack={onAddItemsToPack}
+                onShowForm={onShowForm}
+                onShowUrlImport={onShowUrlImport}
               />
           </div>
         </Card>

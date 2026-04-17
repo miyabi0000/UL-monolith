@@ -7,6 +7,7 @@ import { getQuantityForDisplayMode } from '../utils/chartHelpers';
 import { formatWeight, formatWeightLarge } from '../utils/weightUnit';
 import { useWeightUnit } from '../contexts/WeightUnitContext';
 import CategoryBadge from './ui/CategoryBadge';
+import EmptyState from './ui/EmptyState';
 
 const fallbackUserId = 'local-user';
 
@@ -78,7 +79,11 @@ export default function PackDetailPage() {
         </div>
         {isLoading && <p className="px-4 py-4 text-sm text-gray-500">Loading gear...</p>}
         {!isLoading && items.length === 0 && (
-          <p className="px-4 py-4 text-sm text-gray-500">No items in this pack.</p>
+          <EmptyState
+            compact
+            title="このパックにはまだアイテムがありません"
+            description="ホーム画面のギア一覧から、このパックに追加するアイテムを選びましょう。"
+          />
         )}
         {!isLoading &&
           items.map((item) => (
