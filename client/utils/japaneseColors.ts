@@ -17,6 +17,6 @@ export const JAPANESE_COLOR_HEX_SET = new Set(
   JAPANESE_COLOR_PALETTE.map((color) => color.hex)
 );
 
-import { blueGray } from '../styles/tokens/primitives';
-
-export const DEFAULT_JAPANESE_COLOR = blueGray[500] as '#5B6B73';
+// カテゴリのデフォルト色。和カラーパレット範囲内で選んだ中性 blue-gray。
+// tokens.primitives 側の blueGray は Mondrian パレットから外れたため参照を切っている。
+export const DEFAULT_JAPANESE_COLOR = '#5B6B73' as const;

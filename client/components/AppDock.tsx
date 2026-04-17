@@ -60,11 +60,11 @@ const AppDock: React.FC<AppDockProps> = ({
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-2xl shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
+      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
-            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 inline-flex items-center gap-1.5 transition-colors"
+            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 inline-flex items-center gap-1.5 transition-colors"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -126,7 +126,7 @@ const AppDock: React.FC<AppDockProps> = ({
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
               {isAuthenticated ? (
                 <>
                   {userName && (

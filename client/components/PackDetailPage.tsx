@@ -34,7 +34,7 @@ export default function PackDetailPage() {
   if (!pack) {
     return (
       <main className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 lg:px-[16px] py-8">
-        <div className="glass-surface p-8 text-center">
+        <div className="card p-8 text-center">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pack not found</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
             This pack may have been removed from local storage.
@@ -49,7 +49,7 @@ export default function PackDetailPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 lg:px-[16px] py-4">
-      <section className="glass-surface p-4 mb-4">
+      <section className="card p-4 mb-4">
         <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Public Pack</p>
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">{pack.name}</h1>
         {pack.description && <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{pack.description}</p>}
@@ -70,7 +70,7 @@ export default function PackDetailPage() {
         </div>
       </section>
 
-      <section className="glass-surface p-0 overflow-hidden">
+      <section className="card p-0 overflow-hidden">
         <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200">
           <span>Item</span>
           <span>Weight</span>

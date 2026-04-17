@@ -81,7 +81,7 @@ const SuggestedEditCard: React.FC<{
   const isBusy = applyingKey === editKey;
 
   return (
-    <div className={`p-3 rounded-xl mt-2 shadow-sm border text-xs
+    <div className={`p-3 rounded-md mt-2 shadow-sm border text-xs
                      ${isApplied
                        ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}>
@@ -222,8 +222,8 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
             <div className="max-w-[92%]">
               <div className={`p-3 text-xs leading-relaxed shadow-sm
                                ${message.role === 'user'
-                                 ? 'rounded-2xl rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                                 : 'rounded-2xl rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
+                                 ? 'rounded-lg rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
+                                 : 'rounded-lg rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
                 <div className="whitespace-pre-wrap">
                   {message.content}
                   {/* ストリーミング中のブリンクカーソル */}
@@ -272,7 +272,7 @@ const GearAdvisorChat: React.FC<GearAdvisorChatProps> = ({
         {/* 最初のトークン待ちスピナー（ストリーミング開始前のみ） */}
         {isLoading && !isStreaming && (
           <div className="flex justify-start">
-            <div className="p-3 rounded-2xl rounded-bl-sm flex items-center gap-2
+            <div className="p-3 rounded-lg rounded-bl-sm flex items-center gap-2
                             bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
               <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 dark:border-gray-500 border-t-transparent animate-spin" />
               <span className="text-xs text-gray-500 dark:text-gray-400">Analyzing…</span>

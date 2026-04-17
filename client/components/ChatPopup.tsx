@@ -432,7 +432,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] p-4 rounded-2xl transition-all duration-200 hover:scale-[1.02] ${
+                className={`max-w-[85%] p-4 rounded-lg transition-all duration-200 hover:scale-[1.02] ${
                   message.role === 'user' ? 'rounded-br-md' : 'rounded-bl-md'
                 }`}
                 style={{
@@ -467,7 +467,7 @@ const ChatPopup: React.FC<ChatPopupProps> = ({ isOpen, onClose, onGearExtracted,
           {isLoading && (
             <div className="flex justify-start">
               <div
-                className="p-4 rounded-2xl rounded-bl-md transition-all duration-200"
+                className="p-4 rounded-lg rounded-bl-md transition-all duration-200"
                 style={{
                   backgroundColor: COLORS.white,
                   color: COLORS.text.primary,

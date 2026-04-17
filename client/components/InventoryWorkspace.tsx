@@ -339,7 +339,7 @@ export default function InventoryWorkspace({
                     </section>
 
                     {mapEmbedUrl && (
-                      <section className="rounded-2xl p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
+                      <section className="rounded-lg p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
                         <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
                         <div className="mt-2 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
                           <iframe

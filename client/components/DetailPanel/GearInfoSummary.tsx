@@ -1,17 +1,18 @@
 import React from 'react';
 import { GearItemWithCalculated } from '../../utils/types';
-import { COLORS, BORDERS } from '../../utils/designSystem';
+import { COLORS, BORDERS, mondrian } from '../../utils/designSystem';
+import { alpha, primitiveColors } from '../../styles/tokens';
 import { formatWeight } from '../../utils/weightUnit';
 import { formatPrice } from '../../utils/formatters';
 import { useWeightUnit } from '../../contexts/WeightUnitContext';
 
-/** テーブルと同じ優先度スタイル (1-5 の数字表示) */
+/** テーブルと同じ優先度スタイル — Mondrian 縮退 (赤/黄/黒) */
 const PRIORITY_STYLE: Record<number, { color: string; bg: string; border: string }> = {
-  1: { color: '#166534', bg: '#dcfce7', border: '#86efac' },
-  2: { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4' },
-  3: { color: '#a16207', bg: '#fef9c3', border: '#fde047' },
-  4: { color: '#b45309', bg: '#ffedd5', border: '#fdba74' },
-  5: { color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' },
+  1: { color: mondrian.red,    bg: alpha(mondrian.red, 0.12),    border: mondrian.red },
+  2: { color: mondrian.red,    bg: alpha(mondrian.red, 0.06),    border: alpha(mondrian.red, 0.4) },
+  3: { color: mondrian.black,  bg: alpha(mondrian.yellow, 0.22), border: mondrian.yellow },
+  4: { color: primitiveColors.gray[700], bg: primitiveColors.gray[100], border: primitiveColors.gray[300] },
+  5: { color: primitiveColors.gray[600], bg: primitiveColors.gray[50],  border: primitiveColors.gray[200] },
 };
 
 const formatSeasons = (seasons?: string[]): string => {
