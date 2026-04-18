@@ -5,13 +5,12 @@ import { GearService } from '../services/gearService';
 import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [editingGear, setEditingGear] = useState<GearItemWithCalculated | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  // ChatSidebar 一本化 + Landing 導入で不要になった状態は順次削除済み:
+  // - showForm / editingGear / showGearDropdown: ギア追加/編集は Chat & インライン編集
+  // - showAdvisor: Advisor は ChatSidebar の Advisor タブに統合
+  // - showCategoryManager: カテゴリ管理 UI はフロントから廃止 (3b5e200)
+  // - showLogin: 未認証時は Landing を表示するため Login モーダルは廃止 (PR #60)
   const [showChat, setShowChat] = useState(false);
-  const [showAdvisor, setShowAdvisor] = useState(false);
-  const [showGearDropdown, setShowGearDropdown] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   // データ読み込み状態
@@ -123,31 +122,14 @@ export const useAppState = () => {
     }
   };
 
-  // カテゴリAPI操作関数
-  const handleCreateCategory = async (name: string, color: string) => {
-    await CategoryApiService.createCategory(name, color);
-    await fetchCategories(); // データを再取得
-  };
-
-  const handleUpdateCategory = async (id: string, name: string, color: string) => {
-    await CategoryApiService.updateCategory(id, name, color);
-    await fetchCategories(); // データを再取得
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    await CategoryApiService.deleteCategory(id);
-    await fetchCategories(); // データを再取得
-  };
+  // NOTE: カテゴリ CRUD handler はフロントの管理 UI が廃止された時点で
+  // 呼び出し元ゼロとなったため削除済み。将来再導入する際は
+  // `CategoryApiService` を直接使うか、専用 hook (useCategories 等) を新設
+  // して useAppState を肥大化させないこと。
 
   return {
     // UI状態
-    showForm, setShowForm,
-    editingGear, setEditingGear,
-    showLogin, setShowLogin,
-    showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
-    showAdvisor, setShowAdvisor,
-    showGearDropdown, setShowGearDropdown,
     showCheckboxes, setShowCheckboxes,
 
     // データ状態
@@ -164,10 +146,7 @@ export const useAppState = () => {
     refreshGearItems: fetchGearItems,
     refreshWeightBreakdown: fetchWeightBreakdown,
 
-    // カテゴリAPI操作関数
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory,
+    // カテゴリ (読み込みのみ、CRUD は UI 再導入時まで提供しない)
     refreshCategories: fetchCategories
   };
 };

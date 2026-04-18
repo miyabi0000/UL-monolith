@@ -1,70 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface AppDockProps {
-  onShowLogin: () => void;
   onLogout: () => void;
   isAuthenticated: boolean;
   userName?: string;
-  onShowAdvisor?: () => void;
+  onShowChat?: () => void;
 }
 
 const AppDock: React.FC<AppDockProps> = ({
-  onShowLogin,
   onLogout,
   isAuthenticated,
   userName,
-  onShowAdvisor,
+  onShowChat,
 }) => {
   const location = useLocation();
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-  }, []);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const onClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest('.app-dock-user-menu')) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [userMenuOpen]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    const nextDark = !root.classList.contains('dark');
-    if (nextDark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-    setIsDark(nextDark);
-  };
+  const dockRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(dockRef, () => setUserMenuOpen(false), userMenuOpen);
 
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
+      <div ref={dockRef} className="pointer-events-auto relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
-            className="h-control-lg sm:h-control px-2.5 sm:px-3 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 inline-flex items-center gap-1.5 transition-colors"
+            className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 inline-flex items-center gap-1.5 transition-colors"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -73,24 +39,24 @@ const AppDock: React.FC<AppDockProps> = ({
           </a>
         )}
 
-        {onShowAdvisor && (
+        {onShowChat && (
           <button
             type="button"
-            className="glass-header-chip h-control-lg sm:h-control px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
-            onClick={onShowAdvisor}
-            aria-label="UL Advisor"
-            title="ULギアアドバイザー"
+            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
+            onClick={onShowChat}
+            aria-label="Open chat (Add / Advisor)"
+            title="Chat — add gear & advisor"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <span className="hidden sm:inline">Advisor</span>
+            <span className="hidden sm:inline">Chat</span>
           </button>
         )}
 
         <button
           type="button"
-          className="glass-header-chip h-control-lg w-control-lg sm:h-control sm:w-control inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
+          className="glass-header-chip h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
           onClick={toggleDarkMode}
           aria-label="Toggle dark mode"
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -106,60 +72,44 @@ const AppDock: React.FC<AppDockProps> = ({
           )}
         </button>
 
-        {/* ユーザーメニュー（モバイルではProfileHeaderに統合済みのため非表示） */}
-        <div className="hidden sm:block relative">
-          <button
-            type="button"
-            className="glass-header-chip h-control min-w-control px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
-            onClick={() => setUserMenuOpen((prev) => !prev)}
-            aria-label="User menu"
-          >
-            {isAuthenticated ? (
+        {/* ユーザーメニュー（モバイルでは ProfileHeader に統合済みのため非表示）
+         * 未認証時は Landing 画面を表示するため、AppDock は常に認証済み前提。
+         * デスクトップ幅でのみ avatar → dropdown (userName + Logout) を表示。 */}
+        {isAuthenticated && (
+          <div className="hidden sm:block relative">
+            <button
+              type="button"
+              className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
+              onClick={() => setUserMenuOpen((prev) => !prev)}
+              aria-label="User menu"
+              title={userName || 'User'}
+            >
               <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                 {userInitial}
               </span>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            )}
-          </button>
+            </button>
 
-          {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-              {isAuthenticated ? (
-                <>
-                  {userName && (
-                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
-                      {userName}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      onLogout();
-                      setUserMenuOpen(false);
-                    }}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+                {userName && (
+                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
+                    {userName}
+                  </div>
+                )}
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => {
-                    onShowLogin();
+                    onLogout();
                     setUserMenuOpen(false);
                   }}
                 >
-                  Login
+                  Logout
                 </button>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

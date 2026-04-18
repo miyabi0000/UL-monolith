@@ -7,22 +7,28 @@ import { openaiClient } from '../openaiClient.js';
  * LLM_FALLBACK=1 のときのみオーケストレータから呼ばれる
  */
 
+/** 抽出モデル: gpt-4o-mini は抽出タスクで gpt-4o の ~80% 精度・1/10 コスト・~2x 速度。
+ *  精度不足が見えたら環境変数 `LLM_EXTRACT_MODEL` で上書き可能。 */
+const EXTRACT_MODEL = process.env.LLM_EXTRACT_MODEL || 'gpt-4o-mini';
+
 const SYSTEM_PROMPT = `あなたはアウトドアギアの製品情報抽出エキスパートです。
 与えられた既存データとWebページのスニペットから、欠損しているフィールドを補完してください。
 
-以下のJSON形式で返してください。確信がないフィールドはnullにしてください:
+必ず以下のキーを持つ JSON オブジェクトのみを返してください（JSON 以外のテキストは一切含めない）。
+確信がないフィールドは null にしてください:
 {
-  "name": "製品名 (string | null)",
-  "brand": "ブランド名 (string | null)",
-  "weightGrams": "重量グラム (number | null)",
-  "priceCents": "価格セント (number | null)",
-  "suggestedCategory": "Shelter|Clothing|Cooking|Safety|Backpack|Sleep|Water|Electronics|Hygiene|Other (string | null)"
+  "name": string | null,
+  "brand": string | null,
+  "weightGrams": number | null,
+  "priceCents": number | null,
+  "suggestedCategory": "Shelter"|"Clothing"|"Cooking"|"Safety"|"Backpack"|"Sleep"|"Water"|"Electronics"|"Hygiene"|"Other"|null
 }
 
 重要:
 - 既存データで既に値があるフィールドはそのまま返す
-- 推測できないフィールドはnullにする（でたらめは禁止）
-- JSON以外のテキストは出力しない`;
+- 推測できないフィールドは null にする（でたらめは禁止）
+- weightGrams は g 単位の数値のみ (例: 230)、kg や oz は g に換算
+- priceCents は日本円なら円 × 100、ドルなら cent 単位`;
 
 interface LlmFallbackFields {
   name?: string | null;
@@ -49,8 +55,14 @@ export async function llmFallback(
   const userMessage = buildUserMessage(url, candidates, snippets);
 
   try {
-    const response = await openaiClient.chatCompletion(SYSTEM_PROMPT, userMessage);
-    const parsed = parseAndValidate(response);
+    // JSON mode で呼び出し: response_format: { type: 'json_object' } が
+    // 保証するため正規表現での切り出しは不要。パース失敗時は chatCompletionJson が throw する。
+    const obj = await openaiClient.chatCompletionJson<Record<string, unknown>>(
+      SYSTEM_PROMPT,
+      userMessage,
+      { model: EXTRACT_MODEL, maxTokens: 500 },
+    );
+    const parsed = validateFields(obj);
     if (!parsed) return null;
 
     return mergeWithCandidates(candidates, parsed);
@@ -83,26 +95,16 @@ function buildUserMessage(url: string, candidates: LLMExtractionResult, snippets
   return parts.join('\n\n');
 }
 
-/** LLMレスポンスをパース＋簡易バリデーション */
-function parseAndValidate(response: string): LlmFallbackFields | null {
-  try {
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
+/** LLM レスポンス (既にパース済み object) を型ガードで検証する */
+function validateFields(obj: Record<string, unknown>): LlmFallbackFields | null {
+  const result: LlmFallbackFields = {};
+  if (typeof obj.name === 'string' && obj.name.length > 0) result.name = obj.name;
+  if (typeof obj.brand === 'string' && obj.brand.length > 0) result.brand = obj.brand;
+  if (typeof obj.weightGrams === 'number' && obj.weightGrams > 0) result.weightGrams = obj.weightGrams;
+  if (typeof obj.priceCents === 'number' && obj.priceCents > 0) result.priceCents = obj.priceCents;
+  if (typeof obj.suggestedCategory === 'string') result.suggestedCategory = obj.suggestedCategory;
 
-    const obj = JSON.parse(jsonMatch[0]);
-
-    // 型チェック: 期待する型でなければ除外
-    const result: LlmFallbackFields = {};
-    if (typeof obj.name === 'string' && obj.name.length > 0) result.name = obj.name;
-    if (typeof obj.brand === 'string' && obj.brand.length > 0) result.brand = obj.brand;
-    if (typeof obj.weightGrams === 'number' && obj.weightGrams > 0) result.weightGrams = obj.weightGrams;
-    if (typeof obj.priceCents === 'number' && obj.priceCents > 0) result.priceCents = obj.priceCents;
-    if (typeof obj.suggestedCategory === 'string') result.suggestedCategory = obj.suggestedCategory;
-
-    return Object.keys(result).length > 0 ? result : null;
-  } catch {
-    return null;
-  }
+  return Object.keys(result).length > 0 ? result : null;
 }
 
 /** 既存データを優先しつつ欠損フィールドだけLLM結果で埋める */

@@ -76,6 +76,17 @@ interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<boolean>
+  /**
+   * メールアドレスのみでのログイン（パスワードレス）
+   *
+   * - デモモード (Cognito 未設定時): 即座にそのメールで擬似ユーザーを作成しログイン
+   * - Cognito モード: 現時点ではマジックリンク / Email OTP が未配線のためエラー
+   *   を throw する (将来 Cognito Custom Auth Flow を実装予定)
+   *
+   * 成功時 true、失敗時 false。入力不正時も false (エラー throw せず呼び出し側で
+   * メッセージ表示できるように)。
+   */
+  loginWithEmail: (email: string) => Promise<boolean>
   logout: () => void
   /** Cognitoサインアップ（Cognito未設定時はエラーをthrow） */
   signUp: (email: string, password: string, name?: string) => Promise<boolean>
@@ -246,6 +257,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true
     }
     return false
+  }, [])
+
+  /**
+   * メールアドレスのみでのログイン（パスワードレス）
+   *
+   * - デモモード: email だけで擬似ユーザーを作って即座にログイン
+   * - Cognito モード: 未配線。将来 Custom Auth Flow (magic link / Email OTP) で
+   *   実装する前提。呼び出し側でエラーハンドルできるよう false を返す。
+   */
+  const loginWithEmail = useCallback(async (email: string): Promise<boolean> => {
+    const trimmed = email.trim().toLowerCase()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmed)) {
+      return false
+    }
+
+    if (isCognitoConfigured()) {
+      // TODO: Cognito Custom Auth Flow (magic link / Email OTP) を配線
+      // 現時点では Cognito モードではパスワードレスログインを受け付けない
+      console.warn('[Auth] Cognito モードでのパスワードレスログインは未配線です')
+      return false
+    }
+
+    // デモモード: email をそのままユーザー ID / 表示名に流用
+    const demoUser: User = {
+      id: `demo-${trimmed}`,
+      email: trimmed,
+      name: trimmed.split('@')[0],
+      createdAt: new Date().toISOString(),
+    }
+    setUser(demoUser)
+
+    try {
+      localStorage.setItem('auth-user', JSON.stringify(demoUser))
+    } catch (error) {
+      console.warn('localStorageへのユーザーデータ保存に失敗:', error)
+    }
+    return true
   }, [])
 
   /**
@@ -429,6 +478,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isAuthenticated: !!user,
     login,
+    loginWithEmail,
     logout,
     signUp,
     confirmSignUp,
