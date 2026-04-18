@@ -14,7 +14,6 @@ import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 import ChatSidebar from './ChatSidebar';
 
-const CategoryManager = React.lazy(() => import('./CategoryManager'));
 const Login = React.lazy(() => import('./Login'));
 
 interface InventoryWorkspaceProps {
@@ -55,7 +54,6 @@ export default function InventoryWorkspace({
   const { login } = useAuth();
   const {
     showLogin, setShowLogin,
-    showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
     showCheckboxes, setShowCheckboxes,
     gearItems,
@@ -66,9 +64,6 @@ export default function InventoryWorkspace({
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory
   } = appState;
 
   const {
@@ -238,7 +233,6 @@ export default function InventoryWorkspace({
       onEdit={handleEditGear}
       onDelete={handleDeleteGear}
       onUpdateItem={handleUpdateItem}
-      onShowCategoryManager={() => setShowCategoryManager(true)}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}
       showCheckboxes={showCheckboxes}
@@ -354,16 +348,6 @@ export default function InventoryWorkspace({
       </div>
 
       <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {showCategoryManager && (
-          <CategoryManager
-            onClose={() => setShowCategoryManager(false)}
-            categories={categories}
-            onAddCategory={handleCreateCategory}
-            onEditCategory={handleUpdateCategory}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-
         {renderLoginModal && showLogin && (
           <Login
             isOpen={showLogin}
