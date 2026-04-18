@@ -7,7 +7,6 @@ import { CategoryApiService } from '../services/categoryApiService';
 export const useAppState = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingGear, setEditingGear] = useState<GearItemWithCalculated | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(false);
@@ -143,7 +142,6 @@ export const useAppState = () => {
     // UI状態
     showForm, setShowForm,
     editingGear, setEditingGear,
-    showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
     showAdvisor, setShowAdvisor,
