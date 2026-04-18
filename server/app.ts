@@ -13,7 +13,6 @@ import gearRoutes from './routes/gear.js';
 import categoryRoutes from './routes/categories.js';
 import analyticsRoutes from './routes/analytics.js';
 import llmRoutes from './routes/llm.js';
-import authRoutes from './routes/auth.js';
 import imageProxyRoutes from './routes/imageProxy.js';
 import packRoutes from './routes/packs.js';
 import profileRoutes from './routes/profile.js';
@@ -93,7 +92,6 @@ app.use('/api/v1/gear', cognitoAuth, gearRoutes);
 app.use('/api/v1/categories', cognitoAuth, categoryRoutes);
 app.use('/api/v1/analytics', cognitoAuth, analyticsRoutes);
 app.use('/api/v1/llm', cognitoAuth, strictLimiter, llmRoutes);
-app.use('/api/v1/auth', authRoutes); // 認証エンドポイント自体は認証不要
 app.use('/api/v1/image', imageProxyRoutes); // 画像プロキシは認証不要
 app.use('/api/v1/packs', packRoutes); // パック（内部で認証制御）
 app.use('/api/v1/profile', profileRoutes); // プロフィール（内部で認証制御）

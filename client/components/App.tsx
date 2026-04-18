@@ -1,36 +1,23 @@
-import React, { Suspense, useState } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
-import { useGearFocus } from '../hooks/useGearFocus';
 import NotificationPopup from './NotificationPopup';
-import PacksPage, { AdvisorPackScope } from './PacksPage';
+import PacksPage from './PacksPage';
 import PackDetailPage from './PackDetailPage';
 import AppDock from './AppDock';
-
-// 遅延インポート（コード分割）
-const Login = React.lazy(() => import('./Login'));
-const GearAdvisorChat = React.lazy(() => import('./GearAdvisorChat'));
+import Landing from './Landing';
 
 export default function App() {
   const location = useLocation();
-  const { user, isAuthenticated, logout, login } = useAuth();
+  const { user, isAuthenticated, logout, loginWithEmail } = useAuth();
   const appState = useAppState();
-  const {
-    showLogin,
-    setShowLogin,
-    showAdvisor,
-    setShowAdvisor,
-    gearItems,
-    weightBreakdown,
-    ulStatus,
-    handleUpdateGear,
-  } = appState;
+  const { setShowChat } = appState;
 
-  const { messages, removeNotification, showSuccess, showError } = useNotifications();
+  const { messages, removeNotification, showError } = useNotifications();
 
-  // クォータ超過の全局通知
+  // クォータ超過の全局通知 (api.client から CustomEvent で通知される)
   React.useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent<{ plan?: string; message?: string }>).detail ?? {};
@@ -41,14 +28,6 @@ export default function App() {
     window.addEventListener('quota-exceeded', handler);
     return () => window.removeEventListener('quota-exceeded', handler);
   }, [showError]);
-
-  // パック選択スコープ（PacksPage → アドバイザーへの連携）
-  const [advisorScope, setAdvisorScope] = useState<AdvisorPackScope | null>(null);
-
-  const handleLoginSuccess = () => {
-    showSuccess('ログインに成功しました');
-    setShowLogin(false);
-  };
 
   // URLハッシュによるスクロール
   React.useEffect(() => {
@@ -61,15 +40,17 @@ export default function App() {
     });
   }, [location.hash]);
 
-  const handleFocusGear = useGearFocus();
-
-  // アドバイザーに渡すコンテキスト（パック選択中はそのスコープを使用）
-  const advisorGearContext = {
-    items: advisorScope?.items ?? gearItems,
-    weightBreakdown,
-    ulStatus,
-    packName: advisorScope?.packName ?? null,
-  };
+  // 未認証時は CTA ランディングを表示して早期 return
+  // (パスワードレス: Landing の onLogin で loginWithEmail を呼び、
+  //  成功すると isAuthenticated が true になってこの分岐を抜ける)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen">
+        <Landing onLogin={loginWithEmail} />
+        <NotificationPopup messages={messages} onRemove={removeNotification} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -80,12 +61,10 @@ export default function App() {
           element={
             <PacksPage
               appState={appState}
-              onAdvisorScopeChange={setAdvisorScope}
               isAuthenticated={isAuthenticated}
               userName={user?.name}
-              onShowLogin={() => setShowLogin(true)}
               onLogout={logout}
-              onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
+              onShowChat={() => setShowChat((prev) => !prev)}
             />
           }
         />
@@ -97,34 +76,12 @@ export default function App() {
       {/* PacksPage(/) 以外のルート（/p/:packId など）でのみ表示 */}
       {location.pathname !== '/' && (
         <AppDock
-          onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
-          onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
+          onShowChat={() => setShowChat((prev) => !prev)}
         />
       )}
-
-      <Suspense fallback={null}>
-        {showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-
-        <GearAdvisorChat
-          isOpen={showAdvisor}
-          onClose={() => setShowAdvisor(false)}
-          gearContext={advisorGearContext}
-          onApplyEdit={async (gearId, field, value) => {
-            await handleUpdateGear(gearId, { [field]: value });
-          }}
-          onFocusGear={handleFocusGear}
-        />
-      </Suspense>
 
       {/* 右端通知ポップアップ */}
       <NotificationPopup

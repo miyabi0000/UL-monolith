@@ -1,21 +1,13 @@
 import { Router, Request, Response } from 'express';
-import { Pool } from 'pg';
+import { db } from '../database/connection.js';
 import { cognitoAuth } from '../middleware/cognitoAuth.js';
 
 const router = Router();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5433'),
-  database: process.env.DB_NAME || 'gear_manager',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-});
-
 // GET /api/v1/profile - 自分のプロフィール取得
 router.get('/', cognitoAuth, async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT display_name, handle, bio, header_image_url, header_title, plan
        FROM users WHERE id = $1`,
       [req.userId],
@@ -50,7 +42,7 @@ router.put('/', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const { displayName, handle, bio, headerImageUrl, headerTitle } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE users SET
          display_name = COALESCE($1, display_name),
          handle = COALESCE($2, handle),
@@ -98,7 +90,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
 
     console.info(`[Profile Import] user=${req.userId} — localStorage → DB 移行`);
 
-    const result = await pool.query(
+    const result = await db.query(
       `UPDATE users SET
          display_name = $1,
          handle = $2,

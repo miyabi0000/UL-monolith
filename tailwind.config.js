@@ -110,12 +110,34 @@ export default {
         'lg': `0 2px 0 rgba(10, 10, 10, 0.08)`,
       },
       borderRadius: {
+        // 既存キー（互換維持）
         sm: '4px',
         DEFAULT: '8px',
         md: '8px',
         lg: '12px',
         xl: '16px',
         pill: '9999px',
+        // セマンティックキー — globals.css の --radius-* と整合
+        // designSystem.ts COMPONENT_RADIUS と対応
+        surface: 'var(--radius-surface)', // 6px: カード・モーダル・パネル
+        control: 'var(--radius-control)', // 4px: ボタン・入力・チップ
+        badge:   'var(--radius-badge)',   // 9999px: バッジ・ピル
+      },
+      // 横並びコントロールの標準高さ — designSystem.ts CONTROL_HEIGHT と整合
+      // globals.css の --control-h / --control-h-lg / --badge-h を参照
+      height: {
+        'control':    'var(--control-h)',    // 36px: 標準 interactive control
+        'control-lg': 'var(--control-h-lg)', // 44px: 主要 CTA・タップ目標
+        'badge':      'var(--badge-h)',      // 20px: data badge
+      },
+      minHeight: {
+        'control':    'var(--control-h)',
+        'control-lg': 'var(--control-h-lg)',
+        'badge':      'var(--badge-h)',
+      },
+      width: {
+        'control':    'var(--control-h)',    // square ボタン用 (縦横同値)
+        'control-lg': 'var(--control-h-lg)',
       },
     },
   },

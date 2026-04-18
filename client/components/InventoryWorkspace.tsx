@@ -1,28 +1,26 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
-import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { useIsMobile } from '../hooks/useResponsiveSize';
+import { useGearFocus } from '../hooks/useGearFocus';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
+import type { GearAdvisorContext } from '../services/llmAdvisor';
 import ChartPanel from './ChartPanel';
 import PackTabBar from './PackTabBar';
+import PackInfoSection from './PackInfoSection';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
+import ChatSidebar from './ChatSidebar';
 
-const GearForm = React.lazy(() => import('./GearForm'));
-const CategoryManager = React.lazy(() => import('./CategoryManager'));
-const Login = React.lazy(() => import('./Login'));
-const ChatPopup = React.lazy(() => import('./ChatPopup'));
-const UrlBulkImportModal = React.lazy(() => import('./gear-input/UrlBulkImportModal'));
-const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
+// 旧 GearForm / CategoryManager / ChatPopup / UrlBulkImportModal / GearInputModal
+// および Login モーダルは ChatSidebar 一本化 & Landing 導入で廃止済み。
+// モーダル起動用の state も useAppState から削除されている。
 
 interface InventoryWorkspaceProps {
   appState: ReturnType<typeof useAppState>;
   embedded?: boolean;
-  renderLoginModal?: boolean;
   items?: GearItemWithCalculated[];
   // Pack integration
   activePack?: Pack | null;
@@ -35,13 +33,15 @@ interface InventoryWorkspaceProps {
   onSelectPack?: (packId: string | null) => void;
   onCreatePack?: (name: string) => void;
   onDeletePack?: (packId: string) => void;
-  onOpenPackSettings?: () => void;
+  // Pack 編集: インラインフォームから呼ぶ CRUD アクション
+  onUpdatePack?: (updates: { name: string; routeName?: string; description?: string }) => void;
+  onCopyPackLink?: () => void;
+  onOpenPackPublic?: () => void;
 }
 
 export default function InventoryWorkspace({
   appState,
   embedded = false,
-  renderLoginModal = true,
   items,
   activePack = null,
   activePackItemIds = [],
@@ -52,14 +52,11 @@ export default function InventoryWorkspace({
   onSelectPack,
   onCreatePack,
   onDeletePack,
-  onOpenPackSettings,
+  onUpdatePack,
+  onCopyPackLink,
+  onOpenPackPublic,
 }: InventoryWorkspaceProps) {
-  const { login } = useAuth();
   const {
-    showForm, setShowForm,
-    editingGear, setEditingGear,
-    showLogin, setShowLogin,
-    showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
     showCheckboxes, setShowCheckboxes,
     gearItems,
@@ -70,9 +67,6 @@ export default function InventoryWorkspace({
     handleCreateGear,
     handleUpdateGear,
     handleDeleteGear,
-    handleCreateCategory,
-    handleUpdateCategory,
-    handleDeleteCategory
   } = appState;
 
   const {
@@ -91,11 +85,8 @@ export default function InventoryWorkspace({
     return saved === 'table' || saved === 'card' || saved === 'compare' ? saved : 'table';
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [showUrlImport, setShowUrlImport] = useState(false);
-  const [showBulkReview, setShowBulkReview] = useState(false);
 
   // Chart ↔ Table/Card の双方向連動用: クリック選択 / ホバー強調
-  // 同一 id の更新を skip する change-detection で hot-path 対策
   const [selectedItemId, setSelectedItemIdRaw] = useState<string | null>(null);
   const [hoveredItemId, setHoveredItemIdRaw] = useState<string | null>(null);
   const setSelectedItemId = useCallback((id: string | null) => {
@@ -105,19 +96,20 @@ export default function InventoryWorkspace({
     setHoveredItemIdRaw((prev) => (prev === id ? prev : id));
   }, []);
 
-  const {
-    extractGears,
-    extractedGears,
-    failedUrls,
-    isExtracting,
-    progress,
-    reset: resetExtraction
-  } = useBulkGearExtraction();
-
   useEffect(() => {
     localStorage.setItem('gearViewMode', gearViewMode);
   }, [gearViewMode]);
 
+  // 初回: リストが空なら Chat を自動で開く（Chat 中心 UX の入口誘導）
+  const chatAutoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (chatAutoOpenedRef.current) return;
+    if (isLoading) return;
+    if (gearItems.length === 0) {
+      setShowChat(true);
+      chatAutoOpenedRef.current = true;
+    }
+  }, [isLoading, gearItems.length, setShowChat]);
 
   const scopedItems = items ?? gearItems;
   const activePackItems = useMemo(() => {
@@ -139,32 +131,45 @@ export default function InventoryWorkspace({
     [analysisItems, quantityDisplayMode]
   );
 
-  const handleSaveGear = async (gearItem: any) => {
-    const loadingId = showLoading(editingGear ? 'アイテムを更新中...' : 'アイテムを作成中...');
+  // Advisor に渡すコンテキスト（ChatSidebar 内の "Advisor" モード用）
+  const advisorContext = useMemo<GearAdvisorContext>(() => ({
+    items: analysisItems,
+    weightBreakdown: items ? null : weightBreakdown,
+    ulStatus: items ? null : ulStatus,
+    packName: activePack?.name ?? null,
+  }), [analysisItems, items, weightBreakdown, ulStatus, activePack]);
 
+  const handleAdvisorApplyEdit = useCallback(
+    async (gearId: string, field: string, value: unknown) => {
+      await handleUpdateGear(gearId, { [field]: value });
+    },
+    [handleUpdateGear],
+  );
+
+  const handleFocusGear = useGearFocus();
+
+  /** ChatSidebar からギア抽出データが届いたら DB に保存する */
+  const handleGearExtracted = useCallback(async (gearItem: any) => {
+    const loadingId = showLoading('アイテムを作成中...');
     try {
-      if (editingGear) {
-        await handleUpdateGear(editingGear.id, gearItem);
-        showSuccess('アイテムが正常に更新されました');
-      } else {
-        await handleCreateGear(gearItem);
-        showSuccess('アイテムが正常に作成されました');
-      }
-
-      setShowForm(false);
-      setEditingGear(null);
+      await handleCreateGear(gearItem);
+      showSuccess('アイテムが追加されました');
     } catch (err) {
-      showError(editingGear ? 'アイテムの更新に失敗しました' : 'アイテムの作成に失敗しました');
-      console.error('Error saving gear:', err);
+      showError('アイテムの作成に失敗しました');
+      console.error('Error creating gear:', err);
     } finally {
       removeNotification(loadingId);
     }
-  };
+  }, [handleCreateGear, showLoading, showSuccess, showError, removeNotification]);
 
-  const handleEditGear = (gear: any) => {
-    setEditingGear(gear);
-    setShowForm(true);
-  };
+  /**
+   * "Edit" アイコンが押された時の挙動。
+   * ギアは既にインライン編集（EditableFields）で直接編集できるため、
+   * ここでは対象行を selected にしてハイライトするだけ。
+   */
+  const handleEditGear = useCallback((gear: GearItemWithCalculated) => {
+    setSelectedItemId(gear.id);
+  }, [setSelectedItemId]);
 
   const handleUpdateItem = useCallback(async (id: string, field: string, value: GearFieldValue) => {
     try {
@@ -185,47 +190,28 @@ export default function InventoryWorkspace({
     showError('追加対象がありません（すでにPackに入っています）');
   }, [activePack, onAddItemsToPack, showSuccess, showError]);
 
-  const handleLoginSuccess = () => {
-    showSuccess('Login successful');
-    setShowLogin(false);
-  };
-
-  const handleExtractUrls = async (urls: string[]) => {
-    const loadingId = showLoading(`Extracting ${urls.length} URLs...`);
-
-    try {
-      await extractGears(urls, categories);
-      removeNotification(loadingId);
-    } catch (err) {
-      showError('Failed to extract gear information');
-      console.error('Error extracting URLs:', err);
-      removeNotification(loadingId);
-    }
-  };
-
-  const handleProceedToReview = () => {
-    setShowUrlImport(false);
-    setShowBulkReview(true);
-  };
-
-  const handleBulkReviewComplete = (savedCount: number, skippedCount: number) => {
-    setShowBulkReview(false);
-    resetExtraction();
-    showSuccess(`${savedCount} items added, ${skippedCount} skipped`);
-  };
-
-  const routeMapQuery = (activePack?.routeName || activePack?.name || '').trim();
+  // Route Map は pack.routeName が **明示的に** 登録されている時だけ表示する。
+  //   1. routeName が空なら表示しない
+  //   2. routeName === pack.name の場合、seed/デフォルトで同値のケースが多く
+  //      （「あーだこーだ」のような非地名で世界地図が出る）、ユーザーが明示的に
+  //      route を登録していないと判断して非表示にする
+  const _routeName = activePack?.routeName?.trim() ?? '';
+  const _packName = activePack?.name?.trim() ?? '';
+  const routeMapQuery = _routeName && _routeName !== _packName ? _routeName : '';
   const mapEmbedUrl = routeMapQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(routeMapQuery)}&output=embed`
     : '';
 
   const containerClassName = embedded
     ? 'w-full'
-    : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]';
+    : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-2 sm:px-4 md:px-6 lg:px-4';
 
-  const chatPaddingRight = showChat && !isMobile ? '400px' : undefined;
+  // Chat サイドバー展開時の右余白:
+  // - embedded (PacksPage 配下): PacksPage main で padding-right を持つため適用不要
+  // - standalone (/p/:packId など): 自身で適用
+  const chatPaddingRight = !embedded && showChat && !isMobile ? '400px' : undefined;
   const containerStyle = embedded
-    ? { paddingRight: chatPaddingRight }
+    ? undefined
     : {
         paddingTop: `${SPACING_SCALE.md}px`,
         paddingBottom: `${SPACING_SCALE.md}px`,
@@ -249,9 +235,6 @@ export default function InventoryWorkspace({
       onEdit={handleEditGear}
       onDelete={handleDeleteGear}
       onUpdateItem={handleUpdateItem}
-      onShowForm={() => setShowForm(true)}
-      onShowUrlImport={() => setShowUrlImport(true)}
-      onShowCategoryManager={() => setShowCategoryManager(true)}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}
       showCheckboxes={showCheckboxes}
@@ -294,49 +277,18 @@ export default function InventoryWorkspace({
 
                 {selectedPackId && (
                   <div role="tabpanel" className="grid gap-2 px-3 pt-1 pb-2">
-                    <section className="px-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Pack Info</h3>
-                        <div className="flex items-center gap-1">
-                          {onOpenPackSettings && (
-                            <button
-                              type="button"
-                              className="icon-btn"
-                              onClick={onOpenPackSettings}
-                              title="Edit pack"
-                              aria-label="Edit pack"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </button>
-                          )}
-                          {onDeletePack && (
-                            <button
-                              type="button"
-                              className="icon-btn"
-                              onClick={() => {
-                                if (window.confirm('Delete this pack?')) {
-                                  onDeletePack(selectedPackId);
-                                }
-                              }}
-                              title="Delete pack"
-                              aria-label="Delete pack"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      {activePack && (
-                        <div className="mt-1 space-y-0.5 text-xs text-gray-600 dark:text-gray-300">
-                          <p>{activePack.description || 'No description'}</p>
-                          <p>{`Items: ${activePackItemIds.length}`}</p>
-                        </div>
-                      )}
-                    </section>
+                    <PackInfoSection
+                      pack={activePack}
+                      itemCount={activePackItemIds.length}
+                      onUpdate={onUpdatePack}
+                      onDelete={onDeletePack ? () => {
+                        if (window.confirm('Delete this pack?')) {
+                          onDeletePack(selectedPackId);
+                        }
+                      } : undefined}
+                      onCopyLink={onCopyPackLink}
+                      onOpenPublic={onOpenPackPublic}
+                    />
 
                     {mapEmbedUrl && (
                       <section className="rounded-lg p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
@@ -366,79 +318,17 @@ export default function InventoryWorkspace({
         )}
       </div>
 
-      <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {showForm && (
-          <GearForm
-            isOpen={showForm}
-            onClose={() => {
-              setShowForm(false);
-              setEditingGear(null);
-            }}
-            onSave={handleSaveGear}
-            categories={categories}
-            editingGear={editingGear}
-          />
-        )}
-
-        {showCategoryManager && (
-          <CategoryManager
-            onClose={() => setShowCategoryManager(false)}
-            categories={categories}
-            onAddCategory={handleCreateCategory}
-            onEditCategory={handleUpdateCategory}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-
-        {renderLoginModal && showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-
-        {showChat && (
-          <ChatPopup
-            isOpen={showChat}
-            onClose={() => setShowChat(false)}
-            categories={categories}
-            onGearExtracted={handleSaveGear}
-          />
-        )}
-
-        {showUrlImport && (
-          <UrlBulkImportModal
-            isOpen={showUrlImport}
-            onClose={() => {
-              setShowUrlImport(false);
-              resetExtraction();
-            }}
-            onExtract={handleExtractUrls}
-            onProceed={handleProceedToReview}
-            isExtracting={isExtracting}
-            progress={progress}
-            extractedCount={extractedGears.length}
-            failedCount={failedUrls.length}
-          />
-        )}
-
-        {showBulkReview && extractedGears.length > 0 && (
-          <GearInputModal
-            isOpen={showBulkReview}
-            onClose={() => {
-              setShowBulkReview(false);
-              resetExtraction();
-            }}
-            onSave={handleSaveGear}
-            categories={categories}
-            bulkMode={true}
-            bulkGears={extractedGears}
-            onBulkComplete={handleBulkReviewComplete}
-          />
-        )}
-      </Suspense>
+      {/* Chat 中心 UX: Add / Advisor 統合サイドバー */}
+      <ChatSidebar
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        onGearExtracted={handleGearExtracted}
+        advisorContext={advisorContext}
+        onApplyEdit={handleAdvisorApplyEdit}
+        onFocusGear={handleFocusGear}
+        categories={categories}
+        existingItemCount={gearItems.length}
+      />
 
       <NotificationPopup
         messages={messages}

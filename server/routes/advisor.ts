@@ -1,16 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { Pool } from 'pg';
+import { db } from '../database/connection.js';
 import { cognitoAuth } from '../middleware/cognitoAuth.js';
 
 const router = Router();
-
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5433'),
-  database: process.env.DB_NAME || 'gear_manager',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-});
 
 // ==================== セッション ====================
 
@@ -19,7 +11,7 @@ router.get('/sessions', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
 
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT id, pack_id, title, created_at, updated_at
        FROM advisor_sessions
        WHERE user_id = $1
@@ -41,7 +33,7 @@ router.post('/sessions', cognitoAuth, async (req: Request, res: Response) => {
     const { packId, title } = req.body;
     const sessionTitle = title || `Chat ${new Date().toISOString().slice(0, 10)}`;
 
-    const result = await pool.query(
+    const result = await db.query(
       `INSERT INTO advisor_sessions (user_id, pack_id, title)
        VALUES ($1, $2, $3)
        RETURNING id, pack_id, title, created_at, updated_at`,
@@ -59,7 +51,7 @@ router.post('/sessions', cognitoAuth, async (req: Request, res: Response) => {
 router.delete('/sessions/:id', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query(
+    const result = await db.query(
       'DELETE FROM advisor_sessions WHERE id = $1 AND user_id = $2 RETURNING id',
       [id, req.userId],
     );
@@ -84,7 +76,7 @@ router.get('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Resp
     const { id } = req.params;
 
     // 所有権チェック
-    const sessionCheck = await pool.query(
+    const sessionCheck = await db.query(
       'SELECT id FROM advisor_sessions WHERE id = $1 AND user_id = $2',
       [id, req.userId],
     );
@@ -94,7 +86,7 @@ router.get('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Resp
     }
 
     // TODO: 将来メッセージ数が増えたらページネーション対応
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT id, role, content, suggested_edits, gear_refs, created_at
        FROM advisor_messages
        WHERE session_id = $1
@@ -131,7 +123,7 @@ router.post('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Res
     }
 
     // 所有権チェック
-    const sessionCheck = await pool.query(
+    const sessionCheck = await db.query(
       'SELECT id FROM advisor_sessions WHERE id = $1 AND user_id = $2',
       [id, req.userId],
     );
@@ -141,7 +133,7 @@ router.post('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Res
     }
 
     // メッセージ挿入 + セッション updated_at 更新
-    const client = await pool.connect();
+    const client = await db.connect();
     try {
       await client.query('BEGIN');
 

@@ -28,6 +28,47 @@ export const SPACING_SCALE = {
   '4xl': 64,  // 8 unit
 } as const;
 
+/**
+ * 横並びコントロールの標準高さ（px）
+ *
+ * globals.css の --control-h / --control-h-lg / --badge-h と整合。
+ * 3 ティア縮退設計: 迷ったら base (36) を使う。
+ *
+ * **ルール**: 横並びコンポーネントは必ず `items-center` を付け、
+ * 子要素（ボタン・バッジ・入力・チップ・アイコン）の高さは
+ * この CONTROL_HEIGHT のいずれかに揃えること。高さ混在禁止。
+ *
+ * Tailwind からは `h-control` / `h-control-lg` / `h-badge` で参照可能。
+ */
+export const CONTROL_HEIGHT = {
+  /** 20px: バッジ・優先度トークン・ピル型ステータス (data badge 専用) */
+  badge: 20,
+  /** 36px: 全 interactive control の既定 (ボタン・入力・タブ・チップ・ドロップダウン) */
+  base: 36,
+  /** 44px: 主要 CTA・モーダルアクション (タップ目標) */
+  lg: 44,
+} as const;
+
+/**
+ * 横並びレイアウトのクラスプリセット。
+ *
+ * 全バリアントで `items-center` を含む（垂直中央揃え必須のルール）。
+ * gap のみ使い分ける。
+ *
+ * @example
+ *   <div className={ROW_CLASSES.base}>...</div>
+ */
+export const ROW_CLASSES = {
+  /** gap-2 (8px): 標準の横並び */
+  base:    'flex items-center gap-2',
+  /** gap-1 (4px): アイコン+テキストなど密集配置 */
+  tight:   'flex items-center gap-1',
+  /** gap-3 (12px): ボタン群・セクション間 */
+  wide:    'flex items-center gap-3',
+  /** 両端寄せ: ヘッダー・ツールバー */
+  between: 'flex items-center justify-between gap-2',
+} as const;
+
 // Font Family
 export const FONT_FAMILY = 'Inter, sans-serif' as const;
 

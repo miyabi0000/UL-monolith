@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { db } from '../../database/connection.js';
 
 /**
  * Cognito sub → users.id のマッピングとプロビジョニング
@@ -6,14 +6,6 @@ import { Pool } from 'pg';
  * JWT 検証後に呼び出し、users テーブルに行が無ければ自動作成（upsert）。
  * プロセス内キャッシュ（TTL 10分）で毎リクエストの DB アクセスを回避。
  */
-
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5433'),
-  database: process.env.DB_NAME || 'gear_manager',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-});
 
 // --- LRU + TTL キャッシュ ---
 
@@ -60,7 +52,7 @@ export async function resolveUserIdFromSub(
 
   // Upsert: cognito_sub が一致する行があれば email を更新、無ければ INSERT
   // password_hash は NOT NULL 制約があるため固定文字列を入れる（Cognito が実パスワードを管理）
-  const result = await pool.query(
+  const result = await db.query(
     `INSERT INTO users (cognito_sub, email, password_hash, name)
      VALUES ($1, $2, 'cognito_managed', $3)
      ON CONFLICT (cognito_sub) DO UPDATE SET email = EXCLUDED.email

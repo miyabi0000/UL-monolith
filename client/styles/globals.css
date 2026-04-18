@@ -456,12 +456,14 @@
     border-radius: var(--radius-control);
   }
 
-  /* 入力フィールド — Mondrian 黒線 + Mondrian Blue focus
-   * 高さは --field-h (= --control-h) で統一 */
+  /* 入力フィールド — 視認可能な hairline 枠線 + Mondrian Blue focus
+   * 高さは --field-h (= --control-h) で統一。
+   * 既定の --border-default は transparent (borderless 方針) だが、
+   * 入力欄は "どこに打てるか" の可視化が必要なので --stroke-subtle を明示。 */
   .input {
     @apply inline-flex items-center px-2 transition-all duration-200;
     min-height: var(--field-h);
-    border: var(--border-default);
+    border: var(--border-width-thin) solid var(--stroke-subtle);
     border-radius: var(--radius-control);
     color: var(--ink-primary);
     background: var(--surface-level-0);
