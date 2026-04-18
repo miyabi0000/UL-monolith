@@ -147,7 +147,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   }, []);
 
   return (
-    <div className="p-2 sm:p-3 space-y-2 w-full min-w-0">
+    <div className="p-1 sm:p-3 space-y-2 w-full min-w-0">
       <div className="flex justify-between items-center text-xs font-medium text-gray-500 mb-2">
         <span>ITEMS</span>
         <span className="font-semibold text-gray-900">{items.length}</span>

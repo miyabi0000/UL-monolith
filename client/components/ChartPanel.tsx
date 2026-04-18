@@ -133,7 +133,21 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   const [centerPulse, triggerCenterPulse] = useCenterClickPulse()
 
   const screenSize = useResponsiveSize()
-  const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
+  // モバイルではデフォルトで折りたたんでリストを優先表示。ユーザーが展開したら
+  // 以降は localStorage で記憶する。
+  const [isChartCollapsed, setIsChartCollapsed] = useState(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('chartCollapsed') : null
+    if (saved === '0') return false
+    if (saved === '1') return true
+    // 初期値: モバイル幅は折りたたみ、デスクトップは展開
+    return typeof window !== 'undefined' && window.innerWidth < 640
+  })
+  // 展開状態の永続化
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chartCollapsed', isChartCollapsed ? '1' : '0')
+    }
+  }, [isChartCollapsed])
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
