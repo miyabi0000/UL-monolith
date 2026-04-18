@@ -211,7 +211,10 @@ export default function InventoryWorkspace({
     });
   }, [setShowCheckboxes]);
 
-  const routeMapQuery = (activePack?.routeName || activePack?.name || '').trim();
+  // Route Map は pack.routeName が明示的に設定されている時だけ表示する。
+  // pack.name フォールバックを使うと「あーだこーだ」のような非地名でも
+  // 世界地図が埋め込まれて縦スペースが無駄になる。
+  const routeMapQuery = activePack?.routeName?.trim() ?? '';
   const mapEmbedUrl = routeMapQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(routeMapQuery)}&output=embed`
     : '';
