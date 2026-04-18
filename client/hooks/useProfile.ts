@@ -29,7 +29,7 @@ const buildDefault = (fallbackName?: string): ProfileSettings => ({
   headerImageUrl: '',
   displayName: fallbackName || 'Guest',
   handle: fallbackName ? `@${fallbackName.toLowerCase().replace(/\s+/g, '')}` : '@guest',
-  bio: 'Inventory / Packs を切り替えて山行ごとの装備をまとめる。',
+  bio: 'Organize gear for each trek — Inventory ↔ Packs',
 });
 
 /** サーバーレスポンスをクライアント型に変換（null はデフォルト値で埋める） */
