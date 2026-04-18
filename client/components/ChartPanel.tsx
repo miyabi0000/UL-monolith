@@ -408,6 +408,30 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                   </svg>
                 </button>
               )}
+
+              {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
+                  Compare モード中は無効（Compare 中は別の checkbox 選択が走っているため） */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (gearViewMode === 'compare') return
+                  onToggleCheckboxes()
+                }}
+                disabled={gearViewMode === 'compare'}
+                className={`icon-btn ${
+                  showCheckboxes && gearViewMode !== 'compare'
+                    ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
+                    : gearViewMode === 'compare'
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                }`}
+                aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
+                title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
             </div>
           </div>
 
