@@ -24,7 +24,6 @@ interface PacksPageProps {
   // ProfileHeader に渡すコントロール
   isAuthenticated: boolean;
   userName?: string;
-  onShowLogin: () => void;
   onLogout: () => void;
   onShowAdvisor?: () => void;
 }
@@ -34,7 +33,6 @@ export default function PacksPage({
   onAdvisorScopeChange,
   isAuthenticated,
   userName,
-  onShowLogin,
   onLogout,
   onShowAdvisor,
 }: PacksPageProps) {
@@ -96,7 +94,6 @@ export default function PacksPage({
           onEditProfile={() => setShowEditor(true)}
           isAuthenticated={isAuthenticated}
           userName={userName}
-          onShowLogin={onShowLogin}
           onLogout={onLogout}
           onShowAdvisor={onShowAdvisor}
         />

@@ -7,7 +7,6 @@ interface ProfileHeaderProps {
   // AppDock から移植するコントロール
   isAuthenticated: boolean;
   userName?: string;
-  onShowLogin: () => void;
   onLogout: () => void;
   onShowAdvisor?: () => void;
 }
@@ -17,7 +16,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onEditProfile,
   isAuthenticated,
   userName,
-  onShowLogin,
   onLogout,
   onShowAdvisor,
 }) => {
@@ -123,27 +121,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => setUserMenuOpen((p) => !p)}
-            className="icon-btn"
-            aria-label="User menu"
-          >
-            {isAuthenticated ? (
-              <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
-                {userInitial}
-              </span>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            )}
-          </button>
+          {/* ユーザーメニュー: ProfileHeader は認証済みでのみ表示されるため、
+           * ログアウトのみを持つシンプルなメニューにする */}
+          {isAuthenticated && (
+            <>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((p) => !p)}
+                className="icon-btn"
+                aria-label="User menu"
+              >
+                <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
+                  {userInitial}
+                </span>
+              </button>
 
-          {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
-              {isAuthenticated ? (
-                <>
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
                   {userName && (
                     <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 truncate">
                       {userName}
@@ -156,17 +150,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   >
                     Logout
                   </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => { onShowLogin(); setUserMenuOpen(false); }}
-                >
-                  Login
-                </button>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

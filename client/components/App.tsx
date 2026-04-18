@@ -8,18 +8,16 @@ import NotificationPopup from './NotificationPopup';
 import PacksPage, { AdvisorPackScope } from './PacksPage';
 import PackDetailPage from './PackDetailPage';
 import AppDock from './AppDock';
+import Landing from './Landing';
 
 // 遅延インポート（コード分割）
-const Login = React.lazy(() => import('./Login'));
 const GearAdvisorChat = React.lazy(() => import('./GearAdvisorChat'));
 
 export default function App() {
   const location = useLocation();
-  const { user, isAuthenticated, logout, login } = useAuth();
+  const { user, isAuthenticated, logout, loginWithEmail } = useAuth();
   const appState = useAppState();
   const {
-    showLogin,
-    setShowLogin,
     showAdvisor,
     setShowAdvisor,
     gearItems,
@@ -28,15 +26,10 @@ export default function App() {
     handleUpdateGear,
   } = appState;
 
-  const { messages, removeNotification, showSuccess } = useNotifications();
+  const { messages, removeNotification } = useNotifications();
 
   // パック選択スコープ（PacksPage → アドバイザーへの連携）
   const [advisorScope, setAdvisorScope] = useState<AdvisorPackScope | null>(null);
-
-  const handleLoginSuccess = () => {
-    showSuccess('ログインに成功しました');
-    setShowLogin(false);
-  };
 
   // URLハッシュによるスクロール
   React.useEffect(() => {
@@ -59,6 +52,18 @@ export default function App() {
     packName: advisorScope?.packName ?? null,
   };
 
+  // 未認証時は CTA ランディングを表示して早期 return
+  // (パスワードレス。Landing の onLogin で loginWithEmail を呼び、
+  //  成功すると isAuthenticated が true になってこの分岐を抜ける)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen">
+        <Landing onLogin={loginWithEmail} />
+        <NotificationPopup messages={messages} onRemove={removeNotification} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {/* ルーティング */}
@@ -71,7 +76,6 @@ export default function App() {
               onAdvisorScopeChange={setAdvisorScope}
               isAuthenticated={isAuthenticated}
               userName={user?.name}
-              onShowLogin={() => setShowLogin(true)}
               onLogout={logout}
               onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
             />
@@ -85,7 +89,6 @@ export default function App() {
       {/* PacksPage(/) 以外のルート（/p/:packId など）でのみ表示 */}
       {location.pathname !== '/' && (
         <AppDock
-          onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
@@ -94,15 +97,6 @@ export default function App() {
       )}
 
       <Suspense fallback={null}>
-        {showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-
         <GearAdvisorChat
           isOpen={showAdvisor}
           onClose={() => setShowAdvisor(false)}
