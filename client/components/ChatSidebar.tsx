@@ -124,7 +124,7 @@ const GearRefChip: React.FC<{ ref_: GearRef; onClick: (gearId: string) => void }
     type="button"
     onClick={() => onClick(ref_.gearId)}
     title={`Jump to ${ref_.gearName}`}
-    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge text-xs font-medium
+    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
                bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
                border border-gray-200 dark:border-gray-600
                hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -502,7 +502,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               role="tab"
               aria-selected={mode === 'add'}
               onClick={() => setMode('add')}
-              className={`px-3 h-control-base inline-flex items-center rounded text-xs font-semibold transition-colors
+              className={`px-3 h-8 inline-flex items-center rounded text-xs font-semibold transition-colors
                           ${mode === 'add'
                             ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100'}`}
@@ -516,7 +516,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               disabled={!isAdvisorAvailable}
               onClick={() => setMode('advisor')}
               title={!isAdvisorAvailable ? 'Advisor requires gear context' : 'Optimization advisor'}
-              className={`px-3 h-control-base inline-flex items-center rounded text-xs font-semibold transition-colors
+              className={`px-3 h-8 inline-flex items-center rounded text-xs font-semibold transition-colors
                           disabled:opacity-40 disabled:cursor-not-allowed
                           ${mode === 'advisor'
                             ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
@@ -671,7 +671,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   type="button"
                   onClick={handleAddSend}
                   disabled={!addInput.trim() || addIsLoading}
-                  className="h-control px-4 rounded-lg text-xs font-medium
+                  className="h-9 px-4 rounded-lg text-xs font-medium
                              bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900
                              hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed
                              transition-opacity"
@@ -729,7 +729,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   type="button"
                   onClick={advisor.handleSend}
                   disabled={!advisor.input.trim() || advisor.isLoading}
-                  className="h-control px-4 rounded-lg text-xs font-medium
+                  className="h-9 px-4 rounded-lg text-xs font-medium
                              bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900
                              hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed
                              transition-opacity"
