@@ -7,37 +7,25 @@ import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import ProfileEditorModal from './ProfileEditorModal';
 import PackSettingsModal from './PackSettingsModal';
-import { GearItemWithCalculated } from '../utils/types';
 
 const fallbackUserId = 'local-user';
 
-export interface AdvisorPackScope {
-  /** アドバイザーに渡すアイテム一覧（パック選択中はそのパックのみ） */
-  items: GearItemWithCalculated[];
-  /** 選択中パック名（null = 全ギアスコープ） */
-  packName: string | null;
-}
-
 interface PacksPageProps {
   appState: ReturnType<typeof useAppState>;
-  onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
   // ProfileHeader に渡すコントロール
   isAuthenticated: boolean;
   userName?: string;
   onShowLogin: () => void;
   onLogout: () => void;
-  onShowAdvisor?: () => void;
   onShowChat?: () => void;
 }
 
 export default function PacksPage({
   appState,
-  onAdvisorScopeChange,
   isAuthenticated,
   userName,
   onShowLogin,
   onLogout,
-  onShowAdvisor,
   onShowChat,
 }: PacksPageProps) {
   const { user } = useAuth();
@@ -60,7 +48,6 @@ export default function PacksPage({
     [packs, selectedPackId]
   );
 
-  // アドバイザーのスコープを親に通知（パック選択変更時）
   const activePackItems = useMemo(
     () =>
       selectedPack
@@ -68,13 +55,6 @@ export default function PacksPage({
         : null,
     [selectedPack, gearItems]
   );
-
-  useEffect(() => {
-    onAdvisorScopeChange?.({
-      items: activePackItems ?? gearItems,
-      packName: selectedPack?.name ?? null,
-    });
-  }, [activePackItems, gearItems, selectedPack, onAdvisorScopeChange]);
 
   const handleCreatePack = (name: string) => {
     const next = createPack(name);
@@ -100,7 +80,6 @@ export default function PacksPage({
           userName={userName}
           onShowLogin={onShowLogin}
           onLogout={onLogout}
-          onShowAdvisor={onShowAdvisor}
           onShowChat={onShowChat}
         />
 

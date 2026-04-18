@@ -1,17 +1,15 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { useNotifications } from '../hooks/useNotifications';
-import { useGearFocus } from '../hooks/useGearFocus';
 import NotificationPopup from './NotificationPopup';
-import PacksPage, { AdvisorPackScope } from './PacksPage';
+import PacksPage from './PacksPage';
 import PackDetailPage from './PackDetailPage';
 import AppDock from './AppDock';
 
 // 遅延インポート（コード分割）
 const Login = React.lazy(() => import('./Login'));
-const GearAdvisorChat = React.lazy(() => import('./GearAdvisorChat'));
 
 export default function App() {
   const location = useLocation();
@@ -20,19 +18,10 @@ export default function App() {
   const {
     showLogin,
     setShowLogin,
-    showAdvisor,
-    setShowAdvisor,
     setShowChat,
-    gearItems,
-    weightBreakdown,
-    ulStatus,
-    handleUpdateGear,
   } = appState;
 
   const { messages, removeNotification, showSuccess } = useNotifications();
-
-  // パック選択スコープ（PacksPage → アドバイザーへの連携）
-  const [advisorScope, setAdvisorScope] = useState<AdvisorPackScope | null>(null);
 
   const handleLoginSuccess = () => {
     showSuccess('ログインに成功しました');
@@ -50,16 +39,6 @@ export default function App() {
     });
   }, [location.hash]);
 
-  const handleFocusGear = useGearFocus();
-
-  // アドバイザーに渡すコンテキスト（パック選択中はそのスコープを使用）
-  const advisorGearContext = {
-    items: advisorScope?.items ?? gearItems,
-    weightBreakdown,
-    ulStatus,
-    packName: advisorScope?.packName ?? null,
-  };
-
   return (
     <div className="min-h-screen">
       {/* ルーティング */}
@@ -69,12 +48,10 @@ export default function App() {
           element={
             <PacksPage
               appState={appState}
-              onAdvisorScopeChange={setAdvisorScope}
               isAuthenticated={isAuthenticated}
               userName={user?.name}
               onShowLogin={() => setShowLogin(true)}
               onLogout={logout}
-              onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
               onShowChat={() => setShowChat((prev) => !prev)}
             />
           }
@@ -91,7 +68,6 @@ export default function App() {
           onLogout={logout}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
-          onShowAdvisor={() => setShowAdvisor((prev) => !prev)}
           onShowChat={() => setShowChat((prev) => !prev)}
         />
       )}
@@ -105,16 +81,6 @@ export default function App() {
             onLoginSuccess={handleLoginSuccess}
           />
         )}
-
-        <GearAdvisorChat
-          isOpen={showAdvisor}
-          onClose={() => setShowAdvisor(false)}
-          gearContext={advisorGearContext}
-          onApplyEdit={async (gearId, field, value) => {
-            await handleUpdateGear(gearId, { [field]: value });
-          }}
-          onFocusGear={handleFocusGear}
-        />
       </Suspense>
 
       {/* 右端通知ポップアップ */}

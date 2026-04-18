@@ -5,12 +5,12 @@ import { GearService } from '../services/gearService';
 import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
-  // 旧 showForm / editingGear / showGearDropdown は ChatSidebar 一本化で不要に
-  // なったため削除済み。ギア追加は ChatSidebar、編集はインラインで行う。
+  // ChatSidebar 一本化で不要になった状態は順次削除済み:
+  // - showForm / editingGear / showGearDropdown: ギア追加/編集は Chat & インライン編集
+  // - showAdvisor: Advisor は ChatSidebar の Advisor タブに統合
   const [showLogin, setShowLogin] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [showAdvisor, setShowAdvisor] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   // データ読み込み状態
@@ -143,7 +143,6 @@ export const useAppState = () => {
     showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
-    showAdvisor, setShowAdvisor,
     showCheckboxes, setShowCheckboxes,
 
     // データ状態

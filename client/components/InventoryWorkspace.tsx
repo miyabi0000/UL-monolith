@@ -5,7 +5,9 @@ import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { useIsMobile } from '../hooks/useResponsiveSize';
+import { useGearFocus } from '../hooks/useGearFocus';
 import { ChartViewMode, GearFieldValue, GearItemWithCalculated, Pack, QuantityDisplayMode } from '../utils/types';
+import type { GearAdvisorContext } from '../services/llmAdvisor';
 import ChartPanel from './ChartPanel';
 import PackTabBar from './PackTabBar';
 import NotificationPopup from './NotificationPopup';
@@ -130,6 +132,23 @@ export default function InventoryWorkspace({
     () => calculateTotals(analysisItems, quantityDisplayMode),
     [analysisItems, quantityDisplayMode]
   );
+
+  // Advisor に渡すコンテキスト（ChatSidebar 内の "Advisor" モード用）
+  const advisorContext = useMemo<GearAdvisorContext>(() => ({
+    items: analysisItems,
+    weightBreakdown: items ? null : weightBreakdown,
+    ulStatus: items ? null : ulStatus,
+    packName: activePack?.name ?? null,
+  }), [analysisItems, items, weightBreakdown, ulStatus, activePack]);
+
+  const handleAdvisorApplyEdit = useCallback(
+    async (gearId: string, field: string, value: unknown) => {
+      await handleUpdateGear(gearId, { [field]: value });
+    },
+    [handleUpdateGear],
+  );
+
+  const handleFocusGear = useGearFocus();
 
   /** ChatSidebar からギア抽出データが届いたら DB に保存する */
   const handleGearExtracted = useCallback(async (gearItem: any) => {
@@ -363,13 +382,16 @@ export default function InventoryWorkspace({
         )}
       </Suspense>
 
-      {/* Chat 中心 UX: 常駐サイドバー */}
+      {/* Chat 中心 UX: Add / Advisor 統合サイドバー */}
       <ChatSidebar
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         onGearExtracted={handleGearExtracted}
         onToggleCompareMode={handleToggleCompareMode}
         isCompareMode={gearViewMode === 'compare'}
+        advisorContext={advisorContext}
+        onApplyEdit={handleAdvisorApplyEdit}
+        onFocusGear={handleFocusGear}
         categories={categories}
         existingItemCount={gearItems.length}
       />

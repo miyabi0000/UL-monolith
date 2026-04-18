@@ -6,7 +6,6 @@ interface AppDockProps {
   onLogout: () => void;
   isAuthenticated: boolean;
   userName?: string;
-  onShowAdvisor?: () => void;
   onShowChat?: () => void;
 }
 
@@ -15,7 +14,6 @@ const AppDock: React.FC<AppDockProps> = ({
   onLogout,
   isAuthenticated,
   userName,
-  onShowAdvisor,
   onShowChat,
 }) => {
   const location = useLocation();
@@ -80,28 +78,13 @@ const AppDock: React.FC<AppDockProps> = ({
             type="button"
             className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
             onClick={onShowChat}
-            aria-label="Open gear chat"
-            title="Gear Chat — add & compare"
+            aria-label="Open chat (Add / Advisor)"
+            title="Chat — add gear & advisor"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <span className="hidden sm:inline">Chat</span>
-          </button>
-        )}
-
-        {onShowAdvisor && (
-          <button
-            type="button"
-            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
-            onClick={onShowAdvisor}
-            aria-label="UL Advisor"
-            title="UL Advisor — optimization"
-          >
-            <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="hidden sm:inline">Advisor</span>
           </button>
         )}
 

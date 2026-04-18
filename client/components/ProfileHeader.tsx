@@ -9,7 +9,6 @@ interface ProfileHeaderProps {
   userName?: string;
   onShowLogin: () => void;
   onLogout: () => void;
-  onShowAdvisor?: () => void;
   onShowChat?: () => void;
 }
 
@@ -20,7 +19,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   userName,
   onShowLogin,
   onLogout,
-  onShowAdvisor,
   onShowChat,
 }) => {
   const [isDark, setIsDark] = useState(false);
@@ -86,25 +84,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               type="button"
               onClick={onShowChat}
               className="icon-btn"
-              aria-label="Open gear chat"
-              title="Gear Chat — add & compare"
+              aria-label="Open chat (Add / Advisor)"
+              title="Chat — add gear & advisor"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </button>
-          )}
-
-          {onShowAdvisor && (
-            <button
-              type="button"
-              onClick={onShowAdvisor}
-              className="icon-btn"
-              aria-label="UL Advisor"
-              title="UL Advisor — optimization"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </button>
           )}
