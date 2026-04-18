@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { Pack } from '../utils/types'
+import { useOutsideClick } from '../hooks/useOutsideClick'
 
 interface PackInfoSectionProps {
   pack: Pack | null
@@ -51,17 +52,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     setMenuOpen(false)
   }, [pack?.id])
 
-  // メニューの外側クリックでクローズ
-  useEffect(() => {
-    if (!menuOpen) return
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [menuOpen])
+  useOutsideClick(menuRef, () => setMenuOpen(false), menuOpen)
 
   const hasChanges =
     name.trim() !== (pack?.name ?? '') ||

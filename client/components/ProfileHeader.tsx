@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ProfileSettings } from '../hooks/useProfile';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface ProfileHeaderProps {
   profile: ProfileSettings;
@@ -21,34 +23,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onLogout,
   onShowChat,
 }) => {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.profile-user-menu')) setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [userMenuOpen]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    const next = !root.classList.contains('dark');
-    root.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-    setIsDark(next);
-  };
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(userMenuRef, () => setUserMenuOpen(false), userMenuOpen);
 
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
@@ -81,7 +59,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
          * - Chat / Edit Profile / Dark mode は常時表示
          * - 未ログイン時: Login ボタンを直接表示（メニューに埋め込まない）
          * - ログイン済み: avatar → User menu（userName + Logout のみ） */}
-        <div className="profile-user-menu relative flex items-center gap-1">
+        <div ref={userMenuRef} className="relative flex items-center gap-1">
           {onShowChat && (
             <button
               type="button"

@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface AppDockProps {
   onShowLogin: () => void;
@@ -17,50 +19,16 @@ const AppDock: React.FC<AppDockProps> = ({
   onShowChat,
 }) => {
   const location = useLocation();
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-  }, []);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const onClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest('.app-dock-user-menu')) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [userMenuOpen]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    const nextDark = !root.classList.contains('dark');
-    if (nextDark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-    setIsDark(nextDark);
-  };
+  const dockRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(dockRef, () => setUserMenuOpen(false), userMenuOpen);
 
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
+      <div ref={dockRef} className="pointer-events-auto relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
