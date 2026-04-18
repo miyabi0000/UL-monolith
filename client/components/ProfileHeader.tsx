@@ -72,7 +72,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 truncate">{profile.headerTitle}</p>
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{profile.displayName}</h2>
             {profile.bio && (
-              <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{profile.bio}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[240px] sm:max-w-xs">{profile.bio}</p>
             )}
           </div>
         </div>
