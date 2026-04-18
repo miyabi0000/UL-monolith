@@ -28,7 +28,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
   };
 
   const tabClass = (isActive: boolean) => [
-    'pack-tab-shape relative -mb-px h-9 px-5 text-xs font-semibold transition-all duration-150 inline-flex items-center justify-center',
+    'pack-tab-shape relative -mb-px h-control px-5 text-xs font-semibold transition-all duration-150 inline-flex items-center justify-center',
     isActive
       ? 'text-gray-900 dark:text-gray-100'
       : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200',
@@ -70,7 +70,7 @@ const PackTabBar: React.FC<PackTabBarProps> = ({
         {showCreateInput ? (
           <form
             onSubmit={handleSubmit}
-            className="pack-tab-shape -mb-px h-8 px-4 flex items-center gap-1.5 bg-white border border-gray-200 border-b-white dark:bg-gray-800 dark:border-gray-600 dark:border-b-gray-800"
+            className="pack-tab-shape -mb-px h-control px-4 flex items-center gap-1.5 bg-white border border-gray-200 border-b-white dark:bg-gray-800 dark:border-gray-600 dark:border-b-gray-800"
           >
             <input
               className="h-5 w-28 text-xs font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400"
