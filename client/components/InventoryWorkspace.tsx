@@ -220,9 +220,12 @@ export default function InventoryWorkspace({
     ? 'w-full'
     : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-2 sm:px-4 md:px-6 lg:px-4';
 
-  const chatPaddingRight = showChat && !isMobile ? '400px' : undefined;
+  // Chat サイドバー展開時の右余白:
+  // - embedded (PacksPage 配下): PacksPage main で padding-right を持つため適用不要
+  // - standalone (/p/:packId など): 自身で適用
+  const chatPaddingRight = !embedded && showChat && !isMobile ? '400px' : undefined;
   const containerStyle = embedded
-    ? { paddingRight: chatPaddingRight }
+    ? undefined
     : {
         paddingTop: `${SPACING_SCALE.md}px`,
         paddingBottom: `${SPACING_SCALE.md}px`,
