@@ -178,9 +178,6 @@ export default function InventoryWorkspace({
     setShowLogin(false);
   };
 
-  /** ChatSidebar の "+" / URL 入口の代替: Chat を開く */
-  const handleOpenChat = useCallback(() => setShowChat(true), [setShowChat]);
-
   /**
    * Chat の 📋 Compare アイコン押下: compare モードを toggle する。
    * GearViewToggle から Compare セグメントを外した分、Chat アイコンが唯一の
@@ -230,7 +227,6 @@ export default function InventoryWorkspace({
       onEdit={handleEditGear}
       onDelete={handleDeleteGear}
       onUpdateItem={handleUpdateItem}
-      onOpenChat={handleOpenChat}
       onShowCategoryManager={() => setShowCategoryManager(true)}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}
