@@ -2,7 +2,6 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'reac
 import { useBulkGearExtraction } from '../hooks/useBulkGearExtraction';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
-import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { useIsMobile } from '../hooks/useResponsiveSize';
@@ -14,7 +13,6 @@ import SkeletonLoader from './ui/SkeletonLoader';
 
 const GearForm = React.lazy(() => import('./GearForm'));
 const CategoryManager = React.lazy(() => import('./CategoryManager'));
-const Login = React.lazy(() => import('./Login'));
 const ChatPopup = React.lazy(() => import('./ChatPopup'));
 const UrlBulkImportModal = React.lazy(() => import('./gear-input/UrlBulkImportModal'));
 const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
@@ -22,7 +20,6 @@ const GearInputModal = React.lazy(() => import('./gear-input/GearInputModal'));
 interface InventoryWorkspaceProps {
   appState: ReturnType<typeof useAppState>;
   embedded?: boolean;
-  renderLoginModal?: boolean;
   items?: GearItemWithCalculated[];
   // Pack integration
   activePack?: Pack | null;
@@ -41,7 +38,6 @@ interface InventoryWorkspaceProps {
 export default function InventoryWorkspace({
   appState,
   embedded = false,
-  renderLoginModal = true,
   items,
   activePack = null,
   activePackItemIds = [],
@@ -54,11 +50,9 @@ export default function InventoryWorkspace({
   onDeletePack,
   onOpenPackSettings,
 }: InventoryWorkspaceProps) {
-  const { login } = useAuth();
   const {
     showForm, setShowForm,
     editingGear, setEditingGear,
-    showLogin, setShowLogin,
     showCategoryManager, setShowCategoryManager,
     showChat, setShowChat,
     showCheckboxes, setShowCheckboxes,
@@ -184,11 +178,6 @@ export default function InventoryWorkspace({
     }
     showError('追加対象がありません（すでにPackに入っています）');
   }, [activePack, onAddItemsToPack, showSuccess, showError]);
-
-  const handleLoginSuccess = () => {
-    showSuccess('Login successful');
-    setShowLogin(false);
-  };
 
   const handleExtractUrls = async (urls: string[]) => {
     const loadingId = showLoading(`Extracting ${urls.length} URLs...`);
@@ -387,15 +376,6 @@ export default function InventoryWorkspace({
             onAddCategory={handleCreateCategory}
             onEditCategory={handleUpdateCategory}
             onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-
-        {renderLoginModal && showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
           />
         )}
 

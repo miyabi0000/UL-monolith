@@ -102,7 +102,6 @@ export default function PacksPage({
           <InventoryWorkspace
             appState={appState}
             embedded
-            renderLoginModal={false}
             items={gearItems}
             activePack={selectedPack}
             activePackItemIds={selectedPack?.itemIds ?? []}
