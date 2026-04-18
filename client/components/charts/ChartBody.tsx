@@ -57,10 +57,10 @@ const cellTransition = {
 /**
  * チャート本体の orchestrator。
  *
- * 重要: recharts v2 の `PieChart` は `findAllByType(children, Pie)` で
- * 直接子要素型 (displayName/name === 'Pie') を検索する。カスタムコンポーネントで
- * ラップすると recharts がピースを発見できず空の SVG が描画される致命バグを踏む。
- * そのため Pie / Cell は必ず PieChart の直接子として書く (wrapper 禁止)。
+ * recharts v2 の `PieChart` は `findAllByType(children, Pie)` で直接子の
+ * displayName/name === 'Pie' だけを検出する（カスタム wrapper は透過しない）
+ * ため、Pie / Cell はここに直書きする。wrapper で包むと pie が発見されず
+ * SVG が空のまま描画される。
  */
 const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const geometry = useChartGeometry()
