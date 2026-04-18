@@ -1,16 +1,63 @@
-import React, { useEffect } from 'react';
-import type { ProfileSettings } from '../hooks/useProfile';
+import React, { useEffect, useState } from 'react';
+import type { ProfileSettings, UserPlan } from '../hooks/useProfile';
 import { useImageUpload } from '../hooks/useImageUpload';
+import { createCheckoutSession, createPortalSession } from '../services/billingService';
 
 interface ProfileEditorModalProps {
   profile: ProfileSettings;
   onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
   onClose: () => void;
+  plan?: UserPlan;
 }
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</label>
 );
+
+const PlanSection: React.FC<{ plan: UserPlan }> = ({ plan }) => {
+  const [loading, setLoading] = useState(false);
+
+  const goTo = async (getUrl: () => Promise<string>, errorMessage: string) => {
+    setLoading(true);
+    try {
+      window.location.href = await getUrl();
+    } catch (err) {
+      console.error('[Billing]', err);
+      alert(errorMessage);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <SectionLabel>Plan</SectionLabel>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-gray-700 dark:text-gray-300">
+          現在のプラン: <strong>{plan === 'pro' ? 'Pro' : 'Free'}</strong>
+        </span>
+        {plan === 'free' ? (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => goTo(createCheckoutSession, '決済ページを開けませんでした。時間をおいて再試行してください。')}
+            disabled={loading}
+          >
+            {loading ? '読込中...' : 'Upgrade to Pro'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => goTo(createPortalSession, 'サブスクリプション管理ページを開けませんでした。')}
+            disabled={loading}
+          >
+            {loading ? '読込中...' : 'Manage'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /** ギア入力と同じドラッグ&ドロップ画像選択UI（コンパクト版） */
 const ImageDropZone: React.FC<{
@@ -73,7 +120,7 @@ const ImageDropZone: React.FC<{
   );
 };
 
-const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpdate, onClose }) => (
+const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpdate, onClose, plan = 'free' }) => (
   <div className="modal-overlay" onClick={onClose}>
     <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
       <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
@@ -118,6 +165,7 @@ const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpda
             onChange={(e) => onUpdate('bio', e.target.value)}
           />
         </div>
+        <PlanSection plan={plan} />
         <div className="flex items-center justify-end pt-1">
           <button type="button" className="btn-primary" onClick={onClose}>Done</button>
         </div>

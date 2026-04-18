@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { llmService } from '../../services/llmService.js';
 import { CategoryMatcher } from '../../services/categoryMatcher.js';
+import { recordUsage } from '../../services/quotaService.js';
+
+const trackUrlUsage = (userId: string | undefined) => {
+  if (userId) void recordUsage({ userId, endpoint: 'url' });
+};
 
 /**
  * POST /api/v1/llm/extract-url - URLからギア情報を抽出
@@ -45,6 +50,8 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
     }
 
     console.log(`[LLM] URL extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory}`);
+
+    trackUrlUsage(req.userId);
 
     res.json({
       success: true,
@@ -115,6 +122,8 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
 
     console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory} (confidence: ${extractionResult.confidence})`);
 
+    trackUrlUsage(req.userId);
+
     res.json({
       success: true,
       data: extractionResult,
@@ -162,7 +171,9 @@ export const handleEnhancePrompt = async (req: Request, res: Response) => {
     console.log(`[LLM] Enhancing URL data with prompt: ${prompt.substring(0, 50)}...`);
     
     const enhancedResult = await llmService.enhanceWithPrompt(urlData, prompt);
-    
+
+    trackUrlUsage(req.userId);
+
     res.json({
       success: true,
       data: enhancedResult,

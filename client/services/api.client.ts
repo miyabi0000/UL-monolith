@@ -134,7 +134,13 @@ export const callAPIWithRetry = async (
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         const error = new Error(`HTTP ${response.status}: ${errorData.message || 'API request failed'}`)
-        
+
+        // 429 quota_exceeded: グローバルイベントで通知し、上位へエラー伝播
+        if (response.status === 429 && errorData.error === 'quota_exceeded') {
+          window.dispatchEvent(new CustomEvent('quota-exceeded', { detail: errorData }))
+          throw error
+        }
+
         // 4xx エラーはリトライしない
         if (response.status >= 400 && response.status < 500) {
           throw error

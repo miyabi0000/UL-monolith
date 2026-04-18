@@ -3,22 +3,19 @@ import { handleExtractUrl, handleExtractPrompt, handleEnhancePrompt } from './ll
 import { handleExtractCategory } from './llm/categoryHandlers.js';
 import { handleHealthCheck } from './llm/healthHandlers.js';
 import { handleAdvisorChat, handleAdvisorChatStream } from './llm/advisorHandlers.js';
+import { quotaCheck } from '../middleware/quotaCheck.js';
 
 const router = Router();
 
-// Extraction endpoints
-router.post('/extract-url', handleExtractUrl);
-router.post('/extract-prompt', handleExtractPrompt);
-router.post('/enhance-prompt', handleEnhancePrompt);
+router.post('/extract-url', quotaCheck('url'), handleExtractUrl);
+router.post('/extract-prompt', quotaCheck('url'), handleExtractPrompt);
+router.post('/enhance-prompt', quotaCheck('url'), handleEnhancePrompt);
+router.post('/extract-category', quotaCheck('url'), handleExtractCategory);
 
-// Category endpoints
-router.post('/extract-category', handleExtractCategory);
+router.post('/advisor', quotaCheck('chat'), handleAdvisorChat);
+router.post('/advisor/stream', quotaCheck('chat'), handleAdvisorChatStream);
 
-// Advisor endpoints
-router.post('/advisor', handleAdvisorChat);
-router.post('/advisor/stream', handleAdvisorChatStream);
-
-// Health endpoint
+// health はクォータ対象外
 router.get('/health', handleHealthCheck);
 
 export default router;

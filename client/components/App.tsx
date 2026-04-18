@@ -15,7 +15,19 @@ export default function App() {
   const appState = useAppState();
   const { setShowChat } = appState;
 
-  const { messages, removeNotification } = useNotifications();
+  const { messages, removeNotification, showError } = useNotifications();
+
+  // クォータ超過の全局通知 (api.client から CustomEvent で通知される)
+  React.useEffect(() => {
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ plan?: string; message?: string }>).detail ?? {};
+      const base = detail.message ?? '月の利用上限に達しました。';
+      const suffix = detail.plan === 'free' ? ' Pro にアップグレードすると継続利用できます。' : '';
+      showError(`${base}${suffix}`, 8000);
+    };
+    window.addEventListener('quota-exceeded', handler);
+    return () => window.removeEventListener('quota-exceeded', handler);
+  }, [showError]);
 
   // URLハッシュによるスクロール
   React.useEffect(() => {
