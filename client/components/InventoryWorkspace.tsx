@@ -192,10 +192,14 @@ export default function InventoryWorkspace({
     setShowLogin(false);
   };
 
-  // Route Map は pack.routeName が明示的に設定されている時だけ表示する。
-  // pack.name フォールバックを使うと「あーだこーだ」のような非地名でも
-  // 世界地図が埋め込まれて縦スペースが無駄になる。
-  const routeMapQuery = activePack?.routeName?.trim() ?? '';
+  // Route Map は pack.routeName が **明示的に** 登録されている時だけ表示する。
+  //   1. routeName が空なら表示しない
+  //   2. routeName === pack.name の場合、seed/デフォルトで同値のケースが多く
+  //      （「あーだこーだ」のような非地名で世界地図が出る）、ユーザーが明示的に
+  //      route を登録していないと判断して非表示にする
+  const _routeName = activePack?.routeName?.trim() ?? '';
+  const _packName = activePack?.name?.trim() ?? '';
+  const routeMapQuery = _routeName && _routeName !== _packName ? _routeName : '';
   const mapEmbedUrl = routeMapQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(routeMapQuery)}&output=embed`
     : '';
