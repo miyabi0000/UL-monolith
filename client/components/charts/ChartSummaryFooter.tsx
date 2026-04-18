@@ -154,7 +154,7 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
             <SummaryStatCard
               label="Weight"
               value={formatWeightLarge(totalWeight, unit)}
-              subValue={formatWeight(totalWeight, unit)}
+              subValue={`${itemCount} items`}
               isActive
               wide
               icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}

@@ -237,6 +237,18 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const addMessagesEndRef = useRef<HTMLDivElement>(null);
   const addInputRef = useRef<HTMLTextAreaElement>(null);
 
+  // existingItemCount は非同期で後からロードされるため、ユーザーがまだ
+  // 発話していない（初回メッセージ 1 件だけの）状態であれば welcome 文言を
+  // items 数に追従させる。
+  useEffect(() => {
+    setAddMessages((prev) => {
+      if (prev.length === 1 && prev[0].id === 'initial-add') {
+        return [buildInitialAddMessage(existingItemCount > 0)];
+      }
+      return prev;
+    });
+  }, [existingItemCount]);
+
   // --- Advisor モード hook （常に呼び出す：hook 順序安定のため） ---
   const advisor = useAdvisorChat(
     advisorContext ?? FALLBACK_ADVISOR_CONTEXT,
