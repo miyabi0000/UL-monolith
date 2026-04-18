@@ -1,7 +1,6 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAppState } from '../hooks/useAppState';
-import { useAuth } from '../utils/AuthContext';
 import { calculateChartData, calculateTotals } from '../utils/chartHelpers';
 import { SPACING_SCALE } from '../utils/designSystem';
 import { useIsMobile } from '../hooks/useResponsiveSize';
@@ -15,12 +14,13 @@ import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 import ChatSidebar from './ChatSidebar';
 
-const Login = React.lazy(() => import('./Login'));
+// 旧 GearForm / CategoryManager / ChatPopup / UrlBulkImportModal / GearInputModal
+// および Login モーダルは ChatSidebar 一本化 & Landing 導入で廃止済み。
+// モーダル起動用の state も useAppState から削除されている。
 
 interface InventoryWorkspaceProps {
   appState: ReturnType<typeof useAppState>;
   embedded?: boolean;
-  renderLoginModal?: boolean;
   items?: GearItemWithCalculated[];
   // Pack integration
   activePack?: Pack | null;
@@ -42,7 +42,6 @@ interface InventoryWorkspaceProps {
 export default function InventoryWorkspace({
   appState,
   embedded = false,
-  renderLoginModal = true,
   items,
   activePack = null,
   activePackItemIds = [],
@@ -57,9 +56,7 @@ export default function InventoryWorkspace({
   onCopyPackLink,
   onOpenPackPublic,
 }: InventoryWorkspaceProps) {
-  const { login } = useAuth();
   const {
-    showLogin, setShowLogin,
     showChat, setShowChat,
     showCheckboxes, setShowCheckboxes,
     gearItems,
@@ -193,11 +190,6 @@ export default function InventoryWorkspace({
     showError('追加対象がありません（すでにPackに入っています）');
   }, [activePack, onAddItemsToPack, showSuccess, showError]);
 
-  const handleLoginSuccess = () => {
-    showSuccess('Login successful');
-    setShowLogin(false);
-  };
-
   // Route Map は pack.routeName が **明示的に** 登録されている時だけ表示する。
   //   1. routeName が空なら表示しない
   //   2. routeName === pack.name の場合、seed/デフォルトで同値のケースが多く
@@ -325,17 +317,6 @@ export default function InventoryWorkspace({
           </div>
         )}
       </div>
-
-      <Suspense fallback={<div className="text-center py-4">Loading...</div>}>
-        {renderLoginModal && showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-      </Suspense>
 
       {/* Chat 中心 UX: Add / Advisor 統合サイドバー */}
       <ChatSidebar

@@ -4,7 +4,6 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface AppDockProps {
-  onShowLogin: () => void;
   onLogout: () => void;
   isAuthenticated: boolean;
   userName?: string;
@@ -12,7 +11,6 @@ interface AppDockProps {
 }
 
 const AppDock: React.FC<AppDockProps> = ({
-  onShowLogin,
   onLogout,
   isAuthenticated,
   userName,
@@ -74,21 +72,10 @@ const AppDock: React.FC<AppDockProps> = ({
           )}
         </button>
 
-        {/* 未ログイン: Login ボタンを直接表示
-         * ログイン済み: avatar → dropdown (userName + Logout のみ) */}
-        {!isAuthenticated ? (
-          <button
-            type="button"
-            onClick={onShowLogin}
-            className="glass-header-chip h-11 w-11 sm:h-9 sm:w-9 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
-            aria-label="Login"
-            title="Login"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </button>
-        ) : (
+        {/* ユーザーメニュー（モバイルでは ProfileHeader に統合済みのため非表示）
+         * 未認証時は Landing 画面を表示するため、AppDock は常に認証済み前提。
+         * デスクトップ幅でのみ avatar → dropdown (userName + Logout) を表示。 */}
+        {isAuthenticated && (
           <div className="hidden sm:block relative">
             <button
               type="button"

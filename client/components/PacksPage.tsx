@@ -15,7 +15,6 @@ interface PacksPageProps {
   // ProfileHeader に渡すコントロール
   isAuthenticated: boolean;
   userName?: string;
-  onShowLogin: () => void;
   onLogout: () => void;
   onShowChat?: () => void;
 }
@@ -24,7 +23,6 @@ export default function PacksPage({
   appState,
   isAuthenticated,
   userName,
-  onShowLogin,
   onLogout,
   onShowChat,
 }: PacksPageProps) {
@@ -86,7 +84,6 @@ export default function PacksPage({
           onEditProfile={() => setShowEditor(true)}
           isAuthenticated={isAuthenticated}
           userName={userName}
-          onShowLogin={onShowLogin}
           onLogout={onLogout}
           onShowChat={onShowChat}
         />
@@ -95,7 +92,6 @@ export default function PacksPage({
           <InventoryWorkspace
             appState={appState}
             embedded
-            renderLoginModal={false}
             items={gearItems}
             activePack={selectedPack}
             activePackItemIds={selectedPack?.itemIds ?? []}

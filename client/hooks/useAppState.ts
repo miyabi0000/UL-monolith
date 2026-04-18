@@ -5,11 +5,11 @@ import { GearService } from '../services/gearService';
 import { CategoryApiService } from '../services/categoryApiService';
 
 export const useAppState = () => {
-  // ChatSidebar 一本化で不要になった状態は順次削除済み:
+  // ChatSidebar 一本化 + Landing 導入で不要になった状態は順次削除済み:
   // - showForm / editingGear / showGearDropdown: ギア追加/編集は Chat & インライン編集
   // - showAdvisor: Advisor は ChatSidebar の Advisor タブに統合
   // - showCategoryManager: カテゴリ管理 UI はフロントから廃止 (3b5e200)
-  const [showLogin, setShowLogin] = useState(false);
+  // - showLogin: 未認証時は Landing を表示するため Login モーダルは廃止 (PR #60)
   const [showChat, setShowChat] = useState(false);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
@@ -129,7 +129,6 @@ export const useAppState = () => {
 
   return {
     // UI状態
-    showLogin, setShowLogin,
     showChat, setShowChat,
     showCheckboxes, setShowCheckboxes,
 

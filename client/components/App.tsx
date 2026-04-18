@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
@@ -7,26 +7,15 @@ import NotificationPopup from './NotificationPopup';
 import PacksPage from './PacksPage';
 import PackDetailPage from './PackDetailPage';
 import AppDock from './AppDock';
-
-// 遅延インポート（コード分割）
-const Login = React.lazy(() => import('./Login'));
+import Landing from './Landing';
 
 export default function App() {
   const location = useLocation();
-  const { user, isAuthenticated, logout, login } = useAuth();
+  const { user, isAuthenticated, logout, loginWithEmail } = useAuth();
   const appState = useAppState();
-  const {
-    showLogin,
-    setShowLogin,
-    setShowChat,
-  } = appState;
+  const { setShowChat } = appState;
 
-  const { messages, removeNotification, showSuccess } = useNotifications();
-
-  const handleLoginSuccess = () => {
-    showSuccess('ログインに成功しました');
-    setShowLogin(false);
-  };
+  const { messages, removeNotification } = useNotifications();
 
   // URLハッシュによるスクロール
   React.useEffect(() => {
@@ -39,6 +28,18 @@ export default function App() {
     });
   }, [location.hash]);
 
+  // 未認証時は CTA ランディングを表示して早期 return
+  // (パスワードレス: Landing の onLogin で loginWithEmail を呼び、
+  //  成功すると isAuthenticated が true になってこの分岐を抜ける)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen">
+        <Landing onLogin={loginWithEmail} />
+        <NotificationPopup messages={messages} onRemove={removeNotification} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {/* ルーティング */}
@@ -50,7 +51,6 @@ export default function App() {
               appState={appState}
               isAuthenticated={isAuthenticated}
               userName={user?.name}
-              onShowLogin={() => setShowLogin(true)}
               onLogout={logout}
               onShowChat={() => setShowChat((prev) => !prev)}
             />
@@ -64,24 +64,12 @@ export default function App() {
       {/* PacksPage(/) 以外のルート（/p/:packId など）でのみ表示 */}
       {location.pathname !== '/' && (
         <AppDock
-          onShowLogin={() => setShowLogin(true)}
           onLogout={logout}
           isAuthenticated={isAuthenticated}
           userName={user?.name}
           onShowChat={() => setShowChat((prev) => !prev)}
         />
       )}
-
-      <Suspense fallback={null}>
-        {showLogin && (
-          <Login
-            isOpen={showLogin}
-            onLogin={login}
-            onClose={() => setShowLogin(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )}
-      </Suspense>
 
       {/* 右端通知ポップアップ */}
       <NotificationPopup
