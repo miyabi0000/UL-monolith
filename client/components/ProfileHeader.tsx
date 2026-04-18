@@ -59,7 +59,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
         </div>
       )}
-      <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="px-3 py-2 sm:px-4 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         {/* 左: プロフィール情報 */}
         <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--control-h)' }}>
           <span
@@ -69,10 +69,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{profile.headerTitle}</p>
+            <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 truncate">{profile.headerTitle}</p>
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{profile.displayName}</h2>
             {profile.bio && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{profile.bio}</p>
+              <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{profile.bio}</p>
             )}
           </div>
         </div>
@@ -107,24 +107,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           <button
             type="button"
-            onClick={toggleDarkMode}
-            className="icon-btn"
-            aria-label="Toggle dark mode"
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
-
-          <button
-            type="button"
             onClick={() => setUserMenuOpen((p) => !p)}
             className="icon-btn"
             aria-label="User menu"
@@ -142,25 +124,37 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {userMenuOpen && (
             <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
-              {isAuthenticated ? (
-                <>
-                  {userName && (
-                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 truncate">
-                      {userName}
-                    </div>
+              {isAuthenticated && userName && (
+                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 truncate">
+                  {userName}
+                </div>
+              )}
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                onClick={() => { toggleDarkMode(); /* keep menu open for quick revert */ }}
+              >
+                <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+                <svg className="w-4 h-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {isDark ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   )}
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => { onLogout(); setUserMenuOpen(false); }}
-                  >
-                    Logout
-                  </button>
-                </>
+                </svg>
+              </button>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
+                  onClick={() => { onLogout(); setUserMenuOpen(false); }}
+                >
+                  Logout
+                </button>
               ) : (
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
                   onClick={() => { onShowLogin(); setUserMenuOpen(false); }}
                 >
                   Login

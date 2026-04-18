@@ -71,7 +71,7 @@ export default function PacksPage({
   };
 
   return (
-    <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-3 pt-4 pb-6 sm:px-6 md:px-8 lg:px-[16px]">
+    <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-4 sm:px-4 md:px-6 lg:px-4">
       <div className="flex min-h-0 flex-col gap-3">
         <ProfileHeader
           profile={profile}

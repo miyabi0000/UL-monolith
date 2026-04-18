@@ -218,7 +218,7 @@ export default function InventoryWorkspace({
 
   const containerClassName = embedded
     ? 'w-full'
-    : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-4 sm:px-6 md:px-8 lg:px-[16px]';
+    : 'max-w-6xl mx-auto transition-all duration-150 ease-out px-2 sm:px-4 md:px-6 lg:px-4';
 
   const chatPaddingRight = showChat && !isMobile ? '400px' : undefined;
   const containerStyle = embedded
