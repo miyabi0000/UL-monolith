@@ -355,9 +355,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
           weightClassSummaryCards={weightClassSummaryCards}
           chartFocus={chartFocus}
           onToggleChartFocus={handleToggleChartFocus}
-          totalWeight={totalWeight}
-          totalCost={totalCost}
-          itemCount={analysisItems.length}
         />
             </>
           )}

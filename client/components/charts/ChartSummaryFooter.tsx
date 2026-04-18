@@ -7,9 +7,7 @@ import ScaleIcon from '../icons/ScaleIcon'
 import YenIcon from '../icons/YenIcon'
 import BackpackIcon from '../icons/BackpackIcon'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
-import { useCurrency } from '../../contexts/CurrencyContext'
-import { formatWeight, formatWeightLarge } from '../../utils/weightUnit'
-import { formatPriceWithCurrency } from '../../utils/formatters'
+import { formatWeight } from '../../utils/weightUnit'
 
 const VIEW_MODE_OPTIONS = [
   { mode: 'weight', label: 'Weight', icon: ScaleIcon },
@@ -82,9 +80,6 @@ export interface ChartSummaryFooterProps {
   weightClassSummaryCards: Array<{ key: string; label: string; value: number; focus: ChartFocus }>
   chartFocus: ChartFocus
   onToggleChartFocus: (focus: ChartFocus) => void
-  totalWeight: number
-  totalCost: number
-  itemCount: number
 }
 
 const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
@@ -94,12 +89,8 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   weightClassSummaryCards,
   chartFocus,
   onToggleChartFocus,
-  totalWeight,
-  totalCost,
-  itemCount
 }) => {
   const { unit } = useWeightUnit()
-  const { currency } = useCurrency()
   return (
     <div className="px-2 py-1.5 border-b border-gray-200">
       {/* view-mode toggle は中央、右端は viewMode に応じて g/oz or ¥/$ を出し分け */}
@@ -123,45 +114,22 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
         </div>
       </div>
 
-      {/* viewMode に応じて表示する card を切替。
-       * weight → Weight 1枚、cost → Price 1枚、weight-class → 4枚グリッド */}
-      <div>
-        {viewMode === 'weight-class' && weightBreakdown ? (
-          <div className="grid grid-cols-4 gap-1">
-            {weightClassSummaryCards.map(card => (
-              <SummaryStatCard
-                key={card.key}
-                label={card.label}
-                value={formatWeight(card.value, unit)}
-                isActive={chartFocus === card.focus}
-                onClick={() => onToggleChartFocus(card.focus)}
-              />
-            ))}
-          </div>
-        ) : viewMode === 'cost' ? (
-          <div className="flex justify-center">
+      {/* weight-class モード時のみ 4 枚の Stat カードを表示（big3/misc 分類トグルを兼ねる）。
+       * weight / cost モードでは合計値を既に Chat ヘッダーとドーナツ中央に持つため、
+       * 重複を避けてここでは描画しない。 */}
+      {viewMode === 'weight-class' && weightBreakdown && (
+        <div className="grid grid-cols-4 gap-1">
+          {weightClassSummaryCards.map(card => (
             <SummaryStatCard
-              label="Price"
-              value={formatPriceWithCurrency(totalCost, currency)}
-              subValue={`${itemCount} items`}
-              isActive
-              wide
-              icon={<YenIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
+              key={card.key}
+              label={card.label}
+              value={formatWeight(card.value, unit)}
+              isActive={chartFocus === card.focus}
+              onClick={() => onToggleChartFocus(card.focus)}
             />
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <SummaryStatCard
-              label="Weight"
-              value={formatWeightLarge(totalWeight, unit)}
-              subValue={`${itemCount} items`}
-              isActive
-              wide
-              icon={<ScaleIcon className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 dark:text-gray-300" />}
-            />
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
