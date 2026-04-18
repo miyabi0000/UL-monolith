@@ -8,6 +8,7 @@ import {
 } from '../services/llmService';
 import { useWeightUnit } from '../contexts/WeightUnitContext';
 import { formatWeight, formatWeightLarge } from '../utils/weightUnit';
+import { formatPrice } from '../utils/formatters';
 import { useIsMobile } from '../hooks/useResponsiveSize';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
 import type { GearAdvisorContext, GearRef } from '../services/llmAdvisor';
@@ -109,9 +110,7 @@ const FIELD_LABELS: Record<string, string> = {
 
 const formatEditValue = (field: string, value: unknown, weightUnit: 'g' | 'oz' = 'g'): string => {
   if (field === 'weightGrams' && typeof value === 'number') return formatWeight(value, weightUnit);
-  if (field === 'priceCents' && typeof value === 'number') {
-    return `¥${Math.round(value / 100).toLocaleString()}`;
-  }
+  if (field === 'priceCents' && typeof value === 'number') return formatPrice(value);
   if (field === 'isInKit') return value ? 'In kit' : 'Not in kit';
   return String(value);
 };
@@ -292,7 +291,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           try {
             const extractedData = await extractFromUrl(currentInput, categories);
             const matchedCategory = categories.find((cat) => cat.name === extractedData.suggestedCategory);
-            assistantResponse = `Extracted from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
+            assistantResponse = `Extracted from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? formatPrice(extractedData.priceCents) : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
             shouldExtractGear = true;
             mockGearData = {
               name: extractedData.name, brand: extractedData.brand, productUrl: currentInput,
@@ -311,7 +310,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           try {
             const extractedData = await extractFromPrompt(currentInput, categories);
             const matchedCategory = categories.find((cat) => cat.name === extractedData.suggestedCategory);
-            assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? `¥${Math.round(extractedData.priceCents / 100).toLocaleString()}` : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
+            assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? formatPrice(extractedData.priceCents) : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
             shouldExtractGear = true;
             mockGearData = {
               name: extractedData.name, brand: extractedData.brand, productUrl: '',
@@ -347,7 +346,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
               const urlData = await extractFromUrl(url, categories);
               const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput);
               const matchedCategory = categories.find((cat) => cat.name === enhancedData.suggestedCategory);
-              assistantResponse = `Processed URL with extra info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${formatWeight(enhancedData.weightGrams ?? null, weightUnit)}\nPrice: ¥${Math.round(enhancedData.priceCents! / 100).toLocaleString()}\nCategory: ${enhancedData.suggestedCategory}\n\nAdded to your list.`;
+              assistantResponse = `Processed URL with extra info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${formatWeight(enhancedData.weightGrams ?? null, weightUnit)}\nPrice: ${formatPrice(enhancedData.priceCents)}\nCategory: ${enhancedData.suggestedCategory}\n\nAdded to your list.`;
               shouldExtractGear = true;
               mockGearData = {
                 name: enhancedData.name, brand: enhancedData.brand, productUrl: url,
@@ -389,7 +388,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 assistantResponse += `${idx + 1}. ${item.data.name}\n`;
                 assistantResponse += `   Brand: ${item.data.brand || 'Unknown'}\n`;
                 assistantResponse += `   Weight: ${item.data.weightGrams ? formatWeight(item.data.weightGrams, weightUnit) : '?'}\n`;
-                assistantResponse += `   Price: ${item.data.priceCents ? `¥${Math.round(item.data.priceCents / 100).toLocaleString()}` : '?'}\n\n`;
+                assistantResponse += `   Price: ${item.data.priceCents ? formatPrice(item.data.priceCents) : '?'}\n\n`;
               });
               shouldExtractGear = true;
               mockGearData = successResults.map((item) => {
