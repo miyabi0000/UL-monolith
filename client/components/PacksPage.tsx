@@ -7,7 +7,6 @@ import { useIsMobile } from '../hooks/useResponsiveSize';
 import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import ProfileEditorModal from './ProfileEditorModal';
-import PackSettingsModal from './PackSettingsModal';
 
 const fallbackUserId = 'local-user';
 
@@ -36,7 +35,6 @@ export default function PacksPage({
   const isMobile = useIsMobile();
 
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
-  const [showPackSettings, setShowPackSettings] = useState(false);
 
   // 選択中のパックが削除された場合のみリセット（nullはALLモードとして有効）
   useEffect(() => {
@@ -108,7 +106,9 @@ export default function PacksPage({
             onSelectPack={setSelectedPackId}
             onCreatePack={handleCreatePack}
             onDeletePack={(packId) => { deletePack(packId); setSelectedPackId(null); }}
-            onOpenPackSettings={selectedPack ? () => setShowPackSettings(true) : undefined}
+            onUpdatePack={selectedPack ? (updates) => updatePack(selectedPack.id, updates) : undefined}
+            onCopyPackLink={selectedPack ? () => copyPublicLink(selectedPack.id) : undefined}
+            onOpenPackPublic={selectedPack ? () => window.open(`/p/${selectedPack.id}`, '_blank', 'noopener,noreferrer') : undefined}
           />
         </div>
       </div>
@@ -118,17 +118,6 @@ export default function PacksPage({
           profile={profile}
           onUpdate={updateField}
           onClose={() => setShowEditor(false)}
-        />
-      )}
-
-      {showPackSettings && selectedPack && (
-        <PackSettingsModal
-          pack={selectedPack}
-          onSave={(updates) => updatePack(selectedPack.id, updates)}
-          onDelete={() => deletePack(selectedPack.id)}
-          onCopyLink={() => copyPublicLink(selectedPack.id)}
-          onOpen={() => window.open(`/p/${selectedPack.id}`, '_blank', 'noopener,noreferrer')}
-          onClose={() => setShowPackSettings(false)}
         />
       )}
     </main>
