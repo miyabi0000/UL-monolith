@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
 import { sanitizeGearData } from '../../utils/helpers.js';
 import { db } from '../../database/connection.js';
-
-// デモユーザーID（認証実装までの仮ID）
-const DEMO_USER_ID = '550e8400-e29b-41d4-a716-446655440100';
+import { getRequestUserId } from '../shared/userContext.js';
 
 export const handleGetAllGear = async (req: Request, res: Response) => {
   try {
-    const result = await db.getGearWithCategories(DEMO_USER_ID);
+    const result = await db.getGearWithCategories(getRequestUserId(req));
 
     res.json({
       success: true,
@@ -35,7 +33,7 @@ export const handleGetGearById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const item = await db.getGearById(id, DEMO_USER_ID);
+    const item = await db.getGearById(id, getRequestUserId(req));
 
     if (!item) {
       return res.status(404).json({
@@ -60,7 +58,7 @@ export const handleGetGearById = async (req: Request, res: Response) => {
 
 export const handleGetGearSummary = async (req: Request, res: Response) => {
   try {
-    const summary = await db.getAnalyticsSummary(DEMO_USER_ID);
+    const summary = await db.getAnalyticsSummary(getRequestUserId(req));
 
     res.json({
       success: true,
@@ -92,7 +90,7 @@ export const handleCreateGear = async (req: Request, res: Response) => {
       });
     }
 
-    const newItem = await db.createGearItem(sanitizedData, DEMO_USER_ID);
+    const newItem = await db.createGearItem(sanitizedData, getRequestUserId(req));
 
     res.status(201).json({
       success: true,
@@ -114,7 +112,7 @@ export const handleUpdateGear = async (req: Request, res: Response) => {
     const { id } = req.params;
     const sanitizedData = sanitizeGearData(req.body);
     
-    const updatedItem = await db.updateGearItem(id, sanitizedData, DEMO_USER_ID);
+    const updatedItem = await db.updateGearItem(id, sanitizedData, getRequestUserId(req));
     
     if (!updatedItem) {
       return res.status(404).json({
@@ -142,7 +140,7 @@ export const handleDeleteGear = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
-    const deleted = await db.deleteGearItem(id, DEMO_USER_ID);
+    const deleted = await db.deleteGearItem(id, getRequestUserId(req));
     
     if (!deleted) {
       return res.status(404).json({
