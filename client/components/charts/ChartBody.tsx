@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { PieChart, ResponsiveContainer } from 'recharts'
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import BarChartBody from './BarChartBody'
-import StandardPieBody from './StandardPieBody'
-import DualRingPieBody from './DualRingPieBody'
 import ChartCenterOverlay from './ChartCenterOverlay'
+import ActiveCalloutShape from './ActiveCalloutShape'
+import { darkenColor, darkenHslColor, generateItemColor } from '../../utils/colorHelpers'
+import { COLORS, getCategoryColor } from '../../utils/designSystem'
 import type { BarItem } from './HorizontalBarChart'
 import type { ChartViewMode, DonutSegment, WeightBreakdown, ULStatus } from '../../utils/types'
 import type { SortedChartCategory, OuterPieEntry } from '../../utils/chart/pipeline'
@@ -45,20 +46,28 @@ interface ChartBodyProps {
   hoveredItemId?: string | null
 }
 
+const DEFAULT_COLOR = COLORS.gray[500]
+
+const cellTransition = {
+  transition: 'all 0.2s ease',
+  outline: 'none',
+  cursor: 'pointer',
+} as const
+
 /**
  * チャート本体の orchestrator。
- * chartDisplayMode と viewMode の組み合わせで適切な body を選ぶ。
  *
- * 選択状態は ChartSelection union で受け取り、内部で各子コンポーネントが
- * 必要とする legacy 値 (selectedCategoryName / selectedItemId / chartFocus) に
- * 派生させる。
+ * 重要: recharts v2 の `PieChart` は `findAllByType(children, Pie)` で
+ * 直接子要素型 (displayName/name === 'Pie') を検索する。カスタムコンポーネントで
+ * ラップすると recharts がピースを発見できず空の SVG が描画される致命バグを踏む。
+ * そのため Pie / Cell は必ず PieChart の直接子として書く (wrapper 禁止)。
  */
 const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const geometry = useChartGeometry()
+  const { outerRadiusConfig, innerRadiusConfig } = geometry
   const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
   const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
 
-  // ChartSelection union → 子コンポーネント用の派生値
   const { selection } = props
   const selectedCategoryName =
     selection.kind === 'category' || selection.kind === 'item' ? selection.categoryName : null
@@ -86,6 +95,16 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const isClassMode =
     props.viewMode === 'weight-class' && props.dualRingInnerData && props.dualRingOuterData
 
+  // weight-class 用 (二重ドーナツ)
+  const hasFocus = chartFocus !== 'all'
+  const innerData = props.dualRingInnerData ?? []
+  const outerData = props.dualRingOuterData ?? []
+
+  // 標準モード用
+  const hasCategorySelection = selectedCategoryName !== null
+  const baseColor = props.selectedCategory?.color ?? DEFAULT_COLOR
+  const itemCount = props.selectedCategory?.sortedItems?.length ?? 1
+
   return (
     <div
       className="relative flex items-center justify-center p-2 flex-1"
@@ -94,33 +113,154 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           {isClassMode ? (
-            <DualRingPieBody
-              innerData={props.dualRingInnerData!}
-              outerData={props.dualRingOuterData!}
-              selectedCategories={props.selectedCategories}
-              chartFocus={chartFocus}
-              outerActiveIndex={outerActiveIndex}
-              innerActiveIndex={innerActiveIndex}
-              setOuterActiveIndex={setOuterActiveIndex}
-              setInnerActiveIndex={setInnerActiveIndex}
-              onInnerClick={props.onInnerRingClick}
-              onOuterClick={props.onDualRingOuterClick}
-            />
+            <>
+              {/* 外輪: カテゴリ or Big3 内訳 */}
+              <Pie
+                data={outerData}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                outerRadius={outerRadiusConfig.outer}
+                innerRadius={outerRadiusConfig.inner}
+                activeShape={ActiveCalloutShape as any}
+                activeIndex={outerActiveIndex ?? undefined}
+                onClick={(entry: DonutSegment) => props.onDualRingOuterClick(entry.id)}
+                onMouseEnter={(_: DonutSegment, idx: number) => setOuterActiveIndex(idx)}
+                onMouseLeave={() => setOuterActiveIndex(null)}
+                className="cursor-pointer"
+              >
+                {outerData.map((entry, index) => {
+                  const isSelected = props.selectedCategories.includes(entry.label)
+                  const darkFill = darkenColor(entry.color, 0.15)
+                  const baseOpacity = hasFocus ? 0.5 : 0.7
+                  return (
+                    <Cell
+                      key={`dual-outer-${index}`}
+                      fill={isSelected ? darkFill : entry.color}
+                      stroke={COLORS.white}
+                      strokeWidth={isSelected ? 2 : 1}
+                      opacity={isSelected ? 0.95 : baseOpacity}
+                      style={cellTransition}
+                    />
+                  )
+                })}
+              </Pie>
+              {/* 内輪: Big3 / Other */}
+              <Pie
+                data={innerData}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                outerRadius={innerRadiusConfig.outer}
+                innerRadius={innerRadiusConfig.inner}
+                activeShape={ActiveCalloutShape as any}
+                activeIndex={innerActiveIndex ?? undefined}
+                onClick={(entry: DonutSegment) => props.onInnerRingClick(entry.id)}
+                onMouseEnter={(_: DonutSegment, idx: number) => setInnerActiveIndex(idx)}
+                onMouseLeave={() => setInnerActiveIndex(null)}
+                className="cursor-pointer"
+              >
+                {innerData.map((entry, index) => {
+                  const isFocused = chartFocus === entry.id
+                  const hasOther = chartFocus !== 'all' && chartFocus !== entry.id
+                  const darkFill = darkenColor(entry.color, 0.25)
+                  return (
+                    <Cell
+                      key={`dual-inner-${index}`}
+                      fill={isFocused ? darkFill : entry.color}
+                      stroke={isFocused ? darkFill : COLORS.white}
+                      strokeWidth={isFocused ? 3 : 2}
+                      opacity={isFocused || !hasOther ? 1 : 0.35}
+                      style={{
+                        ...cellTransition,
+                        filter: isFocused ? `drop-shadow(0 0 8px ${entry.color}aa)` : 'none',
+                      }}
+                    />
+                  )
+                })}
+              </Pie>
+            </>
           ) : (
-            <StandardPieBody
-              sortedData={props.sortedData}
-              outerPieData={props.outerPieData}
-              selectedCategory={props.selectedCategory}
-              selectedCategoryName={selectedCategoryName}
-              selectedItemId={selectedItemId}
-              outerActiveIndex={outerActiveIndex}
-              innerActiveIndex={innerActiveIndex}
-              setOuterActiveIndex={setOuterActiveIndex}
-              setInnerActiveIndex={setInnerActiveIndex}
-              onCategoryClick={props.onCategoryClick}
-              onItemClick={props.onItemClick}
-              onItemHover={props.onItemHover}
-            />
+            <>
+              {/* 外側円: 選択カテゴリのアイテム (先に描画して背面配置) */}
+              {selectedCategoryName && (
+                <Pie
+                  data={props.outerPieData}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={outerRadiusConfig.outer}
+                  innerRadius={outerRadiusConfig.inner}
+                  activeShape={ActiveCalloutShape as any}
+                  activeIndex={outerActiveIndex ?? undefined}
+                  onClick={(entry: OuterPieEntry) => props.onItemClick(entry.id)}
+                  onMouseEnter={(entry: OuterPieEntry, idx: number) => {
+                    setOuterActiveIndex(idx)
+                    props.onItemHover?.(entry?.id ?? null)
+                  }}
+                  onMouseLeave={() => {
+                    setOuterActiveIndex(null)
+                    props.onItemHover?.(null)
+                  }}
+                  className="cursor-pointer"
+                >
+                  {props.outerPieData.map((item, index) => {
+                    const isSelected = selectedItemId === item.id
+                    const color = generateItemColor(baseColor, index, itemCount)
+                    const darkFill = darkenHslColor(color, 0.2)
+                    const darkStroke = darkenColor(baseColor, 0.2)
+                    return (
+                      <Cell
+                        key={`item-${index}`}
+                        fill={isSelected ? darkFill : color}
+                        stroke={isSelected ? darkStroke : COLORS.white}
+                        strokeWidth={isSelected ? 2 : 1}
+                        opacity={isSelected ? 1 : 0.85}
+                        style={{
+                          ...cellTransition,
+                          filter: isSelected ? `drop-shadow(0 0 6px ${darkStroke}99)` : 'none',
+                        }}
+                      />
+                    )
+                  })}
+                </Pie>
+              )}
+              {/* 内側円: カテゴリ (最後に描画して前面配置) */}
+              <Pie
+                data={props.sortedData}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                outerRadius={innerRadiusConfig.outer}
+                innerRadius={innerRadiusConfig.inner}
+                activeShape={ActiveCalloutShape as any}
+                activeIndex={innerActiveIndex ?? undefined}
+                onClick={(entry: SortedChartCategory) => props.onCategoryClick(entry.name)}
+                onMouseEnter={(_: SortedChartCategory, idx: number) => setInnerActiveIndex(idx)}
+                onMouseLeave={() => setInnerActiveIndex(null)}
+                className="cursor-pointer"
+              >
+                {props.sortedData.map((entry) => {
+                  const color = getCategoryColor(entry.name)
+                  const isSelected = selectedCategoryName === entry.name
+                  const darkFill = darkenColor(color, 0.15)
+                  const darkStroke = darkenColor(color, 0.2)
+                  return (
+                    <Cell
+                      key={`category-${entry.name}`}
+                      fill={isSelected ? darkFill : color}
+                      stroke={isSelected ? darkStroke : COLORS.white}
+                      strokeWidth={isSelected ? 2 : 1}
+                      opacity={hasCategorySelection && !isSelected ? 0.4 : 1}
+                      style={{
+                        ...cellTransition,
+                        filter: isSelected ? `drop-shadow(0 0 6px ${darkStroke}99)` : 'none',
+                      }}
+                    />
+                  )
+                })}
+              </Pie>
+            </>
           )}
         </PieChart>
       </ResponsiveContainer>
