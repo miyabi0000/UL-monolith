@@ -35,11 +35,15 @@ const actionButtonStyle = {
 
 const actionButtonClass = 'text-2xs font-medium px-2 py-0.5 rounded transition-colors hover:bg-gray-100';
 
-/** 画像なし時のプレースホルダー */
-const ImagePlaceholder: React.FC<{ name: string; className?: string }> = ({ name, className = '' }) => (
+/** 画像なし/読込失敗時のプレースホルダー */
+const ImagePlaceholder: React.FC<{ name: string; className?: string; style?: React.CSSProperties }> = ({
+  name,
+  className = '',
+  style,
+}) => (
   <div
     className={`w-full flex items-center justify-center ${className}`}
-    style={{ backgroundColor: COLORS.gray[100] }}
+    style={{ backgroundColor: COLORS.gray[100], ...style }}
   >
     <span className="text-xs text-center px-2 truncate" style={{ color: COLORS.text.muted }}>
       {name}
@@ -192,17 +196,27 @@ const CardGridView: React.FC<CardGridViewProps> = ({
                     </button>
                   )}
 
-                  {/* 画像（object-contain で見切れ防止） */}
+                  {/* 画像（object-contain で見切れ防止、ロード失敗時は name プレースホルダーに差替え） */}
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
                       alt={item.name}
                       className="w-full aspect-[4/3] object-contain bg-gray-50"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement | null;
+                        if (fallback) fallback.style.display = '';
+                      }}
                     />
-                  ) : (
-                    <ImagePlaceholder name={item.name} className="aspect-[4/3]" />
-                  )}
+                  ) : null}
+                  {/* img が表示されない / 失敗した場合のフォールバック */}
+                  <ImagePlaceholder
+                    name={item.name}
+                    className="aspect-[4/3]"
+                    style={item.imageUrl ? { display: 'none' } : undefined}
+                  />
                 </div>
 
                 {/* フルワイド展開パネル（行の下に挿入） */}
