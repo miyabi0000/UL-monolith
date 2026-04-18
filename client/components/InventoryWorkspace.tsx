@@ -181,10 +181,18 @@ export default function InventoryWorkspace({
   /** ChatSidebar の "+" / URL 入口の代替: Chat を開く */
   const handleOpenChat = useCallback(() => setShowChat(true), [setShowChat]);
 
-  /** Compare アイコン押下: リストを compare モードにして選択 UI を起こす */
-  const handleEnterCompareMode = useCallback(() => {
-    setGearViewMode('compare');
-    setShowCheckboxes(true);
+  /**
+   * Chat の 📋 Compare アイコン押下: compare モードを toggle する。
+   * GearViewToggle から Compare セグメントを外した分、Chat アイコンが唯一の
+   * エントリ/離脱口になるため toggle 動作で両方向を扱う。
+   * - 離脱時: checkbox 選択も解除する
+   */
+  const handleToggleCompareMode = useCallback(() => {
+    setGearViewMode((prev) => {
+      const nextIsCompare = prev !== 'compare';
+      setShowCheckboxes(nextIsCompare);
+      return nextIsCompare ? 'compare' : 'table';
+    });
   }, [setShowCheckboxes]);
 
   const routeMapQuery = (activePack?.routeName || activePack?.name || '').trim();
@@ -364,7 +372,8 @@ export default function InventoryWorkspace({
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         onGearExtracted={handleGearExtracted}
-        onEnterCompareMode={handleEnterCompareMode}
+        onToggleCompareMode={handleToggleCompareMode}
+        isCompareMode={gearViewMode === 'compare'}
         categories={categories}
         existingItemCount={gearItems.length}
       />
