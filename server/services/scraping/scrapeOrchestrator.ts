@@ -5,6 +5,7 @@ import { normalizeUrl } from './normalizeUrl.js';
 import { db } from '../../database/connection.js';
 import { extractSnippets } from './snippet.js';
 import { llmFallback } from '../llm/llmFallback.js';
+import { validateAndSanitize } from './validateResult.js';
 
 /**
  * スクレイピング入口オーケストレータ
@@ -75,6 +76,11 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
       console.log(`[Orchestrator] LLM fallback triggered for ${url}`);
       data = await tryLlmFallback(url, data, scrapeResult.html);
     }
+
+    // ── 値域検証・サニタイズ ──
+    // 異常値 (負の重量、カテゴリ名が brand に混入 等) をここで除去。
+    // 必ず LLM 後、キャッシュ前に実行して不正データが永続化されないようにする。
+    data = validateAndSanitize(data);
 
     const failureReasons = detectFailureReasons(data);
 

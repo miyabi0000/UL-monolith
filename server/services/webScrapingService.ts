@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { LLMExtractionResult } from '../models/types.js';
 import { normalizeBrand, extractBrandFromText, getBrandFromDomain } from '../utils/brandUtils.js';
 import { CategoryMatcher } from './categoryMatcher.js';
-import { extractJsonLd, extractOgp, OgpData } from './scraping/headParsers.js';
+import { extractJsonLd, extractOgp, extractMicrodata, OgpData, MicrodataProduct } from './scraping/headParsers.js';
 import { extractWeight as extractWeightFromText } from '../utils/scrapingHelpers.js';
 
 /**
@@ -47,34 +47,35 @@ export class WebScrapingService {
 
   /**
    * 基本情報抽出（強化版）
-   * JSON-LD / OGP を1回だけパースして各メソッドに渡す
+   * JSON-LD / OGP / microdata を1回だけパースして各メソッドに渡す
    */
   private extractBasicInfo(html: string, url: string): LLMExtractionResult {
     const $ = cheerio.load(html);
     const extractedFields: string[] = [];
 
-    // JSON-LD / OGP を1回だけ抽出（キャッシュ）
+    // 構造化データを1回だけ抽出（キャッシュ）
     const jsonLd = extractJsonLd($);
     const ogp = extractOgp($);
+    const microdata = extractMicrodata($);
 
     // 製品名（強化版）
-    const name = this.extractName($, jsonLd, ogp);
+    const name = this.extractName($, jsonLd, ogp, microdata);
     if (name) extractedFields.push('name');
 
     // ブランド（強化版）
-    const brand = this.extractBrand($, url, jsonLd, ogp, name);
+    const brand = this.extractBrand($, url, jsonLd, ogp, microdata, name);
     if (brand) extractedFields.push('brand');
 
     // 価格（強化版）
-    const priceCents = this.extractPrice($, jsonLd);
+    const priceCents = this.extractPrice($, jsonLd, ogp, microdata);
     if (priceCents) extractedFields.push('priceCents');
 
-    // 重量（新規）
-    const weightGrams = this.extractWeight($);
+    // 重量（新規）: microdata の weight プロパティも試す
+    const weightGrams = this.extractWeight($, microdata);
     if (weightGrams) extractedFields.push('weightGrams');
 
     // 画像URL
-    const imageUrl = this.extractImage($, url, jsonLd, ogp);
+    const imageUrl = this.extractImage($, url, jsonLd, ogp, microdata);
     if (imageUrl) extractedFields.push('imageUrl');
 
     // カテゴリ
@@ -99,19 +100,30 @@ export class WebScrapingService {
 
   /**
    * 製品名抽出（強化版）
+   * 優先順: JSON-LD > microdata > OGP > HTML セレクタ
    */
-  private extractName($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
-    // JSON-LD構造化データから取得
+  private extractName(
+    $: cheerio.CheerioAPI,
+    jsonLd: Record<string, unknown> | null,
+    ogp: OgpData,
+    microdata: MicrodataProduct,
+  ): string | undefined {
+    // 1. JSON-LD構造化データから取得
     if (jsonLd?.name && typeof jsonLd.name === 'string') {
       return jsonLd.name;
     }
 
-    // OGタグから取得
+    // 2. microdata から取得
+    if (microdata.name && microdata.name.length > 3 && microdata.name.length < 300) {
+      return microdata.name;
+    }
+
+    // 3. OGタグから取得
     if (ogp.title && ogp.title.length > 3 && ogp.title.length < 200) {
       return this.cleanTitle(ogp.title);
     }
 
-    // HTML要素から取得
+    // 4. HTML要素から取得
     const selectors = [
       'h1',
       '.product-title',
@@ -131,25 +143,38 @@ export class WebScrapingService {
 
   /**
    * ブランド抽出（統合版）
+   * 優先順: JSON-LD > microdata > ドメイン判定 > OGP > HTML セレクタ > 製品名からの推測
    */
-  private extractBrand($: cheerio.CheerioAPI, url: string, jsonLd: Record<string, unknown> | null, ogp: OgpData, name?: string): string | undefined {
-    // JSON-LD構造化データから取得
+  private extractBrand(
+    $: cheerio.CheerioAPI,
+    url: string,
+    jsonLd: Record<string, unknown> | null,
+    ogp: OgpData,
+    microdata: MicrodataProduct,
+    name?: string,
+  ): string | undefined {
+    // 1. JSON-LD構造化データから取得
     if (jsonLd?.brand) {
       const brand = jsonLd.brand as string | { name?: string };
       const brandName = typeof brand === 'string' ? brand : brand?.name;
       if (brandName) return brandName;
     }
 
-    // ドメインから判定
+    // 2. microdata から取得
+    if (microdata.brand && microdata.brand.length > 1 && microdata.brand.length < 50) {
+      return microdata.brand;
+    }
+
+    // 3. ドメインから判定
     const domainBrand = getBrandFromDomain(url);
     if (domainBrand) return domainBrand;
 
-    // OGPから取得
+    // 4. OGPから取得
     if (ogp.brand && ogp.brand.length > 1 && ogp.brand.length < 50) {
       return ogp.brand;
     }
 
-    // HTML要素から取得
+    // 5. HTML要素から取得
     const selectors = [
       '[itemprop="brand"]',
       '.brand-name',
@@ -165,7 +190,7 @@ export class WebScrapingService {
       }
     }
 
-    // 製品名から抽出
+    // 6. 製品名から抽出
     if (name) {
       return extractBrandFromText(name);
     }
@@ -173,9 +198,15 @@ export class WebScrapingService {
 
   /**
    * 価格抽出（強化版）
+   * 優先順: JSON-LD offers > microdata > OGP (product:price) > HTML セレクタ
    */
-  private extractPrice($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null): number | undefined {
-    // JSON-LD構造化データから取得
+  private extractPrice(
+    $: cheerio.CheerioAPI,
+    jsonLd: Record<string, unknown> | null,
+    ogp: OgpData,
+    microdata: MicrodataProduct,
+  ): number | undefined {
+    // 1. JSON-LD構造化データから取得
     if (jsonLd) {
       const offers = jsonLd.offers as Record<string, unknown> | undefined;
       const price = offers?.price ?? jsonLd.price;
@@ -187,7 +218,19 @@ export class WebScrapingService {
       }
     }
 
-    // HTML要素から取得
+    // 2. microdata から取得
+    if (microdata.price) {
+      const numPrice = parseFloat(microdata.price.replace(/[^0-9.]/g, ''));
+      if (numPrice > 0) return Math.round(numPrice * 100);
+    }
+
+    // 3. OGP product:price:amount から取得
+    if (ogp.priceAmount) {
+      const numPrice = parseFloat(ogp.priceAmount);
+      if (numPrice > 0) return Math.round(numPrice * 100);
+    }
+
+    // 4. HTML要素から取得
     const selectors = [
       '.price',
       '.product-price',
@@ -199,7 +242,7 @@ export class WebScrapingService {
     for (const selector of selectors) {
       const element = $(selector).first();
       const priceText = element.attr('content') || element.text().trim();
-      
+
       // 価格パターン: ¥3,850 / $38.50 / 3850円
       const match = priceText.match(/[¥$]?\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
       if (match) {
@@ -211,9 +254,16 @@ export class WebScrapingService {
 
   /**
    * 重量抽出（強化版）
+   * 優先: microdata の weight プロパティ → 通常のテキスト検索
    */
-  private extractWeight($: cheerio.CheerioAPI): number | undefined {
-    // より広範囲から重量を検索
+  private extractWeight($: cheerio.CheerioAPI, microdata: MicrodataProduct): number | undefined {
+    // 1. microdata の weight から取得 (例: "230g" / "0.23 kg")
+    if (microdata.weight) {
+      const w = extractWeightFromText(microdata.weight);
+      if (w) return w;
+    }
+
+    // 2. より広範囲から重量を検索
     const searchSelectors = [
       '.product-description',
       '[class*="description"]',
@@ -239,9 +289,16 @@ export class WebScrapingService {
 
   /**
    * 画像URL抽出（強化版）
+   * 優先順: JSON-LD > microdata > OGP > HTML セレクタ
    */
-  private extractImage($: cheerio.CheerioAPI, baseUrl: string, jsonLd: Record<string, unknown> | null, ogp: OgpData): string | undefined {
-    // JSON-LD構造化データから取得
+  private extractImage(
+    $: cheerio.CheerioAPI,
+    baseUrl: string,
+    jsonLd: Record<string, unknown> | null,
+    ogp: OgpData,
+    microdata: MicrodataProduct,
+  ): string | undefined {
+    // 1. JSON-LD構造化データから取得
     if (jsonLd?.image) {
       const image = jsonLd.image as string | string[];
       const imageUrl = Array.isArray(image) ? image[0] : image;
@@ -250,7 +307,13 @@ export class WebScrapingService {
       }
     }
 
-    // OGPから取得（集約済み）
+    // 2. microdata から取得
+    if (microdata.image) {
+      const normalized = this.normalizeUrl(microdata.image, baseUrl);
+      if (normalized) return normalized;
+    }
+
+    // 3. OGPから取得（集約済み）
     const ogpImages = [ogp.image, ogp.twitterImage, ogp.imageSecure];
     for (const src of ogpImages) {
       if (src) {
