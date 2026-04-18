@@ -395,59 +395,67 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
               )}
             </div>
 
-            {/* 右側: 統合ツールバー */}
-            <div className="inline-flex items-center gap-1">
+            {/* 右側ツールバー: 表示切替 と アクション を階層分離
+             *  - 表示切替: Card / Table / Compare (GearViewToggle, SegmentedControl)
+             *  - アクション: Manage categories / Edit mode (独立アイコンボタン)
+             * 2 グループ間にスペーサー (gap-3) を入れて視覚的に区別。 */}
+            <div className="inline-flex items-center gap-3">
+              {/* グループ A: 表示切替 */}
               {onGearViewModeChange && (
-                <GearViewToggle
-                  gearViewMode={gearViewMode ?? 'table'}
-                  showCheckboxes={showCheckboxes}
-                  onGearViewModeChange={onGearViewModeChange}
-                  onToggleCheckboxes={onToggleCheckboxes}
-                />
+                <div className="inline-flex items-center">
+                  <GearViewToggle
+                    gearViewMode={gearViewMode ?? 'table'}
+                    showCheckboxes={showCheckboxes}
+                    onGearViewModeChange={onGearViewModeChange}
+                    onToggleCheckboxes={onToggleCheckboxes}
+                  />
+                </div>
               )}
 
-              {onShowCategoryManager && (
+              {/* グループ B: アクション */}
+              <div className="inline-flex items-center gap-1">
+                {onShowCategoryManager && (
+                  <button
+                    type="button"
+                    onClick={onShowCategoryManager}
+                    className="icon-btn"
+                    aria-label="Manage categories"
+                    title="Manage categories"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
+                    Card view では checkbox 表示が未サポートなので、Edit 起動時は
+                    Table view に自動切替する。Compare モード中は無効。 */}
                 <button
                   type="button"
-                  onClick={onShowCategoryManager}
-                  className="icon-btn"
-                  aria-label="Manage categories"
-                  title="Manage categories"
+                  onClick={() => {
+                    if (gearViewMode === 'compare') return
+                    if (!showCheckboxes && gearViewMode === 'card' && onGearViewModeChange) {
+                      onGearViewModeChange('table')
+                    }
+                    onToggleCheckboxes()
+                  }}
+                  disabled={gearViewMode === 'compare'}
+                  className={`icon-btn ${
+                    showCheckboxes && gearViewMode !== 'compare'
+                      ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
+                      : gearViewMode === 'compare'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                  }`}
+                  aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
+                  title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </button>
-              )}
-
-              {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
-                  Card view では checkbox 表示が未サポートなので、Edit 起動時は
-                  Table view に自動切替する。Compare モード中は無効。 */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (gearViewMode === 'compare') return
-                  // Card モードで Edit を押した場合は Table に切替
-                  if (!showCheckboxes && gearViewMode === 'card' && onGearViewModeChange) {
-                    onGearViewModeChange('table')
-                  }
-                  onToggleCheckboxes()
-                }}
-                disabled={gearViewMode === 'compare'}
-                className={`icon-btn ${
-                  showCheckboxes && gearViewMode !== 'compare'
-                    ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
-                    : gearViewMode === 'compare'
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                }`}
-                aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
-                title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
+              </div>
             </div>
           </div>
 

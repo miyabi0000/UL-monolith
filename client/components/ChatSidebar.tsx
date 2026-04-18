@@ -41,10 +41,6 @@ interface ChatSidebarProps {
   onClose: () => void;
   /** Add モード: LLM 抽出結果を親にコールバック */
   onGearExtracted?: (gearData: any) => void;
-  /** Compare モードへの toggle（enter / exit 両方向） */
-  onToggleCompareMode?: () => void;
-  /** 現在 Compare モード中か（アイコンのアクティブ表示用） */
-  isCompareMode?: boolean;
   categories?: any[];
   existingItemCount?: number;
   /** Advisor モード: コンテキスト / 編集 apply / gear ジャンプ */
@@ -216,8 +212,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   isOpen,
   onClose,
   onGearExtracted,
-  onToggleCompareMode,
-  isCompareMode = false,
   categories = [],
   existingItemCount = 0,
   advisorContext,
@@ -461,10 +455,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     }
   };
 
-  const handleCompare = () => {
-    if (onToggleCompareMode) onToggleCompareMode();
-  };
-
   // ==================== Advisor モード: ヘッダー情報 ====================
   const advisorHeaderInfo = useMemo(() => {
     if (!advisorContext) return null;
@@ -661,36 +651,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         border-t border-gray-200 dark:border-gray-700">
           {mode === 'add' ? (
             <>
-              {/* Compare アクション */}
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={handleCompare}
-                  disabled={!onToggleCompareMode || (!isCompareMode && existingItemCount < 2)}
-                  title={
-                    isCompareMode
-                      ? 'Exit compare mode'
-                      : existingItemCount < 2
-                        ? 'Need at least 2 items to compare'
-                        : 'Compare items'
-                  }
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border
-                              disabled:opacity-40 disabled:cursor-not-allowed
-                              transition-colors ${
-                                isCompareMode
-                                  ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-800 dark:border-gray-100 hover:opacity-80'
-                                  : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                              }`}
-                  aria-label={isCompareMode ? 'Exit compare mode' : 'Enter compare mode'}
-                  aria-pressed={isCompareMode}
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                  <span>{isCompareMode ? 'Exit Compare' : 'Compare'}</span>
-                </button>
-              </div>
-
               <div className="flex items-end gap-2">
                 <textarea
                   ref={addInputRef}

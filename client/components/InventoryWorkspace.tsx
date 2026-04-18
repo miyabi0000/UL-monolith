@@ -197,20 +197,6 @@ export default function InventoryWorkspace({
     setShowLogin(false);
   };
 
-  /**
-   * Chat の 📋 Compare アイコン押下: compare モードを toggle する。
-   * GearViewToggle から Compare セグメントを外した分、Chat アイコンが唯一の
-   * エントリ/離脱口になるため toggle 動作で両方向を扱う。
-   * - 離脱時: checkbox 選択も解除する
-   */
-  const handleToggleCompareMode = useCallback(() => {
-    setGearViewMode((prev) => {
-      const nextIsCompare = prev !== 'compare';
-      setShowCheckboxes(nextIsCompare);
-      return nextIsCompare ? 'compare' : 'table';
-    });
-  }, [setShowCheckboxes]);
-
   // Route Map は pack.routeName が明示的に設定されている時だけ表示する。
   // pack.name フォールバックを使うと「あーだこーだ」のような非地名でも
   // 世界地図が埋め込まれて縦スペースが無駄になる。
@@ -393,8 +379,6 @@ export default function InventoryWorkspace({
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         onGearExtracted={handleGearExtracted}
-        onToggleCompareMode={handleToggleCompareMode}
-        isCompareMode={gearViewMode === 'compare'}
         advisorContext={advisorContext}
         onApplyEdit={handleAdvisorApplyEdit}
         onFocusGear={handleFocusGear}
