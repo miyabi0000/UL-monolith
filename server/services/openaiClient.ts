@@ -48,6 +48,58 @@ export class OpenAIClient {
   }
 
   /**
+   * JSON mode での抽出系呼び出し
+   *
+   * OpenAI の `response_format: { type: 'json_object' }` を強制して、
+   * 返り値が必ず parseable な JSON object になることを保証する。
+   * system prompt に "JSON" の文字を含める必要があるため、JSON mode の
+   * 利用には呼び出し側プロンプトで明示的に JSON で返す指示を入れること。
+   *
+   * @param systemPrompt JSON 返却指示を含む system prompt
+   * @param userMessage 入力テキスト
+   * @param options.model モデル上書き。未指定時はデフォルト (gpt-4o)
+   * @param options.maxTokens 最大トークン数。デフォルト 800
+   * @param options.temperature 温度。デフォルト 0.1 (抽出タスク向け)
+   * @returns パース済み JSON オブジェクト
+   */
+  async chatCompletionJson<T = unknown>(
+    systemPrompt: string,
+    userMessage: string,
+    options: {
+      model?: string;
+      maxTokens?: number;
+      temperature?: number;
+    } = {},
+  ): Promise<T> {
+    if (!this.openai) {
+      throw new Error('OpenAI client not available');
+    }
+
+    const completion = await this.openai.chat.completions.create({
+      model: options.model ?? this.defaultModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: options.temperature ?? 0.1,
+      max_tokens: options.maxTokens ?? 800,
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No response from OpenAI');
+    }
+
+    // JSON mode では必ず JSON が返るが、念のため try-catch
+    try {
+      return JSON.parse(content) as T;
+    } catch (err) {
+      throw new Error(`Failed to parse JSON response: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  /**
    * マルチターン会話API呼び出し
    * @param systemPrompt システムプロンプト
    * @param messages 会話履歴（user/assistantの交互メッセージ）
