@@ -421,11 +421,16 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
               )}
 
               {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
-                  Compare モード中は無効（Compare 中は別の checkbox 選択が走っているため） */}
+                  Card view では checkbox 表示が未サポートなので、Edit 起動時は
+                  Table view に自動切替する。Compare モード中は無効。 */}
               <button
                 type="button"
                 onClick={() => {
                   if (gearViewMode === 'compare') return
+                  // Card モードで Edit を押した場合は Table に切替
+                  if (!showCheckboxes && gearViewMode === 'card' && onGearViewModeChange) {
+                    onGearViewModeChange('table')
+                  }
                   onToggleCheckboxes()
                 }}
                 disabled={gearViewMode === 'compare'}
