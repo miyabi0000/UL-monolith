@@ -77,7 +77,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
         </div>
 
-        {/* 右: コントロール群 */}
+        {/* 右: コントロール群
+         * - Chat / Edit Profile / Dark mode は常時表示
+         * - 未ログイン時: Login ボタンを直接表示（メニューに埋め込まない）
+         * - ログイン済み: avatar → User menu（userName + Logout のみ） */}
         <div className="profile-user-menu relative flex items-center gap-1">
           {onShowChat && (
             <button
@@ -107,60 +110,65 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           <button
             type="button"
-            onClick={() => setUserMenuOpen((p) => !p)}
+            onClick={toggleDarkMode}
             className="icon-btn"
-            aria-label="User menu"
+            aria-label="Toggle dark mode"
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {isAuthenticated ? (
-              <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
-                {userInitial}
-              </span>
+            {isDark ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
             ) : (
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
           </button>
 
-          {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
-              {isAuthenticated && userName && (
-                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 truncate">
-                  {userName}
-                </div>
-              )}
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={onShowLogin}
+              className="h-control px-3 rounded-control text-xs font-semibold
+                         bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900
+                         hover:opacity-80 transition-opacity"
+              aria-label="Login"
+              title="Login"
+            >
+              Login
+            </button>
+          ) : (
+            <>
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
-                onClick={() => { toggleDarkMode(); /* keep menu open for quick revert */ }}
+                onClick={() => setUserMenuOpen((p) => !p)}
+                className="icon-btn"
+                aria-label="User menu"
+                title={userName || 'User'}
               >
-                <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
-                <svg className="w-4 h-4 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {isDark ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  )}
-                </svg>
+                <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
+                  {userInitial}
+                </span>
               </button>
-              {isAuthenticated ? (
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
-                  onClick={() => { onLogout(); setUserMenuOpen(false); }}
-                >
-                  Logout
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border-t border-gray-100 dark:border-gray-700"
-                  onClick={() => { onShowLogin(); setUserMenuOpen(false); }}
-                >
-                  Login
-                </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50">
+                  {userName && (
+                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700 truncate">
+                      {userName}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => { onLogout(); setUserMenuOpen(false); }}
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

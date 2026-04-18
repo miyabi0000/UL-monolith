@@ -106,60 +106,53 @@ const AppDock: React.FC<AppDockProps> = ({
           )}
         </button>
 
-        {/* ユーザーメニュー（モバイルではProfileHeaderに統合済みのため非表示） */}
-        <div className="hidden sm:block relative">
+        {/* 未ログイン: Login ボタンを直接表示
+         * ログイン済み: avatar → dropdown (userName + Logout のみ) */}
+        {!isAuthenticated ? (
           <button
             type="button"
-            className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
-            onClick={() => setUserMenuOpen((prev) => !prev)}
-            aria-label="User menu"
+            onClick={onShowLogin}
+            className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-100 hover:bg-white dark:hover:bg-gray-700"
+            aria-label="Login"
+            title="Login"
           >
-            {isAuthenticated ? (
+            Login
+          </button>
+        ) : (
+          <div className="hidden sm:block relative">
+            <button
+              type="button"
+              className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
+              onClick={() => setUserMenuOpen((prev) => !prev)}
+              aria-label="User menu"
+              title={userName || 'User'}
+            >
               <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                 {userInitial}
               </span>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            )}
-          </button>
+            </button>
 
-          {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-              {isAuthenticated ? (
-                <>
-                  {userName && (
-                    <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
-                      {userName}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      onLogout();
-                      setUserMenuOpen(false);
-                    }}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+                {userName && (
+                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
+                    {userName}
+                  </div>
+                )}
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => {
-                    onShowLogin();
+                    onLogout();
                     setUserMenuOpen(false);
                   }}
                 >
-                  Login
+                  Logout
                 </button>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
