@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ProfileSettings } from '../hooks/useProfile';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface ProfileHeaderProps {
   profile: ProfileSettings;
@@ -8,7 +10,7 @@ interface ProfileHeaderProps {
   isAuthenticated: boolean;
   userName?: string;
   onLogout: () => void;
-  onShowAdvisor?: () => void;
+  onShowChat?: () => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -17,36 +19,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isAuthenticated,
   userName,
   onLogout,
-  onShowAdvisor,
+  onShowChat,
 }) => {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.profile-user-menu')) setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [userMenuOpen]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    const next = !root.classList.contains('dark');
-    root.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-    setIsDark(next);
-  };
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(userMenuRef, () => setUserMenuOpen(false), userMenuOpen);
 
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
@@ -57,7 +35,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <img src={profile.headerImageUrl} alt="" className="h-full w-full object-cover" />
         </div>
       )}
-      <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="px-3 py-2 sm:px-4 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         {/* 左: プロフィール情報 */}
         <div className="min-w-0 flex items-center gap-3" style={{ minHeight: 'var(--control-h)' }}>
           <span
@@ -67,26 +45,29 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {(profile.displayName?.trim()?.charAt(0) || 'U').toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{profile.headerTitle}</p>
+            <p className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 truncate">{profile.headerTitle}</p>
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{profile.displayName}</h2>
             {profile.bio && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{profile.bio}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[240px] sm:max-w-xs">{profile.bio}</p>
             )}
           </div>
         </div>
 
-        {/* 右: コントロール群 */}
-        <div className="profile-user-menu relative flex items-center gap-1">
-          {onShowAdvisor && (
+        {/* 右: コントロール群
+         * - Chat / Edit Profile / Dark mode は常時表示
+         * - 未ログイン時: Login ボタンを直接表示（メニューに埋め込まない）
+         * - ログイン済み: avatar → User menu（userName + Logout のみ） */}
+        <div ref={userMenuRef} className="relative flex items-center gap-1">
+          {onShowChat && (
             <button
               type="button"
-              onClick={onShowAdvisor}
+              onClick={onShowChat}
               className="icon-btn"
-              aria-label="UL Advisor"
-              title="ULギアアドバイザー"
+              aria-label="Open chat (Add / Advisor)"
+              title="Chat — add gear & advisor"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </button>
           )}
@@ -121,8 +102,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             )}
           </button>
 
-          {/* ユーザーメニュー: ProfileHeader は認証済みでのみ表示されるため、
-           * ログアウトのみを持つシンプルなメニューにする */}
+          {/* ユーザーメニュー: 未認証時は Landing 画面を表示するため、
+           * ProfileHeader は常に認証済み前提。ログアウトのみを持つ。 */}
           {isAuthenticated && (
             <>
               <button
@@ -130,6 +111,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 onClick={() => setUserMenuOpen((p) => !p)}
                 className="icon-btn"
                 aria-label="User menu"
+                title={userName || 'User'}
               >
                 <span className="h-5 w-5 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                   {userInitial}

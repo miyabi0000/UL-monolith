@@ -3,46 +3,36 @@ import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { useProfile } from '../hooks/useProfile';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import ProfileEditorModal from './ProfileEditorModal';
-import PackSettingsModal from './PackSettingsModal';
-import { GearItemWithCalculated } from '../utils/types';
 
 const fallbackUserId = 'local-user';
 
-export interface AdvisorPackScope {
-  /** アドバイザーに渡すアイテム一覧（パック選択中はそのパックのみ） */
-  items: GearItemWithCalculated[];
-  /** 選択中パック名（null = 全ギアスコープ） */
-  packName: string | null;
-}
-
 interface PacksPageProps {
   appState: ReturnType<typeof useAppState>;
-  onAdvisorScopeChange?: (scope: AdvisorPackScope) => void;
   // ProfileHeader に渡すコントロール
   isAuthenticated: boolean;
   userName?: string;
   onLogout: () => void;
-  onShowAdvisor?: () => void;
+  onShowChat?: () => void;
 }
 
 export default function PacksPage({
   appState,
-  onAdvisorScopeChange,
   isAuthenticated,
   userName,
   onLogout,
-  onShowAdvisor,
+  onShowChat,
 }: PacksPageProps) {
   const { user } = useAuth();
-  const { gearItems } = appState;
+  const { gearItems, showChat } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
   const { profile, updateField, showEditor, setShowEditor } = useProfile(user?.name);
+  const isMobile = useIsMobile();
 
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
-  const [showPackSettings, setShowPackSettings] = useState(false);
 
   // 選択中のパックが削除された場合のみリセット（nullはALLモードとして有効）
   useEffect(() => {
@@ -56,7 +46,6 @@ export default function PacksPage({
     [packs, selectedPackId]
   );
 
-  // アドバイザーのスコープを親に通知（パック選択変更時）
   const activePackItems = useMemo(
     () =>
       selectedPack
@@ -64,13 +53,6 @@ export default function PacksPage({
         : null,
     [selectedPack, gearItems]
   );
-
-  useEffect(() => {
-    onAdvisorScopeChange?.({
-      items: activePackItems ?? gearItems,
-      packName: selectedPack?.name ?? null,
-    });
-  }, [activePackItems, gearItems, selectedPack, onAdvisorScopeChange]);
 
   const handleCreatePack = (name: string) => {
     const next = createPack(name);
@@ -86,8 +68,16 @@ export default function PacksPage({
     }
   };
 
+  // Chat が開いているデスクトップではサイドバー分の右余白を確保して、
+  // ProfileHeader の右端アイコン（Chat / Edit / Dark / Login）が隠れないようにする。
+  const chatSidebarGutter = showChat && !isMobile ? { paddingRight: '400px' } : undefined;
+
   return (
-    <main id="inventory-overview" className="max-w-6xl mx-auto min-h-screen px-3 pt-4 pb-6 sm:px-6 md:px-8 lg:px-[16px]">
+    <main
+      id="inventory-overview"
+      className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-4 sm:px-4 md:px-6 lg:px-4 transition-[padding] duration-200"
+      style={chatSidebarGutter}
+    >
       <div className="flex min-h-0 flex-col gap-3">
         <ProfileHeader
           profile={profile}
@@ -95,7 +85,7 @@ export default function PacksPage({
           isAuthenticated={isAuthenticated}
           userName={userName}
           onLogout={onLogout}
-          onShowAdvisor={onShowAdvisor}
+          onShowChat={onShowChat}
         />
 
         <div className="min-h-0 flex-1">
@@ -112,7 +102,9 @@ export default function PacksPage({
             onSelectPack={setSelectedPackId}
             onCreatePack={handleCreatePack}
             onDeletePack={(packId) => { deletePack(packId); setSelectedPackId(null); }}
-            onOpenPackSettings={selectedPack ? () => setShowPackSettings(true) : undefined}
+            onUpdatePack={selectedPack ? (updates) => updatePack(selectedPack.id, updates) : undefined}
+            onCopyPackLink={selectedPack ? () => copyPublicLink(selectedPack.id) : undefined}
+            onOpenPackPublic={selectedPack ? () => window.open(`/p/${selectedPack.id}`, '_blank', 'noopener,noreferrer') : undefined}
           />
         </div>
       </div>
@@ -122,17 +114,6 @@ export default function PacksPage({
           profile={profile}
           onUpdate={updateField}
           onClose={() => setShowEditor(false)}
-        />
-      )}
-
-      {showPackSettings && selectedPack && (
-        <PackSettingsModal
-          pack={selectedPack}
-          onSave={(updates) => updatePack(selectedPack.id, updates)}
-          onDelete={() => deletePack(selectedPack.id)}
-          onCopyLink={() => copyPublicLink(selectedPack.id)}
-          onOpen={() => window.open(`/p/${selectedPack.id}`, '_blank', 'noopener,noreferrer')}
-          onClose={() => setShowPackSettings(false)}
         />
       )}
     </main>

@@ -11,7 +11,6 @@ import ChartHeader from './charts/ChartHeader'
 import ChartBody from './charts/ChartBody'
 import { ChartGeometryProvider } from './charts/context/ChartGeometryContext'
 import ChartBreadcrumb from './charts/ChartBreadcrumb'
-import GearActionMenu from './charts/GearActionMenu'
 import GearViewToggle from './charts/GearViewToggle'
 import { useCenterClickPulse } from './charts/hooks/useCenterClickPulse'
 import { useChartCalculations } from './charts/hooks/useChartCalculations'
@@ -51,9 +50,6 @@ interface ChartPanelProps {
   onEdit: (item: GearItemWithCalculated) => void
   onDelete: (id: string) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void // フィールド更新用
-  onShowForm?: () => void // + ADDボタン用（Manual Add）
-  onShowUrlImport?: () => void // + ADDボタン用（From URL）
-  onShowCategoryManager?: () => void // カテゴリ管理用
   gearViewMode?: 'table' | 'card' | 'compare' // ギア表示モード
   onGearViewModeChange?: (mode: 'table' | 'card' | 'compare') => void // モード変更ハンドラ
   showCheckboxes: boolean // チェックボックス表示状態
@@ -94,9 +90,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   onEdit,
   onDelete,
   onUpdateItem,
-  onShowForm,
-  onShowUrlImport,
-  onShowCategoryManager,
   gearViewMode,
   onGearViewModeChange,
   showCheckboxes,
@@ -138,7 +131,21 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   const [centerPulse, triggerCenterPulse] = useCenterClickPulse()
 
   const screenSize = useResponsiveSize()
-  const [isChartCollapsed, setIsChartCollapsed] = useState(false) // グラフ折りたたみ状態
+  // モバイルではデフォルトで折りたたんでリストを優先表示。ユーザーが展開したら
+  // 以降は localStorage で記憶する。
+  const [isChartCollapsed, setIsChartCollapsed] = useState(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('chartCollapsed') : null
+    if (saved === '0') return false
+    if (saved === '1') return true
+    // 初期値: モバイル幅は折りたたみ、デスクトップは展開
+    return typeof window !== 'undefined' && window.innerWidth < 640
+  })
+  // 展開状態の永続化
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('chartCollapsed', isChartCollapsed ? '1' : '0')
+    }
+  }, [isChartCollapsed])
   const [chartDisplayMode, setChartDisplayMode] = useState<'pie' | 'bar'>('pie') // チャート表示モード
   // 二重ドーナツ用状態
   const [chartFocus, setChartFocus] = useState<ChartFocus>('all')
@@ -346,9 +353,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
           weightClassSummaryCards={weightClassSummaryCards}
           chartFocus={chartFocus}
           onToggleChartFocus={handleToggleChartFocus}
-          totalWeight={totalWeight}
-          totalCost={totalCost}
-          itemCount={analysisItems.length}
         />
             </>
           )}
@@ -389,47 +393,55 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
               )}
             </div>
 
-            {/* 右側: 統合ツールバー */}
-            <div className="inline-flex items-center gap-1">
+            {/* 右側ツールバー: 表示切替 と アクション を階層分離
+             *  - 表示切替: Card / Table / Compare (GearViewToggle, SegmentedControl)
+             *  - アクション: Manage categories / Edit mode (独立アイコンボタン)
+             * 2 グループ間にスペーサー (gap-3) を入れて視覚的に区別。 */}
+            <div className="inline-flex items-center gap-3">
+              {/* グループ A: 表示切替 */}
               {onGearViewModeChange && (
-                <GearViewToggle
-                  gearViewMode={gearViewMode ?? 'table'}
-                  showCheckboxes={showCheckboxes}
-                  onGearViewModeChange={onGearViewModeChange}
-                  onToggleCheckboxes={onToggleCheckboxes}
-                />
+                <div className="inline-flex items-center">
+                  <GearViewToggle
+                    gearViewMode={gearViewMode ?? 'table'}
+                    showCheckboxes={showCheckboxes}
+                    onGearViewModeChange={onGearViewModeChange}
+                    onToggleCheckboxes={onToggleCheckboxes}
+                  />
+                </div>
               )}
 
-              <GearActionMenu
-                onShowForm={onShowForm}
-                onShowUrlImport={onShowUrlImport}
-                onShowCategoryManager={onShowCategoryManager}
-              />
-
-              {/* Edit(✏️)ボタン - Compareモード中は無効 */}
-              <button
-                onClick={() => {
-                  if (gearViewMode === 'compare') {
-                    // Compareモード中は編集モードに入れない
-                    return
-                  }
-                  onToggleCheckboxes()
-                }}
-                disabled={gearViewMode === 'compare'}
-                className={`icon-btn ${
-                  showCheckboxes
-                    ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
-                    : gearViewMode === 'compare'
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                }`}
-                aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
-                title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
+              {/* グループ B: アクション
+               * Note: カテゴリ管理 UI は一旦フロントから廃止。CategoryManager.tsx と
+               * useAppState の CRUD handlers は将来復活時のために残置。 */}
+              <div className="inline-flex items-center gap-1">
+                {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
+                    Card view では checkbox 表示が未サポートなので、Edit 起動時は
+                    Table view に自動切替する。Compare モード中は無効。 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (gearViewMode === 'compare') return
+                    if (!showCheckboxes && gearViewMode === 'card' && onGearViewModeChange) {
+                      onGearViewModeChange('table')
+                    }
+                    onToggleCheckboxes()
+                  }}
+                  disabled={gearViewMode === 'compare'}
+                  className={`icon-btn ${
+                    showCheckboxes && gearViewMode !== 'compare'
+                      ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
+                      : gearViewMode === 'compare'
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
+                  }`}
+                  aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
+                  title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -457,8 +469,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                 activePackItemIds={activePackItemIds}
                 onTogglePackItem={onTogglePackItem}
                 onAddItemsToPack={onAddItemsToPack}
-                onShowForm={onShowForm}
-                onShowUrlImport={onShowUrlImport}
               />
           </div>
         </Card>

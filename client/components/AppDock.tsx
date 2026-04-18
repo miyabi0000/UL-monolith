@@ -1,64 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface AppDockProps {
   onLogout: () => void;
   isAuthenticated: boolean;
   userName?: string;
-  onShowAdvisor?: () => void;
+  onShowChat?: () => void;
 }
 
 const AppDock: React.FC<AppDockProps> = ({
   onLogout,
   isAuthenticated,
   userName,
-  onShowAdvisor,
+  onShowChat,
 }) => {
   const location = useLocation();
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'));
-  }, []);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const onClickOutside = (event: MouseEvent) => {
-      if (!(event.target as Element).closest('.app-dock-user-menu')) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [userMenuOpen]);
-
-  const toggleDarkMode = () => {
-    const root = document.documentElement;
-    const nextDark = !root.classList.contains('dark');
-    if (nextDark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-    setIsDark(nextDark);
-  };
+  const dockRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(dockRef, () => setUserMenuOpen(false), userMenuOpen);
 
   const userInitial = (userName?.trim()?.charAt(0) || 'U').toUpperCase();
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div className="pointer-events-auto app-dock-user-menu relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
+      <div ref={dockRef} className="pointer-events-auto relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
@@ -71,18 +39,18 @@ const AppDock: React.FC<AppDockProps> = ({
           </a>
         )}
 
-        {onShowAdvisor && (
+        {onShowChat && (
           <button
             type="button"
             className="glass-header-chip h-11 sm:h-9 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
-            onClick={onShowAdvisor}
-            aria-label="UL Advisor"
-            title="ULギアアドバイザー"
+            onClick={onShowChat}
+            aria-label="Open chat (Add / Advisor)"
+            title="Chat — add gear & advisor"
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <span className="hidden sm:inline">Advisor</span>
+            <span className="hidden sm:inline">Chat</span>
           </button>
         )}
 
@@ -104,9 +72,9 @@ const AppDock: React.FC<AppDockProps> = ({
           )}
         </button>
 
-        {/* ユーザーメニュー（モバイルではProfileHeaderに統合済みのため非表示）
-         * AppDock は認証済みのときのみ App.tsx から描画されるので、
-         * 常にイニシャル + ログアウトメニューを表示する */}
+        {/* ユーザーメニュー（モバイルでは ProfileHeader に統合済みのため非表示）
+         * 未認証時は Landing 画面を表示するため、AppDock は常に認証済み前提。
+         * デスクトップ幅でのみ avatar → dropdown (userName + Logout) を表示。 */}
         {isAuthenticated && (
           <div className="hidden sm:block relative">
             <button
@@ -114,6 +82,7 @@ const AppDock: React.FC<AppDockProps> = ({
               className="glass-header-chip h-9 min-w-[36px] px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
               onClick={() => setUserMenuOpen((prev) => !prev)}
               aria-label="User menu"
+              title={userName || 'User'}
             >
               <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
                 {userInitial}

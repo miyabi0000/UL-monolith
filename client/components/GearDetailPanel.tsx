@@ -37,10 +37,6 @@ interface GearDetailPanelProps {
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
   onAddItemsToPack?: (itemIds: string[]) => void;
-  /** 新規ギア追加フォームを開く（空状態の CTA 用） */
-  onShowForm?: () => void;
-  /** URL インポートを開く（空状態の二次 CTA 用） */
-  onShowUrlImport?: () => void;
 }
 
 const MAX_COMPARE_ITEMS = 4;
@@ -67,8 +63,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   activePackItemIds = [],
   onTogglePackItem,
   onAddItemsToPack,
-  onShowForm,
-  onShowUrlImport,
 }) => {
   const { sortField, sortDirection, handleSort, forceSort } = useGearSort();
   const { changedFields, handleFieldChange, clearChangedFields } = useChangedFields(onUpdateItem);
@@ -234,17 +228,15 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   const showGlobalEmpty = !hasAnyItem;
   const showFilteredEmpty = hasAnyItem && !hasFilteredItem;
 
-  // 全体 0 件: 初回ユーザー向けの CTA を含む空状態
+  // 全体 0 件: 初回ユーザー向けの空状態
+  // Chat サイドバーがリスト空時に自動オープンするため CTA ボタンは置かない
+  // （AppDock / ProfileHeader の Chat ボタンもあり三重化防止）
   if (showGlobalEmpty) {
     return (
       <div className="w-full h-full min-w-0 flex items-center justify-center">
         <EmptyState
           title="まだギアがありません"
-          description="最初のアイテムを登録して、パックの重量管理を始めましょう。"
-          actionLabel={onShowForm ? '+ ギアを追加' : undefined}
-          onAction={onShowForm}
-          secondaryActionLabel={onShowUrlImport ? 'URL から取り込む' : undefined}
-          onSecondaryAction={onShowUrlImport}
+          description="右の Chat パネルに URL を貼るか、ブランド + 商品名を入力するとギアが追加されます。"
         />
       </div>
     );
