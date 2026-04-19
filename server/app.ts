@@ -7,6 +7,7 @@ import { config } from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { randomUUID } from 'crypto';
 
 // Import routes
 import gearRoutes from './routes/gear.js';
@@ -132,12 +133,22 @@ if (distPath) {
 }
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const requestId = randomUUID();
+  const name = err instanceof Error ? err.name : 'UnknownError';
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+
+  // サーバー側にのみ詳細を残す（構造化ロガー導入後は JSON 化）
+  console.error(
+    `[${requestId}] ${req.method} ${req.originalUrl} — ${name}: ${message}`,
+    stack ?? '',
+  );
+
   res.status(500).json({
     success: false,
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    requestId,
   });
 });
 
