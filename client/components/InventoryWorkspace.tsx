@@ -58,7 +58,6 @@ export default function InventoryWorkspace({
 }: InventoryWorkspaceProps) {
   const {
     showChat, setShowChat,
-    showCheckboxes, setShowCheckboxes,
     gearItems,
     categories,
     isLoading,
@@ -85,6 +84,7 @@ export default function InventoryWorkspace({
     return saved === 'table' || saved === 'card' || saved === 'compare' ? saved : 'table';
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // showCheckboxes は廃止: 行編集は per-row ⋯ メニュー、Compare は gearViewMode で判定
 
   // Chart ↔ Table/Card の双方向連動用: クリック選択 / ホバー強調
   const [selectedItemId, setSelectedItemIdRaw] = useState<string | null>(null);
@@ -163,9 +163,9 @@ export default function InventoryWorkspace({
   }, [handleCreateGear, showLoading, showSuccess, showError, removeNotification]);
 
   /**
-   * "Edit" アイコンが押された時の挙動。
-   * ギアは既にインライン編集（EditableFields）で直接編集できるため、
-   * ここでは対象行を selected にしてハイライトするだけ。
+   * 互換 shim: Card view 展開パネルの "Edit" / Advisor からの edit 要求で呼ばれる。
+   * per-row 編集へ移行済みのため、ここでは該当行を selected にしてハイライトする
+   * のみ。Card view の場合はユーザー自身で Table view に切替えて ⋯ → Edit を押す。
    */
   const handleEditGear = useCallback((gear: GearItemWithCalculated) => {
     setSelectedItemId(gear.id);
@@ -237,8 +237,6 @@ export default function InventoryWorkspace({
       onUpdateItem={handleUpdateItem}
       gearViewMode={gearViewMode}
       onGearViewModeChange={setGearViewMode}
-      showCheckboxes={showCheckboxes}
-      onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)}
       weightBreakdown={items ? null : weightBreakdown}
       ulStatus={items ? null : ulStatus}
       activePack={activePack}

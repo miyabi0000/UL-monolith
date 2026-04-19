@@ -52,8 +52,6 @@ interface ChartPanelProps {
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void // フィールド更新用
   gearViewMode?: 'table' | 'card' | 'compare' // ギア表示モード
   onGearViewModeChange?: (mode: 'table' | 'card' | 'compare') => void // モード変更ハンドラ
-  showCheckboxes: boolean // チェックボックス表示状態
-  onToggleCheckboxes: () => void // チェックボックス切り替え
   // Weight-Class用
   weightBreakdown?: WeightBreakdown | null
   ulStatus?: ULStatus | null
@@ -92,8 +90,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   onUpdateItem,
   gearViewMode,
   onGearViewModeChange,
-  showCheckboxes,
-  onToggleCheckboxes,
   weightBreakdown,
   ulStatus,
   activePack,
@@ -393,56 +389,16 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
               )}
             </div>
 
-            {/* 右側ツールバー: 表示切替 と アクション を階層分離
-             *  - 表示切替: Card / Table / Compare (GearViewToggle, SegmentedControl)
-             *  - アクション: Manage categories / Edit mode (独立アイコンボタン)
-             * 2 グループ間にスペーサー (gap-3) を入れて視覚的に区別。 */}
-            <div className="inline-flex items-center gap-3">
-              {/* グループ A: 表示切替 */}
-              {onGearViewModeChange && (
-                <div className="inline-flex items-center">
-                  <GearViewToggle
-                    gearViewMode={gearViewMode ?? 'table'}
-                    showCheckboxes={showCheckboxes}
-                    onGearViewModeChange={onGearViewModeChange}
-                    onToggleCheckboxes={onToggleCheckboxes}
-                  />
-                </div>
-              )}
-
-              {/* グループ B: アクション
-               * Note: カテゴリ管理 UI は一旦フロントから廃止。CategoryManager.tsx と
-               * useAppState の CRUD handlers は将来復活時のために残置。 */}
-              <div className="inline-flex items-center gap-1">
-                {/* Edit(✏️) ボタン - 複数選択によるバルク操作（Delete / Bulk Update）の入口
-                    Card view では checkbox 表示が未サポートなので、Edit 起動時は
-                    Table view に自動切替する。Compare モード中は無効。 */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (gearViewMode === 'compare') return
-                    if (!showCheckboxes && gearViewMode === 'card' && onGearViewModeChange) {
-                      onGearViewModeChange('table')
-                    }
-                    onToggleCheckboxes()
-                  }}
-                  disabled={gearViewMode === 'compare'}
-                  className={`icon-btn ${
-                    showCheckboxes && gearViewMode !== 'compare'
-                      ? 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
-                      : gearViewMode === 'compare'
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                  }`}
-                  aria-label={showCheckboxes ? 'Exit edit mode' : 'Enter edit mode'}
-                  title={gearViewMode === 'compare' ? 'Exit Compare mode first' : showCheckboxes ? 'Exit Edit Mode' : 'Edit Mode'}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
+            {/* 右側ツールバー: 表示切替 (Card / Table / Compare)
+             * 旧 Edit (✏️) ボタンは廃止。編集は各行の ⋯ メニュー → Edit で per-row に実行する。 */}
+            {onGearViewModeChange && (
+              <div className="inline-flex items-center">
+                <GearViewToggle
+                  gearViewMode={gearViewMode ?? 'table'}
+                  onGearViewModeChange={onGearViewModeChange}
+                />
               </div>
-            </div>
+            )}
           </div>
 
           {/* パネルコンテンツ */}
@@ -457,8 +413,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onUpdateItem={onUpdateItem}
-                showCheckboxes={showCheckboxes}
-                onToggleCheckboxes={onToggleCheckboxes}
                 filteredByCategory={selectedCategories}
                 chartFocusFilter={viewMode === 'weight-class' ? chartFocus : 'all'}
                 selectedItemId={selectedItem}

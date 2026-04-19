@@ -5,8 +5,7 @@ interface BulkActionBarProps {
   allSelected: boolean;
   onSelectAll: (checked: boolean) => void;
   onClearSelection: () => void;
-  onBulkDelete: () => void;
-  onBulkUpdate?: () => void;
+  /** Compare モード以外の bulk 操作は per-row ⋯ メニューに移動済み。旧 onBulkDelete / onBulkUpdate は廃止 */
   onCompare?: () => void;
   isCompareMode?: boolean;
   maxCompareItems?: number;
@@ -16,12 +15,9 @@ interface BulkActionBarProps {
 
 const BulkActionBar: React.FC<BulkActionBarProps> = ({
   selectedCount,
-  totalCount,
   allSelected,
   onSelectAll,
   onClearSelection,
-  onBulkDelete,
-  onBulkUpdate,
   onCompare,
   isCompareMode = false,
   maxCompareItems = 3,
@@ -103,11 +99,11 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
         </div>
       </div>
 
-      {/* 右側: アクションボタン */}
+      {/* 右側: アクションボタン (Compare モード専用) */}
       <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
+        {selectedCount > 0 && isCompareMode && (
           <>
-            {isCompareMode && onCompare && (
+            {onCompare && (
               <button
                 onClick={onCompare}
                 disabled={!canCompare}
@@ -120,22 +116,6 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
                 aria-label={`Compare (${selectedCount}/${maxCompareItems} items selected)`}
               >
                 Compare ({selectedCount}/{maxCompareItems})
-              </button>
-            )}
-            {!isCompareMode && onBulkUpdate && (
-              <button
-                onClick={onBulkUpdate}
-                className="btn-primary btn-xs px-3"
-              >
-                Bulk Update ({selectedCount})
-              </button>
-            )}
-            {!isCompareMode && (
-              <button
-                onClick={onBulkDelete}
-                className="btn-danger btn-xs px-3"
-              >
-                Delete ({selectedCount})
               </button>
             )}
             <button

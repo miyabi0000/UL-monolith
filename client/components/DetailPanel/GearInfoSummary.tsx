@@ -28,7 +28,7 @@ interface GearInfoSummaryProps {
  * ギアの概要を表示する読み取り専用コンポーネント
  *
  * 情報の表示順はギアテーブルの列順に従う:
- *   name → category → type(weightClass) → quantity → weight → priority → price → season
+ *   name → category → quantity → weight → priority → price → season
  */
 const GearInfoSummary: React.FC<GearInfoSummaryProps> = ({ item }) => {
   const { unit: weightUnit } = useWeightUnit();
@@ -41,17 +41,14 @@ const GearInfoSummary: React.FC<GearInfoSummaryProps> = ({ item }) => {
         {item.name}
       </span>
 
-      {/* 2. category + 3. type(weightClass) */}
+      {/* 2. category */}
       <div className="flex items-center gap-1.5 mt-0.5">
         <span className="text-2xs truncate" style={{ color: COLORS.text.secondary }}>
           {item.category?.name ?? '—'}
         </span>
-        <span className="text-2xs font-medium" style={{ color: COLORS.text.muted }}>
-          {item.weightClass}
-        </span>
       </div>
 
-      {/* 4. quantity + 5. weight */}
+      {/* 3. quantity + 4. weight */}
       <div className="flex items-center justify-between mt-0.5">
         <span className="text-2xs" style={{ color: COLORS.text.muted }}>
           {item.ownedQuantity}/{item.requiredQuantity}
@@ -61,7 +58,7 @@ const GearInfoSummary: React.FC<GearInfoSummaryProps> = ({ item }) => {
         </span>
       </div>
 
-      {/* 6. priority + 7. price */}
+      {/* 5. priority + 6. price */}
       <div className="flex items-center justify-between mt-0.5">
         <span
           className="text-2xs font-bold h-5 w-5 inline-flex items-center justify-center"
@@ -79,7 +76,7 @@ const GearInfoSummary: React.FC<GearInfoSummaryProps> = ({ item }) => {
         </span>
       </div>
 
-      {/* 8. season */}
+      {/* 7. season */}
       <div className="mt-0.5">
         <span className="text-2xs" style={{ color: COLORS.text.muted }}>
           {formatSeasons(item.seasons)}

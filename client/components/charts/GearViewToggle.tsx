@@ -8,26 +8,20 @@ type GearViewMode = 'table' | 'card' | 'compare'
 
 interface GearViewToggleProps {
   gearViewMode: GearViewMode
-  showCheckboxes: boolean
   onGearViewModeChange: (mode: GearViewMode) => void
-  onToggleCheckboxes: () => void
 }
 
 /**
  * Card / Table / Compare ビューモード切替 (icon only, 正方形)
  *
- * Compare モードと showCheckboxes (Edit モード) が排他なので、
- * compare 選択時に Edit が有効なら先に抜ける副作用を持つ。
+ * per-row ⋯ 編集に移行済みのため、グローバル Edit モードとの排他制御は不要。
+ * Compare はここで自由に切替可能。
  */
 const GearViewToggle: React.FC<GearViewToggleProps> = ({
   gearViewMode,
-  showCheckboxes,
   onGearViewModeChange,
-  onToggleCheckboxes,
 }) => {
-  const inactive = gearViewMode === 'compare'
-    ? 'text-gray-400 dark:text-gray-500'
-    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
+  const inactive = 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'
 
   return (
     <SegmentedControl
@@ -55,18 +49,13 @@ const GearViewToggle: React.FC<GearViewToggleProps> = ({
           key: 'compare',
           label: <CompareIcon className="w-4 h-4" />,
           onClick: () => {
-            if (gearViewMode === 'compare') {
-              onGearViewModeChange('table')
-            } else {
-              if (showCheckboxes) onToggleCheckboxes()
-              onGearViewModeChange('compare')
-            }
+            onGearViewModeChange(gearViewMode === 'compare' ? 'table' : 'compare')
           },
           isActive: gearViewMode === 'compare',
-          isDisabled: showCheckboxes && gearViewMode !== 'compare',
           activeClassName: 'bg-gray-700 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm',
+          inactiveClassName: inactive,
           ariaLabel: 'Compare view',
-          title: showCheckboxes ? 'Exit Edit mode first' : 'Compare items',
+          title: 'Compare items',
         },
       ]}
     />
