@@ -25,8 +25,6 @@ interface GearDetailPanelProps {
   onEdit: (item: GearItemWithCalculated) => void;
   onDelete: (id: string) => void;
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void;
-  showCheckboxes: boolean;
-  onToggleCheckboxes: () => void;
   filteredByCategory?: string[];
   chartFocusFilter?: ChartFocus;
   selectedItemId?: string | null;
@@ -51,8 +49,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   onEdit,
   onDelete,
   onUpdateItem,
-  showCheckboxes,
-  onToggleCheckboxes,
   filteredByCategory = [],
   chartFocusFilter = 'all',
   selectedItemId,
@@ -125,13 +121,6 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     maxSelection: isCompareMode ? MAX_COMPARE_ITEMS : undefined,
   });
 
-  const handleBulkDelete = () => {
-    if (selectedIds.length > 0) {
-      selectedIds.forEach(id => onDelete(id));
-      clearSelection();
-    }
-  };
-
   const handleQuantityDisplayModeChange = useCallback(() => {
     const next =
       quantityDisplayMode === 'owned' ? 'need' :
@@ -139,15 +128,42 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     onQuantityDisplayModeChange(next);
   }, [quantityDisplayMode, onQuantityDisplayModeChange]);
 
-  const shouldShowCheckboxes = showCheckboxes || isCompareMode;
-  const isEditable = !isCompareMode && showCheckboxes;
+  // Per-row inline edit state: 同時に編集できるのは 1 行だけ。
+  // 旧 showCheckboxes を分離: Compare mode は checkbox 表示のみ (shouldShowCheckboxes)、
+  // 行編集は editingItemId 単独で制御する。
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const shouldShowCheckboxes = isCompareMode;
 
-  useEffect(() => {
-    if (!showCheckboxes) {
-      clearSelection();
-      clearChangedFields();
+  const handleStartEdit = useCallback((itemId: string) => {
+    setEditingItemId(itemId);
+  }, []);
+
+  const handleSaveEdit = useCallback(() => {
+    // onUpdateItem で即時保存済みなので state をクリアするだけでよい
+    setEditingItemId(null);
+    clearChangedFields();
+  }, [clearChangedFields]);
+
+  const handleCancelEdit = useCallback(() => {
+    // TODO: 真のロールバックには元値を保持する必要がある。
+    //       現状は楽観的 UI 更新のため「Cancel は単に変更バッジをクリアして抜ける」挙動。
+    setEditingItemId(null);
+    clearChangedFields();
+  }, [clearChangedFields]);
+
+  const handleDeleteItem = useCallback((itemId: string) => {
+    if (window.confirm('このギアを削除しますか?')) {
+      onDelete(itemId);
+      if (editingItemId === itemId) setEditingItemId(null);
     }
-  }, [showCheckboxes, clearSelection, clearChangedFields]);
+  }, [onDelete, editingItemId]);
+
+  // Compare モードから抜けたら選択状態をクリア
+  useEffect(() => {
+    if (!isCompareMode) {
+      clearSelection();
+    }
+  }, [isCompareMode, clearSelection]);
 
   const asyncOnUpdateItem = useCallback(
     async (id: string, field: string, value: GearFieldValue) => { onUpdateItem(id, field, value); },
@@ -199,12 +215,17 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
     currency,
     onCurrencyChange: handleCurrencyChange,
     showCheckboxes: shouldShowCheckboxes,
-    isEditable,
+    editingItemId,
+    onStartEdit: handleStartEdit,
+    onSaveEdit: handleSaveEdit,
+    onCancelEdit: handleCancelEdit,
+    onDeleteItem: handleDeleteItem,
     activePackName: activePack?.name,
     onAddAllToPack: activePack && (onAddItemsToPack || onTogglePackItem) ? handleAddAllToPack : undefined,
     isAllVisibleInPack,
   }), [quantityDisplayMode, handleQuantityDisplayModeChange, currency, handleCurrencyChange,
-       shouldShowCheckboxes, isEditable, activePack, onAddItemsToPack, onTogglePackItem,
+       shouldShowCheckboxes, editingItemId, handleStartEdit, handleSaveEdit, handleCancelEdit,
+       handleDeleteItem, activePack, onAddItemsToPack, onTogglePackItem,
        handleAddAllToPack, isAllVisibleInPack]);
 
   // Compareモード時の比較表示
@@ -265,6 +286,7 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
             activePackItemIds={activePackItemIds}
             onTogglePackItem={onTogglePackItem}
             onEdit={onEdit}
+            onDelete={onDelete}
           />
         )}
       </div>
@@ -274,7 +296,8 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
   return (
     <GearListProvider value={contextValue}>
       <div className="w-full h-full min-w-0 overflow-auto">
-        {shouldShowCheckboxes && (
+        {/* Compare モード時のみ BulkActionBar を表示 (compare 選択用) */}
+        {isCompareMode && (
           <div style={{ padding: `${SPACING_SCALE.base}px` }}>
             <BulkActionBar
               selectedCount={selectedIds.length}
@@ -282,12 +305,11 @@ const GearDetailPanel: React.FC<GearDetailPanelProps> = ({
               allSelected={isAllSelected}
               onSelectAll={handleSelectAll}
               onClearSelection={clearSelection}
-              onBulkDelete={handleBulkDelete}
-              onCompare={isCompareMode ? handleCompare : undefined}
-              isCompareMode={isCompareMode}
+              onCompare={handleCompare}
+              isCompareMode={true}
               maxCompareItems={MAX_COMPARE_ITEMS}
-              canCompare={isCompareMode ? validationResult.isValid : undefined}
-              compareDisabledReason={isCompareMode ? validationResult.errorMessage : undefined}
+              canCompare={validationResult.isValid}
+              compareDisabledReason={validationResult.errorMessage}
             />
           </div>
         )}

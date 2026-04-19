@@ -12,6 +12,7 @@ import {
   PrioritySelector,
 } from './EditableFields'
 import { useGearListContext } from '../../hooks/useGearListContext'
+import RowActionMenu from './RowActionMenu'
 
 interface TableRowProps {
   item: GearItemWithCalculated
@@ -27,7 +28,6 @@ interface TableRowProps {
   changedFields?: Set<string>
   onSelectItem: (id: string, checked: boolean) => void
   onUpdateItem: (id: string, field: string, value: GearFieldValue) => void
-  onEdit?: (item: GearItemWithCalculated) => void
   onTogglePackItem?: (itemId: string) => void
   /** 行クリックで Chart にセグメント選択を通知 */
   onItemSelect?: (id: string | null) => void
@@ -47,7 +47,6 @@ const TableRow: React.FC<TableRowProps> = ({
   changedFields,
   onSelectItem,
   onUpdateItem,
-  onEdit,
   onTogglePackItem,
   onItemSelect,
   onItemHover,
@@ -56,9 +55,14 @@ const TableRow: React.FC<TableRowProps> = ({
     showCheckboxes,
     quantityDisplayMode,
     currency,
-    isEditable,
+    editingItemId,
+    onStartEdit,
+    onSaveEdit,
+    onCancelEdit,
+    onDeleteItem,
   } = useGearListContext()
 
+  const isEditable = editingItemId === item.id
   const warningTone = STATUS_TONES.warning
   const isFieldChanged = (field: string) => changedFields?.has(field) || false
 
@@ -120,8 +124,8 @@ const TableRow: React.FC<TableRowProps> = ({
         ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
         : undefined}
     >
-      {/* Pack Toggle */}
-      {activePackName && onTogglePackItem && !isEditable && (
+      {/* Pack Toggle: 編集中も常時表示 (pack 追加と行編集を独立させるため) */}
+      {activePackName && onTogglePackItem && (
         <td className="px-1 py-2 text-center w-7">
           <button
             type="button"
@@ -294,23 +298,16 @@ const TableRow: React.FC<TableRowProps> = ({
         />
       </td>
 
-      {/* Edit button */}
-      {onEdit && !isEditable && (
-        <td className="px-2 py-2 text-center w-8">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onEdit(item)
-            }}
-            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
-            title="Edit"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
-        </td>
-      )}
+      {/* ⋯ Action menu: 非編集時は dropdown (Edit / Delete)、編集時は Save / Cancel */}
+      <td className="px-2 py-2 text-center w-16" onClick={(e) => e.stopPropagation()}>
+        <RowActionMenu
+          isEditing={isEditable}
+          onStartEdit={() => onStartEdit(item.id)}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+          onDelete={() => onDeleteItem(item.id)}
+        />
+      </td>
     </tr>
   )
 }

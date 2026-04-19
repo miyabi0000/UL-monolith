@@ -10,8 +10,8 @@ export const useAppState = () => {
   // - showAdvisor: Advisor は ChatSidebar の Advisor タブに統合
   // - showCategoryManager: カテゴリ管理 UI はフロントから廃止 (3b5e200)
   // - showLogin: 未認証時は Landing を表示するため Login モーダルは廃止 (PR #60)
+  // - showCheckboxes: per-row ⋯ 編集 + Compare 内部 state 化で廃止
   const [showChat, setShowChat] = useState(false);
-  const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   // データ読み込み状態
   const [isLoading, setIsLoading] = useState(true);
@@ -130,7 +130,6 @@ export const useAppState = () => {
   return {
     // UI状態
     showChat, setShowChat,
-    showCheckboxes, setShowCheckboxes,
 
     // データ状態
     gearItems,

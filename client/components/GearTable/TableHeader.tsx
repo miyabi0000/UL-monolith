@@ -14,7 +14,6 @@ interface TableHeaderProps {
   sortDirection: SortDirection
   onSelectAll: (checked: boolean) => void
   onSort: (field: SortField) => void
-  showEditColumn?: boolean
 }
 
 type HeaderColumn = {
@@ -47,7 +46,6 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   sortDirection,
   onSelectAll,
   onSort,
-  showEditColumn = false,
 }) => {
   const {
     showCheckboxes,
@@ -55,7 +53,6 @@ const TableHeader: React.FC<TableHeaderProps> = ({
     onQuantityDisplayModeChange,
     currency,
     onCurrencyChange,
-    isEditable,
     activePackName,
     onAddAllToPack,
     isAllVisibleInPack,
@@ -117,11 +114,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({
       >
         <button
           type="button"
-          disabled={isEditable}
           onClick={() => onSort(column.sortField!)}
-          className={`group ${labelBase} justify-between ${
-            isEditable ? 'text-gray-400 dark:text-gray-500 cursor-default' : `${inactiveText} ${hoverText}`
-          }`}
+          className={`group ${labelBase} justify-between ${inactiveText} ${hoverText}`}
           aria-label={`Sort by ${column.label}`}
         >
           <span className="whitespace-nowrap">{column.label}</span>
@@ -134,7 +128,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   return (
     <thead className="gear-table-head">
       <tr>
-        {activePackName && !isEditable && (
+        {activePackName && (
           <th className={`${thBase} text-center w-7`}>
             <button
               type="button"
@@ -202,11 +196,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                 <div className="inline-flex h-6 w-full items-center gap-0.5">
                   <button
                     type="button"
-                    disabled={isEditable}
                     onClick={() => onSort(column.sortField!)}
-                    className={`group ${labelBase} min-w-0 flex-1 justify-between ${
-                      isEditable ? 'text-gray-400 dark:text-gray-500 cursor-default' : `${inactiveText} ${hoverText}`
-                    }`}
+                    className={`group ${labelBase} min-w-0 flex-1 justify-between ${inactiveText} ${hoverText}`}
                     aria-label="Sort by price"
                   >
                     <span className="whitespace-nowrap">price</span>
@@ -229,7 +220,8 @@ const TableHeader: React.FC<TableHeaderProps> = ({
           return renderStandardColumn(column)
         })}
 
-        {showEditColumn && <th className="px-1.5 py-1 text-center w-8"></th>}
+        {/* 各行の ⋯ メニュー列用 (Edit / Delete) */}
+        <th className="px-1.5 py-1 text-center w-16"></th>
       </tr>
     </thead>
   )

@@ -1,7 +1,8 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
 import { GearItemWithCalculated, QuantityDisplayMode } from '../../utils/types';
 import { COLORS, BORDERS } from '../../utils/designSystem';
 import { getQuantityForDisplayMode } from '../../utils/chartHelpers';
+import { useOutsideClick } from '../../hooks/useOutsideClick';
 import GearInfoSummary from './GearInfoSummary';
 
 interface CardGridViewProps {
@@ -16,7 +17,10 @@ interface CardGridViewProps {
   activePackName?: string;
   activePackItemIds?: string[];
   onTogglePackItem?: (itemId: string) => void;
+  /** 展開パネルの ⋯ → Edit: 行を highlight (Table view に切替えて ⋯ → Edit で per-row 編集する誘導) */
   onEdit?: (item: GearItemWithCalculated) => void;
+  /** 展開パネルの ⋯ → Delete */
+  onDelete?: (id: string) => void;
 }
 
 /** 展開セクションの詳細行（Brand / Source） */
@@ -51,11 +55,81 @@ const ImagePlaceholder: React.FC<{ name: string; className?: string; style?: Rea
   </div>
 );
 
+/**
+ * 展開パネルの ⋯ メニュー
+ * - Edit: 行 highlight のみ (Card では inline 編集不可。Table view に切替えて
+ *         ⋯ → Edit で per-row 編集する UX を誘導)
+ * - Delete: window.confirm 付きで onDelete を呼ぶ
+ */
+const CardActionMenu: React.FC<{
+  item: GearItemWithCalculated;
+  onEdit?: (item: GearItemWithCalculated) => void;
+  onDelete?: (id: string) => void;
+}> = ({ item, onEdit, onDelete }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useOutsideClick(ref, () => setOpen(false), open);
+
+  if (!onEdit && !onDelete) return null;
+
+  return (
+    <div ref={ref} className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className={actionButtonClass}
+        style={actionButtonStyle}
+        aria-label="Card actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="More actions"
+      >
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.5" />
+          <circle cx="12" cy="12" r="1.5" />
+          <circle cx="19" cy="12" r="1.5" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 top-full mt-1 w-32 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden z-50 border border-gray-100 dark:border-gray-700"
+        >
+          {onEdit && (
+            <button
+              type="button"
+              role="menuitem"
+              className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => { setOpen(false); onEdit(item); }}
+            >
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              role="menuitem"
+              className="w-full text-left px-3 py-2 text-xs text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => {
+                setOpen(false);
+                if (window.confirm('このギアを削除しますか?')) onDelete(item.id);
+              }}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 /** フルワイド展開パネル */
 const ExpandedPanel: React.FC<{
   item: GearItemWithCalculated;
   onEdit?: (item: GearItemWithCalculated) => void;
-}> = ({ item, onEdit }) => (
+  onDelete?: (id: string) => void;
+}> = ({ item, onEdit, onDelete }) => (
   <div
     className="animate-fade-in overflow-hidden"
     style={{
@@ -88,16 +162,7 @@ const ExpandedPanel: React.FC<{
         <DetailRow label="Source" value={`${item.weightSource} (${item.weightConfidence})`} />
 
         <div className="flex items-center gap-2 mt-2">
-          {onEdit && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className={actionButtonClass}
-              style={actionButtonStyle}
-            >
-              Edit
-            </button>
-          )}
+          <CardActionMenu item={item} onEdit={onEdit} onDelete={onDelete} />
           {item.productUrl && (
             <a
               href={item.productUrl}
@@ -128,6 +193,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
   activePackItemIds = [],
   onTogglePackItem,
   onEdit,
+  onDelete,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -221,7 +287,7 @@ const CardGridView: React.FC<CardGridViewProps> = ({
 
                 {/* フルワイド展開パネル（行の下に挿入） */}
                 {isExpanded && (
-                  <ExpandedPanel item={item} onEdit={onEdit} />
+                  <ExpandedPanel item={item} onEdit={onEdit} onDelete={onDelete} />
                 )}
               </React.Fragment>
             );
