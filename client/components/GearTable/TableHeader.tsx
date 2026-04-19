@@ -30,7 +30,6 @@ const buildColumns = (weightLabel: string): HeaderColumn[] => [
   { key: 'image', label: 'image', widthClass: 'w-20' },
   { key: 'name', label: 'name', widthClass: 'min-w-[112px] max-w-[188px]', sortable: true, sortField: 'name' },
   { key: 'category', label: 'category', widthClass: 'w-28', sortable: true, sortField: 'category' },
-  { key: 'weightclass', label: 'Class', widthClass: 'w-7', align: 'center' },
   { key: 'quantity', label: 'ALL', widthClass: 'w-[88px]', align: 'center' },
   { key: 'weight', label: weightLabel, widthClass: 'w-[72px]', align: 'center', sortable: true, sortField: 'weight' },
   { key: 'priority', label: 'priority', widthClass: 'w-8', align: 'center', sortable: true, sortField: 'priority' },

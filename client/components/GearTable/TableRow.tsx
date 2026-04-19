@@ -1,6 +1,5 @@
 import React from 'react'
 import type { GearItemWithCalculated, Category, GearFieldValue } from '../../utils/types'
-import { isBig3Category } from '../../utils/types'
 import { STATUS_TONES } from '../../utils/designSystem'
 import {
   EditableImageField,
@@ -9,11 +8,9 @@ import {
   EditablePriceField,
   EditableWeightField,
   EditableSeasonField,
-  EditableWeightClassField,
   QuantitySelector,
   PrioritySelector,
 } from './EditableFields'
-import WeightClassBadge from '../ui/WeightClassBadge'
 import { useGearListContext } from '../../hooks/useGearListContext'
 
 interface TableRowProps {
@@ -234,25 +231,6 @@ const TableRow: React.FC<TableRowProps> = ({
             category={item.category}
           />
         </div>
-      </td>
-
-      {/* Weight Class */}
-      <td className="px-1 py-2 whitespace-nowrap text-center w-7">
-        {isEditable ? (
-          <EditableWeightClassField
-            value={item.weightClass || 'base'}
-            onChange={(value) => onUpdateItem(item.id, 'weightClass', value)}
-            isEditing={true}
-            isChanged={isFieldChanged('weightClass')}
-            isBig3={isBig3Category(item.category)}
-          />
-        ) : (
-          <WeightClassBadge
-            weightClass={item.weightClass || 'base'}
-            isBig3={isBig3Category(item.category)}
-            compact
-          />
-        )}
       </td>
 
       {/* Own/Need */}

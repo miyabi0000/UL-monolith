@@ -15,6 +15,5 @@ export {
   EditableSeasonField,
   QuantitySelector,
   PrioritySelector,
-  EditableWeightClassField,
 } from './fields'
 export type { Currency } from './fields'
