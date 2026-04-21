@@ -14,6 +14,10 @@ export interface ActiveShapeProps {
   startAngle: number
   endAngle: number
   fill: string
+  cornerRadius?: number
+  paddingAngle?: number
+  /** Recharts が activeShape コールバックに渡す index */
+  index?: number
   payload: {
     label?: string
     value: number
@@ -23,18 +27,30 @@ export interface ActiveShapeProps {
   }
 }
 
+/** Hover 時の拡大量 (px)。角丸を保ったままほんのり大きくなる感じ */
+const HOVER_BULGE = 8
+
+/** grain フィルター ID を index から循環参照（ChartBody と同じロジック） */
+const GRAIN_SEED_COUNT = 3
+const grainFilterIdForIndex = (idx: number | undefined): string =>
+  `url(#chart-grain-${((idx ?? 0) % GRAIN_SEED_COUNT + GRAIN_SEED_COUNT) % GRAIN_SEED_COUNT})`
+
 const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
   const {
     cx, cy,
     innerRadius, outerRadius,
     startAngle, endAngle,
     fill,
+    cornerRadius,
+    paddingAngle,
+    index,
     payload
   } = props
+  const grainFilter = grainFilterIdForIndex(index)
 
   const ratio = payload.ratio ?? 0
 
-  // 3%未満はcallout出さない（セクターのみ）
+  // 3%未満はcallout出さない（セクターのみ膨らます）
   if (ratio < CALLOUT_THRESHOLD) {
     return (
       <g style={{ outline: 'none' }}>
@@ -42,10 +58,13 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
           cx={cx}
           cy={cy}
           innerRadius={innerRadius}
-          outerRadius={outerRadius}
+          outerRadius={outerRadius + HOVER_BULGE}
           startAngle={startAngle}
           endAngle={endAngle}
           fill={fill}
+          cornerRadius={cornerRadius}
+          paddingAngle={paddingAngle}
+          stroke="none"
           style={{ outline: 'none' }}
         />
       </g>
@@ -90,11 +109,14 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
         cx={cx}
         cy={cy}
         innerRadius={innerRadius}
-        outerRadius={outerRadius + 2}
+        outerRadius={outerRadius + HOVER_BULGE}
         startAngle={startAngle}
         endAngle={endAngle}
         fill={fill}
-        style={{ outline: 'none' }}
+        cornerRadius={cornerRadius}
+        paddingAngle={paddingAngle}
+        stroke="none"
+        style={{ outline: 'none', filter: grainFilter }}
       />
       {/* 引き出し線 */}
       <polyline

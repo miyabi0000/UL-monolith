@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import BarChartBody from './BarChartBody'
 import ChartCenterOverlay from './ChartCenterOverlay'
 import ActiveCalloutShape from './ActiveCalloutShape'
-import GradientDefs, { GradientColorEntry } from './GradientDefs'
-import { sanitizeDefId } from './gradientHelpers'
-import { darkenColor, generateItemColor } from '../../utils/colorHelpers'
+import GradientDefs, { grainFilterId } from './GradientDefs'
+import { generateItemColor } from '../../utils/colorHelpers'
 import { COLORS, getCategoryColor } from '../../utils/designSystem'
 import type { BarItem } from './HorizontalBarChart'
 import type { ChartViewMode, DonutSegment, WeightBreakdown, ULStatus } from '../../utils/types'
@@ -50,21 +49,34 @@ interface ChartBodyProps {
 
 const DEFAULT_COLOR = COLORS.gray[500]
 
-/** 有機的デザインの共通パラメータ */
-const ORGANIC_CORNER_RADIUS = 14
-const ORGANIC_PAD_ANGLE = 0.018
-const CASCADE_DELAY_MS = 90 // 各セクターが順に花開くカスケード間隔
+/** Pie レイアウトの共通パラメータ */
+const CHART_CORNER_RADIUS = 0
+const CHART_PAD_ANGLE = 0.018
+
+/** activeIndex に hover と selected の両方を反映 (重複は排除) */
+const combineActive = (hovered: number | null, selected: number | null): number[] | undefined => {
+  const set = new Set<number>()
+  if (selected !== null && selected >= 0) set.add(selected)
+  if (hovered !== null && hovered >= 0) set.add(hovered)
+  if (set.size === 0) return undefined
+  return Array.from(set)
+}
+
+/**
+ * 状態間の一貫性を保つための共通トークン。
+ * 枠線は全状態で廃止し、選択は opacity のみで表現する。色は常にベースカラーのまま。
+ */
+const CELL_TOKENS = {
+  opacityBase: 1,
+  opacityDimmed: 0.55,
+} as const
 
 const cellTransition = {
-  transition: 'fill 0.5s ease, stroke 0.4s ease, opacity 0.4s ease',
+  // 状態遷移は 0.5s ease (従来 0.45s を 10% 遅く)
+  transition: 'opacity 0.5s ease, fill 0.5s ease',
   outline: 'none',
   cursor: 'pointer',
 } as const
-
-/** inline animation-delay を cascade 付きで生成 */
-const cascadeDelay = (index: number, baseMs: number = 0): React.CSSProperties => ({
-  animationDelay: `${baseMs + index * CASCADE_DELAY_MS}ms`,
-})
 
 /**
  * チャート本体の orchestrator。
@@ -117,67 +129,35 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const baseColor = props.selectedCategory?.color ?? DEFAULT_COLOR
   const itemCount = props.selectedCategory?.sortedItems?.length ?? 1
 
-  // ==================== グラデーション ID 一覧 ====================
-  // 各セクターの色に対し GradientDefs 内で radialGradient を定義し、
-  // Cell 側で fill="url(#<id>)" から参照する。
-  const dualOuterGradIds = useMemo(
-    () => outerData.map((_, i) => sanitizeDefId('grad-dual-outer', i)),
-    [outerData],
-  )
-  const dualInnerGradIds = useMemo(
-    () => innerData.map((entry) => sanitizeDefId('grad-dual-inner', entry.id)),
-    [innerData],
-  )
-  const itemGradIds = useMemo(
-    () => props.outerPieData.map((item) => sanitizeDefId('grad-item', item.id)),
-    [props.outerPieData],
-  )
-  const categoryGradIds = useMemo(
-    () => props.sortedData.map((entry) => sanitizeDefId('grad-cat', entry.name)),
-    [props.sortedData],
-  )
-
-  // GradientDefs へ渡す全エントリ (同一 <defs> 内で一括定義)
-  const allGradientEntries: GradientColorEntry[] = useMemo(() => {
-    const entries: GradientColorEntry[] = []
-    if (isClassMode) {
-      outerData.forEach((e, i) => entries.push({ id: dualOuterGradIds[i], color: e.color }))
-      innerData.forEach((e, i) => entries.push({ id: dualInnerGradIds[i], color: e.color }))
-    } else {
-      props.outerPieData.forEach((_, i) =>
-        entries.push({ id: itemGradIds[i], color: generateItemColor(baseColor, i, itemCount) }),
-      )
-      props.sortedData.forEach((e, i) =>
-        entries.push({ id: categoryGradIds[i], color: getCategoryColor(e.name) }),
-      )
-    }
-    return entries
-  }, [
-    isClassMode,
-    outerData,
-    innerData,
-    props.outerPieData,
-    props.sortedData,
-    dualOuterGradIds,
-    dualInnerGradIds,
-    itemGradIds,
-    categoryGradIds,
-    baseColor,
-    itemCount,
-  ])
+  // 選択済みインデックス (activeShape で「大きく固定」するため)
+  const dualOuterSelectedIdx =
+    props.selectedCategories.length === 1
+      ? outerData.findIndex((e) => e.label === props.selectedCategories[0])
+      : -1
+  const dualInnerSelectedIdx =
+    chartFocus !== 'all' ? innerData.findIndex((e) => e.id === chartFocus) : -1
+  const categorySelectedIdx = selectedCategoryName
+    ? props.sortedData.findIndex((e) => e.name === selectedCategoryName)
+    : -1
+  const itemSelectedIdx = selectedItemId
+    ? props.outerPieData.findIndex((e) => e.id === selectedItemId)
+    : -1
 
   return (
     <div
       className="relative flex items-center justify-center p-2 flex-1"
       style={{ minHeight: geometry.chartHeight }}
     >
+      {/* 独立した 0px SVG に <defs> を配置する。
+       * Recharts の PieChart は内部的に children 種別を厳密に扱うため <defs> が
+       * ドロップされるリスクがあり、同じドキュメント内に 1 回だけ <defs> があれば
+       * fill="url(#id)" は解決できる (modern browsers は SVG ルート跨ぎの参照を許容)。 */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
+        <GradientDefs />
+      </svg>
+
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          {/* SVG <defs>: グラデーション + 有機的ノイズ / グロー filter の定義
-           * Recharts は PieChart の children を SVG 内にそのまま render するため、
-           * <defs> を最初の子として配置すれば後続の <Cell fill="url(#...)"> から参照できる。 */}
-          <GradientDefs entries={allGradientEntries} />
-
           {isClassMode ? (
             <>
               {/* 外輪: カテゴリ or Big3 内訳 */}
@@ -188,10 +168,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cy="50%"
                 outerRadius={outerRadiusConfig.outer}
                 innerRadius={outerRadiusConfig.inner}
-                cornerRadius={ORGANIC_CORNER_RADIUS}
-                paddingAngle={ORGANIC_PAD_ANGLE}
+                cornerRadius={CHART_CORNER_RADIUS}
+                paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={outerActiveIndex ?? undefined}
+                activeIndex={combineActive(outerActiveIndex, dualOuterSelectedIdx)}
                 onClick={(entry: DonutSegment) => props.onDualRingOuterClick(entry.id)}
                 onMouseEnter={(_: DonutSegment, idx: number) => setOuterActiveIndex(idx)}
                 onMouseLeave={() => setOuterActiveIndex(null)}
@@ -200,16 +180,19 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
               >
                 {outerData.map((entry, index) => {
                   const isSelected = props.selectedCategories.includes(entry.label)
-                  const baseOpacity = hasFocus ? 0.55 : 0.82
+                  // focus 中かつ非選択は dim、それ以外は常にベース
+                  const opacity = isSelected
+                    ? CELL_TOKENS.opacityBase
+                    : hasFocus
+                      ? CELL_TOKENS.opacityDimmed
+                      : CELL_TOKENS.opacityBase
                   return (
                     <Cell
                       key={`dual-outer-${index}`}
-                      fill={`url(#${dualOuterGradIds[index]})`}
-                      stroke={isSelected ? darkenColor(entry.color, 0.2) : 'rgba(255,255,255,0.65)'}
-                      strokeWidth={isSelected ? 2 : 0.8}
-                      opacity={isSelected ? 1 : baseOpacity}
-                      className={`chart-sector-bloom${isSelected ? ' chart-sector-selected' : ''}`}
-                      style={{ ...cellTransition, ...cascadeDelay(index, 80) }}
+                      fill={entry.color}
+                      stroke="none"
+                      opacity={opacity}
+                      style={{ ...cellTransition, filter: `url(#${grainFilterId(index)})` }}
                     />
                   )
                 })}
@@ -222,10 +205,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cy="50%"
                 outerRadius={innerRadiusConfig.outer}
                 innerRadius={innerRadiusConfig.inner}
-                cornerRadius={ORGANIC_CORNER_RADIUS}
-                paddingAngle={ORGANIC_PAD_ANGLE}
+                cornerRadius={CHART_CORNER_RADIUS}
+                paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={innerActiveIndex ?? undefined}
+                activeIndex={combineActive(innerActiveIndex, dualInnerSelectedIdx)}
                 onClick={(entry: DonutSegment) => props.onInnerRingClick(entry.id)}
                 onMouseEnter={(_: DonutSegment, idx: number) => setInnerActiveIndex(idx)}
                 onMouseLeave={() => setInnerActiveIndex(null)}
@@ -235,18 +218,18 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 {innerData.map((entry, index) => {
                   const isFocused = chartFocus === entry.id
                   const hasOther = chartFocus !== 'all' && chartFocus !== entry.id
+                  const opacity = isFocused || !hasOther
+                    ? CELL_TOKENS.opacityBase
+                    : CELL_TOKENS.opacityDimmed
                   return (
                     <Cell
                       key={`dual-inner-${index}`}
-                      fill={`url(#${dualInnerGradIds[index]})`}
-                      stroke={isFocused ? darkenColor(entry.color, 0.3) : 'rgba(255,255,255,0.7)'}
-                      strokeWidth={isFocused ? 2.5 : 1.2}
-                      opacity={isFocused || !hasOther ? 1 : 0.4}
-                      className={`chart-sector-bloom${isFocused ? ' chart-sector-selected' : ''}`}
+                      fill={entry.color}
+                      stroke="none"
+                      opacity={opacity}
                       style={{
                         ...cellTransition,
-                        ...cascadeDelay(index, 320),
-                        filter: isFocused ? `drop-shadow(0 0 10px ${entry.color}aa)` : 'none',
+                        filter: `url(#${grainFilterId(index)})`,
                       }}
                     />
                   )
@@ -264,10 +247,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                   cy="50%"
                   outerRadius={outerRadiusConfig.outer}
                   innerRadius={outerRadiusConfig.inner}
-                  cornerRadius={ORGANIC_CORNER_RADIUS}
-                  paddingAngle={ORGANIC_PAD_ANGLE}
+                  cornerRadius={CHART_CORNER_RADIUS}
+                  paddingAngle={CHART_PAD_ANGLE}
                   activeShape={ActiveCalloutShape as any}
-                  activeIndex={outerActiveIndex ?? undefined}
+                  activeIndex={combineActive(outerActiveIndex, itemSelectedIdx)}
                   onClick={(entry: OuterPieEntry) => props.onItemClick(entry.id)}
                   onMouseEnter={(entry: OuterPieEntry, idx: number) => {
                     setOuterActiveIndex(idx)
@@ -282,19 +265,22 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 >
                   {props.outerPieData.map((item, index) => {
                     const isSelected = selectedItemId === item.id
-                    const darkStroke = darkenColor(baseColor, 0.2)
+                    const hasItemSelection = selectedItemId !== null
+                    const color = generateItemColor(baseColor, index, itemCount)
+                    const opacity = isSelected
+                      ? CELL_TOKENS.opacityBase
+                      : hasItemSelection
+                        ? CELL_TOKENS.opacityDimmed
+                        : CELL_TOKENS.opacityBase
                     return (
                       <Cell
                         key={`item-${index}`}
-                        fill={`url(#${itemGradIds[index]})`}
-                        stroke={isSelected ? darkStroke : 'rgba(255,255,255,0.5)'}
-                        strokeWidth={isSelected ? 2 : 0.8}
-                        opacity={isSelected ? 1 : 0.9}
-                        className={`chart-sector-bloom${isSelected ? ' chart-sector-selected' : ''}`}
+                        fill={color}
+                        stroke="none"
+                        opacity={opacity}
                         style={{
                           ...cellTransition,
-                          ...cascadeDelay(index, 220),
-                          filter: isSelected ? `drop-shadow(0 0 8px ${darkStroke}99)` : 'none',
+                          filter: `url(#${grainFilterId(index)})`,
                         }}
                       />
                     )
@@ -309,10 +295,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cy="50%"
                 outerRadius={innerRadiusConfig.outer}
                 innerRadius={innerRadiusConfig.inner}
-                cornerRadius={ORGANIC_CORNER_RADIUS}
-                paddingAngle={ORGANIC_PAD_ANGLE}
+                cornerRadius={CHART_CORNER_RADIUS}
+                paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={innerActiveIndex ?? undefined}
+                activeIndex={combineActive(innerActiveIndex, categorySelectedIdx)}
                 onClick={(entry: SortedChartCategory) => props.onCategoryClick(entry.name)}
                 onMouseEnter={(_: SortedChartCategory, idx: number) => setInnerActiveIndex(idx)}
                 onMouseLeave={() => setInnerActiveIndex(null)}
@@ -322,19 +308,20 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 {props.sortedData.map((entry, index) => {
                   const color = getCategoryColor(entry.name)
                   const isSelected = selectedCategoryName === entry.name
-                  const darkStroke = darkenColor(color, 0.25)
+                  const opacity = isSelected
+                    ? CELL_TOKENS.opacityBase
+                    : hasCategorySelection
+                      ? CELL_TOKENS.opacityDimmed
+                      : CELL_TOKENS.opacityBase
                   return (
                     <Cell
                       key={`category-${entry.name}`}
-                      fill={`url(#${categoryGradIds[index]})`}
-                      stroke={isSelected ? darkStroke : 'rgba(255,255,255,0.6)'}
-                      strokeWidth={isSelected ? 2 : 1}
-                      opacity={hasCategorySelection && !isSelected ? 0.38 : 1}
-                      className={`chart-sector-bloom${isSelected ? ' chart-sector-selected' : ''}`}
+                      fill={color}
+                      stroke="none"
+                      opacity={opacity}
                       style={{
                         ...cellTransition,
-                        ...cascadeDelay(index, 80),
-                        filter: isSelected ? `drop-shadow(0 0 9px ${darkStroke}99)` : 'none',
+                        filter: `url(#${grainFilterId(index)})`,
                       }}
                     />
                   )
