@@ -1,10 +1,9 @@
 import React from 'react'
 import { Sector } from 'recharts'
 import { COLORS } from '../../utils/designSystem'
-import { alpha } from '../../styles/tokens'
 import { formatWeight, WeightUnit } from '../../utils/weightUnit'
 
-const CALLOUT_THRESHOLD = 0.03 // 3%未満はcallout非表示
+const CALLOUT_THRESHOLD = 0.03 // 3% 未満はラベル非表示
 
 export interface ActiveShapeProps {
   cx: number
@@ -35,6 +34,24 @@ const GRAIN_SEED_COUNT = 3
 const grainFilterIdForIndex = (idx: number | undefined): string =>
   `url(#chart-grain-${((idx ?? 0) % GRAIN_SEED_COUNT + GRAIN_SEED_COUNT) % GRAIN_SEED_COUNT})`
 
+/** label を chart 範囲内に収めるクランプ計算 */
+const clampLabelPosition = (
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  x: number,
+  y: number,
+): { x: number; y: number } => {
+  // 許容範囲: chart 中心から outerRadius + α 以内に収める
+  const maxReach = outerRadius + 20
+  const dx = x - cx
+  const dy = y - cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  if (dist <= maxReach) return { x, y }
+  const scale = maxReach / dist
+  return { x: cx + dx * scale, y: cy + dy * scale }
+}
+
 const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
   const {
     cx, cy,
@@ -44,13 +61,13 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
     cornerRadius,
     paddingAngle,
     index,
-    payload
+    payload,
   } = props
   const grainFilter = grainFilterIdForIndex(index)
 
   const ratio = payload.ratio ?? 0
 
-  // 3%未満はcallout出さない（セクターのみ膨らます）
+  // 3% 未満はセクターを膨らますだけでラベルは出さない
   if (ratio < CALLOUT_THRESHOLD) {
     return (
       <g style={{ outline: 'none' }}>
@@ -65,7 +82,7 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
           cornerRadius={cornerRadius}
           paddingAngle={paddingAngle}
           stroke="none"
-          style={{ outline: 'none' }}
+          style={{ outline: 'none', filter: grainFilter }}
         />
       </g>
     )
@@ -76,32 +93,22 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
   const cos = Math.cos(-midAngle * RAD)
   const sin = Math.sin(-midAngle * RAD)
 
-  // 引き出し線の各点
-  const r1 = outerRadius + 4
-  const r2 = outerRadius + 16
-  const x1 = cx + r1 * cos
-  const y1 = cy + r1 * sin
-  const x2 = cx + r2 * cos
-  const y2 = cy + r2 * sin
-  const x3 = x2 + (cos >= 0 ? 14 : -14)
-  const y3 = y2
+  // ラベル位置: セクター外周すぐ隣に配置 (leader line 撤去)。
+  // chart の半径 + 小さなオフセットで収める → overflow を防ぐ。
+  const labelOffset = 6
+  const rawX = cx + (outerRadius + HOVER_BULGE + labelOffset) * cos
+  const rawY = cy + (outerRadius + HOVER_BULGE + labelOffset) * sin
+  const { x: labelX, y: labelY } = clampLabelPosition(cx, cy, outerRadius, rawX, rawY)
 
   const textAnchor = cos >= 0 ? 'start' : 'end'
 
-  // ラベル位置
-  const labelX = x3 + (cos >= 0 ? 6 : -6)
-  const labelY = y3
-
   // 単位に応じた値テキスト（payload.unit に 'g' / 'oz' / '¥' いずれかが入る）
   const unit = payload.unit ?? 'g'
-  const valueText = unit === '¥'
-    ? `¥${Math.round(payload.value / 100).toLocaleString()}`
-    : formatWeight(payload.value, unit as WeightUnit)
+  const valueText =
+    unit === '¥'
+      ? `¥${Math.round(payload.value / 100).toLocaleString()}`
+      : formatWeight(payload.value, unit as WeightUnit)
   const labelText = payload.label ?? ''
-  const textWidth = Math.max(valueText.length * 7, labelText.length * 5.5) + 8
-  const textHeight = 28
-  const rectX = cos >= 0 ? labelX - 4 : labelX - textWidth + 4
-  const rectY = labelY - 10
 
   return (
     <g style={{ outline: 'none' }}>
@@ -118,45 +125,40 @@ const ActiveCalloutShape: React.FC<ActiveShapeProps> = (props) => {
         stroke="none"
         style={{ outline: 'none', filter: grainFilter }}
       />
-      {/* 引き出し線 */}
-      <polyline
-        points={`${x1},${y1} ${x2},${y2} ${x3},${y3}`}
-        fill="none"
-        stroke={COLORS.gray[500]}
-        strokeWidth={2}
-      />
-      {/* ラベル背景 */}
-      <rect
-        x={rectX}
-        y={rectY}
-        width={textWidth}
-        height={textHeight}
-        rx={4}
-        fill={alpha(COLORS.gray[900], 0.85)}
-      />
-      {/* 値ラベル */}
+      {/* 値ラベル: マット背景に馴染むよう chrome を排し、text-stroke で
+          コントラストを確保する。(paint-order: stroke fill で縁取り) */}
       <text
         x={labelX}
         y={labelY}
         textAnchor={textAnchor}
         dominantBaseline="middle"
         fontSize={11}
-        fontWeight="bold"
-        fill={COLORS.white}
+        fontWeight={700}
+        fill={COLORS.gray[900]}
+        stroke="rgba(255,255,255,0.85)"
+        strokeWidth={3}
+        paintOrder="stroke"
+        style={{ letterSpacing: '0.01em' }}
       >
         {valueText}
       </text>
-      {/* 名前ラベル */}
-      <text
-        x={labelX}
-        y={labelY + 12}
-        textAnchor={textAnchor}
-        dominantBaseline="middle"
-        fontSize={9}
-        fill={alpha(COLORS.white, 0.7)}
-      >
-        {labelText}
-      </text>
+      {/* 名前 (小さめ、控えめ) */}
+      {labelText && (
+        <text
+          x={labelX}
+          y={labelY + 12}
+          textAnchor={textAnchor}
+          dominantBaseline="middle"
+          fontSize={9}
+          fontWeight={500}
+          fill={COLORS.gray[600]}
+          stroke="rgba(255,255,255,0.85)"
+          strokeWidth={2.5}
+          paintOrder="stroke"
+        >
+          {labelText}
+        </text>
+      )}
     </g>
   )
 }
