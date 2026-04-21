@@ -4,6 +4,7 @@ import BarChartBody from './BarChartBody'
 import ChartCenterOverlay from './ChartCenterOverlay'
 import ActiveCalloutShape from './ActiveCalloutShape'
 import GradientDefs, { grainFilterId } from './GradientDefs'
+import { CHART_CELL_TRANSITION, CHART_OPACITY_BASE, CHART_OPACITY_DIMMED } from './chartTokens'
 import { generateItemColor } from '../../utils/colorHelpers'
 import { COLORS, getCategoryColor } from '../../utils/designSystem'
 import type { BarItem } from './HorizontalBarChart'
@@ -62,18 +63,8 @@ const combineActive = (hovered: number | null, selected: number | null): number[
   return Array.from(set)
 }
 
-/**
- * 状態間の一貫性を保つための共通トークン。
- * 枠線は全状態で廃止し、選択は opacity のみで表現する。色は常にベースカラーのまま。
- */
-const CELL_TOKENS = {
-  opacityBase: 1,
-  opacityDimmed: 0.55,
-} as const
-
 const cellTransition = {
-  // 状態遷移は 0.5s ease (従来 0.45s を 10% 遅く)
-  transition: 'opacity 0.5s ease, fill 0.5s ease',
+  transition: CHART_CELL_TRANSITION,
   outline: 'none',
   cursor: 'pointer',
 } as const
@@ -146,7 +137,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
   return (
     <div
       className="relative flex items-center justify-center p-2 flex-1"
-      style={{ minHeight: geometry.chartHeight }}
+      style={{ height: geometry.chartHeight, minHeight: geometry.chartHeight }}
     >
       {/* 独立した 0px SVG に <defs> を配置する。
        * Recharts の PieChart は内部的に children 種別を厳密に扱うため <defs> が
@@ -156,7 +147,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
         <GradientDefs />
       </svg>
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={geometry.chartHeight}>
         <PieChart>
           {isClassMode ? (
             <>
@@ -182,10 +173,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                   const isSelected = props.selectedCategories.includes(entry.label)
                   // focus 中かつ非選択は dim、それ以外は常にベース
                   const opacity = isSelected
-                    ? CELL_TOKENS.opacityBase
+                    ? CHART_OPACITY_BASE
                     : hasFocus
-                      ? CELL_TOKENS.opacityDimmed
-                      : CELL_TOKENS.opacityBase
+                      ? CHART_OPACITY_DIMMED
+                      : CHART_OPACITY_BASE
                   return (
                     <Cell
                       key={`dual-outer-${index}`}
@@ -219,8 +210,8 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                   const isFocused = chartFocus === entry.id
                   const hasOther = chartFocus !== 'all' && chartFocus !== entry.id
                   const opacity = isFocused || !hasOther
-                    ? CELL_TOKENS.opacityBase
-                    : CELL_TOKENS.opacityDimmed
+                    ? CHART_OPACITY_BASE
+                    : CHART_OPACITY_DIMMED
                   return (
                     <Cell
                       key={`dual-inner-${index}`}
@@ -268,10 +259,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                     const hasItemSelection = selectedItemId !== null
                     const color = generateItemColor(baseColor, index, itemCount)
                     const opacity = isSelected
-                      ? CELL_TOKENS.opacityBase
+                      ? CHART_OPACITY_BASE
                       : hasItemSelection
-                        ? CELL_TOKENS.opacityDimmed
-                        : CELL_TOKENS.opacityBase
+                        ? CHART_OPACITY_DIMMED
+                        : CHART_OPACITY_BASE
                     return (
                       <Cell
                         key={`item-${index}`}
@@ -309,10 +300,10 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                   const color = getCategoryColor(entry.name)
                   const isSelected = selectedCategoryName === entry.name
                   const opacity = isSelected
-                    ? CELL_TOKENS.opacityBase
+                    ? CHART_OPACITY_BASE
                     : hasCategorySelection
-                      ? CELL_TOKENS.opacityDimmed
-                      : CELL_TOKENS.opacityBase
+                      ? CHART_OPACITY_DIMMED
+                      : CHART_OPACITY_BASE
                   return (
                     <Cell
                       key={`category-${entry.name}`}
