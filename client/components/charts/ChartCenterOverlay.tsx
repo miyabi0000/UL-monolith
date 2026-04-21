@@ -43,7 +43,7 @@ const ChartCenterOverlay: React.FC<ChartCenterOverlayProps> = ({
         width:           innerRadiusConfig.inner * 2,
         height:          innerRadiusConfig.inner * 2,
         borderRadius:    '50%',
-        transition:      'all 0.3s ease',
+        transition:      'all 0.5s ease',
         backgroundColor: isPulsing ? alpha(COLORS.gray[800], 0.05) : 'transparent',
         transform:       isPulsing ? 'scale(1.05)' : 'scale(1)',
         boxShadow:       isPulsing ? `0 0 20px ${alpha(COLORS.gray[800], 0.3)}` : 'none',

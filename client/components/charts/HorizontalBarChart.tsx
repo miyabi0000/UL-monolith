@@ -10,11 +10,12 @@ import {
   type TooltipProps,
 } from 'recharts'
 import type { ChartViewMode } from '../../utils/types'
-import { darkenColor } from '../../utils/colorHelpers'
 import { formatChartAxisValue } from '../../utils/chartHelpers'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
 import { primitiveColors, alpha } from '../../styles/tokens'
 import { formatWeight } from '../../utils/weightUnit'
+import GradientDefs, { grainFilterId } from './GradientDefs'
+import { CHART_CELL_TRANSITION, CHART_OPACITY_BASE, CHART_OPACITY_DIMMED } from './chartTokens'
 
 export interface BarItem {
   id?: string
@@ -88,9 +89,6 @@ const BAR_GAP = 8
 const MIN_CHART_HEIGHT = 120
 const HEIGHT_PADDING = 32
 
-const calcBarOpacity = (hasSelection: boolean, isSelected: boolean, hasItemId: boolean): number =>
-  hasSelection && !isSelected && !hasItemId ? 0.35 : 1
-
 const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   data,
   viewMode,
@@ -106,6 +104,10 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
 
   return (
     <div style={{ width: '100%', height: chartHeight }}>
+      {/* Pie と同じ grain フィルターを参照するため defs を 0px SVG に同梱 */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
+        <GradientDefs />
+      </svg>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -158,16 +160,22 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
             }}
             style={{ cursor: 'pointer' }}
           >
-            {data.map((entry) => {
+            {data.map((entry, index) => {
               const isSelected = selectedCategories.includes(entry.name)
               const isHovered = Boolean(hoveredItemId && entry.id === hoveredItemId)
-              const opacity = calcBarOpacity(hasSelection, isSelected, Boolean(entry.id))
+              // Pie と同じロジック: fill はベースカラー固定、強調は opacity のみで表現
+              const dim = hasSelection && !isSelected && !entry.id && !isHovered
+              const opacity = dim ? CHART_OPACITY_DIMMED : CHART_OPACITY_BASE
               return (
                 <Cell
                   key={entry.id ?? entry.name}
-                  fill={isSelected || isHovered ? darkenColor(entry.color, 0.15) : entry.color}
+                  fill={entry.color}
+                  stroke="none"
                   opacity={opacity}
-                  style={{ transition: 'opacity 0.15s ease, fill 0.15s ease' }}
+                  style={{
+                    transition: CHART_CELL_TRANSITION,
+                    filter: `url(#${grainFilterId(index)})`,
+                  }}
                 />
               )
             })}

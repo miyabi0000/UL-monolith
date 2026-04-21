@@ -177,34 +177,39 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
     defaultColor: DEFAULT_COLOR,
   })
 
-  // Card/Listからアイテム選択された場合、対応カテゴリも自動選択
-  const selectedItemCategoryRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (!selectedItem) {
-      selectedItemCategoryRef.current = null
-      return
-    }
-    const item = items.find(i => i.id === selectedItem)
-    const categoryName = item?.category?.name ?? null
-    if (categoryName && categoryName !== selectedItemCategoryRef.current && !selectedCategories.includes(categoryName)) {
-      selectedItemCategoryRef.current = categoryName
-      onCategorySelect([categoryName])
-    }
-  }, [selectedItem, items, selectedCategories, onCategorySelect])
-
   // ==================== イベントハンドラー（memo化） ====================
+  //
+  // 設計原則: 各クリックは "atomic transition" — 選択状態 (category / item /
+  // classFocus) を 1 回の操作で完全に定義する。クリック後に useEffect で他の
+  // 状態を後追い変更しない (旧状態と新状態の競合を防ぐ)。
+  //
+  // 遷移ルール:
+  //   - category 選択/解除  → item / classFocus を常に clear
+  //   - item 選択            → その item の category を自動で選択 + classFocus clear
+  //   - classFocus toggle    → category / item を clear
+  //   - view / display mode 切替 → 既存値を維持 (ユーザーの選択は保持)
+
   const handleCategoryClick = useCallback((categoryName: string) => {
-    if (selectedCategories.includes(categoryName)) {
-      onCategorySelect([])
-    } else {
-      onCategorySelect([categoryName])
-    }
+    const isDeselect = selectedCategories.includes(categoryName)
+    onCategorySelect(isDeselect ? [] : [categoryName])
     setSelectedItem(null)
-  }, [selectedCategories, onCategorySelect])
+    setChartFocus('all')
+  }, [selectedCategories, onCategorySelect, setSelectedItem])
 
   const handleItemClick = useCallback((itemId: string) => {
-    setSelectedItem(prev => prev === itemId ? null : itemId)
-  }, [])
+    const isDeselect = selectedItem === itemId
+    const nextItem = isDeselect ? null : itemId
+    setSelectedItem(nextItem)
+    setChartFocus('all')
+    // 選択時: item が属する category を自動で選択状態に
+    if (nextItem) {
+      const item = items.find(i => i.id === nextItem)
+      const categoryName = item?.category?.name
+      if (categoryName && !selectedCategories.includes(categoryName)) {
+        onCategorySelect([categoryName])
+      }
+    }
+  }, [selectedItem, items, selectedCategories, onCategorySelect, setSelectedItem])
 
   const handleCenterClick = useCallback(() => {
     const nextMode: ChartViewMode = viewMode === 'weight' ? 'cost' : 'weight'
@@ -213,26 +218,26 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   }, [viewMode, onViewModeChange, triggerCenterPulse])
 
   // 二重ドーナツ: Inner ringクリック（Big3 vs Other 切替）
+  // 競合回避のため他の選択を解除する
   const handleInnerRingClick = useCallback((segmentId: string) => {
+    onCategorySelect([])
+    setSelectedItem(null)
     if (segmentId === 'big3') {
       setChartFocus(chartFocus === 'big3' ? 'all' : 'big3')
     } else if (segmentId === 'other') {
       setChartFocus(chartFocus === 'other' ? 'all' : 'other')
     }
-  }, [chartFocus])
+  }, [chartFocus, onCategorySelect, setSelectedItem])
 
   // 二重ドーナツ: Outer ringクリック（カテゴリ選択）
   const handleDualRingOuterClick = useCallback((segmentId: string) => {
     const segment = dualRingOuterData?.find(s => s.id === segmentId)
-    if (segment) {
-      if (selectedCategories.includes(segment.label)) {
-        onCategorySelect([])
-      } else {
-        onCategorySelect([segment.label])
-      }
-    }
+    if (!segment) return
+    const isDeselect = selectedCategories.includes(segment.label)
+    onCategorySelect(isDeselect ? [] : [segment.label])
     setSelectedItem(null)
-  }, [dualRingOuterData, selectedCategories, onCategorySelect])
+    setChartFocus('all')
+  }, [dualRingOuterData, selectedCategories, onCategorySelect, setSelectedItem])
 
   // パンくずリスト用の選択中アイテム名を取得 (items prop から検索)
   const selectedItemName = useMemo(() => {

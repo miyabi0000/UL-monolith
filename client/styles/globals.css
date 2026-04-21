@@ -578,6 +578,10 @@
   outline: none !important;
 }
 
+/* Chart: 旧エントランスアニメ (chart-sector-bloom) と呼吸アニメは、
+ * グレインテクスチャ (SVG filter) と CSS filter の競合を避けるため撤去。
+ * エントランスは Recharts ネイティブ animation、選択表現は stroke で行う。 */
+
 /* アニメーション */
 @keyframes slideIn {
   from {
