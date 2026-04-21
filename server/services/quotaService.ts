@@ -26,6 +26,10 @@ function monthStart(): string {
 }
 
 async function getUserPlan(userId: string): Promise<Plan> {
+  // STG では課金が無効のため、全員 Pro 扱いで AI 機能を開放する
+  if (process.env.APP_ENV === 'staging') {
+    return 'pro';
+  }
   const result = await db.query<{ plan: string }>(
     'SELECT plan FROM users WHERE id = $1',
     [userId],

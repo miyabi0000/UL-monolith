@@ -6,6 +6,13 @@ import { stripe, STRIPE_PRICE_ID_PRO, STRIPE_WEBHOOK_SECRET, FRONTEND_URL } from
 
 const router = Router();
 
+// STG では決済機能を無効化（Stripe キーを STG 環境に置かず、本番と分離するため）
+if (process.env.APP_ENV === 'staging') {
+  router.use((_req: Request, res: Response) => {
+    res.status(503).json({ success: false, message: 'Billing is disabled on staging' });
+  });
+}
+
 const stripeUnavailable = (res: Response) =>
   res.status(503).json({ success: false, message: 'Billing is not configured on this server' });
 
