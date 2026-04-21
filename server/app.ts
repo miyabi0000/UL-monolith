@@ -66,7 +66,10 @@ const strictLimiter = rateLimit({
 });
 
 // Middleware
-app.use(helmet());
+// CSP は無効化: Cognito (cognito-idp.*.amazonaws.com) や外部の商品画像で
+// default-src 'self' に引っかかって fetch がブロックされるため。
+// 必要になったら connect-src / img-src を明示した上で再有効化する。
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(morgan('combined'));
 app.use('/api/', limiter); // 全APIにRate Limiting適用
