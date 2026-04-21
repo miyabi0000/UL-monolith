@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 const secretKey = process.env.STRIPE_SECRET_KEY;
 
 export const stripe = secretKey
-  ? new Stripe(secretKey, { apiVersion: '2024-10-28.acacia' })
+  ? new Stripe(secretKey, { apiVersion: '2025-02-24.acacia' })
   : null;
 
 export const STRIPE_PRICE_ID_PRO = process.env.STRIPE_PRICE_ID_PRO ?? '';

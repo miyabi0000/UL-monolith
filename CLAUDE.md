@@ -180,3 +180,17 @@ npm run typecheck      # 型チェック (client + server)
 - 本番環境では環境変数の適切な設定が必要
 - セキュリティ: 認証情報をコードに含めない
 - パック/プロフィールは現在 localStorage 保存（DB移行予定）
+
+## 環境 (Environments)
+
+- `development` — ローカル (`npm run dev` + `npm run server:dev`)
+- `staging` — Railway の `web-staging` サービス。`staging` ブランチから自動デプロイ。友達テスト用
+- `production` — Railway の web サービス。`main` から自動デプロイ
+
+環境は `APP_ENV` / `VITE_APP_ENV` で分岐する (`NODE_ENV` は STG も `production` 固定)。STG では:
+- STAGING バナーを最上部に表示 (`client/components/StagingBanner.tsx`)
+- `/api/v1/billing/*` は 503 (決済無効化)
+- AI クォータは全員 Pro 扱い (`server/services/quotaService.ts`)
+- `/robots.txt` は Disallow
+
+セットアップ手順は `docs/staging.md` 参照。

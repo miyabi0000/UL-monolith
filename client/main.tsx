@@ -5,6 +5,7 @@ import './styles/globals.css'
 import { themeCssVariables } from './styles/tokens'
 import App from './components/App'
 import ErrorBoundary from './components/ErrorBoundary'
+import StagingBanner from './components/StagingBanner'
 import { AuthProvider } from './utils/AuthContext'
 import { WeightUnitProvider } from './contexts/WeightUnitContext'
 import { CurrencyProvider } from './contexts/CurrencyContext'
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <WeightUnitProvider>
             <CurrencyProvider>
+              <StagingBanner />
               <App />
             </CurrencyProvider>
           </WeightUnitProvider>

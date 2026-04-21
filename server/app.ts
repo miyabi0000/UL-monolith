@@ -77,13 +77,24 @@ app.use('/api/v1/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' })); // 画像データを含むリクエストのためにリミットを増やす
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// robots.txt - STG のみ検索エンジンインデックス禁止。本番は標準許可。
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain');
+  if (process.env.APP_ENV === 'staging') {
+    res.send('User-agent: *\nDisallow: /\n');
+  } else {
+    res.send('User-agent: *\nAllow: /\n');
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'UL Gear Manager API is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    appEnv: process.env.APP_ENV || 'development'
   });
 });
 
