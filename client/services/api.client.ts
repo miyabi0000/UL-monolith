@@ -4,7 +4,10 @@
 
 export const API_CONFIG = {
   // Backend API Base URL
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  // 未設定時は同一オリジンの /api/v1 に向ける:
+  //   - 本番/STG: フロントとバックが同一オリジン配信 → / 始まりでそのまま届く
+  //   - 開発: Vite の proxy ('/api' → localhost:8000) で透過的に通る
+  baseUrl: import.meta.env.VITE_API_BASE_URL || '/api/v1',
 
   // Timeout configuration - 段階的タイムアウト
   timeout: {
