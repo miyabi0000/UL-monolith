@@ -26,8 +26,10 @@ function monthStart(): string {
 }
 
 async function getUserPlan(userId: string): Promise<Plan> {
-  // STG では課金が無効のため、全員 Pro 扱いで AI 機能を開放する
-  if (process.env.APP_ENV === 'staging') {
+  // 決済が未設定の環境 (STG / 初期本番) では全員 Pro 扱い。
+  // アップグレード手段が無いのに Free 制限をかけると AI が使えなくなるため。
+  // Stripe キーを設定した時点で通常の users.plan ベースに切り替わる。
+  if (!process.env.STRIPE_SECRET_KEY) {
     return 'pro';
   }
   const result = await db.query<{ plan: string }>(
