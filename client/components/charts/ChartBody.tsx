@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import BarChartBody from './BarChartBody'
 import ChartCenterOverlay from './ChartCenterOverlay'
@@ -54,13 +54,22 @@ const DEFAULT_COLOR = COLORS.gray[500]
 const CHART_CORNER_RADIUS = 0
 const CHART_PAD_ANGLE = 0.018
 
-/** activeIndex に hover と selected の両方を反映 (重複は排除) */
-const combineActive = (hovered: number | null, selected: number | null): number[] | undefined => {
-  const set = new Set<number>()
-  if (selected !== null && selected >= 0) set.add(selected)
-  if (hovered !== null && hovered >= 0) set.add(hovered)
-  if (set.size === 0) return undefined
-  return Array.from(set)
+/**
+ * activeIndex のリゾルバ。hover を selected より優先する。
+ *
+ * この優先順位により:
+ *  - 未選択でホバー → ホバー先が bulge (プレビュー)
+ *  - 選択中でホバーなし → 選択セクターが bulge 固定
+ *  - 選択中に別セクターをホバー → ホバー先が bulge、mouse leave で選択に戻る
+ *  - 同じセクターをホバー + 選択 → そのセクターだけ bulge
+ *
+ * 従来の [hovered, selected] 同時返却は 2 つの bulge が並ぶ視覚競合を
+ * 生んでいたため、単一 index に統一して解消する。
+ */
+const chooseActive = (hovered: number | null, selected: number | null): number | undefined => {
+  if (hovered !== null && hovered >= 0) return hovered
+  if (selected !== null && selected >= 0) return selected
+  return undefined
 }
 
 const cellTransition = {
@@ -80,6 +89,10 @@ const cellTransition = {
 const ChartBody: React.FC<ChartBodyProps> = (props) => {
   const geometry = useChartGeometry()
   const { outerRadiusConfig, innerRadiusConfig } = geometry
+
+  // Pie ごとの hover state (マウス中のセクター index)。
+  //   outer = weight-class の外輪 / 標準モードの items
+  //   inner = weight-class の内輪 (big3) / 標準モードの categories
   const [outerActiveIndex, setOuterActiveIndex] = useState<number | null>(null)
   const [innerActiveIndex, setInnerActiveIndex] = useState<number | null>(null)
 
@@ -88,6 +101,15 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
     selection.kind === 'category' || selection.kind === 'item' ? selection.categoryName : null
   const selectedItemId = selection.kind === 'item' ? selection.itemId : null
   const chartFocus = selection.kind === 'classFocus' ? selection.focus : 'all'
+
+  // selection / viewMode の変化で Pie のデータ長・意味が変わるため、
+  // hover state をクリアしてインデックスの古参照を断つ。
+  // (例: Clothing 選択解除で items Pie が unmount → outerActiveIndex が
+  //  消えたアイテムの古い index を指し続けるのを防ぐ)
+  useEffect(() => {
+    setOuterActiveIndex(null)
+    setInnerActiveIndex(null)
+  }, [selection.kind, props.viewMode, props.chartDisplayMode])
 
   if (props.chartDisplayMode === 'bar') {
     return (
@@ -162,7 +184,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cornerRadius={CHART_CORNER_RADIUS}
                 paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={combineActive(outerActiveIndex, dualOuterSelectedIdx)}
+                activeIndex={chooseActive(outerActiveIndex, dualOuterSelectedIdx)}
                 onClick={(entry: DonutSegment) => props.onDualRingOuterClick(entry.id)}
                 onMouseEnter={(_: DonutSegment, idx: number) => setOuterActiveIndex(idx)}
                 onMouseLeave={() => setOuterActiveIndex(null)}
@@ -199,7 +221,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cornerRadius={CHART_CORNER_RADIUS}
                 paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={combineActive(innerActiveIndex, dualInnerSelectedIdx)}
+                activeIndex={chooseActive(innerActiveIndex, dualInnerSelectedIdx)}
                 onClick={(entry: DonutSegment) => props.onInnerRingClick(entry.id)}
                 onMouseEnter={(_: DonutSegment, idx: number) => setInnerActiveIndex(idx)}
                 onMouseLeave={() => setInnerActiveIndex(null)}
@@ -241,7 +263,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                   cornerRadius={CHART_CORNER_RADIUS}
                   paddingAngle={CHART_PAD_ANGLE}
                   activeShape={ActiveCalloutShape as any}
-                  activeIndex={combineActive(outerActiveIndex, itemSelectedIdx)}
+                  activeIndex={chooseActive(outerActiveIndex, itemSelectedIdx)}
                   onClick={(entry: OuterPieEntry) => props.onItemClick(entry.id)}
                   onMouseEnter={(entry: OuterPieEntry, idx: number) => {
                     setOuterActiveIndex(idx)
@@ -289,7 +311,7 @@ const ChartBody: React.FC<ChartBodyProps> = (props) => {
                 cornerRadius={CHART_CORNER_RADIUS}
                 paddingAngle={CHART_PAD_ANGLE}
                 activeShape={ActiveCalloutShape as any}
-                activeIndex={combineActive(innerActiveIndex, categorySelectedIdx)}
+                activeIndex={chooseActive(innerActiveIndex, categorySelectedIdx)}
                 onClick={(entry: SortedChartCategory) => props.onCategoryClick(entry.name)}
                 onMouseEnter={(_: SortedChartCategory, idx: number) => setInnerActiveIndex(idx)}
                 onMouseLeave={() => setInnerActiveIndex(null)}
