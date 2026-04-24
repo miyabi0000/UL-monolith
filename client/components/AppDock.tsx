@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useDarkMode } from '../hooks/useDarkMode';
 import { useOutsideClick } from '../hooks/useOutsideClick';
 
 interface AppDockProps {
@@ -10,6 +9,13 @@ interface AppDockProps {
   onShowChat?: () => void;
 }
 
+/**
+ * AppDock — `/p/:packId` (公開 pack) 等 ProfileHeader が無いルート専用の
+ * 右上固定チップ群。Board 戻り線 / Chat / User メニューを載せる。
+ *
+ * ダークモード切替は `ThemeToggleFab` (App.tsx で全ルート常駐) に一元化済み
+ * のため、ここでは扱わない。
+ */
 const AppDock: React.FC<AppDockProps> = ({
   onLogout,
   isAuthenticated,
@@ -17,7 +23,6 @@ const AppDock: React.FC<AppDockProps> = ({
   onShowChat,
 }) => {
   const location = useLocation();
-  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
   useOutsideClick(dockRef, () => setUserMenuOpen(false), userMenuOpen);
@@ -53,24 +58,6 @@ const AppDock: React.FC<AppDockProps> = ({
             <span className="hidden sm:inline">Chat</span>
           </button>
         )}
-
-        <button
-          type="button"
-          className="glass-header-chip h-control-lg w-control-lg sm:h-control sm:w-control inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
-          onClick={toggleDarkMode}
-          aria-label="Toggle dark mode"
-          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
 
         {/* ユーザーメニュー（モバイルでは ProfileHeader に統合済みのため非表示）
          * 未認証時は Landing 画面を表示するため、AppDock は常に認証済み前提。
