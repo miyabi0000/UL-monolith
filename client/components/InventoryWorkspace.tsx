@@ -269,40 +269,44 @@ export default function InventoryWorkspace({
                   onDeletePack={onDeletePack}
                 />
 
-                {selectedPackId && (
-                  <div role="tabpanel" className="grid gap-2 px-3 pt-1 pb-2">
-                    <PackInfoSection
-                      pack={activePack}
-                      itemCount={activePackItemIds.length}
-                      onUpdate={onUpdatePack}
-                      onDelete={onDeletePack ? () => {
-                        if (window.confirm('Delete this pack?')) {
-                          onDeletePack(selectedPackId);
-                        }
-                      } : undefined}
-                      onCopyLink={onCopyPackLink}
-                      onOpenPublic={onOpenPackPublic}
-                    />
+                {/* Folder body: アクティブ tab の surface を共有して、
+                 * タブとその内容が「1 つのフォルダ」として視覚的にまとまる */}
+                <div className="pack-folder-body">
+                  {selectedPackId && (
+                    <div role="tabpanel" className="grid gap-2 px-3 pt-3 pb-2">
+                      <PackInfoSection
+                        pack={activePack}
+                        itemCount={activePackItemIds.length}
+                        onUpdate={onUpdatePack}
+                        onDelete={onDeletePack ? () => {
+                          if (window.confirm('Delete this pack?')) {
+                            onDeletePack(selectedPackId);
+                          }
+                        } : undefined}
+                        onCopyLink={onCopyPackLink}
+                        onOpenPublic={onOpenPackPublic}
+                      />
 
-                    {mapEmbedUrl && (
-                      <section className="rounded-lg p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
-                        <div className="mt-2 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
-                          <iframe
-                            title="Route map"
-                            src={mapEmbedUrl}
-                            className="h-44 w-full"
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
-                        </div>
-                      </section>
-                    )}
+                      {mapEmbedUrl && (
+                        <section className="rounded-lg p-3 bg-gray-50 border border-gray-200 dark:border-gray-700">
+                          <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-200">Route Map</h3>
+                          <div className="mt-2 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
+                            <iframe
+                              title="Route map"
+                              src={mapEmbedUrl}
+                              className="h-44 w-full"
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                            />
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="px-1 py-1">
+                    {gearChartPanel}
                   </div>
-                )}
-
-                <div className="px-1 pb-1">
-                  {gearChartPanel}
                 </div>
               </div>
             )}

@@ -112,6 +112,15 @@
     --text-table-sub: #6B6B66;
     --text-table-num: #0A0A0A;
     --text-table-micro: #6B6B66;
+
+    /* Paper grain / noise matte — チャートのグレインと同系の質感を
+     * カード / モーダル / ボタンに薄く重ねる。base frequency 高めで細目の粒。 */
+    --noise-url: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    /* 3 強度: control (input 系) < surface (card / modal) < prominent (btn)
+     * ダークモードでは少し強めに補正 (screen 合成で粒がコントラストを受けやすいため) */
+    --noise-opacity-surface:   0.09;
+    --noise-opacity-control:   0.11;
+    --noise-opacity-prominent: 0.14;
   }
 
   body {
@@ -215,6 +224,54 @@
     box-shadow: var(--shadow-sm);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  /* Paper grain overlay — card / modal / button / chip に共通の
+   * マットなノイズ質感を ::after で重ねる。チャートの feTurbulence
+   * grain と同じ視覚言語をデザインシステム全体に適用する。 */
+  .card::after,
+  .modal-content::after,
+  .btn-primary::after,
+  .btn-secondary::after,
+  .btn-danger::after,
+  .glass-header-chip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: var(--noise-url);
+    mix-blend-mode: multiply;
+    opacity: var(--noise-opacity-surface);
+    border-radius: inherit;
+    z-index: 0;
+  }
+  /* ボタン / チップは主張を強めに */
+  .btn-primary::after,
+  .btn-danger::after {
+    opacity: var(--noise-opacity-prominent);
+  }
+  .btn-secondary::after,
+  .glass-header-chip::after {
+    opacity: var(--noise-opacity-control);
+  }
+  /* ダークモード: screen 合成で粒を浮かせる */
+  .dark .card::after,
+  .dark .modal-content::after,
+  .dark .btn-primary::after,
+  .dark .btn-secondary::after,
+  .dark .btn-danger::after,
+  .dark .glass-header-chip::after {
+    mix-blend-mode: screen;
+  }
+  /* 子要素を noise の上に重ねる (デフォルトの z-index: 0 と衝突しないよう明示) */
+  .card > *,
+  .modal-content > *,
+  .btn-primary > *,
+  .btn-secondary > *,
+  .btn-danger > *,
+  .glass-header-chip > * {
+    position: relative;
+    z-index: 1;
   }
 
   /* ヘッダー — 下部に Mondrian 黒線 */
@@ -646,6 +703,37 @@
   .dark .hover\:text-gray-600:not([class*='dark:hover:text-']):hover { color: var(--ink-primary); }
   .dark .hover\:text-gray-700:not([class*='dark:hover:text-']):hover { color: var(--ink-primary); }
   .dark .hover\:text-gray-900:not([class*='dark:hover:text-']):hover { color: var(--ink-primary); }
+}
+
+/* Pack folder body — tab bar の直下に貼り付く「フォルダの中身」パネル。
+ * アクティブ tab と同じ surface を共有し、top-left は角なし (tab と
+ * 見切れ接続)、他 3 隅は --radius-surface で丸める。tabbar は -mb-px で
+ * 1px 食い込んでシームを消す前提。noise matte も継承。 */
+.pack-folder-body {
+  position: relative;
+  background: var(--surface-level-0);
+  border: var(--border-default);
+  border-radius: 0 var(--radius-surface) var(--radius-surface) var(--radius-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.pack-folder-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--noise-url);
+  mix-blend-mode: multiply;
+  opacity: var(--noise-opacity-surface);
+  z-index: 0;
+  border-radius: inherit;
+}
+.dark .pack-folder-body::after {
+  mix-blend-mode: screen;
+}
+.pack-folder-body > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Pack folder tab – trapezoid via perspective transform */
