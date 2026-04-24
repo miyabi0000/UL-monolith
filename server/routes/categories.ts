@@ -7,6 +7,7 @@ import {
   normalizeCategoryName,
   DEFAULT_CATEGORY_COLOR
 } from '../utils/categoryValidation.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
       data: categories
     });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error({ err: error }, 'Error fetching categories:');
     return sendError(res, 'Failed to fetch categories', error);
   }
 });
@@ -45,7 +46,7 @@ router.get('/:id', async (req, res) => {
       data: category
     });
   } catch (error) {
-    console.error('Error fetching category:', error);
+    logger.error({ err: error }, 'Error fetching category:');
     return sendError(res, 'Failed to fetch category', error);
   }
 });
@@ -84,7 +85,7 @@ router.post('/', async (req, res) => {
       message: 'Category created successfully'
     }, 201);
   } catch (error) {
-    console.error('Error creating category:', error);
+    logger.error({ err: error }, 'Error creating category:');
     return sendError(res, 'Failed to create category', error);
   }
 });
@@ -144,7 +145,7 @@ router.put('/:id', async (req, res) => {
       message: 'Category updated successfully'
     });
   } catch (error) {
-    console.error('Error updating category:', error);
+    logger.error({ err: error }, 'Error updating category:');
     return sendError(res, 'Failed to update category', error);
   }
 });
@@ -185,7 +186,7 @@ router.delete('/:id', async (req, res) => {
       return sendError(res, 'Cannot delete category with associated items. Please reassign or delete items first.', undefined, 409);
     }
 
-    console.error('Error deleting category:', error);
+    logger.error({ err: error }, 'Error deleting category:');
     return sendError(res, 'Failed to delete category', error);
   }
 });

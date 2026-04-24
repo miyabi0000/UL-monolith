@@ -20,5 +20,15 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'off',
     'no-unused-vars': 'off',
   },
-  ignorePatterns: ['dist/', 'node_modules/'],
+  overrides: [
+    {
+      // サーバー側は構造化ロガー (pino) を使う (Issue #54)
+      // クライアント側は console 許容 (dev tool 連携 / 既存デバッグコードのため)
+      files: ['server/**/*.ts'],
+      rules: {
+        'no-console': 'error',
+      },
+    },
+  ],
+  ignorePatterns: ['dist/', 'node_modules/', 'server/dist/'],
 };

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { sanitizeGearData } from '../../utils/helpers.js';
 import { db } from '../../database/connection.js';
 import { getRequestUserId } from '../shared/userContext.js';
+import { logger } from '../../utils/logger.js';
 
 export const handleGetAllGear = async (req: Request, res: Response) => {
   try {
@@ -20,7 +21,7 @@ export const handleGetAllGear = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error in handleGetAllGear:', error);
+    logger.error({ err: error }, 'Error in handleGetAllGear:');
     res.status(500).json({
       success: false,
       message: 'Failed to fetch gear items',
@@ -47,7 +48,7 @@ export const handleGetGearById = async (req: Request, res: Response) => {
       data: item
     });
   } catch (error) {
-    console.error('Error in handleGetGearById:', error);
+    logger.error({ err: error }, 'Error in handleGetGearById:');
     res.status(500).json({
       success: false,
       message: 'Failed to fetch gear item',
@@ -70,7 +71,7 @@ export const handleGetGearSummary = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Error in handleGetGearSummary:', error);
+    logger.error({ err: error }, 'Error in handleGetGearSummary:');
     res.status(500).json({
       success: false,
       message: 'Failed to calculate gear summary',
@@ -98,7 +99,7 @@ export const handleCreateGear = async (req: Request, res: Response) => {
       message: 'Gear item created successfully'
     });
   } catch (error) {
-    console.error('Error in handleCreateGear:', error);
+    logger.error({ err: error }, 'Error in handleCreateGear:');
     res.status(500).json({
       success: false,
       message: 'Failed to create gear item',
@@ -127,7 +128,7 @@ export const handleUpdateGear = async (req: Request, res: Response) => {
       message: 'Gear item updated successfully'
     });
   } catch (error) {
-    console.error('Error in handleUpdateGear:', error);
+    logger.error({ err: error }, 'Error in handleUpdateGear:');
     res.status(500).json({
       success: false,
       message: 'Failed to update gear item',
@@ -154,7 +155,7 @@ export const handleDeleteGear = async (req: Request, res: Response) => {
       message: 'Gear item deleted successfully'
     });
   } catch (error) {
-    console.error('Error in handleDeleteGear:', error);
+    logger.error({ err: error }, 'Error in handleDeleteGear:');
     res.status(500).json({
       success: false,
       message: 'Failed to delete gear item',

@@ -5,6 +5,7 @@ import { normalizeBrand } from '../utils/brandUtils.js';
 import { extractJsonLd } from './scraping/headParsers.js';
 import { extractWeight, cleanBrandText } from '../utils/scrapingHelpers.js';
 import { CategoryMatcher } from './categoryMatcher.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Amazon専用スクレイピングサービス - 最適化版
@@ -37,13 +38,13 @@ export class AmazonScraper {
       const result = this.extractAmazonData($, url);
 
       if (result.extractedFields.length === 0) {
-        console.warn(`[Amazon] No data extracted from ${url}, using fallback`);
+        logger.warn(`[Amazon] No data extracted from ${url}, using fallback`);
         return { data: this.createAmazonFallback(url), html };
       }
 
       return { data: result, html };
     } catch (error) {
-      console.error(`[Amazon] Scraping failed for ${url}:`, error);
+      logger.error({ err: error }, `[Amazon] Scraping failed for ${url}:`);
       return { data: this.createAmazonFallback(url), html: '' };
     }
   }

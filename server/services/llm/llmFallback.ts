@@ -1,5 +1,6 @@
 import { LLMExtractionResult } from '../../models/types.js';
 import { openaiClient } from '../openaiClient.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * スクレイピング欠損時のLLMフォールバック
@@ -48,7 +49,7 @@ export async function llmFallback(
   snippets: string,
 ): Promise<Partial<LLMExtractionResult> | null> {
   if (!openaiClient.isAvailable()) {
-    console.log('[LLM Fallback] OpenAI client not available, skipping');
+    logger.info('[LLM Fallback] OpenAI client not available, skipping');
     return null;
   }
 
@@ -67,7 +68,7 @@ export async function llmFallback(
 
     return mergeWithCandidates(candidates, parsed);
   } catch (error) {
-    console.error('[LLM Fallback] Failed:', error);
+    logger.error({ err: error }, '[LLM Fallback] Failed:');
     return null;
   }
 }

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { cognitoAuth, optionalAuth } from '../middleware/cognitoAuth.js';
 import { db } from '../database/connection.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.get('/', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: result.rows });
   } catch (error) {
-    console.error('Error fetching packs:', error);
+    logger.error({ err: error }, 'Error fetching packs:');
     res.status(500).json({ success: false, message: 'Failed to fetch packs' });
   }
 });
@@ -47,7 +48,7 @@ router.post('/', cognitoAuth, async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error) {
-    console.error('Error creating pack:', error);
+    logger.error({ err: error }, 'Error creating pack:');
     res.status(500).json({ success: false, message: 'Failed to create pack' });
   }
 });
@@ -76,7 +77,7 @@ router.put('/:id', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: result.rows[0] });
   } catch (error) {
-    console.error('Error updating pack:', error);
+    logger.error({ err: error }, 'Error updating pack:');
     res.status(500).json({ success: false, message: 'Failed to update pack' });
   }
 });
@@ -97,7 +98,7 @@ router.delete('/:id', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, message: 'Pack deleted' });
   } catch (error) {
-    console.error('Error deleting pack:', error);
+    logger.error({ err: error }, 'Error deleting pack:');
     res.status(500).json({ success: false, message: 'Failed to delete pack' });
   }
 });
@@ -126,7 +127,7 @@ router.get('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: result.rows.map(r => r.gear_id) });
   } catch (error) {
-    console.error('Error fetching pack items:', error);
+    logger.error({ err: error }, 'Error fetching pack items:');
     res.status(500).json({ success: false, message: 'Failed to fetch pack items' });
   }
 });
@@ -176,7 +177,7 @@ router.put('/:id/items', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: gearIds });
   } catch (error) {
-    console.error('Error updating pack items:', error);
+    logger.error({ err: error }, 'Error updating pack items:');
     res.status(500).json({ success: false, message: 'Failed to update pack items' });
   }
 });
@@ -222,7 +223,7 @@ router.get('/public/:id', optionalAuth, async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching public pack:', error);
+    logger.error({ err: error }, 'Error fetching public pack:');
     res.status(500).json({ success: false, message: 'Failed to fetch public pack' });
   }
 });
@@ -276,7 +277,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true, data: importedPacks, message: `${importedPacks.length} packs imported` });
   } catch (error) {
-    console.error('Error importing packs:', error);
+    logger.error({ err: error }, 'Error importing packs:');
     res.status(500).json({ success: false, message: 'Failed to import packs' });
   }
 });

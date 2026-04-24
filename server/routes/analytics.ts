@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../database/connection.js';
 import { sendError, sendSuccess } from './shared/httpResponse.js';
 import { getRequestUserId } from './shared/userContext.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.get('/summary', async (req, res) => {
       data: summary
     });
   } catch (error) {
-    console.error('Error fetching analytics summary:', error);
+    logger.error({ err: error }, 'Error fetching analytics summary:');
     return sendError(res, 'Failed to fetch analytics summary', error);
   }
 });
@@ -51,7 +52,7 @@ router.get('/weight-breakdown', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching weight breakdown:', error);
+    logger.error({ err: error }, 'Error fetching weight breakdown:');
     return sendError(res, 'Failed to fetch weight breakdown', error);
   }
 });

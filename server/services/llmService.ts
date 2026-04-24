@@ -2,6 +2,7 @@ import { LLMExtractionResult } from '../models/types.js';
 import { openaiClient } from './openaiClient.js';
 import { scrapeUrl } from './scraping/scrapeOrchestrator.js';
 import { PROMPTS } from './llmPrompts.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * LLM Service - 最小限実装
@@ -34,7 +35,7 @@ export class LLMService {
         source: 'llm_prompt'
       };
     } catch (error) {
-      console.error('Prompt extraction failed:', error);
+      logger.error({ err: error }, 'Prompt extraction failed:');
       return this.createFallback(prompt);
     }
   }
@@ -47,7 +48,7 @@ export class LLMService {
     const { data, failureReasons } = await scrapeUrl(url);
 
     if (failureReasons.length > 0) {
-      console.log(`[LLM] Scrape issues for ${url}: ${failureReasons.join(', ')}`);
+      logger.info(`[LLM] Scrape issues for ${url}: ${failureReasons.join(', ')}`);
     }
 
     return data;
@@ -78,7 +79,7 @@ export class LLMService {
         source: 'enhanced'
       };
     } catch (error) {
-      console.error('Enhancement failed:', error);
+      logger.error({ err: error }, 'Enhancement failed:');
       return urlData; // 失敗時は元データを返す
     }
   }
@@ -95,7 +96,7 @@ export class LLMService {
       const result = this.parseJSON(response);
       return { name: result.name, englishName: result.englishName };
     } catch (error) {
-      console.error('Category extraction failed:', error);
+      logger.error({ err: error }, 'Category extraction failed:');
       return null;
     }
   }
@@ -113,7 +114,7 @@ export class LLMService {
         tips: result.tips || ['特に提案はありません']
       };
     } catch (error) {
-      console.error('List analysis failed:', error);
+      logger.error({ err: error }, 'List analysis failed:');
       return {
         summary: '分析に失敗しました',
         tips: ['後でもう一度お試しください']

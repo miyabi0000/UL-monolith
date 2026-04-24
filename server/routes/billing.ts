@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 import { cognitoAuth } from '../middleware/cognitoAuth.js';
 import { db } from '../database/connection.js';
 import { stripe, STRIPE_PRICE_ID_PRO, STRIPE_WEBHOOK_SECRET, FRONTEND_URL } from '../services/stripeClient.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -49,7 +50,7 @@ router.post('/checkout', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: { url: session.url } });
   } catch (error) {
-    console.error('[Billing] checkout error:', error);
+    logger.error({ err: error }, '[Billing] checkout error:');
     res.status(500).json({ success: false, message: 'Failed to create checkout session' });
   }
 });
@@ -81,7 +82,7 @@ router.post('/portal', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: { url: session.url } });
   } catch (error) {
-    console.error('[Billing] portal error:', error);
+    logger.error({ err: error }, '[Billing] portal error:');
     res.status(500).json({ success: false, message: 'Failed to create portal session' });
   }
 });
@@ -103,7 +104,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
   try {
     event = stripe.webhooks.constructEvent(req.body as Buffer, signature, STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('[Billing] Webhook signature verification failed:', err);
+    logger.error({ err: err }, '[Billing] Webhook signature verification failed:');
     return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'unknown'}`);
   }
 
@@ -150,7 +151,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
     }
     res.json({ received: true });
   } catch (error) {
-    console.error('[Billing] Webhook processing error:', error);
+    logger.error({ err: error }, '[Billing] Webhook processing error:');
     res.status(500).send('Webhook handler failed');
   }
 });

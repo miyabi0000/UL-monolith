@@ -17,6 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
 import { buildPoolConfig } from '../database/poolConfig.js';
+import { logger } from '../utils/logger.js';
 
 config();
 
@@ -63,10 +64,10 @@ async function applyMigration(version: string, sql: string): Promise<void> {
     await client.query(sql);
     await client.query('INSERT INTO schema_migrations (version) VALUES ($1)', [version]);
     await client.query('COMMIT');
-    console.log(`  ✅ ${version}`);
+    logger.info(`  ✅ ${version}`);
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(`  ❌ ${version} failed:`, err);
+    logger.error({ err: err }, `  ❌ ${version} failed:`);
     throw err;
   } finally {
     client.release();
@@ -74,7 +75,7 @@ async function applyMigration(version: string, sql: string): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log('🚀 Running database migrations...');
+  logger.info('🚀 Running database migrations...');
 
   // Railway 等の本番では init.sql の内容も流す必要がある (docker-entrypoint が動かないため)
   // 開発時 (docker-compose) では init.sql は postgres 起動時に自動で適用済み
@@ -85,10 +86,10 @@ async function main(): Promise<void> {
     `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') AS exists`,
   );
   if (!usersCheck.rows[0].exists) {
-    console.log('📦 Initial schema not found. Running init.sql...');
+    logger.info('📦 Initial schema not found. Running init.sql...');
     const initSql = fs.readFileSync(path.join(databaseDir, 'init.sql'), 'utf-8');
     await pool.query(initSql);
-    console.log('  ✅ init.sql applied');
+    logger.info('  ✅ init.sql applied');
   }
 
   // migrations/*.sql を辞書順に適用
@@ -102,22 +103,22 @@ async function main(): Promise<void> {
   const pending = files.filter((f) => !applied.has(f));
 
   if (pending.length === 0) {
-    console.log('✨ No pending migrations.');
+    logger.info('✨ No pending migrations.');
     await pool.end();
     return;
   }
 
-  console.log(`📋 ${pending.length} pending migration(s):`);
+  logger.info(`📋 ${pending.length} pending migration(s):`);
   for (const file of pending) {
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
     await applyMigration(file, sql);
   }
 
-  console.log('✨ All migrations applied.');
+  logger.info('✨ All migrations applied.');
   await pool.end();
 }
 
 main().catch((err) => {
-  console.error('Migration failed:', err);
+  logger.error({ err: err }, 'Migration failed:');
   process.exit(1);
 });

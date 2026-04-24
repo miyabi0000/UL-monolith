@@ -5,6 +5,7 @@ import { normalizeBrand, extractBrandFromText, getBrandFromDomain } from '../uti
 import { CategoryMatcher } from './categoryMatcher.js';
 import { extractJsonLd, extractOgp, extractMicrodata, OgpData, MicrodataProduct } from './scraping/headParsers.js';
 import { extractWeight as extractWeightFromText } from '../utils/scrapingHelpers.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * 汎用Web Scraping Service - 最小限実装
@@ -29,7 +30,7 @@ export class WebScrapingService {
 
       return { data: this.createFallback(url), html };
     } catch (error) {
-      console.error(`Scraping failed for ${url}:`, error);
+      logger.error({ err: error }, `Scraping failed for ${url}:`);
       return { data: this.createFallback(url), html: '' };
     }
   }

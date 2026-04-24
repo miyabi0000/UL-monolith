@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { checkQuota, QuotaEndpoint } from '../services/quotaService.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * 月次クォータ判定ミドルウェア。
@@ -36,7 +37,7 @@ export function quotaCheck(endpoint: QuotaEndpoint) {
       }
       next();
     } catch (error) {
-      console.error('[quotaCheck] Failed:', error);
+      logger.error({ err: error }, '[quotaCheck] Failed:');
       // DB 障害でもユーザー体験を止めない（記録はできないが通す）
       next();
     }

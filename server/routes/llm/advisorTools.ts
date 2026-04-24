@@ -4,6 +4,7 @@
  */
 import type { ChatCompletionTool, ChatCompletionMessageToolCall } from 'openai/resources/chat/completions';
 import type { GearRef, SuggestedEdit } from './advisorTypes.js';
+import { logger } from '../../utils/logger.js';
 
 // ==================== ツール定義 ====================
 
@@ -89,7 +90,7 @@ export function parseToolCalls(
     try {
       args = JSON.parse(call.function.arguments);
     } catch {
-      console.warn(`[AdvisorTools] JSON parse failed for ${call.function.name}:`, call.function.arguments);
+      logger.warn({ args: call.function.arguments }, `[AdvisorTools] JSON parse failed for ${call.function.name}`);
       continue;
     }
 

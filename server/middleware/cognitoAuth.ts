@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { resolveUserIdFromSub } from '../routes/shared/userProvisioning.js';
+import { logger } from '../utils/logger.js';
 
 // Cognito JWT 検証ミドルウェア
 // 開発時のみ COGNITO_USER_POOL_ID が未設定なら DEMO_USER_ID を使用。
@@ -30,9 +31,9 @@ const verifier = userPoolId && clientId
 
 if (!verifier) {
   if (isProduction) {
-    console.error('[cognitoAuth] COGNITO_USER_POOL_ID / COGNITO_CLIENT_ID が未設定です。本番では認証が必須のため、全てのリクエストに 401 を返します。');
+    logger.error('[cognitoAuth] COGNITO_USER_POOL_ID / COGNITO_CLIENT_ID が未設定です。本番では認証が必須のため、全てのリクエストに 401 を返します。');
   } else {
-    console.warn('[cognitoAuth] Cognito 未設定 (開発モード) - DEMO_USER_ID をフォールバック使用');
+    logger.warn('[cognitoAuth] Cognito 未設定 (開発モード) - DEMO_USER_ID をフォールバック使用');
   }
 }
 
@@ -79,7 +80,7 @@ export async function cognitoAuth(req: Request, res: Response, next: NextFunctio
     req.userId = await resolveUserIdFromSub(payload.sub, email, name);
     next();
   } catch (error) {
-    console.error('JWT verification failed:', error);
+    logger.error({ err: error }, 'JWT verification failed:');
     res.status(401).json({
       success: false,
       message: 'Invalid or expired token',
