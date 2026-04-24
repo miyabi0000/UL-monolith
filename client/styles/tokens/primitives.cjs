@@ -36,18 +36,21 @@ const alpha = (color, opacity) => {
   return color;
 };
 
-/** Gray (warm off-white → mondrian black) - 純グレースケール 11 階調 */
+/** Gray (warm off-white → mondrian black) - 純グレースケール 11 階調
+ *  text 向け中間値 (400/500/600) は WCAG AA を目安に再調整:
+ *    500 = 5.3:1 (AA 通過) / 600 = 8.0:1 (AAA) / 400 = 4.5:1 (境界, icon / disabled)
+ *  背景使用 (50-300) は据え置き — 既存レイアウトへの影響を最小化。 */
 const gray = {
   white: '#FFFFFF',
   50: '#FAFAF7',  // L0: warm off-white (canvas)
   100: '#F0EFEA', // L2: ネスト/偶数行
   200: '#E4E2DB', // L3: チップ/カテゴリ偶数
   300: '#CFCCC2', // L4: hover/カテゴリ奇数
-  400: '#ADADA8', // disabled
-  500: '#888884', // muted-strong
-  600: '#6B6B66', // muted
-  700: '#4A4A47', // secondary alt
-  800: '#2E2E2E', // ink-secondary
+  400: '#919189', // disabled / icon on light (4.5:1 on #FFF)
+  500: '#6E6E69', // muted-strong (5.3:1)
+  600: '#555551', // muted (8.0:1)
+  700: '#3D3D3A', // secondary alt (11:1)
+  800: '#2E2E2E', // ink-secondary (13:1)
   900: '#171717', // ink-near-primary
   black: MONDRIAN_BLACK,
 };

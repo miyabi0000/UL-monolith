@@ -705,6 +705,20 @@
   .dark .hover\:text-gray-900:not([class*='dark:hover:text-']):hover { color: var(--ink-primary); }
 }
 
+/* ダークモード向け text-gray-* 上書き — Tailwind の静的値では両モード両立
+ * しないため、暗い背景 (#2D2F2D 等) 上でのコントラストを明示的に高める。
+ *
+ * 目安 (bg: --surface-level-0 dark #434543):
+ *   gray-400  → #C8C7C3 ≒ 5.6:1  (AA)
+ *   gray-500  → #B1B0AC ≒ 4.7:1  (AA 境界)
+ *   gray-600  → #9C9B97 ≒ 3.7:1  (icon / large text のみ)
+ *
+ * Tailwind の `text-gray-500` / `dark:text-gray-400` 等のクラスは light 時の
+ * primitive 値を使うため、.dark 下では以下で書き換える。 */
+.dark .text-gray-400 { color: #C8C7C3 !important; }
+.dark .text-gray-500 { color: #B1B0AC !important; }
+.dark .text-gray-600 { color: #9C9B97 !important; }
+
 /* Pack folder body — tab bar の直下に貼り付く「フォルダの中身」パネル。
  * アクティブ tab と同じ surface を共有し、top-left は角なし (tab と
  * 見切れ接続)、他 3 隅は --radius-surface で丸める。tabbar は -mb-px で
