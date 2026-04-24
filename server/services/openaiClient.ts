@@ -13,7 +13,8 @@ export interface UsageContext {
  */
 export class OpenAIClient {
   private openai: OpenAI | null;
-  private readonly defaultModel = 'gpt-4o';
+  /** OPENAI_MODEL env で上書き可能。未設定時は gpt-4o にフォールバック */
+  private readonly defaultModel = process.env.OPENAI_MODEL ?? 'gpt-4o';
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
