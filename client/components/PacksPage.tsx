@@ -3,10 +3,9 @@ import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { useProfile } from '../hooks/useProfile';
-import { useIsMobile } from '../hooks/useResponsiveSize';
 import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
-import ProfileEditorModal from './ProfileEditorModal';
+import SettingsModal from './SettingsModal';
 
 const fallbackUserId = 'local-user';
 
@@ -27,10 +26,10 @@ export default function PacksPage({
   onShowChat,
 }: PacksPageProps) {
   const { user } = useAuth();
-  const { gearItems, showChat } = appState;
+  const { gearItems } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
-  const { profile, updateField, showEditor, setShowEditor, plan } = useProfile(user?.name);
-  const isMobile = useIsMobile();
+  const { profile, updateField, plan } = useProfile(user?.name);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
 
@@ -68,23 +67,18 @@ export default function PacksPage({
     }
   };
 
-  // Chat が開いているデスクトップではサイドバー分の右余白を確保して、
-  // ProfileHeader の右端アイコン（Chat / Edit / Dark / Login）が隠れないようにする。
-  const chatSidebarGutter = showChat && !isMobile ? { paddingRight: '400px' } : undefined;
+  // Chat は bottom sheet 化したため、右余白を確保する必要はなし。
+  // main content は常時フル幅。
 
   return (
     <main
       id="inventory-overview"
-      className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-4 sm:px-4 md:px-6 lg:px-4 transition-[padding] duration-200"
-      style={chatSidebarGutter}
+      className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-4 sm:px-4 md:px-6 lg:px-4"
     >
       <div className="flex min-h-0 flex-col gap-3">
         <ProfileHeader
           profile={profile}
-          onEditProfile={() => setShowEditor(true)}
-          isAuthenticated={isAuthenticated}
-          userName={userName}
-          onLogout={onLogout}
+          onOpenSettings={() => setSettingsOpen(true)}
           onShowChat={onShowChat}
         />
 
@@ -109,12 +103,15 @@ export default function PacksPage({
         </div>
       </div>
 
-      {showEditor && (
-        <ProfileEditorModal
+      {settingsOpen && (
+        <SettingsModal
           profile={profile}
           onUpdate={updateField}
-          onClose={() => setShowEditor(false)}
+          onClose={() => setSettingsOpen(false)}
           plan={plan}
+          isAuthenticated={isAuthenticated}
+          userName={userName}
+          onLogout={onLogout}
         />
       )}
     </main>
