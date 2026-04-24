@@ -6,7 +6,6 @@ import { deriveChartSelection } from '../utils/chart/chartTypes'
 import Card from './ui/Card'
 import GearDetailPanel from './GearDetailPanel'
 import ChartSummaryFooter from './charts/ChartSummaryFooter'
-import PackTabSection from './charts/PackTabSection'
 import ChartHeader from './charts/ChartHeader'
 import ChartBody from './charts/ChartBody'
 import { ChartGeometryProvider } from './charts/context/ChartGeometryContext'
@@ -59,12 +58,6 @@ interface ChartPanelProps {
   activePackItemIds?: string[]
   onTogglePackItem?: (itemId: string) => void
   onAddItemsToPack?: (itemIds: string[]) => void
-  // Pack タブ（detail panel ヘッダーに統合）
-  packList?: Array<{ id: string; name: string }>
-  selectedPackId?: string | null
-  onSelectPack?: (packId: string | null) => void
-  onCreatePack?: (name: string) => void
-  onOpenPackSettings?: () => void
   // Chart ↔ Table/Card の双方向連動
   selectedItemId?: string | null
   onItemSelect?: (id: string | null) => void
@@ -96,11 +89,6 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   activePackItemIds = [],
   onTogglePackItem,
   onAddItemsToPack,
-  packList,
-  selectedPackId,
-  onSelectPack,
-  onCreatePack,
-  onOpenPackSettings,
   selectedItemId = null,
   onItemSelect,
   hoveredItemId = null,
@@ -364,34 +352,12 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
           {/* パネルヘッダー */}
           <div className="relative z-[60] flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11 overflow-visible">
             <div className="flex items-center gap-1 text-xs min-w-0 overflow-x-auto">
-              {packList !== undefined ? (
-                /* Pack タブモード */
-                <>
-                  <PackTabSection
-                    packList={packList}
-                    selectedPackId={selectedPackId}
-                    onSelectPack={onSelectPack}
-                    onCreatePack={onCreatePack}
-                    onOpenPackSettings={onOpenPackSettings}
-                    onPackChange={() => { setSelectedItem(null); onCategorySelect([]) }}
-                  />
-
-                  <ChartBreadcrumb
-                    packMode
-                    selectedCategoryName={selectedCategoryFromChart}
-                    selectedItemName={selectedItem ? selectedItemName : null}
-                    onClearAll={() => { setSelectedItem(null); onCategorySelect([]) }}
-                    onClearItem={() => setSelectedItem(null)}
-                  />
-                </>
-              ) : (
-                <ChartBreadcrumb
-                  selectedCategoryName={selectedCategoryFromChart}
-                  selectedItemName={selectedItem ? selectedItemName : null}
-                  onClearAll={() => { setSelectedItem(null); onCategorySelect([]) }}
-                  onClearItem={() => setSelectedItem(null)}
-                />
-              )}
+              <ChartBreadcrumb
+                selectedCategoryName={selectedCategoryFromChart}
+                selectedItemName={selectedItem ? selectedItemName : null}
+                onClearAll={() => { setSelectedItem(null); onCategorySelect([]) }}
+                onClearItem={() => setSelectedItem(null)}
+              />
             </div>
 
             {/* 右側ツールバー: 表示切替 (Card / Table / Compare)
