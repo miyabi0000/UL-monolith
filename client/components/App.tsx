@@ -8,6 +8,7 @@ import PacksPage from './PacksPage';
 import PackDetailPage from './PackDetailPage';
 import AppDock from './AppDock';
 import Landing from './Landing';
+import ThemeToggleFab from './ThemeToggleFab';
 
 export default function App() {
   const location = useLocation();
@@ -54,6 +55,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      {/* viewport 右上 fixed の theme toggle (全ルート共通) */}
+      <ThemeToggleFab />
+
       {/* ルーティング */}
       <Routes>
         <Route

@@ -3,13 +3,6 @@ import type { ProfileSettings, UserPlan } from '../hooks/useProfile';
 import { useImageUpload } from '../hooks/useImageUpload';
 import { createCheckoutSession, createPortalSession } from '../services/billingService';
 
-interface ProfileEditorModalProps {
-  profile: ProfileSettings;
-  onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
-  onClose: () => void;
-  plan?: UserPlan;
-}
-
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</label>
 );
@@ -69,7 +62,6 @@ const ImageDropZone: React.FC<{
 }> = ({ imageUrl, onSelect, onRemove, inputId, height = 'max-h-24' }) => {
   const { isDragging, imagePreview, handleDragOver, handleDragLeave, handleDrop, handleImageSelect, setPreview, removeImage } = useImageUpload();
 
-  // 既存画像をプレビューに反映
   useEffect(() => {
     setPreview(imageUrl || null);
   }, [imageUrl]);
@@ -120,6 +112,71 @@ const ImageDropZone: React.FC<{
   );
 };
 
+// ==================== Form (再利用可能な中身のみ) ====================
+
+interface ProfileEditorFormProps {
+  profile: ProfileSettings;
+  onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
+  plan?: UserPlan;
+}
+
+/**
+ * プロフィール編集フォーム本体 (モーダル chrome なし)。
+ * 単体モーダル (`ProfileEditorModal`) と統合 Settings (`SettingsModal`) の
+ * 両方から再利用される。
+ */
+export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, onUpdate, plan = 'free' }) => (
+  <div className="space-y-3">
+    <div className="space-y-1.5">
+      <SectionLabel>Header</SectionLabel>
+      <input
+        className="input w-full"
+        placeholder="Packboard"
+        value={profile.headerTitle}
+        onChange={(e) => onUpdate('headerTitle', e.target.value)}
+      />
+      <ImageDropZone
+        imageUrl={profile.headerImageUrl}
+        onSelect={(base64) => onUpdate('headerImageUrl', base64)}
+        onRemove={() => onUpdate('headerImageUrl', '')}
+        inputId="profile-header-image"
+        height="max-h-20"
+      />
+    </div>
+    <div className="space-y-1.5">
+      <SectionLabel>Profile</SectionLabel>
+      <input
+        className="input w-full"
+        placeholder="Display name"
+        value={profile.displayName}
+        onChange={(e) => onUpdate('displayName', e.target.value)}
+      />
+      <input
+        className="input w-full"
+        placeholder="@handle"
+        value={profile.handle}
+        onChange={(e) => onUpdate('handle', e.target.value)}
+      />
+      <textarea
+        className="input w-full min-h-[64px]"
+        placeholder="Bio"
+        value={profile.bio}
+        onChange={(e) => onUpdate('bio', e.target.value)}
+      />
+    </div>
+    <PlanSection plan={plan} />
+  </div>
+);
+
+// ==================== Modal wrapper (後方互換) ====================
+
+interface ProfileEditorModalProps {
+  profile: ProfileSettings;
+  onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
+  onClose: () => void;
+  plan?: UserPlan;
+}
+
 const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpdate, onClose, plan = 'free' }) => (
   <div className="modal-overlay" onClick={onClose}>
     <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
@@ -127,46 +184,9 @@ const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpda
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Edit Profile</h3>
         <button type="button" className="text-gray-400 hover:text-gray-600" onClick={onClose}>✕</button>
       </div>
-      <div className="px-4 py-3 space-y-3">
-        <div className="space-y-1.5">
-          <SectionLabel>Header</SectionLabel>
-          <input
-            className="input w-full"
-            placeholder="Packboard"
-            value={profile.headerTitle}
-            onChange={(e) => onUpdate('headerTitle', e.target.value)}
-          />
-          <ImageDropZone
-            imageUrl={profile.headerImageUrl}
-            onSelect={(base64) => onUpdate('headerImageUrl', base64)}
-            onRemove={() => onUpdate('headerImageUrl', '')}
-            inputId="profile-header-image"
-            height="max-h-20"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <SectionLabel>Profile</SectionLabel>
-          <input
-            className="input w-full"
-            placeholder="Display name"
-            value={profile.displayName}
-            onChange={(e) => onUpdate('displayName', e.target.value)}
-          />
-          <input
-            className="input w-full"
-            placeholder="@handle"
-            value={profile.handle}
-            onChange={(e) => onUpdate('handle', e.target.value)}
-          />
-          <textarea
-            className="input w-full min-h-[64px]"
-            placeholder="Bio"
-            value={profile.bio}
-            onChange={(e) => onUpdate('bio', e.target.value)}
-          />
-        </div>
-        <PlanSection plan={plan} />
-        <div className="flex items-center justify-end pt-1">
+      <div className="px-4 py-3">
+        <ProfileEditorForm profile={profile} onUpdate={onUpdate} plan={plan} />
+        <div className="flex items-center justify-end pt-3">
           <button type="button" className="btn-primary" onClick={onClose}>Done</button>
         </div>
       </div>

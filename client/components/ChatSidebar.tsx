@@ -470,27 +470,36 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const advisorLastAssistantId = advisor.messages.filter((m) => m.role === 'assistant').at(-1)?.id;
 
   // ==================== Render ====================
+  // Bottom sheet: 画面下部から transform translateY でスライドイン。
+  // backdrop は透過 + blur で、背景の chart / table が見えたまま操作できる。
   return (
     <>
-      {isMobile && isOpen && (
+      {isOpen && (
         <div
-          className="fixed inset-0 z-[39] bg-black/30 transition-opacity duration-300"
+          className="fixed inset-0 z-[39] bg-black/30 backdrop-blur-sm transition-opacity duration-300"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
       <aside
-        className="fixed top-0 right-0 h-full z-40 flex flex-col
+        className="fixed left-0 right-0 bottom-0 z-40 flex flex-col
                    bg-white dark:bg-gray-900
-                   border-l border-gray-200 dark:border-gray-700
+                   border-t border-gray-200 dark:border-gray-700
                    shadow-xl
                    transition-transform duration-300 ease-in-out"
         style={{
-          width: isMobile ? '100%' : '400px',
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          height: isMobile ? '85vh' : 'min(70vh, 640px)',
+          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+          borderTopLeftRadius: 'var(--radius-surface)',
+          borderTopRightRadius: 'var(--radius-surface)',
         }}
         aria-label="Gear chat assistant"
       >
+        {/* Grabber bar (装飾): 下部シートであることを視覚的に示す */}
+        <div className="flex items-center justify-center pt-2 pb-1 shrink-0" aria-hidden="true">
+          <div className="h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
+        </div>
+
         {/* ヘッダー: mode tabs + close */}
         <div className="flex items-center justify-between px-3 py-2 shrink-0
                         bg-white dark:bg-gray-800
