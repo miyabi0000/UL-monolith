@@ -243,7 +243,8 @@
     inset: 0;
     pointer-events: none;
     background-image: var(--noise-url);
-    mix-blend-mode: multiply;
+    /* light=multiply / dark=screen の切替を colors.ts のトークンで管理 */
+    mix-blend-mode: var(--noise-blend, multiply);
     opacity: var(--noise-opacity-surface);
     border-radius: inherit;
     z-index: 0;
@@ -264,16 +265,7 @@
   /* `.has-noise[data-noise="prominent|control"]` で粒度を切替できるオプション */
   .has-noise[data-noise="prominent"]::after { opacity: var(--noise-opacity-prominent); }
   .has-noise[data-noise="control"]::after   { opacity: var(--noise-opacity-control); }
-  /* ダークモード: screen 合成で粒を浮かせる */
-  .dark .card::after,
-  .dark .modal-content::after,
-  .dark .btn-primary::after,
-  .dark .btn-secondary::after,
-  .dark .btn-danger::after,
-  .dark .glass-header-chip::after,
-  .dark .has-noise::after {
-    mix-blend-mode: screen;
-  }
+  /* light/dark 切替は --noise-blend (colors.ts) が司る。個別 .dark override は不要 */
   /* 子要素を noise の上に重ねる (デフォルトの z-index: 0 と衝突しないよう明示) */
   .card > *,
   .modal-content > *,

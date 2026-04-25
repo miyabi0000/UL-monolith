@@ -216,6 +216,14 @@ export const colors = {
 };
 
 /**
+ * Paper grain noise — light/dark で同じ SVG 粒を使う。
+ * baseFrequency / numOctaves はチャートの feTurbulence と揃え、
+ * 視覚言語の一貫性を保つ。
+ */
+const NOISE_URL =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")";
+
+/**
  * UI Theme Tokens
  * CSS変数へ投影する色定義（light/dark）
  * フラット+影デザイン
@@ -293,6 +301,15 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       tableNum:   mondrian.black,
       tableMicro: gray[600],
     },
+    noise: {
+      url: NOISE_URL,
+      opacity: {
+        surface:   '0.09',
+        control:   '0.11',
+        prominent: '0.14',
+      },
+      blendMode: 'multiply',
+    },
   },
   dark: {
     page: {
@@ -364,6 +381,16 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       tableNum:   mondrian.canvas,
       tableMicro: '#BCBCBA',     // ↑ コントラスト改善
     },
+    noise: {
+      url: NOISE_URL,
+      // dark は粒を screen 合成で浮かせるため、light と同 opacity でも見え方が変わる。
+      opacity: {
+        surface:   '0.09',
+        control:   '0.11',
+        prominent: '0.14',
+      },
+      blendMode: 'screen',
+    },
   },
 };
 
@@ -408,6 +435,11 @@ const toThemeCssVariables = (tokens: ThemeColors): Record<string, string> => ({
   '--text-table-sub': tokens.text.tableSub,
   '--text-table-num': tokens.text.tableNum,
   '--text-table-micro': tokens.text.tableMicro,
+  '--noise-url': tokens.noise.url,
+  '--noise-opacity-surface':   tokens.noise.opacity.surface,
+  '--noise-opacity-control':   tokens.noise.opacity.control,
+  '--noise-opacity-prominent': tokens.noise.opacity.prominent,
+  '--noise-blend': tokens.noise.blendMode,
 });
 
 export const themeCssVariables = {
