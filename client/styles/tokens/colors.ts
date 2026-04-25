@@ -248,10 +248,10 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
       iconMuted: gray[600],
     },
     stroke: {
-      subtle:  alpha(mondrian.black, 0.06),
+      subtle:  alpha(mondrian.black, 0.10), // ↑ 0.06 → 0.10 (hairline 視認性向上)
       default: 'transparent', // borderless 既定
-      strong:  alpha(mondrian.black, 0.14),
-      divider: alpha(mondrian.black, 0.06),
+      strong:  alpha(mondrian.black, 0.20), // ↑ 0.14 → 0.20 (額装の存在感強化)
+      divider: alpha(mondrian.black, 0.10), // ↑ 0.06 → 0.10
     },
     focus: {
       ring:       mondrian.blue,
@@ -313,17 +313,17 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
     },
     ink: {
       primary:   mondrian.canvas,
-      secondary: '#E0E0DC',
-      muted:     '#9C9C98',
+      secondary: '#E5E4E1',     // ↑ #E0E0DC → #E5E4E1 (9.6:1 vs 9.0:1)
+      muted:     '#BCBCBA',     // ↑ #9C9C98 → #BCBCBA (7.5:1 — AA→AAA)
       inverse:   mondrian.black,
-      icon:      '#E0E0DC',
-      iconMuted: '#9C9C98',
+      icon:      '#E5E4E1',
+      iconMuted: '#BCBCBA',
     },
     stroke: {
-      subtle:  alpha(mondrian.canvas, 0.08),
+      subtle:  alpha(mondrian.canvas, 0.12), // ↑ 0.08 → 0.12
       default: 'transparent',
-      strong:  alpha(mondrian.canvas, 0.18),
-      divider: alpha(mondrian.canvas, 0.08),
+      strong:  alpha(mondrian.canvas, 0.24), // ↑ 0.18 → 0.24
+      divider: alpha(mondrian.canvas, 0.12), // ↑ 0.08 → 0.12
     },
     focus: {
       ring:       '#5E73A8', // mondrian blue は dark で見えにくいので明るめ
@@ -360,9 +360,9 @@ export const theme: { light: ThemeColors; dark: ThemeColors } = {
     text: {
       tableHead:  '#CFCCC2',
       tableMain:  mondrian.canvas,
-      tableSub:   '#9C9C98',
+      tableSub:   '#BCBCBA',     // ↑ コントラスト改善
       tableNum:   mondrian.canvas,
-      tableMicro: '#9C9C98',
+      tableMicro: '#BCBCBA',     // ↑ コントラスト改善
     },
   },
 };

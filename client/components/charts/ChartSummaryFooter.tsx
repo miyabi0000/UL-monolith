@@ -8,6 +8,7 @@ import YenIcon from '../icons/YenIcon'
 import BackpackIcon from '../icons/BackpackIcon'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
 import { formatWeight } from '../../utils/weightUnit'
+import { useIsMobile } from '../../hooks/useResponsiveSize'
 
 const VIEW_MODE_OPTIONS = [
   { mode: 'weight', label: 'Weight', icon: ScaleIcon },
@@ -34,13 +35,19 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
   wide = false,
   onClick,
 }) => {
+  const isMobile = useIsMobile()
+  // モバイルの 4 カード並びは横幅が厳しいため padding を圧縮 + label を text-3xs に逃がす
+  const stackedPad = isMobile ? 'px-0.5 py-1.5' : 'px-1 py-2'
   const cardClass = `flex items-center justify-center gap-3 rounded-md transition-all duration-200 ${
-    wide ? 'px-5 py-2' : 'flex-col px-1 py-2'
+    wide ? 'px-5 py-2' : `flex-col ${stackedPad}`
   } ${
     isActive
       ? 'bg-gray-200 dark:bg-gray-600 ring-1 ring-gray-400 dark:ring-gray-500'
       : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
   }`
+
+  const stackedLabelClass = isMobile ? 'text-3xs' : 'text-2xs'
+  const stackedValueClass = isMobile ? 'text-2xs' : 'text-xs'
 
   const content = wide ? (
     <>
@@ -53,12 +60,14 @@ const SummaryStatCard: React.FC<SummaryStatCardProps> = ({
     </>
   ) : (
     <>
-      <div className="flex items-center gap-1.5 mb-1 leading-none">
+      <div className={`flex items-center gap-1 mb-0.5 leading-none ${isMobile ? '' : 'mb-1 gap-1.5'}`}>
         {icon}
-        <span className="text-2xs leading-none font-medium text-gray-600 dark:text-gray-300">{label}</span>
+        <span className={`${stackedLabelClass} leading-none font-medium text-gray-600 dark:text-gray-300`}>{label}</span>
       </div>
-      <span className="text-xs leading-none font-bold text-gray-900 dark:text-gray-100">{value}</span>
-      {subValue && <span className="text-3xs leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>}
+      <span className={`${stackedValueClass} leading-none font-bold text-gray-900 dark:text-gray-100`}>{value}</span>
+      {subValue && !isMobile && (
+        <span className="text-3xs leading-none mt-1 text-gray-500 dark:text-gray-400">{subValue}</span>
+      )}
     </>
   )
 
@@ -91,10 +100,11 @@ const ChartSummaryFooter: React.FC<ChartSummaryFooterProps> = ({
   onToggleChartFocus,
 }) => {
   const { unit } = useWeightUnit()
+  const isMobile = useIsMobile()
   return (
     <div className="px-2 py-1.5 border-b border-gray-200">
       {/* view-mode toggle は中央、右端は viewMode に応じて g/oz or ¥/$ を出し分け */}
-      <div className="grid grid-cols-3 items-center mb-1.5">
+      <div className={`grid grid-cols-3 items-center ${isMobile ? 'mb-1' : 'mb-1.5'}`}>
         <div />
         <div className="justify-self-center">
           <SegmentedControl

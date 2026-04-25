@@ -287,7 +287,7 @@ const ChartPanel: React.FC<ChartPanelProps> = React.memo(({
   return (
     <div className="lg:h-[calc(100vh-100px)] flex flex-col">
       {/* メインコンテンツ - 統合レイアウト */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 lg:overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-2 lg:gap-3 min-h-0 lg:overflow-hidden">
         {/* グラフエリア */}
         <Card className={`flat-panel flex flex-col min-w-0 flex-shrink-0 transition-all duration-300 ${
           isChartCollapsed

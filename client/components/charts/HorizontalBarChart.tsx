@@ -14,8 +14,10 @@ import { formatChartAxisValue } from '../../utils/chartHelpers'
 import { useWeightUnit } from '../../contexts/WeightUnitContext'
 import { primitiveColors, alpha } from '../../styles/tokens'
 import { formatWeight } from '../../utils/weightUnit'
+import { FONT_SIZES, BAR_LABEL_MAX_CHARS } from '../../utils/chartConfig'
 import GradientDefs, { grainFilterId } from './GradientDefs'
 import { CHART_CELL_TRANSITION, CHART_OPACITY_BASE, CHART_OPACITY_DIMMED } from './chartTokens'
+import { useChartGeometry } from './context/ChartGeometryContext'
 
 export interface BarItem {
   id?: string
@@ -55,26 +57,34 @@ const ChartTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload 
   )
 }
 
-const YAXIS_WIDTH = 80
+const YAXIS_WIDTH_DESKTOP = 80
+const YAXIS_WIDTH_MOBILE = 70
 
 // YAxis カスタムティック（左寄せ）
+// recharts の `x` は tick line（YAxis 右端）位置で渡ってくるが、recharts 内部の
+// gap で `x < yAxisWidth` になるため `x - yAxisWidth + offset` だと左にはみ出す。
+// `payload.coordinate ?? 0` (= y軸内の相対位置) を起点に、開始 x を固定値で扱う。
 const CategoryTick: React.FC<{
   x?: number
   y?: number
   payload?: { value: string }
   selectedCategories: string[]
-}> = ({ x = 0, y = 0, payload, selectedCategories }) => {
+  fontSize: number
+  maxChars: number
+  /** 左パディング（固定 px） */
+  leftPad?: number
+}> = ({ y = 0, payload, selectedCategories, fontSize, maxChars, leftPad = 4 }) => {
   const name = payload?.value ?? ''
   const isSelected = selectedCategories.includes(name)
-  const label = name.length > 11 ? `${name.slice(0, 10)}…` : name
+  const label = name.length > maxChars ? `${name.slice(0, Math.max(1, maxChars - 1))}…` : name
   return (
     <text
-      x={x - YAXIS_WIDTH + 4}
+      x={leftPad}
       y={y}
       textAnchor="start"
       dominantBaseline="middle"
       style={{
-        fontSize: 10,
+        fontSize,
         fill: isSelected ? primitiveColors.gray[700] : primitiveColors.gray[500],
         fontWeight: isSelected ? 600 : 400,
       }}
@@ -99,8 +109,16 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   hoveredItemId,
 }) => {
   const { unit } = useWeightUnit()
+  const { screenSize } = useChartGeometry()
+  const isMobile = screenSize === 'mobile'
   const hasSelection = selectedCategories.length > 0
   const chartHeight = Math.max(MIN_CHART_HEIGHT, data.length * (BAR_HEIGHT + BAR_GAP) + HEIGHT_PADDING)
+
+  // モバイルは Y 軸幅を圧縮し、左マージンを 0 にしてカテゴリ名の収納幅を確保
+  const yAxisWidth = isMobile ? YAXIS_WIDTH_MOBILE : YAXIS_WIDTH_DESKTOP
+  const labelFontSize = isMobile ? FONT_SIZES.axis.label.mobile : FONT_SIZES.axis.label.desktop
+  const tickFontSize  = isMobile ? FONT_SIZES.axis.tick.mobile  : FONT_SIZES.axis.tick.desktop
+  const maxChars      = isMobile ? BAR_LABEL_MAX_CHARS.mobile   : BAR_LABEL_MAX_CHARS.desktop
 
   return (
     <div style={{ width: '100%', height: chartHeight }}>
@@ -112,35 +130,37 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 4, right: 12, left: 4, bottom: 4 }}
+          margin={{ top: 4, right: 12, left: isMobile ? 0 : 4, bottom: 4 }}
           barSize={BAR_HEIGHT}
           barCategoryGap={BAR_GAP}
         >
           <XAxis
             type="number"
             tickFormatter={(value: number) => formatChartAxisValue(value, viewMode, unit)}
-            tick={{ fontSize: 9, fill: primitiveColors.gray[400] }}
+            tick={{ fontSize: tickFontSize, fill: primitiveColors.gray[400] }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             type="category"
             dataKey="name"
-            width={YAXIS_WIDTH}
+            width={yAxisWidth}
             axisLine={false}
             tickLine={false}
             tick={(props) => (
               <CategoryTick
-                x={props.x}
                 y={props.y}
                 payload={props.payload}
                 selectedCategories={selectedCategories}
+                fontSize={labelFontSize}
+                maxChars={maxChars}
               />
             )}
           />
           <Tooltip
             content={<ChartTooltip />}
             cursor={{ fill: alpha(primitiveColors.gray[400], 0.08) }}
+            wrapperStyle={{ outline: 'none', maxWidth: isMobile ? '70%' : undefined }}
           />
           <Bar
             dataKey="value"

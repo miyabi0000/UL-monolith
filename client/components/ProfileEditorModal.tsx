@@ -1,56 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import type { ProfileSettings, UserPlan } from '../hooks/useProfile';
+import React, { useEffect } from 'react';
+import type { ProfileSettings } from '../hooks/useProfile';
 import { useImageUpload } from '../hooks/useImageUpload';
-import { createCheckoutSession, createPortalSession } from '../services/billingService';
+
+/**
+ * Profile 編集フォーム本体（モーダル chrome なし）。
+ *
+ * - 単独モーダルは廃止し、Settings モーダルの Profile タブから直接利用される。
+ * - Plan / 課金 UI は Settings モーダルの Plan タブに分離済みのため、ここでは扱わない。
+ * - 全ての色はデザイントークン (`--ink-*`, `--stroke-*`, `--surface-*`) に統一。
+ *   `dark:` プレフィックスのハードコードは使わない。
+ */
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <label className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{children}</label>
+  <label
+    className="text-xs uppercase tracking-wide"
+    style={{ color: 'var(--ink-muted)' }}
+  >
+    {children}
+  </label>
 );
-
-const PlanSection: React.FC<{ plan: UserPlan }> = ({ plan }) => {
-  const [loading, setLoading] = useState(false);
-
-  const goTo = async (getUrl: () => Promise<string>, errorMessage: string) => {
-    setLoading(true);
-    try {
-      window.location.href = await getUrl();
-    } catch (err) {
-      console.error('[Billing]', err);
-      alert(errorMessage);
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <SectionLabel>Plan</SectionLabel>
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-700 dark:text-gray-300">
-          現在のプラン: <strong>{plan === 'pro' ? 'Pro' : 'Free'}</strong>
-        </span>
-        {plan === 'free' ? (
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => goTo(createCheckoutSession, '決済ページを開けませんでした。時間をおいて再試行してください。')}
-            disabled={loading}
-          >
-            {loading ? '読込中...' : 'Upgrade to Pro'}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => goTo(createPortalSession, 'サブスクリプション管理ページを開けませんでした。')}
-            disabled={loading}
-          >
-            {loading ? '読込中...' : 'Manage'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
 
 /** ギア入力と同じドラッグ&ドロップ画像選択UI（コンパクト版） */
 const ImageDropZone: React.FC<{
@@ -60,7 +28,16 @@ const ImageDropZone: React.FC<{
   inputId: string;
   height?: string;
 }> = ({ imageUrl, onSelect, onRemove, inputId, height = 'max-h-24' }) => {
-  const { isDragging, imagePreview, handleDragOver, handleDragLeave, handleDrop, handleImageSelect, setPreview, removeImage } = useImageUpload();
+  const {
+    isDragging,
+    imagePreview,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleImageSelect,
+    setPreview,
+    removeImage,
+  } = useImageUpload();
 
   useEffect(() => {
     setPreview(imageUrl || null);
@@ -73,25 +50,29 @@ const ImageDropZone: React.FC<{
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, onSelect)}
-      className={`border-2 border-dashed rounded-md p-2 text-center transition-colors ${
-        isDragging ? 'border-gray-700 bg-gray-50 dark:bg-gray-700' : 'border-gray-300 dark:border-gray-600'
-      }`}
+      className="border-2 border-dashed rounded-control p-2 text-center transition-colors"
+      style={{
+        borderColor: isDragging ? 'var(--ink-primary)' : 'var(--stroke-subtle)',
+        background: isDragging ? 'var(--surface-level-1)' : 'transparent',
+      }}
     >
       {preview ? (
         <div className="relative">
-          <img src={preview} alt="" className={`${height} w-full object-cover rounded`} />
+          <img src={preview} alt="" className={`${height} w-full object-cover rounded-control`} />
           <button
             type="button"
             onClick={() => removeImage(onRemove)}
-            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-red-500 text-white text-2xs inline-flex items-center justify-center"
+            aria-label="Remove image"
+            className="absolute top-1 right-1 h-5 w-5 rounded-full text-2xs inline-flex items-center justify-center"
+            style={{ background: 'var(--mondrian-red)', color: 'var(--ink-inverse)' }}
           >
             ✕
           </button>
         </div>
       ) : (
         <div className="py-1">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-            Drag & drop or click to select
+          <p className="text-xs mb-1" style={{ color: 'var(--ink-muted)' }}>
+            Drag &amp; drop or click to select
           </p>
           <input
             type="file"
@@ -102,7 +83,7 @@ const ImageDropZone: React.FC<{
           />
           <label
             htmlFor={inputId}
-            className="btn-secondary text-xs px-3 py-1 rounded cursor-pointer"
+            className="btn-secondary btn-xs cursor-pointer"
           >
             Choose Image
           </label>
@@ -112,20 +93,12 @@ const ImageDropZone: React.FC<{
   );
 };
 
-// ==================== Form (再利用可能な中身のみ) ====================
-
 interface ProfileEditorFormProps {
   profile: ProfileSettings;
   onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
-  plan?: UserPlan;
 }
 
-/**
- * プロフィール編集フォーム本体 (モーダル chrome なし)。
- * 単体モーダル (`ProfileEditorModal`) と統合 Settings (`SettingsModal`) の
- * 両方から再利用される。
- */
-export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, onUpdate, plan = 'free' }) => (
+export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, onUpdate }) => (
   <div className="space-y-3">
     <div className="space-y-1.5">
       <SectionLabel>Header</SectionLabel>
@@ -164,34 +137,5 @@ export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, o
         onChange={(e) => onUpdate('bio', e.target.value)}
       />
     </div>
-    <PlanSection plan={plan} />
   </div>
 );
-
-// ==================== Modal wrapper (後方互換) ====================
-
-interface ProfileEditorModalProps {
-  profile: ProfileSettings;
-  onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
-  onClose: () => void;
-  plan?: UserPlan;
-}
-
-const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({ profile, onUpdate, onClose, plan = 'free' }) => (
-  <div className="modal-overlay" onClick={onClose}>
-    <div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
-      <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Edit Profile</h3>
-        <button type="button" className="text-gray-400 hover:text-gray-600" onClick={onClose}>✕</button>
-      </div>
-      <div className="px-4 py-3">
-        <ProfileEditorForm profile={profile} onUpdate={onUpdate} plan={plan} />
-        <div className="flex items-center justify-end pt-3">
-          <button type="button" className="btn-primary" onClick={onClose}>Done</button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-export default React.memo(ProfileEditorModal);
