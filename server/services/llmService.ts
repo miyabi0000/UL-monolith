@@ -20,13 +20,15 @@ export class LLMService {
     try {
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, prompt.trim());
       const result = this.parseJSON(response);
-      
+      const asString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
+      const asNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
+
       return {
-        name: result.name || 'Unknown Gear',
-        brand: result.brand,
-        weightGrams: result.weightGrams,
-        priceCents: result.priceCents,
-        suggestedCategory: result.suggestedCategory || 'Other',
+        name: asString(result.name) ?? 'Unknown Gear',
+        brand: asString(result.brand),
+        weightGrams: asNumber(result.weightGrams),
+        priceCents: asNumber(result.priceCents),
+        suggestedCategory: asString(result.suggestedCategory) ?? 'Other',
         requiredQuantity: 1,
         ownedQuantity: 0,
         priority: 3,
@@ -63,14 +65,18 @@ export class LLMService {
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, enhanceMessage);
       const result = this.parseJSON(response);
       
+      const asString = (v: unknown): string | undefined =>
+        typeof v === 'string' ? v : undefined
+      const asNumber = (v: unknown): number | undefined =>
+        typeof v === 'number' ? v : undefined
       return {
-        name: result.name || urlData.name,
-        brand: result.brand || urlData.brand,
+        name: asString(result.name) ?? urlData.name,
+        brand: asString(result.brand) ?? urlData.brand,
         productUrl: urlData.productUrl,
         imageUrl: urlData.imageUrl, // 元データの画像URLを保持
-        weightGrams: result.weightGrams || urlData.weightGrams,
-        priceCents: result.priceCents || urlData.priceCents,
-        suggestedCategory: result.suggestedCategory || urlData.suggestedCategory,
+        weightGrams: asNumber(result.weightGrams) ?? urlData.weightGrams,
+        priceCents: asNumber(result.priceCents) ?? urlData.priceCents,
+        suggestedCategory: asString(result.suggestedCategory) ?? urlData.suggestedCategory,
         requiredQuantity: 1,
         ownedQuantity: 0,
         priority: 3,
@@ -94,7 +100,9 @@ export class LLMService {
         return null;
       }
       const result = this.parseJSON(response);
-      return { name: result.name, englishName: result.englishName };
+      const name = typeof result.name === 'string' ? result.name : '';
+      const englishName = typeof result.englishName === 'string' ? result.englishName : '';
+      return { name, englishName };
     } catch (error) {
       logger.error({ err: error }, 'Category extraction failed:');
       return null;
@@ -104,15 +112,14 @@ export class LLMService {
   /**
    * リスト分析
    */
-  async analyzeList(gearList: any[]): Promise<{ summary: string; tips: string[] }> {
+  async analyzeList(gearList: unknown[]): Promise<{ summary: string; tips: string[] }> {
     try {
       const listData = JSON.stringify(gearList.slice(0, 10)); // 最初の10件のみ
       const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, listData);
       const result = this.parseJSON(response);
-      return {
-        summary: result.summary || 'リストを分析できませんでした',
-        tips: result.tips || ['特に提案はありません']
-      };
+      const summary = typeof result.summary === 'string' ? result.summary : 'リストを分析できませんでした';
+      const tips = Array.isArray(result.tips) ? (result.tips as unknown[]).filter((t): t is string => typeof t === 'string') : ['特に提案はありません'];
+      return { summary, tips };
     } catch (error) {
       logger.error({ err: error }, 'List analysis failed:');
       return {
@@ -123,12 +130,13 @@ export class LLMService {
   }
 
   /**
-   * JSON解析
+   * JSON解析 — 不定形 LLM レスポンスからオブジェクトを抽出
    */
-  private parseJSON(response: string): any {
+  private parseJSON(response: string): Record<string, unknown> {
     try {
       const jsonMatch = response.match(/\{[\s\S]*\}/);
-      return jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+      const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+      return (typeof parsed === 'object' && parsed !== null) ? parsed as Record<string, unknown> : {};
     } catch {
       return {};
     }
@@ -137,7 +145,7 @@ export class LLMService {
   /**
    * 抽出フィールド取得
    */
-  private getExtractedFields(result: any): string[] {
+  private getExtractedFields(result: Record<string, unknown>): string[] {
     const fields: string[] = [];
     if (result.name) fields.push('name');
     if (result.brand) fields.push('brand');

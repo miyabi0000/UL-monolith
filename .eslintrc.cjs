@@ -22,11 +22,15 @@ module.exports = {
   },
   overrides: [
     {
-      // サーバー側は構造化ロガー (pino) を使う (Issue #54)
-      // クライアント側は console 許容 (dev tool 連携 / 既存デバッグコードのため)
+      // サーバー側は型安全性を強める (Issue #53 / #54)
+      // - no-console: 構造化ロガー (pino) を強制
+      // - no-explicit-any: any 型は unknown + 型ガードで代替
+      // テストファイル (mock 等で any が便利) は除外。
       files: ['server/**/*.ts'],
+      excludedFiles: ['server/**/__tests__/**', 'server/**/*.test.ts'],
       rules: {
         'no-console': 'error',
+        '@typescript-eslint/no-explicit-any': 'error',
       },
     },
   ],

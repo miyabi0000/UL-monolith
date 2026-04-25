@@ -73,13 +73,15 @@ export const httpLogger = pinoHttp({
     `${req.method} ${req.url} → ${res.statusCode} ${err.message}`,
   // 健康診断系は info を絞る
   serializers: {
-    req: (req: any) => ({
+    // pino-http が渡す req は IncomingMessage + 拡張プロパティ (id, userId)。
+    // 全フィールドの完全な型は pino-http に依存するため最小限の shape で受ける。
+    req: (req: IncomingMessage & { id?: string; userId?: string }) => ({
       id: req.id,
       method: req.method,
       url: req.url,
       userId: req.userId,
     }),
-    res: (res: any) => ({ statusCode: res.statusCode }),
+    res: (res: ServerResponse) => ({ statusCode: res.statusCode }),
   },
   // /api/health の成功ログは debug に落とす (alive 監視で溢れる対策)
   autoLogging: {
