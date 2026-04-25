@@ -31,11 +31,18 @@ const AppDock: React.FC<AppDockProps> = ({
 
   return (
     <div className="fixed top-3 right-3 z-[70] pointer-events-none">
-      <div ref={dockRef} className="pointer-events-auto relative flex items-center gap-1 rounded-lg shadow-sm bg-white px-1.5 py-1.5 dark:bg-gray-900">
+      <div
+        ref={dockRef}
+        className="pointer-events-auto relative flex items-center gap-1 px-1.5 py-1.5 rounded-surface has-noise"
+        style={{ background: 'var(--surface-level-0)', boxShadow: 'var(--shadow-sm)', border: 'var(--border-default)' }}
+      >
         {location.pathname.startsWith('/p/') && (
           <a
             href="/"
-            className="h-control-lg sm:h-control px-2.5 sm:px-3 rounded-control text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 inline-flex items-center gap-1.5 transition-colors"
+            className="h-control-lg sm:h-control px-2.5 sm:px-3 rounded-control text-xs font-medium inline-flex items-center gap-1.5 transition-colors"
+            style={{ color: 'var(--ink-secondary)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'var(--surface-level-1)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
           >
             <svg className="w-4 h-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -47,7 +54,8 @@ const AppDock: React.FC<AppDockProps> = ({
         {onShowChat && (
           <button
             type="button"
-            className="glass-header-chip h-control-lg sm:h-control px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 text-xs font-medium"
+            className="glass-header-chip h-control-lg sm:h-control px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-xs font-medium"
+            style={{ color: 'var(--ink-secondary)' }}
             onClick={onShowChat}
             aria-label="Open chat (Add / Advisor)"
             title="Chat — add gear & advisor"
@@ -66,26 +74,39 @@ const AppDock: React.FC<AppDockProps> = ({
           <div className="hidden sm:block relative">
             <button
               type="button"
-              className="glass-header-chip h-control min-w-control px-1.5 inline-flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
+              className="glass-header-chip h-control min-w-control px-1.5 inline-flex items-center justify-center"
+              style={{ color: 'var(--ink-secondary)' }}
               onClick={() => setUserMenuOpen((prev) => !prev)}
               aria-label="User menu"
               title={userName || 'User'}
             >
-              <span className="h-6 w-6 rounded-full bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 text-2xs font-semibold inline-flex items-center justify-center">
+              <span
+                className="h-6 w-6 rounded-full text-2xs font-semibold inline-flex items-center justify-center"
+                style={{ background: 'var(--mondrian-black)', color: 'var(--ink-inverse)' }}
+              >
                 {userInitial}
               </span>
             </button>
 
             {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-44 rounded-md bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+              <div
+                className="card absolute right-0 top-full mt-2 w-44 overflow-hidden"
+                style={{ borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-md)' }}
+              >
                 {userName && (
-                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300 border-b border-gray-200 truncate">
+                  <div
+                    className="px-3 py-2 text-xs truncate"
+                    style={{ color: 'var(--ink-muted)', borderBottom: 'var(--border-divider)' }}
+                  >
                     {userName}
                   </div>
                 )}
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs transition-colors"
+                  style={{ color: 'var(--ink-primary)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-level-1)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                   onClick={() => {
                     onLogout();
                     setUserMenuOpen(false);

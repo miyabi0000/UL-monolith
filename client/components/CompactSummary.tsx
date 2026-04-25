@@ -41,7 +41,7 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
   return (
     <Card hover className="p-2">
       <div className="mb-2">
-        <h3 className="text-xs font-semibold text-gray-900">
+        <h3 className="text-xs font-semibold" style={{ color: 'var(--ink-primary)' }}>
           Pack Summary
         </h3>
       </div>
@@ -49,17 +49,17 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
         {stats.map((stat, index) => {
           const isSelected = stat.mode && viewMode === stat.mode;
           const isClickable = stat.mode !== null && onViewModeChange;
-          
+
           return (
             <div
               key={index}
-              className={`flex flex-col items-center justify-center group transition-all duration-200 p-2 rounded-lg border-2 ${
+              className={`flex flex-col items-center justify-center group transition-all duration-200 p-2 rounded-control border ${
                 isClickable ? 'cursor-pointer hover:scale-105' : ''
-              } ${
-                isSelected 
-                  ? 'bg-gray-200 border-gray-600' 
-                  : 'bg-gray-50 border-transparent'
               }`}
+              style={{
+                background: isSelected ? 'var(--surface-level-2)' : 'var(--surface-level-1)',
+                borderColor: isSelected ? 'var(--stroke-strong)' : 'transparent',
+              }}
               onClick={() => {
                 if (stat.mode && onViewModeChange) {
                   onViewModeChange(stat.mode);
@@ -68,20 +68,26 @@ const CompactSummary: React.FC<CompactSummaryProps> = ({ totals, viewMode = 'wei
             >
               <div className="flex items-center space-x-1 mb-0.5">
                 <span
-                  className={`text-2xs font-bold w-4 h-4 flex items-center justify-center rounded shadow-sm transition-all duration-200 text-white bg-gray-600 ${
+                  className={`text-2xs font-bold w-4 h-4 flex items-center justify-center rounded-control transition-all duration-200 ${
                     isClickable ? 'group-hover:scale-110' : ''
                   }`}
+                  style={{
+                    background: 'var(--mondrian-black)',
+                    color: 'var(--ink-inverse)',
+                    boxShadow: 'var(--shadow-sm)',
+                  }}
                 >
                   {stat.icon}
                 </span>
-                <span className="text-2xs font-medium text-gray-500">
+                <span className="text-2xs font-medium" style={{ color: 'var(--ink-muted)' }}>
                   {stat.label}
                 </span>
               </div>
               <div
-                className={`text-sm font-bold transition-all duration-200 text-gray-700 ${
+                className={`text-sm font-bold transition-all duration-200 ${
                   isClickable ? 'group-hover:scale-110' : ''
                 }`}
+                style={{ color: 'var(--ink-secondary)' }}
               >
                 {stat.value}
               </div>

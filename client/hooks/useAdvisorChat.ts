@@ -7,7 +7,10 @@ import {
   fetchMessages,
   createSession,
   saveMessage,
+  fetchSessions,
+  deleteSession,
   type AdvisorMessageRow,
+  type AdvisorSession,
 } from '../services/advisorSessionsApi';
 
 export interface SuggestedEditWithState extends SuggestedEdit {
@@ -21,6 +24,8 @@ export interface ChatMessage {
   content: string;
   suggestedEdits?: SuggestedEditWithState[];
   gearRefs?: GearRef[];
+  /** ＋メニューの Compare から挿入されるローカル比較パネル。DB 保存はしない */
+  comparison?: { itemIds: string[] };
   timestamp: Date;
 }
 
@@ -69,7 +74,13 @@ export const useAdvisorChat = (
   const [applyingEdit, setApplyingEdit] = useState<string | null>(null);
 
   // セッション ID（Lazy 作成: 最初のメッセージ送信時に作成）
+  // ref は sendText 等の closure から最新値を読むため、state は UI 表示・履歴ハイライト用。
   const sessionIdRef = useRef<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const updateSessionId = useCallback((id: string | null) => {
+    sessionIdRef.current = id;
+    setCurrentSessionId(id);
+  }, []);
   const initializedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -81,7 +92,7 @@ export const useAdvisorChat = (
   useEffect(() => {
     if (!isAuthenticated) {
       if (initializedRef.current) {
-        sessionIdRef.current = null;
+        updateSessionId(null);
         setMessages([createInitialMessage()]);
         initializedRef.current = false;
       }
@@ -99,7 +110,7 @@ export const useAdvisorChat = (
         const serverMessages = await fetchMessages(session.id);
         if (serverMessages.length === 0) return;
 
-        sessionIdRef.current = session.id;
+        updateSessionId(session.id);
         setMessages([
           createInitialMessage(),
           ...serverMessages.map(fromServerMessage),
@@ -110,7 +121,7 @@ export const useAdvisorChat = (
     };
 
     void restore();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, updateSessionId]);
 
   // ストリーミング中断（パネルclose / unmount 時）
   useEffect(() => {
@@ -139,7 +150,7 @@ export const useAdvisorChat = (
       if (isAuthenticated && !sessionIdRef.current) {
         try {
           const session = await createSession();
-          sessionIdRef.current = session.id;
+          updateSessionId(session.id);
         } catch (err) {
           console.error('[Advisor] セッション作成失敗:', err);
         }
@@ -269,7 +280,7 @@ export const useAdvisorChat = (
       setIsStreaming(false);
       abortRef.current = null;
     }
-  }, [isLoading, gearContext, isAuthenticated]);
+  }, [isLoading, gearContext, isAuthenticated, updateSessionId]);
 
   /** 現在の入力欄テキストを送信 */
   const handleSend = useCallback(() => {
@@ -328,6 +339,71 @@ export const useAdvisorChat = (
     [onApplyEdit]
   );
 
+  /**
+   * ＋メニュー Compare から呼ばれ、チャット末尾にローカル比較パネルを 1 件差し込む。
+   * DB 保存は行わない（リロード後は消える想定）。
+   */
+  const appendComparison = useCallback((itemIds: string[]) => {
+    if (itemIds.length < 2) return;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: createMessageId(),
+        role: 'assistant',
+        content: '',
+        comparison: { itemIds },
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
+
+  /**
+   * 過去セッションをロードしてチャット画面に展開する。
+   * 既存の messages を入れ替え、以後の send は対象セッションへ追記される。
+   */
+  const loadSession = useCallback(async (sessionId: string) => {
+    try {
+      const serverMessages = await fetchMessages(sessionId);
+      updateSessionId(sessionId);
+      setMessages([
+        createInitialMessage(),
+        ...serverMessages.map(fromServerMessage),
+      ]);
+    } catch (err) {
+      console.error('[Advisor] セッション読込エラー:', err);
+    }
+  }, [updateSessionId]);
+
+  /** 新しい会話を開始する。次の送信時に Lazy で session が作成される */
+  const startNewSession = useCallback(() => {
+    updateSessionId(null);
+    setMessages([createInitialMessage()]);
+  }, [updateSessionId]);
+
+  /** 履歴ドロップダウン用: セッション一覧を取得 */
+  const listSessions = useCallback(async (limit = 20): Promise<AdvisorSession[]> => {
+    if (!isAuthenticated) return [];
+    try {
+      return await fetchSessions(limit);
+    } catch (err) {
+      console.error('[Advisor] セッション一覧取得エラー:', err);
+      return [];
+    }
+  }, [isAuthenticated]);
+
+  /** 履歴ドロップダウン用: セッション削除 (現在表示中なら新規へ切替) */
+  const removeSession = useCallback(async (sessionId: string) => {
+    try {
+      await deleteSession(sessionId);
+      if (sessionIdRef.current === sessionId) {
+        updateSessionId(null);
+        setMessages([createInitialMessage()]);
+      }
+    } catch (err) {
+      console.error('[Advisor] セッション削除エラー:', err);
+    }
+  }, [updateSessionId]);
+
   return {
     messages,
     input,
@@ -339,6 +415,12 @@ export const useAdvisorChat = (
     sendText,
     handleApplyEdit,
     handleUndoEdit,
+    appendComparison,
+    currentSessionId,
+    loadSession,
+    startNewSession,
+    listSessions,
+    removeSession,
   };
 };
 

@@ -79,17 +79,17 @@
     --surface-level-0: #FFFFFF;   /* L2 card / modal (最も明るい = "浮く") */
     --surface-level-1: #F7F5EE;   /* L1 nest / inset (card 内のネスト) */
     --surface-level-2: #E3E0D6;   /* L3 hover / selected (明示的に沈む) */
-    --ink-primary: #0A0A0A;
-    --ink-secondary: #3A3A38;
-    --ink-muted: #757570;
-    --ink-disabled: #A8A8A3;
+    --ink-primary: #0A0A0A;       /* 21:1 on level-0 */
+    --ink-secondary: #2E2E2C;     /* 13.8:1 on level-0 (旧 #3A3A38) */
+    --ink-muted: #5C5C58;         /* 6.9:1 on level-0 — AA Large + AAA小 (旧 #757570 4.2:1) */
+    --ink-disabled: #8E8E89;      /* 3.5:1 on level-0 — UI 用 (旧 #A8A8A3 2.7:1) */
     --ink-inverse: #FAFAF7;
-    --icon-default: #3A3A38;
-    --icon-muted: #757570;
-    --stroke-subtle:  rgba(10, 10, 10, 0.06);   /* hairline (input / divider) */
+    --icon-default: #2E2E2C;
+    --icon-muted: #5C5C58;
+    --stroke-subtle:  rgba(10, 10, 10, 0.10);   /* hairline (input / divider) — 旧 0.06 */
     --stroke-default: transparent;               /* borderless 既定: 枠線は描画しない */
-    --stroke-strong:  rgba(10, 10, 10, 0.14);    /* 明示的な額装 (mondrian-grid 等) */
-    --stroke-divider: rgba(10, 10, 10, 0.06);
+    --stroke-strong:  rgba(10, 10, 10, 0.20);    /* 明示的な額装 (mondrian-grid 等) — 旧 0.14 */
+    --stroke-divider: rgba(10, 10, 10, 0.10);    /* 旧 0.06 */
     --focus-ring: #1F3A93;              /* Mondrian Blue */
     --focus-ring-offset: #FAFAF7;
     --overlay-hover: rgba(10, 10, 10, 0.04);
@@ -167,12 +167,13 @@
     --surface-level-0: #434543;
     --surface-level-1: #2D2F2D;
     --surface-level-2: #1B1D1B;
-    --ink-primary: #F7F6F3;
-    --ink-secondary: #E0DFDD;
-    --ink-muted: #AFAFAC;
+    --ink-primary: #F7F6F3;       /* 10.9:1 on level-0 #434543 */
+    --ink-secondary: #E5E4E1;     /* 9.6:1 on level-0 (旧 #E0DFDD 7.6:1) */
+    --ink-muted: #C8C8C5;         /* 6.4:1 on level-0 — AA → AAA寄り (旧 #AFAFAC 4.3:1) */
+    --ink-disabled: #909090;      /* 3.3:1 on level-0 — UI 用 disabled */
     --ink-inverse: #2D2F2D;
-    --icon-default: #E0DFDD;
-    --icon-muted: #AFAFAC;
+    --icon-default: #E5E4E1;
+    --icon-muted: #C8C8C5;
     --stroke-subtle: rgba(148, 148, 146, 0.34);
     --stroke-default: rgba(175, 175, 172, 0.52);
     --stroke-strong: #CAC9C7;
@@ -228,22 +229,29 @@
 
   /* Paper grain overlay — card / modal / button / chip に共通の
    * マットなノイズ質感を ::after で重ねる。チャートの feTurbulence
-   * grain と同じ視覚言語をデザインシステム全体に適用する。 */
+   * grain と同じ視覚言語をデザインシステム全体に適用する。
+   * `.has-noise` は任意要素に同じ粒を乗せたい時に使う escape hatch (背景色は別途指定)。 */
   .card::after,
   .modal-content::after,
   .btn-primary::after,
   .btn-secondary::after,
   .btn-danger::after,
-  .glass-header-chip::after {
+  .glass-header-chip::after,
+  .has-noise::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
     background-image: var(--noise-url);
-    mix-blend-mode: multiply;
+    /* light=multiply / dark=screen の切替を colors.ts のトークンで管理 */
+    mix-blend-mode: var(--noise-blend, multiply);
     opacity: var(--noise-opacity-surface);
     border-radius: inherit;
     z-index: 0;
+  }
+  .has-noise {
+    position: relative;
+    overflow: hidden;
   }
   /* ボタン / チップは主張を強めに */
   .btn-primary::after,
@@ -254,22 +262,18 @@
   .glass-header-chip::after {
     opacity: var(--noise-opacity-control);
   }
-  /* ダークモード: screen 合成で粒を浮かせる */
-  .dark .card::after,
-  .dark .modal-content::after,
-  .dark .btn-primary::after,
-  .dark .btn-secondary::after,
-  .dark .btn-danger::after,
-  .dark .glass-header-chip::after {
-    mix-blend-mode: screen;
-  }
+  /* `.has-noise[data-noise="prominent|control"]` で粒度を切替できるオプション */
+  .has-noise[data-noise="prominent"]::after { opacity: var(--noise-opacity-prominent); }
+  .has-noise[data-noise="control"]::after   { opacity: var(--noise-opacity-control); }
+  /* light/dark 切替は --noise-blend (colors.ts) が司る。個別 .dark override は不要 */
   /* 子要素を noise の上に重ねる (デフォルトの z-index: 0 と衝突しないよう明示) */
   .card > *,
   .modal-content > *,
   .btn-primary > *,
   .btn-secondary > *,
   .btn-danger > *,
-  .glass-header-chip > * {
+  .glass-header-chip > *,
+  .has-noise > * {
     position: relative;
     z-index: 1;
   }

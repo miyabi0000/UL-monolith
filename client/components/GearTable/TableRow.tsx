@@ -73,33 +73,48 @@ const TableRow: React.FC<TableRowProps> = ({
     if (item.ownedQuantity < 0 || item.requiredQuantity < 1) {
       return <span className="gear-anomaly-value" title="Invalid quantity">!</span>
     }
+    const sep = <span className="mx-0.5" style={{ color: 'var(--ink-disabled)' }}>/</span>
+    const sub = (n: number) => (
+      <span style={{ color: 'var(--ink-muted)' }}>{n}</span>
+    )
     switch (quantityDisplayMode) {
       case 'owned':
         return (
           <span className="gear-text-num">
             <span className="font-semibold">{item.ownedQuantity}</span>
-            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
-            <span className="text-gray-500 dark:text-gray-300">{item.requiredQuantity}</span>
+            {sep}
+            {sub(item.requiredQuantity)}
           </span>
         )
       case 'need':
         return (
           <span className="gear-text-num">
-            <span className="text-gray-500 dark:text-gray-300">{item.ownedQuantity}</span>
-            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
+            {sub(item.ownedQuantity)}
+            {sep}
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
       default:
         return (
           <span className="gear-text-num">
-            <span className="text-gray-500 dark:text-gray-300">{item.ownedQuantity}</span>
-            <span className="text-gray-400 dark:text-gray-500 mx-0.5">/</span>
+            {sub(item.ownedQuantity)}
+            {sep}
             <span className="font-semibold">{item.requiredQuantity}</span>
           </span>
         )
     }
   }
+
+  // 行の背景: 選択 / pack内 / hover の優先順位を CSS 変数で表現。
+  // Mondrian Blue 系 (pack 内ハイライト) は Tailwind blue-50/blue-900 の代わりに
+  // --mondrian-blue を低 opacity で使う。
+  const rowBackground = (() => {
+    if (isHighlighted && !isSelected) return undefined; // inline style で warningTone を使う
+    if (isSelected) return 'var(--surface-level-2)';
+    if (activePackName && isInActivePack) return 'color-mix(in srgb, var(--mondrian-blue) 12%, transparent)';
+    if (isHovered) return 'var(--surface-level-1)';
+    return undefined;
+  })();
 
   return (
     <tr
@@ -107,22 +122,16 @@ const TableRow: React.FC<TableRowProps> = ({
       onClick={onItemSelect ? () => onItemSelect(item.id) : undefined}
       onMouseEnter={onItemHover ? () => onItemHover(item.id) : undefined}
       onMouseLeave={onItemHover ? () => onItemHover(null) : undefined}
-      className={`gear-table-row transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+      className={`gear-table-row transition-colors duration-150 hover:bg-[var(--surface-level-1)] ${
         onItemSelect ? 'cursor-pointer' : ''
-      } ${
-        isSelected
-          ? 'bg-gray-50 dark:bg-gray-700 ring-2 ring-gray-400 dark:ring-gray-500 ring-inset'
-          : activePackName && isInActivePack
-            ? 'bg-blue-50/55 dark:bg-blue-900/20'
-          : isHighlighted
-            ? 'border-l-2'
-          : isHovered
-            ? 'bg-gray-50 dark:bg-gray-700'
-            : 'bg-transparent'
-      }`}
-      style={isHighlighted && !isSelected
-        ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
-        : undefined}
+      } ${isHighlighted ? 'border-l-2' : ''}`}
+      style={{
+        background: rowBackground,
+        ...(isSelected ? { boxShadow: 'inset 0 0 0 2px var(--stroke-strong)' } : {}),
+        ...(isHighlighted && !isSelected
+          ? { backgroundColor: warningTone.background, borderLeftColor: warningTone.solid }
+          : {}),
+      }}
     >
       {/* Pack Toggle: 編集中も常時表示 (pack 追加と行編集を独立させるため) */}
       {activePackName && onTogglePackItem && (
@@ -133,12 +142,8 @@ const TableRow: React.FC<TableRowProps> = ({
               e.stopPropagation()
               onTogglePackItem(item.id)
             }}
-            className={[
-              'p-0.5 rounded transition-colors',
-              isInActivePack
-                ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200'
-                : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'
-            ].join(' ')}
+            className="p-0.5 rounded-control transition-colors"
+            style={{ color: isInActivePack ? 'var(--mondrian-blue)' : 'var(--ink-disabled)' }}
             title={`${isInActivePack ? 'Remove from' : 'Add to'} ${activePackName}`}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isInActivePack ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={isInActivePack ? 0 : 1.5}>
@@ -205,7 +210,8 @@ const TableRow: React.FC<TableRowProps> = ({
                     href={item.productUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline transition-colors text-gray-800 dark:text-gray-100"
+                    className="hover:underline transition-colors"
+                    style={{ color: 'var(--ink-primary)' }}
                   >
                     {item.name}
                   </a>

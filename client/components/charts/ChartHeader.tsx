@@ -27,7 +27,10 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
 }) => {
   if (isCollapsed) {
     return (
-      <div className={`flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0`}>
+      <div
+        className="flex items-center justify-between px-2 sm:px-3 py-2 flex-shrink-0"
+        style={{ borderBottom: 'var(--border-divider)' }}
+      >
         <div className="flex items-center justify-center w-full">
           <button
             onClick={() => onToggleCollapsed(false)}
@@ -58,7 +61,10 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   }
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 flex-shrink-0 h-11">
+    <div
+      className="flex items-center justify-between px-2 sm:px-3 py-1 flex-shrink-0 h-control"
+      style={{ borderBottom: 'var(--border-divider)' }}
+    >
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Chart</h3>
         <div className="inline-flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
