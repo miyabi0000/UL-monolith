@@ -118,7 +118,7 @@ export class AmazonScraper {
   /**
    * Amazon製品名抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonTitle($: cheerio.CheerioAPI, jsonLd: any): string | undefined {
+  private extractAmazonTitle($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null): string | undefined {
     // 1. JSON-LD構造化データから取得（最優先）
     if (jsonLd?.name && typeof jsonLd.name === 'string' && jsonLd.name.length > 5) {
       return this.cleanAmazonTitle(jsonLd.name);
@@ -164,7 +164,7 @@ export class AmazonScraper {
   /**
    * Amazon画像URL抽出（JSON-LDキャッシュ対応）
    */
-  private extractAmazonImage($: cheerio.CheerioAPI, jsonLd: any): string | undefined {
+  private extractAmazonImage($: cheerio.CheerioAPI, jsonLd: Record<string, unknown> | null): string | undefined {
     // 1. JSON-LD構造化データから取得（最優先）
     if (jsonLd?.image) {
       const imageUrl = Array.isArray(jsonLd.image) ? jsonLd.image[0] : jsonLd.image;

@@ -481,7 +481,7 @@ class DatabaseConnection {
    */
   async updateCategory(id: string, updates: { name?: string; color?: string; tags?: string[] }): Promise<Category | null> {
     const setClauses: string[] = [];
-    const values: any[] = [];
+    const values: SqlParam[] = [];
     let paramIndex = 1;
 
     if (updates.name !== undefined) {

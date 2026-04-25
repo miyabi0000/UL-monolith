@@ -67,29 +67,45 @@ export const sanitizeUrl = (input: string): string => {
 /**
  * Seasons配列のサニタイゼーション
  */
-export const sanitizeSeasons = (seasons: any): string[] | undefined => {
+export const sanitizeSeasons = (seasons: unknown): string[] | undefined => {
   if (!seasons) return undefined
   if (!Array.isArray(seasons)) return undefined
 
   const validSeasons = ['spring', 'summer', 'fall', 'winter']
-  return seasons
-    .filter(s => typeof s === 'string' && validSeasons.includes(s.toLowerCase()))
-    .map(s => s.toLowerCase())
+  return (seasons as unknown[])
+    .filter((s): s is string => typeof s === 'string' && validSeasons.includes(s.toLowerCase()))
+    .map((s) => s.toLowerCase())
 }
 
 /**
  * ギアフォーム用の統合サニタイゼーション
+ *
+ * 入力は外部 (リクエストボディ等) の不定形データを受けるため `unknown` を
+ * 受け取り、内部で in 演算子と typeof で個別にチェックする。
  */
-export const sanitizeGearForm = (data: any) => {
+type GearFormFields = Partial<{
+  name: string
+  brand: string
+  productUrl: string
+  requiredQuantity: number
+  ownedQuantity: number
+  weightGrams: number
+  priceCents: number
+  seasons: unknown
+  priority: number
+}>
+
+export const sanitizeGearForm = (data: unknown) => {
+  const d: GearFormFields = (typeof data === 'object' && data !== null) ? (data as GearFormFields) : {}
   return {
-    name: escapeHtml(sanitizeString(data.name || '')),
-    brand: escapeHtml(sanitizeString(data.brand || '')),
-    productUrl: sanitizeUrl(data.productUrl || ''),
-    requiredQuantity: sanitizeNumber(data.requiredQuantity, 1, 100) || 1,
-    ownedQuantity: sanitizeNumber(data.ownedQuantity, 0, 100) || 0,
-    weightGrams: data.weightGrams ? sanitizeNumber(data.weightGrams, 0, 10000) : undefined,
-    priceCents: data.priceCents ? sanitizeNumber(data.priceCents, 0, 10000000) : undefined,
-    seasons: sanitizeSeasons(data.seasons),
-    priority: sanitizeNumber(data.priority, 1, 5) || 3
+    name: escapeHtml(sanitizeString(d.name ?? '')),
+    brand: escapeHtml(sanitizeString(d.brand ?? '')),
+    productUrl: sanitizeUrl(d.productUrl ?? ''),
+    requiredQuantity: sanitizeNumber(d.requiredQuantity ?? 1, 1, 100) || 1,
+    ownedQuantity: sanitizeNumber(d.ownedQuantity ?? 0, 0, 100) || 0,
+    weightGrams: d.weightGrams ? sanitizeNumber(d.weightGrams, 0, 10000) : undefined,
+    priceCents: d.priceCents ? sanitizeNumber(d.priceCents, 0, 10000000) : undefined,
+    seasons: sanitizeSeasons(d.seasons),
+    priority: sanitizeNumber(d.priority ?? 3, 1, 5) || 3,
   }
 }

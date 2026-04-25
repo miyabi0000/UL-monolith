@@ -240,7 +240,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
     }
 
     const client = await db.connect();
-    const importedPacks: any[] = [];
+    const importedPacks: Record<string, unknown>[] = [];
 
     try {
       await client.query('BEGIN');
