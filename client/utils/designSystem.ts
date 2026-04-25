@@ -308,3 +308,42 @@ export const getCategoryBadgeShade = (name: string): string => getCategoryColor(
 export const CHART_GRAYSCALE = CATEGORY_PALETTE;
 /** @deprecated getCategoryColorByIndex を使用 */
 export const getChartGrayShade = (index: number): string => getCategoryColorByIndex(index);
+
+/**
+ * Paper grain / Noise system
+ *
+ * チャート (charts/GradientDefs.tsx) と UI サーフェス (globals.css の
+ * `--noise-*` 変数 + `.noise-*` ユーティリティ) で共有される単一の
+ * 真実。値はこの 3 ファイルで同期させること。
+ *
+ * - `feTurbulence` の baseFrequency / numOctaves / seed
+ * - 4 段階の不透明度 (matte / surface / control / prominent)
+ *
+ * 利用方法:
+ *   1. CSS クラス: `.noise-surface` / `.noise-control` / `.noise-prominent`
+ *      を要素に付与 (推奨)。
+ *   2. JS から CSS 変数を参照: `var(--noise-url-surface)` 等。
+ *   3. SVG チャート: `<GradientDefs />` をレンダリングし、
+ *      `filter: url(#chart-grain-N)` をセクターに適用。
+ */
+export const NOISE = {
+  /** feTurbulence パラメータ — チャートと CSS で共通 */
+  baseFrequency: 1.1,
+  numOctaves: 2,
+  /** seed 循環: 隣接コンポーネント間でパターン重複を避けるため 3 値を使い分ける */
+  seeds: [3, 11, 29] as const,
+  /** SVG チャート用 grain 強度 (GradientDefs.tsx の既定) */
+  darkStrength: 0.32,
+  lightStrength: 0.18,
+  /** ティア別の重ね opacity */
+  opacity: {
+    /** 0.018 — body 全体のごく薄い基底テクスチャ */
+    matte: 0.018,
+    /** 0.09 — card / modal / panel / table shell */
+    surface: 0.09,
+    /** 0.11 — chip / segmented / icon-btn / btn-secondary */
+    control: 0.11,
+    /** 0.14 — btn-primary / btn-danger (主張強め) */
+    prominent: 0.14,
+  },
+} as const;

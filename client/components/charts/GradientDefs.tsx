@@ -6,6 +6,15 @@ import React from 'react'
  * feTurbulence ベースの grain フィルター (3 seed 循環) で、各セクターに
  * マットな粒子テクスチャを与える。カラーバリエーションは generateItemColor
  * の HSL 変化で表現するので、ここでは linearGradient は生成しない。
+ *
+ * このノイズはデザインシステム全体 (UI サーフェス側) と視覚言語を共有する:
+ *   - JS トークン:  client/utils/designSystem.ts の `NOISE`
+ *   - CSS 変数:     client/styles/globals.css の `--noise-url-{a,b,c}` /
+ *                   `--noise-opacity-*` / `.noise-{surface,control,prominent}`
+ *   - SVG defs:     当ファイル (チャートセクター用)
+ *
+ * baseFrequency / numOctaves / seed 値を変更する場合は、上記 3 箇所を
+ * 必ず同期させること。GRAIN_SEEDS は CSS 側の seed=3/11/29 と一致。
  */
 
 interface GradientDefsProps {
