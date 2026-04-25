@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { llmService } from '../../services/llmService.js';
 import { CategoryMatcher } from '../../services/categoryMatcher.js';
 import { recordUsage } from '../../services/quotaService.js';
+import { logger } from '../../utils/logger.js';
 
 const trackUrlUsage = (userId: string | undefined) => {
   if (userId) void recordUsage({ userId, endpoint: 'url' });
@@ -32,7 +33,7 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[LLM] Processing URL extraction: ${url}`);
+    logger.info(`[LLM] Processing URL extraction: ${url}`);
     
     const extractionResult = await llmService.extractGearFromUrl(url);
     
@@ -49,7 +50,7 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
       );
     }
 
-    console.log(`[LLM] URL extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory}`);
+    logger.info(`[LLM] URL extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory}`);
 
     trackUrlUsage(req.userId);
 
@@ -59,7 +60,7 @@ export const handleExtractUrl = async (req: Request, res: Response) => {
       message: 'URL extraction completed successfully'
     });
   } catch (error) {
-    console.error('[LLM] URL extraction error:', error);
+    logger.error({ err: error }, '[LLM] URL extraction error:');
     res.status(500).json({
       success: false,
       message: 'Failed to extract from URL',
@@ -104,7 +105,7 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[LLM] Processing prompt extraction: ${prompt.substring(0, 50)}...`);
+    logger.info(`[LLM] Processing prompt extraction: ${prompt.substring(0, 50)}...`);
 
     const extractionResult = await llmService.extractGearFromPrompt(prompt);
 
@@ -120,7 +121,7 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
       );
     }
 
-    console.log(`[LLM] Prompt extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory} (confidence: ${extractionResult.confidence})`);
+    logger.info(`[LLM] Prompt extraction completed: ${extractionResult.name} → ${extractionResult.suggestedCategory} (confidence: ${extractionResult.confidence})`);
 
     trackUrlUsage(req.userId);
 
@@ -130,7 +131,7 @@ export const handleExtractPrompt = async (req: Request, res: Response) => {
       message: 'Prompt extraction completed successfully'
     });
   } catch (error) {
-    console.error('[LLM] Prompt extraction error:', error);
+    logger.error({ err: error }, '[LLM] Prompt extraction error:');
     res.status(500).json({
       success: false,
       message: 'Failed to extract from prompt',
@@ -168,7 +169,7 @@ export const handleEnhancePrompt = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[LLM] Enhancing URL data with prompt: ${prompt.substring(0, 50)}...`);
+    logger.info(`[LLM] Enhancing URL data with prompt: ${prompt.substring(0, 50)}...`);
     
     const enhancedResult = await llmService.enhanceWithPrompt(urlData, prompt);
 
@@ -180,7 +181,7 @@ export const handleEnhancePrompt = async (req: Request, res: Response) => {
       message: 'Data enhancement completed successfully'
     });
   } catch (error) {
-    console.error('[LLM] Enhancement error:', error);
+    logger.error({ err: error }, '[LLM] Enhancement error:');
     res.status(500).json({
       success: false,
       message: 'Failed to enhance data with prompt',

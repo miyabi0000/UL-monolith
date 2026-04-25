@@ -7,6 +7,7 @@ import type {
   GearContext,
 } from './advisorTypes.js';
 import { ADVISOR_TOOLS, parseToolCalls } from './advisorTools.js';
+import { logger } from '../../utils/logger.js';
 
 // ==================== バリデーション ====================
 
@@ -128,7 +129,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
 
   // OpenAI 非利用時はフォールバック
   if (!openaiClient.isAvailable()) {
-    console.info('[Advisor] OpenAI unavailable - returning fallback response');
+    logger.info('[Advisor] OpenAI unavailable - returning fallback response');
     return res.json({
       success: true,
       data: buildFallbackResponse(gearContext),
@@ -138,7 +139,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
 
   try {
     const systemPrompt = buildSystemPrompt(gearContext);
-    console.log(`[Advisor] Calling OpenAI with tools (${conversation.length} messages, ${gearContext.items.length} gear items)`);
+    logger.info(`[Advisor] Calling OpenAI with tools (${conversation.length} messages, ${gearContext.items.length} gear items)`);
 
     const completion = await openaiClient.chatWithTools(systemPrompt, conversation, ADVISOR_TOOLS, 1500, usageContext);
     const choice = completion.choices[0];
@@ -148,7 +149,7 @@ export const handleAdvisorChat = async (req: Request, res: Response) => {
 
     return res.json({ success: true, data, message: 'Advisor response generated' });
   } catch (error) {
-    console.error('[Advisor] OpenAI call failed:', error);
+    logger.error({ err: error }, '[Advisor] OpenAI call failed:');
     return res.json({
       success: true,
       data: {
@@ -202,7 +203,7 @@ export const handleAdvisorChatStream = async (req: Request, res: Response) => {
 
   try {
     const systemPrompt = buildSystemPrompt(gearContext);
-    console.log(`[Advisor/Stream] Calling OpenAI (${conversation.length} messages, ${gearContext.items.length} gear items)`);
+    logger.info(`[Advisor/Stream] Calling OpenAI (${conversation.length} messages, ${gearContext.items.length} gear items)`);
 
     const stream = await openaiClient.chatWithToolsStream(systemPrompt, conversation, ADVISOR_TOOLS, 1500);
 
@@ -270,7 +271,7 @@ export const handleAdvisorChatStream = async (req: Request, res: Response) => {
     sendSSE(res, 'done', {});
     res.end();
   } catch (error) {
-    console.error('[Advisor/Stream] OpenAI call failed:', error);
+    logger.error({ err: error }, '[Advisor/Stream] OpenAI call failed:');
     if (!res.headersSent) {
       // ヘッダー未送信ならJSONフォールバック
       return res.json({

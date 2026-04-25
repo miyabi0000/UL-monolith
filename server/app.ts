@@ -1,13 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { randomUUID } from 'crypto';
+import { logger, httpLogger } from './utils/logger.js';
 
 // Import routes
 import gearRoutes from './routes/gear.js';
@@ -72,7 +71,7 @@ const strictLimiter = rateLimit({
 // 必要になったら connect-src / img-src を明示した上で再有効化する。
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
-app.use(morgan('combined'));
+app.use(httpLogger); // pino-http: req/res ログ + reqId 自動付与 (req.log / req.id で取得可)
 app.use('/api/', limiter); // 全APIにRate Limiting適用
 
 // Stripe webhook は署名検証のため raw body が必要。express.json より先にマウントする。
@@ -133,17 +132,13 @@ if (distPath) {
 }
 
 // Error handling middleware
+// pino-http が自動付与した req.id を使って相関。詳細はサーバー側ログに留める。
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const requestId = randomUUID();
+  const requestId = (req as express.Request & { id?: string }).id ?? 'unknown';
   const name = err instanceof Error ? err.name : 'UnknownError';
   const message = err instanceof Error ? err.message : String(err);
-  const stack = err instanceof Error ? err.stack : undefined;
 
-  // サーバー側にのみ詳細を残す（構造化ロガー導入後は JSON 化）
-  console.error(
-    `[${requestId}] ${req.method} ${req.originalUrl} — ${name}: ${message}`,
-    stack ?? '',
-  );
+  req.log?.error({ err, name, requestId }, message);
 
   res.status(500).json({
     success: false,
@@ -162,9 +157,7 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info({ port: PORT }, `Server running on http://localhost:${PORT}`);
 });
 
 export default app;

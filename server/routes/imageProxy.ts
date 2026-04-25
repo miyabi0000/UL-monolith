@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { assertSafeExternalUrl } from '../utils/ssrfGuard.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -52,7 +53,7 @@ router.get('/proxy', async (req: Request, res: Response) => {
     res.set('Cache-Control', 'public, max-age=86400');
     res.send(response.data);
   } catch (error) {
-    console.error('Image proxy error:', error);
+    logger.error({ err: error }, 'Image proxy error:');
     res.status(502).json({ success: false, message: 'Failed to fetch image' });
   }
 });

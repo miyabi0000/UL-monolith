@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { ChatCompletion, ChatCompletionChunk, ChatCompletionTool } from 'openai/resources/chat/completions';
 import type { Stream } from 'openai/streaming';
 import { recordUsage, QuotaEndpoint } from './quotaService.js';
+import { logger } from '../utils/logger.js';
 
 export interface UsageContext {
   userId: string;
@@ -19,11 +20,11 @@ export class OpenAIClient {
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      console.warn('[OpenAI] API key not configured - LLM features will use fallback responses');
+      logger.warn('[OpenAI] API key not configured - LLM features will use fallback responses');
       this.openai = null;
     } else {
       this.openai = new OpenAI({ apiKey });
-      console.log('[OpenAI] Client initialized successfully');
+      logger.info('[OpenAI] Client initialized successfully');
     }
   }
 
@@ -47,7 +48,7 @@ export class OpenAIClient {
     context?: UsageContext,
   ): Promise<string> {
     if (!this.openai) {
-      console.warn('[OpenAI] API key not configured, using fallback response');
+      logger.warn('[OpenAI] API key not configured, using fallback response');
       throw new Error('OpenAI client not available');
     }
 

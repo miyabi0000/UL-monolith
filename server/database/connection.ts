@@ -1,6 +1,7 @@
 import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { GearItem, GearItemForm, Category, WeightBreakdown, deriveStatus } from '../models/types.js';
 import { buildPoolConfig } from './poolConfig.js';
+import { logger } from '../utils/logger.js';
 
 // SQLパラメータ型
 type SqlParam = string | number | boolean | string[] | number[] | null | undefined;
@@ -179,7 +180,7 @@ class DatabaseConnection {
 
       return { items, total };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to fetch gear items');
     }
   }
@@ -252,7 +253,7 @@ class DatabaseConnection {
         } : undefined
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to fetch gear item');
     }
   }
@@ -327,7 +328,7 @@ class DatabaseConnection {
         chartData
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to fetch analytics summary');
     }
   }
@@ -394,7 +395,7 @@ class DatabaseConnection {
         big3Sleep
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to fetch weight breakdown');
     }
   }
@@ -412,7 +413,7 @@ class DatabaseConnection {
       const result = await this.pool.query(query, [ids, userId]);
       return result.rowCount ?? 0;
     } catch (error) {
-      console.error('Database delete error:', error);
+      logger.error({ err: error }, 'Database delete error:');
       throw new Error('Failed to delete gear items');
     }
   }
@@ -441,7 +442,7 @@ class DatabaseConnection {
         createdAt: row.created_at
       }));
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to fetch categories');
     }
   }
@@ -470,7 +471,7 @@ class DatabaseConnection {
         createdAt: row.created_at
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to create category');
     }
   }
@@ -531,7 +532,7 @@ class DatabaseConnection {
         createdAt: row.created_at
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to update category');
     }
   }
@@ -546,7 +547,7 @@ class DatabaseConnection {
       const result = await this.pool.query(query, [id]);
       return result.rowCount !== null && result.rowCount > 0;
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to delete category');
     }
   }
@@ -611,7 +612,7 @@ class DatabaseConnection {
         updatedAt: row.updated_at
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to create gear item');
     }
   }
@@ -695,7 +696,7 @@ class DatabaseConnection {
         updatedAt: row.updated_at
       };
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to update gear item');
     }
   }
@@ -710,7 +711,7 @@ class DatabaseConnection {
       const result = await this.pool.query(query, [id, userId]);
       return result.rowCount !== null && result.rowCount > 0;
     } catch (error) {
-      console.error('Database query error:', error);
+      logger.error({ err: error }, 'Database query error:');
       throw new Error('Failed to delete gear item');
     }
   }
@@ -737,7 +738,7 @@ class DatabaseConnection {
       );
       return result.rows[0]?.payload_json ?? null;
     } catch (error) {
-      console.error('[ScrapeCache] Read error:', error);
+      logger.error({ err: error }, '[ScrapeCache] Read error:');
       return null;
     }
   }
@@ -760,7 +761,7 @@ class DatabaseConnection {
         [normalizedUrl, JSON.stringify(payload), ttlExpiresAt]
       );
     } catch (error) {
-      console.error('[ScrapeCache] Write error:', error);
+      logger.error({ err: error }, '[ScrapeCache] Write error:');
     }
   }
 

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../database/connection.js';
 import { cognitoAuth } from '../middleware/cognitoAuth.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -32,7 +33,7 @@ router.get('/', cognitoAuth, async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    logger.error({ err: error }, 'Error fetching profile:');
     res.status(500).json({ success: false, message: 'Failed to fetch profile' });
   }
 });
@@ -78,7 +79,7 @@ router.put('/', cognitoAuth, async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    logger.error({ err: error }, 'Error updating profile:');
     res.status(500).json({ success: false, message: 'Failed to update profile' });
   }
 });
@@ -88,7 +89,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
   try {
     const { displayName, handle, bio, headerImageUrl, headerTitle } = req.body;
 
-    console.info(`[Profile Import] user=${req.userId} — localStorage → DB 移行`);
+    logger.info(`[Profile Import] user=${req.userId} — localStorage → DB 移行`);
 
     const result = await db.query(
       `UPDATE users SET
@@ -127,7 +128,7 @@ router.post('/import', cognitoAuth, async (req: Request, res: Response) => {
       message: 'Profile imported from localStorage',
     });
   } catch (error) {
-    console.error('Error importing profile:', error);
+    logger.error({ err: error }, 'Error importing profile:');
     res.status(500).json({ success: false, message: 'Failed to import profile' });
   }
 });

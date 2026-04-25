@@ -6,6 +6,7 @@ import { db } from '../../database/connection.js';
 import { extractSnippets } from './snippet.js';
 import { llmFallback } from '../llm/llmFallback.js';
 import { validateAndSanitize } from './validateResult.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * スクレイピング入口オーケストレータ
@@ -54,11 +55,11 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
     try {
       const cached = await db.getScrapeCache(normalized);
       if (cached) {
-        console.log(`[Orchestrator] Cache HIT: ${normalized}`);
+        logger.info(`[Orchestrator] Cache HIT: ${normalized}`);
         return { data: cached as unknown as LLMExtractionResult, failureReasons: [] };
       }
     } catch (error) {
-      console.warn('[Orchestrator] Cache read failed:', error);
+      logger.warn({ err: error }, '[Orchestrator] Cache read failed:');
     }
   }
 
@@ -73,7 +74,7 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
 
     // ── LLMフォールバック（欠損時のみ、HTMLを再利用） ──
     if (LLM_FALLBACK_ENABLED && needsLlmFallback(data) && scrapeResult.html) {
-      console.log(`[Orchestrator] LLM fallback triggered for ${url}`);
+      logger.info(`[Orchestrator] LLM fallback triggered for ${url}`);
       data = await tryLlmFallback(url, data, scrapeResult.html);
     }
 
@@ -87,12 +88,12 @@ export async function scrapeUrl(url: string): Promise<ScrapeResult> {
     // ── キャッシュ書き込み（LLM補完後の結果を保存） ──
     if (CACHE_ENABLED && data.source !== 'fallback') {
       db.setScrapeCache(normalized, data as unknown as Record<string, unknown>, CACHE_TTL_SECONDS)
-        .catch(err => console.warn('[Orchestrator] Cache write failed:', err));
+        .catch(err => logger.warn({ err: err }, '[Orchestrator] Cache write failed:'));
     }
 
     return { data, failureReasons };
   } catch (error) {
-    console.error(`[Orchestrator] Scraping failed for ${url}:`, error);
+    logger.error({ err: error }, `[Orchestrator] Scraping failed for ${url}:`);
     const reason: ScrapeFailureReason =
       error instanceof Error && error.message.includes('timeout') ? 'timeout' : 'fetch_error';
     return { data: createFallback(url, String(error)), failureReasons: [reason] };
@@ -117,7 +118,7 @@ async function tryLlmFallback(url: string, data: LLMExtractionResult, html: stri
     const patch = await llmFallback(url, data, snippets);
     if (!patch) return data;
 
-    console.log(`[Orchestrator] LLM filled fields: ${Object.keys(patch).join(', ')}`);
+    logger.info(`[Orchestrator] LLM filled fields: ${Object.keys(patch).join(', ')}`);
 
     const merged = { ...data, ...patch, source: 'web_scraping' };
     // extractedFields にLLM補完分を追加
@@ -131,7 +132,7 @@ async function tryLlmFallback(url: string, data: LLMExtractionResult, html: stri
 
     return merged;
   } catch (error) {
-    console.warn('[Orchestrator] LLM fallback failed, using scrape-only result:', error);
+    logger.warn({ err: error }, '[Orchestrator] LLM fallback failed, using scrape-only result:');
     return data;
   }
 }
@@ -154,7 +155,7 @@ function createFallback(url: string, reason: string): LLMExtractionResult {
     fallbackName = `Product from ${domain}`;
   } catch { /* ignore */ }
 
-  console.log(`[Orchestrator] Creating fallback for ${url}: ${reason}`);
+  logger.info(`[Orchestrator] Creating fallback for ${url}: ${reason}`);
   return {
     name: fallbackName,
     productUrl: url,

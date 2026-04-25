@@ -1,4 +1,5 @@
 import { db } from '../database/connection.js';
+import { logger } from '../utils/logger.js';
 
 export type QuotaEndpoint = 'chat' | 'url';
 export type Plan = 'free' | 'pro';
@@ -70,6 +71,6 @@ export async function recordUsage(
     );
   } catch (error) {
     // 記録失敗はリクエストを止めない（ログのみ）
-    console.error('[quotaService] Failed to record usage:', error);
+    logger.error({ err: error }, '[quotaService] Failed to record usage:');
   }
 }

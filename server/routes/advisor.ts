@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../database/connection.js';
 import { cognitoAuth } from '../middleware/cognitoAuth.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -22,7 +23,7 @@ router.get('/sessions', cognitoAuth, async (req: Request, res: Response) => {
 
     res.json({ success: true, data: result.rows });
   } catch (error) {
-    console.error('Error fetching advisor sessions:', error);
+    logger.error({ err: error }, 'Error fetching advisor sessions:');
     res.status(500).json({ success: false, message: 'Failed to fetch sessions' });
   }
 });
@@ -42,7 +43,7 @@ router.post('/sessions', cognitoAuth, async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error) {
-    console.error('Error creating advisor session:', error);
+    logger.error({ err: error }, 'Error creating advisor session:');
     res.status(500).json({ success: false, message: 'Failed to create session' });
   }
 });
@@ -63,7 +64,7 @@ router.delete('/sessions/:id', cognitoAuth, async (req: Request, res: Response) 
 
     res.json({ success: true, message: 'Session deleted' });
   } catch (error) {
-    console.error('Error deleting advisor session:', error);
+    logger.error({ err: error }, 'Error deleting advisor session:');
     res.status(500).json({ success: false, message: 'Failed to delete session' });
   }
 });
@@ -106,7 +107,7 @@ router.get('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Resp
 
     res.json({ success: true, data: messages });
   } catch (error) {
-    console.error('Error fetching advisor messages:', error);
+    logger.error({ err: error }, 'Error fetching advisor messages:');
     res.status(500).json({ success: false, message: 'Failed to fetch messages' });
   }
 });
@@ -176,7 +177,7 @@ router.post('/sessions/:id/messages', cognitoAuth, async (req: Request, res: Res
       client.release();
     }
   } catch (error) {
-    console.error('Error saving advisor message:', error);
+    logger.error({ err: error }, 'Error saving advisor message:');
     res.status(500).json({ success: false, message: 'Failed to save message' });
   }
 });

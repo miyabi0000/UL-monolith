@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { llmService } from '../../services/llmService.js';
+import { logger } from '../../utils/logger.js';
 
 export const handleExtractCategory = async (req: Request, res: Response) => {
   try {
@@ -12,7 +13,7 @@ export const handleExtractCategory = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[LLM] Extracting category from: ${prompt.substring(0, 50)}...`);
+    logger.info(`[LLM] Extracting category from: ${prompt.substring(0, 50)}...`);
 
     const categoryResult = await llmService.extractCategory(prompt);
 
@@ -30,7 +31,7 @@ export const handleExtractCategory = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('[LLM] Category extraction error:', error);
+    logger.error({ err: error }, '[LLM] Category extraction error:');
     res.status(500).json({
       success: false,
       message: 'Failed to extract category',
