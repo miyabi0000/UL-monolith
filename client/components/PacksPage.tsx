@@ -3,6 +3,7 @@ import { useAuth } from '../utils/AuthContext';
 import { useAppState } from '../hooks/useAppState';
 import { usePacks } from '../hooks/usePacks';
 import { useProfile } from '../hooks/useProfile';
+import { useIsMobile } from '../hooks/useResponsiveSize';
 import InventoryWorkspace from './InventoryWorkspace';
 import ProfileHeader from './ProfileHeader';
 import SettingsModal from './SettingsModal';
@@ -15,7 +16,6 @@ interface PacksPageProps {
   isAuthenticated: boolean;
   userName?: string;
   onLogout: () => void;
-  onShowChat?: () => void;
 }
 
 export default function PacksPage({
@@ -23,12 +23,12 @@ export default function PacksPage({
   isAuthenticated,
   userName,
   onLogout,
-  onShowChat,
 }: PacksPageProps) {
   const { user } = useAuth();
-  const { gearItems } = appState;
+  const { gearItems, showChat } = appState;
   const { packs, createPack, updatePack, deletePack, toggleItemInPack, addItemsToPack } = usePacks(user?.id ?? fallbackUserId);
   const { profile, updateField, plan } = useProfile(user?.name);
+  const isMobile = useIsMobile();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
@@ -67,19 +67,20 @@ export default function PacksPage({
     }
   };
 
-  // Chat は bottom sheet 化したため、右余白を確保する必要はなし。
-  // main content は常時フル幅。
+  // Chat が開いているデスクトップでは右余白 400px を確保し、
+  // サイドバーと本体が重ならないようにする。モバイルはフル幅オーバーレイ。
+  const chatSidebarGutter = showChat && !isMobile ? { paddingRight: '400px' } : undefined;
 
   return (
     <main
       id="inventory-overview"
-      className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-4 sm:px-4 md:px-6 lg:px-4"
+      className="max-w-6xl mx-auto min-h-screen px-1.5 pt-3 pb-24 sm:px-4 md:px-6 lg:px-4 transition-[padding] duration-300 ease-in-out"
+      style={chatSidebarGutter}
     >
       <div className="flex min-h-0 flex-col gap-3">
         <ProfileHeader
           profile={profile}
           onOpenSettings={() => setSettingsOpen(true)}
-          onShowChat={onShowChat}
         />
 
         <div className="min-h-0 flex-1">

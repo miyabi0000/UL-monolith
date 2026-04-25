@@ -11,6 +11,21 @@ export const useAppState = () => {
   // 全て削除済み。復活させる場合は各機能の再統合を先に検討すること。
   const [showChat, setShowChat] = useState(false);
 
+  // FloatingChatInput から送られた Advisor の初回プロンプト。
+  // nonce は同じテキストの連続送信を別イベントとして扱うための識別子。
+  const [pendingAdvisorPrompt, setPendingAdvisorPrompt] = useState<{ text: string; nonce: number } | null>(null);
+
+  /** FloatingChatInput から Advisor を起動: ChatSidebar を開き、テキストを自動送信する */
+  const launchAdvisor = useCallback((text: string) => {
+    setPendingAdvisorPrompt({ text, nonce: Date.now() });
+    setShowChat(true);
+  }, []);
+
+  /** ChatSidebar が消費したら呼び出してクリア */
+  const consumePendingAdvisorPrompt = useCallback(() => {
+    setPendingAdvisorPrompt(null);
+  }, []);
+
   // データ読み込み状態
   const [isLoading, setIsLoading] = useState(true);
 
@@ -128,6 +143,9 @@ export const useAppState = () => {
   return {
     // UI状態
     showChat, setShowChat,
+    pendingAdvisorPrompt,
+    launchAdvisor,
+    consumePendingAdvisorPrompt,
 
     // データ状態
     gearItems,
