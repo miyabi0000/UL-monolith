@@ -67,10 +67,10 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Base */}
         <div
           className="flex flex-col items-center justify-center p-2 rounded-control"
-          style={{ background: 'var(--surface-level-1)' }}
+          style={{ background: 'var(--surface-level-1)', color: 'var(--ink-muted)' }}
         >
-          <BackpackIcon className="w-5 h-5 mb-1" style={{ color: 'var(--ink-muted)' }} />
-          <span className="text-2xs font-medium" style={{ color: 'var(--ink-muted)' }}>
+          <BackpackIcon className="w-5 h-5 mb-1" />
+          <span className="text-2xs font-medium">
             {WEIGHT_CLASS_CONFIG.base.label}
           </span>
           <span className="text-sm font-bold" style={{ color: 'var(--ink-primary)' }}>
@@ -81,10 +81,10 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Worn */}
         <div
           className="flex flex-col items-center justify-center p-2 rounded-control"
-          style={{ background: 'var(--surface-level-2)' }}
+          style={{ background: 'var(--surface-level-2)', color: 'var(--ink-muted)' }}
         >
-          <ShirtIcon className="w-5 h-5 mb-1" style={{ color: 'var(--ink-muted)' }} />
-          <span className="text-2xs font-medium" style={{ color: 'var(--ink-muted)' }}>
+          <ShirtIcon className="w-5 h-5 mb-1" />
+          <span className="text-2xs font-medium">
             {WEIGHT_CLASS_CONFIG.worn.label}
           </span>
           <span className="text-sm font-bold" style={{ color: 'var(--ink-primary)' }}>
@@ -95,10 +95,10 @@ const WeightBreakdownCard: React.FC<WeightBreakdownCardProps> = ({ breakdown, ul
         {/* Consumable */}
         <div
           className="flex flex-col items-center justify-center p-2 rounded-control"
-          style={{ background: 'var(--surface-level-2)' }}
+          style={{ background: 'var(--surface-level-2)', color: 'var(--ink-muted)' }}
         >
-          <UtensilsIcon className="w-5 h-5 mb-1" style={{ color: 'var(--ink-muted)' }} />
-          <span className="text-2xs font-medium" style={{ color: 'var(--ink-muted)' }}>
+          <UtensilsIcon className="w-5 h-5 mb-1" />
+          <span className="text-2xs font-medium">
             {WEIGHT_CLASS_CONFIG.consumable.label}
           </span>
           <span className="text-sm font-bold" style={{ color: 'var(--ink-primary)' }}>
