@@ -110,26 +110,6 @@ export class LLMService {
   }
 
   /**
-   * リスト分析
-   */
-  async analyzeList(gearList: unknown[]): Promise<{ summary: string; tips: string[] }> {
-    try {
-      const listData = JSON.stringify(gearList.slice(0, 10)); // 最初の10件のみ
-      const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, listData);
-      const result = this.parseJSON(response);
-      const summary = typeof result.summary === 'string' ? result.summary : 'リストを分析できませんでした';
-      const tips = Array.isArray(result.tips) ? (result.tips as unknown[]).filter((t): t is string => typeof t === 'string') : ['特に提案はありません'];
-      return { summary, tips };
-    } catch (error) {
-      logger.error({ err: error }, 'List analysis failed:');
-      return {
-        summary: '分析に失敗しました',
-        tips: ['後でもう一度お試しください']
-      };
-    }
-  }
-
-  /**
    * JSON解析 — 不定形 LLM レスポンスからオブジェクトを抽出
    */
   private parseJSON(response: string): Record<string, unknown> {

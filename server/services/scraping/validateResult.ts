@@ -103,30 +103,39 @@ export function validateAndSanitize(data: LLMExtractionResult): LLMExtractionRes
 function isValidName(name: string | undefined): boolean {
   if (!name) return false;
   const trimmed = name.trim();
-  if (trimmed.length < LIMITS.nameMinLen || trimmed.length > LIMITS.nameMaxLen) return false;
-  if (NAME_BLACKLIST.includes(trimmed.toLowerCase())) return false;
-  return true;
+  return (
+    trimmed.length >= LIMITS.nameMinLen &&
+    trimmed.length <= LIMITS.nameMaxLen &&
+    !NAME_BLACKLIST.includes(trimmed.toLowerCase())
+  );
 }
 
 function isValidBrand(brand: string): boolean {
   const trimmed = brand.trim();
-  if (trimmed.length < LIMITS.brandMinLen || trimmed.length > LIMITS.brandMaxLen) return false;
-  if (BRAND_BLACKLIST.includes(trimmed.toLowerCase())) return false;
-  return true;
+  return (
+    trimmed.length >= LIMITS.brandMinLen &&
+    trimmed.length <= LIMITS.brandMaxLen &&
+    !BRAND_BLACKLIST.includes(trimmed.toLowerCase())
+  );
 }
 
 function isValidWeight(weight: number): boolean {
-  if (!Number.isFinite(weight)) return false;
-  return weight >= LIMITS.weightMinGrams && weight <= LIMITS.weightMaxGrams;
+  return (
+    Number.isFinite(weight) &&
+    weight >= LIMITS.weightMinGrams &&
+    weight <= LIMITS.weightMaxGrams
+  );
 }
 
 function isValidPrice(price: number): boolean {
-  if (!Number.isFinite(price)) return false;
-  if (!Number.isInteger(price)) return false; // cent 単位なので整数
-  return price >= LIMITS.priceMinCents && price <= LIMITS.priceMaxCents;
+  // cent 単位なので整数
+  return (
+    Number.isInteger(price) &&
+    price >= LIMITS.priceMinCents &&
+    price <= LIMITS.priceMaxCents
+  );
 }
 
 function isValidImageUrl(url: string): boolean {
-  if (typeof url !== 'string' || url.length === 0) return false;
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.length > 0 && (url.startsWith('http://') || url.startsWith('https://'));
 }

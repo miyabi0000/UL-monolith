@@ -1,4 +1,4 @@
-import { GearItemForm, GearItem, DEFAULT_GEAR_VALUES } from '../models/types.js';
+import { GearItemForm, DEFAULT_GEAR_VALUES } from '../models/types.js';
 
 // リクエストボディの型（any入力を受け付ける）
 interface RawGearInput {
@@ -47,23 +47,5 @@ export const sanitizeGearData = (data: RawGearInput): GearItemForm => {
     ),
     priority: Math.max(1, Math.min(5, parseInt(String(data.priority)) || DEFAULT_GEAR_VALUES.priority)),
     isInKit: data.isInKit ?? DEFAULT_GEAR_VALUES.isInKit
-  };
-};
-
-/**
- * ギアアイテムに計算フィールドを追加
- */
-export const calculateGearFields = (item: GearItem) => {
-  const requiredQuantity = item.requiredQuantity || 1;
-  const ownedQuantity = item.ownedQuantity || 0;
-  const weightGrams = item.weightGrams || 0;
-  const priceCents = item.priceCents || 0;
-
-  return {
-    ...item,
-    shortage: requiredQuantity - ownedQuantity,
-    totalWeight: weightGrams * requiredQuantity,
-    totalPrice: priceCents * requiredQuantity,
-    missingQuantity: Math.max(0, requiredQuantity - ownedQuantity)
   };
 };

@@ -79,6 +79,14 @@ export function normalizeCategoryName(name: string): string {
 }
 
 /**
+ * "Other" / "その他" カテゴリ判定（システム保護対象）
+ */
+export function isOtherCategory(name: string): boolean {
+  const lower = name.toLowerCase();
+  return lower === 'other' || lower === 'その他';
+}
+
+/**
  * デフォルト色
  */
 export const DEFAULT_CATEGORY_COLOR = DEFAULT_JAPANESE_COLOR;

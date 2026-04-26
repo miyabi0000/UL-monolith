@@ -5,6 +5,7 @@ import { getRequestUserId } from './shared/userContext.js';
 import {
   validateCategoryInput,
   normalizeCategoryName,
+  isOtherCategory,
   DEFAULT_CATEGORY_COLOR
 } from '../utils/categoryValidation.js';
 import { logger } from '../utils/logger.js';
@@ -67,9 +68,10 @@ router.post('/', async (req, res) => {
     const normalizedName = normalizeCategoryName(name);
     const userId = getRequestUserId(req);
 
-    // 重複チェック
+    // 重複チェック（normalizedName は trim 済み、大文字小文字無視で比較）
     const existingCategories = await db.getCategories(userId);
-    if (existingCategories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
+    const lowered = normalizedName.toLowerCase();
+    if (existingCategories.some(cat => cat.name.toLowerCase() === lowered)) {
       return sendError(res, 'Category with this name already exists', undefined, 409);
     }
 
@@ -107,16 +109,13 @@ router.put('/:id', async (req, res) => {
     }
 
     // "Other" カテゴリーの名前変更を保護
-    if ((category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') && name !== undefined) {
+    if (name !== undefined && isOtherCategory(category.name)) {
       return sendError(res, 'Cannot rename the "Other" category. This is a system-protected category.', undefined, 403);
     }
 
     // バリデーション（共通関数使用）
     if (name !== undefined || color !== undefined) {
-      const validationError = validateCategoryInput(
-        name !== undefined ? name : category.name,
-        color !== undefined ? color : category.color
-      );
+      const validationError = validateCategoryInput(name ?? category.name, color ?? category.color);
       if (validationError) {
         return sendError(res, validationError.message, undefined, 400);
       }
@@ -124,10 +123,8 @@ router.put('/:id', async (req, res) => {
 
     // 重複チェック（自分以外）
     if (name !== undefined) {
-      const normalizedName = normalizeCategoryName(name);
-      if (categories.some(cat => 
-        cat.id !== id && cat.name.toLowerCase() === normalizedName.toLowerCase()
-      )) {
+      const lowered = normalizeCategoryName(name).toLowerCase();
+      if (categories.some(cat => cat.id !== id && cat.name.toLowerCase() === lowered)) {
         return sendError(res, 'Category with this name already exists', undefined, 409);
       }
     }
@@ -166,7 +163,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // "Other" カテゴリーの削除を保護
-    if (category.name.toLowerCase() === 'other' || category.name.toLowerCase() === 'その他') {
+    if (isOtherCategory(category.name)) {
       return sendError(res, 'Cannot delete the "Other" category. This is a system-protected category.', undefined, 403);
     }
 

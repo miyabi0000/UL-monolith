@@ -25,8 +25,6 @@ export class AmazonScraper {
     'Cache-Control': 'max-age=0'
   };
 
-  private readonly delayRange = { min: 1000, max: 3000 }; // 1-3秒のランダム遅延
-
   /**
    * Amazon商品ページから情報を抽出
    */
@@ -194,8 +192,8 @@ export class AmazonScraper {
           if (imageUrls.length > 0 && imageUrls[0].startsWith('http')) {
             return imageUrls[0];
           }
-        } catch (e) {
-          // JSONパース失敗
+        } catch {
+          // JSONパース失敗は無視
         }
       }
       

@@ -1,6 +1,8 @@
+import { isOtherCategory } from '../utils/categoryValidation.js';
+
 /**
  * 統一カテゴリマッチングサービス
- * 
+ *
  * カテゴリの判定ロジックを一箇所に集約し、
  * 複数の情報源から最適なカテゴリを判定する
  */
@@ -97,17 +99,8 @@ export class CategoryMatcher {
       if (matched) return matched;
     }
 
-    // デフォルト: "Other" カテゴリを探す
-    const otherCategory = userCategories.find(cat => 
-      cat.toLowerCase() === 'other' || cat.toLowerCase() === 'その他'
-    );
-    
-    if (otherCategory) {
-      return otherCategory;
-    }
-
-    // "Other" カテゴリが存在しない場合は、"Other" という文字列を返す
-    return 'Other';
+    // デフォルト: "Other" カテゴリを探す。無ければ "Other" 文字列を返す
+    return userCategories.find(isOtherCategory) ?? 'Other';
   }
 
   /**
@@ -186,61 +179,5 @@ export class CategoryMatcher {
     }
   }
 
-  /**
-   * カテゴリキーワードの追加（拡張用）
-   */
-  static addKeywords(category: string, keywords: string[]): void {
-    if (!CATEGORY_KEYWORDS[category]) {
-      CATEGORY_KEYWORDS[category] = [];
-    }
-    CATEGORY_KEYWORDS[category].push(...keywords);
-  }
-
-  /**
-   * デバッグ用：マッチング結果の詳細を返す
-   */
-  static matchCategoryWithDetails(
-    context: CategoryMatchContext,
-    userCategories: string[]
-  ): { category: string; method: string; confidence: number } {
-    if (!userCategories || userCategories.length === 0) {
-      return { category: 'Other', method: 'default', confidence: 0 };
-    }
-
-    // LLM提案
-    if (context.llmSuggestion) {
-      const matched = this.fuzzyMatch(context.llmSuggestion, userCategories);
-      if (matched) return { category: matched, method: 'llm-fuzzy', confidence: 0.9 };
-    }
-
-    // 商品名
-    if (context.productName) {
-      const matched = this.keywordMatch(context.productName, userCategories);
-      if (matched) return { category: matched, method: 'product-keyword', confidence: 0.8 };
-    }
-
-    // URL
-    if (context.url) {
-      const matched = this.urlHintMatch(context.url, userCategories);
-      if (matched) return { category: matched, method: 'url-hint', confidence: 0.6 };
-    }
-
-    // スクレイピングテキスト
-    if (context.scrapedText) {
-      const matched = this.keywordMatch(context.scrapedText, userCategories);
-      if (matched) return { category: matched, method: 'scraped-keyword', confidence: 0.7 };
-    }
-
-    // デフォルト: "Other" カテゴリを探す
-    const otherCategory = userCategories.find(cat => 
-      cat.toLowerCase() === 'other' || cat.toLowerCase() === 'その他'
-    );
-    
-    return { 
-      category: otherCategory || 'Other', 
-      method: 'default', 
-      confidence: 0.3 
-    };
-  }
 }
 
