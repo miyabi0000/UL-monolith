@@ -20,6 +20,13 @@ export interface AdvisorMessageRow {
   createdAt: string;
 }
 
+export interface MessagesPage {
+  /** 最新→古い順（DESC）。表示時は逆順にする */
+  messages: AdvisorMessageRow[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 // --- API ラッパー ---
 
 /** 最新 1 セッションを取得（無ければ null） */
@@ -55,15 +62,23 @@ export async function deleteSession(sessionId: string): Promise<void> {
   );
 }
 
-/** セッション内メッセージを取得 */
-export async function fetchMessages(sessionId: string): Promise<AdvisorMessageRow[]> {
-  const res = await callAPIWithRetry(
-    `/advisor/sessions/${sessionId}/messages`,
-    {},
-    API_CONFIG.timeout.standard,
-    'GET',
-  );
-  return res.data as AdvisorMessageRow[];
+/**
+ * セッション内メッセージを取得（カーソルベースページネーション）
+ * @param sessionId セッション ID
+ * @param opts limit: 取得件数 (default 50, max 100), before: 古い側カーソル (メッセージ ID)
+ */
+export async function fetchMessages(
+  sessionId: string,
+  opts: { limit?: number; before?: string } = {},
+): Promise<MessagesPage> {
+  const params = new URLSearchParams();
+  if (opts.limit !== undefined) params.set('limit', String(opts.limit));
+  if (opts.before) params.set('before', opts.before);
+  const qs = params.toString();
+  const path = `/advisor/sessions/${sessionId}/messages${qs ? `?${qs}` : ''}`;
+
+  const res = await callAPIWithRetry(path, {}, API_CONFIG.timeout.standard, 'GET');
+  return res.data as MessagesPage;
 }
 
 /** セッション作成 */

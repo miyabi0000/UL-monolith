@@ -107,14 +107,13 @@ export const useAdvisorChat = (
         const session = await fetchLatestSession();
         if (!session) return;
 
-        const serverMessages = await fetchMessages(session.id);
-        if (serverMessages.length === 0) return;
+        // サーバーは最新→古い順 (DESC) で返すため、表示用に逆順 (ASC) に並べる
+        const page = await fetchMessages(session.id, { limit: 50 });
+        if (page.messages.length === 0) return;
 
         updateSessionId(session.id);
-        setMessages([
-          createInitialMessage(),
-          ...serverMessages.map(fromServerMessage),
-        ]);
+        const ordered = [...page.messages].reverse().map(fromServerMessage);
+        setMessages([createInitialMessage(), ...ordered]);
       } catch (err) {
         console.error('[Advisor] セッション復元エラー:', err);
       }
@@ -363,12 +362,11 @@ export const useAdvisorChat = (
    */
   const loadSession = useCallback(async (sessionId: string) => {
     try {
-      const serverMessages = await fetchMessages(sessionId);
+      // サーバーは最新→古い順 (DESC) で返すため、表示用に逆順 (ASC) に並べる
+      const page = await fetchMessages(sessionId, { limit: 50 });
       updateSessionId(sessionId);
-      setMessages([
-        createInitialMessage(),
-        ...serverMessages.map(fromServerMessage),
-      ]);
+      const ordered = [...page.messages].reverse().map(fromServerMessage);
+      setMessages([createInitialMessage(), ...ordered]);
     } catch (err) {
       console.error('[Advisor] セッション読込エラー:', err);
     }

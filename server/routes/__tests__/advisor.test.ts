@@ -116,14 +116,14 @@ describe('Advisor API routes', () => {
   });
 
   describe('GET /api/v1/advisor/sessions/:id/messages', () => {
-    it('セッション内メッセージを返す', async () => {
+    it('セッション内メッセージを最新→古い順で返す（hasMore=false）', async () => {
       // 所有権チェック
       mockQuery.mockResolvedValueOnce({ rows: [{ id: 'session-1' }] });
-      // メッセージ取得
+      // メッセージ取得（DESC、limit+1=51 件のうち 2 件返却）
       mockQuery.mockResolvedValueOnce({
         rows: [
-          { id: 'msg-1', role: 'user', content: 'Hello', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:00:00Z' },
           { id: 'msg-2', role: 'assistant', content: 'Hi!', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:01:00Z' },
+          { id: 'msg-1', role: 'user', content: 'Hello', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:00:00Z' },
         ],
       });
 
@@ -131,9 +131,70 @@ describe('Advisor API routes', () => {
       const res = await request(app).get('/api/v1/advisor/sessions/session-1/messages');
 
       expect(res.status).toBe(200);
-      expect(res.body.data).toHaveLength(2);
-      expect(res.body.data[0].role).toBe('user');
-      expect(res.body.data[1].role).toBe('assistant');
+      expect(res.body.data.messages).toHaveLength(2);
+      expect(res.body.data.messages[0].id).toBe('msg-2');
+      expect(res.body.data.hasMore).toBe(false);
+      expect(res.body.data.nextCursor).toBeNull();
+    });
+
+    it('limit を超えたら hasMore=true と nextCursor を返す', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 'session-1' }] });
+      // limit=2 に対し 3 件返ったケース
+      mockQuery.mockResolvedValueOnce({
+        rows: [
+          { id: 'msg-3', role: 'assistant', content: 'c', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:02:00Z' },
+          { id: 'msg-2', role: 'user', content: 'b', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:01:00Z' },
+          { id: 'msg-1', role: 'user', content: 'a', suggested_edits: null, gear_refs: null, created_at: '2026-04-12T00:00:00Z' },
+        ],
+      });
+
+      const app = createApp();
+      const res = await request(app).get('/api/v1/advisor/sessions/session-1/messages?limit=2');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.messages).toHaveLength(2);
+      expect(res.body.data.hasMore).toBe(true);
+      expect(res.body.data.nextCursor).toBe('msg-2');
+
+      // クエリの limit パラメータは limit + 1 (=3) で渡されること
+      const params = mockQuery.mock.calls[1][1] as unknown[];
+      expect(params[params.length - 1]).toBe(3);
+    });
+
+    it('limit は最大 100 に制限される', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 'session-1' }] });
+      mockQuery.mockResolvedValueOnce({ rows: [] });
+
+      const app = createApp();
+      await request(app).get('/api/v1/advisor/sessions/session-1/messages?limit=999');
+
+      const params = mockQuery.mock.calls[1][1] as unknown[];
+      expect(params[params.length - 1]).toBe(101); // 100 + 1
+    });
+
+    it('before カーソル指定時は created_at < cursor で絞り込む', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 'session-1' }] }); // 所有権
+      mockQuery.mockResolvedValueOnce({ rows: [{ created_at: '2026-04-12T00:01:00Z' }] }); // カーソル lookup
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // メッセージ取得
+
+      const app = createApp();
+      const res = await request(app).get('/api/v1/advisor/sessions/session-1/messages?before=msg-2&limit=10');
+
+      expect(res.status).toBe(200);
+      const sql = mockQuery.mock.calls[2][0] as string;
+      expect(sql).toMatch(/created_at < \$2/);
+      const params = mockQuery.mock.calls[2][1] as unknown[];
+      expect(params[1]).toBe('2026-04-12T00:01:00Z');
+    });
+
+    it('不正な before カーソル（他セッションや存在しない ID）は 400 を返す', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 'session-1' }] });
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // カーソル lookup 空
+
+      const app = createApp();
+      const res = await request(app).get('/api/v1/advisor/sessions/session-1/messages?before=bogus');
+
+      expect(res.status).toBe(400);
     });
 
     it('他ユーザーのセッションは 404 を返す', async () => {
