@@ -157,7 +157,8 @@ export const usePacks = (userId: string) => {
         routeName: routeName?.trim() || undefined,
         description: description?.trim() || undefined,
         itemIds: [],
-        isPublic: true,
+        // 新規パックは非公開で作成。ユーザーが編集 UI で明示的に公開を ON にする
+        isPublic: false,
         createdAt: now,
         updatedAt: now,
       };
@@ -171,7 +172,7 @@ export const usePacks = (userId: string) => {
           name,
           description: description?.trim() || undefined,
           routeName: routeName?.trim() || undefined,
-          isPublic: true,
+          isPublic: false,
         }),
       })
         .then((row) => {

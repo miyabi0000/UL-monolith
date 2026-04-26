@@ -35,7 +35,7 @@ interface InventoryWorkspaceProps {
   onCreatePack?: (name: string) => void;
   onDeletePack?: (packId: string) => void;
   // Pack 編集: インラインフォームから呼ぶ CRUD アクション
-  onUpdatePack?: (updates: { name: string; routeName?: string; description?: string }) => void;
+  onUpdatePack?: (updates: { name: string; routeName?: string; description?: string; isPublic?: boolean }) => void;
   onCopyPackLink?: () => void;
   onOpenPackPublic?: () => void;
 }

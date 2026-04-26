@@ -43,13 +43,29 @@ export default function App() {
     });
   }, [location.hash]);
 
+  // /p/:packId は認証不要の公開ページ。未認証でも表示する。
+  const isPublicPackRoute = location.pathname.startsWith('/p/');
+
   // 未認証時は CTA ランディングを表示して早期 return
   // (パスワードレス: Landing の onLogin で loginWithEmail を呼び、
   //  成功すると isAuthenticated が true になってこの分岐を抜ける)
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isPublicPackRoute) {
     return (
       <div className="min-h-screen">
         <Landing onLogin={loginWithEmail} />
+        <NotificationPopup messages={messages} onRemove={removeNotification} />
+      </div>
+    );
+  }
+
+  // 未認証 + 公開パックルート: PackDetailPage のみ表示（AppDock や PacksPage は出さない）
+  if (!isAuthenticated && isPublicPackRoute) {
+    return (
+      <div className="min-h-screen">
+        <ThemeToggleFab />
+        <Routes>
+          <Route path="/p/:packId" element={<PackDetailPage />} />
+        </Routes>
         <NotificationPopup messages={messages} onRemove={removeNotification} />
       </div>
     );
