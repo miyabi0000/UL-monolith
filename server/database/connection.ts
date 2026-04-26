@@ -401,24 +401,6 @@ class DatabaseConnection {
   }
 
   /**
-   * 一括削除（IN句使用）
-   */
-  async deleteGearItems(ids: string[], userId: string): Promise<number> {
-    const query = `
-      DELETE FROM gear_items 
-      WHERE id = ANY($1) AND user_id = $2
-    `;
-
-    try {
-      const result = await this.pool.query(query, [ids, userId]);
-      return result.rowCount ?? 0;
-    } catch (error) {
-      logger.error({ err: error }, 'Database delete error:');
-      throw new Error('Failed to delete gear items');
-    }
-  }
-
-  /**
    * カテゴリ一覧取得
    */
   async getCategories(userId?: string): Promise<Category[]> {
@@ -716,13 +698,6 @@ class DatabaseConnection {
     }
   }
 
-  /**
-   * camelCase を snake_case に変換
-   */
-  private camelToSnake(str: string): string {
-    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-  }
-
   // ==================== スクレイピングキャッシュ ====================
 
   /**
@@ -765,12 +740,6 @@ class DatabaseConnection {
     }
   }
 
-  /**
-   * 接続を閉じる
-   */
-  async close(): Promise<void> {
-    await this.pool.end();
-  }
 }
 
 export const db = new DatabaseConnection();

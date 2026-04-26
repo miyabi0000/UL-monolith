@@ -4,6 +4,9 @@ import { scrapeUrl } from './scraping/scrapeOrchestrator.js';
 import { PROMPTS } from './llmPrompts.js';
 import { logger } from '../utils/logger.js';
 
+const asString = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+const asNumber = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined);
+
 /**
  * LLM Service - 最小限実装
  */
@@ -16,12 +19,10 @@ export class LLMService {
     if (!prompt || prompt.trim().length < 3) {
       return this.createFallback('入力が短すぎます');
     }
-    
+
     try {
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, prompt.trim());
       const result = this.parseJSON(response);
-      const asString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
-      const asNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
 
       return {
         name: asString(result.name) ?? 'Unknown Gear',
@@ -64,11 +65,7 @@ export class LLMService {
       const enhanceMessage = `${PROMPTS.ENHANCE_PROMPT}\n\n既存データ: ${JSON.stringify(urlData)}\n\n追加情報: ${prompt}`;
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, enhanceMessage);
       const result = this.parseJSON(response);
-      
-      const asString = (v: unknown): string | undefined =>
-        typeof v === 'string' ? v : undefined
-      const asNumber = (v: unknown): number | undefined =>
-        typeof v === 'number' ? v : undefined
+
       return {
         name: asString(result.name) ?? urlData.name,
         brand: asString(result.brand) ?? urlData.brand,
@@ -106,26 +103,6 @@ export class LLMService {
     } catch (error) {
       logger.error({ err: error }, 'Category extraction failed:');
       return null;
-    }
-  }
-
-  /**
-   * リスト分析
-   */
-  async analyzeList(gearList: unknown[]): Promise<{ summary: string; tips: string[] }> {
-    try {
-      const listData = JSON.stringify(gearList.slice(0, 10)); // 最初の10件のみ
-      const response = await openaiClient.chatCompletion(PROMPTS.ANALYZE_LIST, listData);
-      const result = this.parseJSON(response);
-      const summary = typeof result.summary === 'string' ? result.summary : 'リストを分析できませんでした';
-      const tips = Array.isArray(result.tips) ? (result.tips as unknown[]).filter((t): t is string => typeof t === 'string') : ['特に提案はありません'];
-      return { summary, tips };
-    } catch (error) {
-      logger.error({ err: error }, 'List analysis failed:');
-      return {
-        summary: '分析に失敗しました',
-        tips: ['後でもう一度お試しください']
-      };
     }
   }
 

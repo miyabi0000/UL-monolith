@@ -43,6 +43,7 @@ describe('Profile API routes', () => {
           bio: 'Hiker',
           header_image_url: null,
           header_title: 'My Board',
+          plan: 'free',
         }],
       });
 
@@ -57,6 +58,7 @@ describe('Profile API routes', () => {
         bio: 'Hiker',
         headerImageUrl: null,
         headerTitle: 'My Board',
+        plan: 'free',
       });
     });
 
