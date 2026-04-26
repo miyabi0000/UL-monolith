@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { Category } from '../utils/types'
 import { STATUS_TONES } from '../utils/designSystem'
 import { DEFAULT_JAPANESE_COLOR, JAPANESE_COLOR_HEX_SET, JAPANESE_COLOR_PALETTE } from '../utils/japaneseColors'
+import { useFormValidation } from '../hooks/useFormValidation'
+import { categorySchema } from '../utils/validation'
+import { FieldError } from './ui/FieldError'
 
 interface CategoryManagerProps {
   categories: Category[]
@@ -20,77 +23,80 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 }) => {
   const errorTone = STATUS_TONES.error
 
+  // 既存パレットから 1 色目を初期値とする（DEFAULT_JAPANESE_COLOR はパレット外のため
+  // form 開始時から validation 適合させる）
+  const INITIAL_COLOR =
+    JAPANESE_COLOR_HEX_SET.has(DEFAULT_JAPANESE_COLOR as Parameters<typeof JAPANESE_COLOR_HEX_SET.has>[0])
+      ? DEFAULT_JAPANESE_COLOR
+      : JAPANESE_COLOR_PALETTE[0].hex
+
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState<{ name: string; color: string }>({
     name: '',
-    color: DEFAULT_JAPANESE_COLOR
+    color: INITIAL_COLOR
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { errors, validate, validateField, setFieldError, clearErrors } =
+    useFormValidation(categorySchema)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setIsSubmitting(true)
+    clearErrors()
 
-    const isAllowedColor = JAPANESE_COLOR_HEX_SET.has(formData.color as Parameters<typeof JAPANESE_COLOR_HEX_SET.has>[0])
-    if (!isAllowedColor) {
-      setError('Color must be selected from the Japanese color palette.')
-      setIsSubmitting(false)
-      return
-    }
-    
+    const result = validate(formData)
+    if (!result.ok) return
+
+    setIsSubmitting(true)
     try {
       if (editingCategory) {
-        await onEditCategory?.(editingCategory.id, formData.name, formData.color)
+        await onEditCategory?.(editingCategory.id, result.data.name, result.data.color)
       } else {
-        await onAddCategory?.(formData.name, formData.color)
+        await onAddCategory?.(result.data.name, result.data.color)
       }
 
-      setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
+      setFormData({ name: '', color: INITIAL_COLOR })
       setIsAddingNew(false)
       setEditingCategory(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save category')
+      setFieldError('_form', err instanceof Error ? err.message : 'Failed to save category')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleEdit = (category: Category) => {
-    const fallbackColor = DEFAULT_JAPANESE_COLOR
     const normalizedColor = JAPANESE_COLOR_HEX_SET.has(category.color as Parameters<typeof JAPANESE_COLOR_HEX_SET.has>[0])
       ? category.color
-      : fallbackColor
+      : INITIAL_COLOR
     setEditingCategory(category)
     setFormData({
       name: category.name,
       color: normalizedColor
     })
     setIsAddingNew(true)
-    setError(null)
+    clearErrors()
   }
 
   const handleCancel = () => {
-    setFormData({ name: '', color: DEFAULT_JAPANESE_COLOR })
+    setFormData({ name: '', color: INITIAL_COLOR })
     setIsAddingNew(false)
     setEditingCategory(null)
-    setError(null)
+    clearErrors()
   }
 
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Delete category "${name}"?`)) return
-    
+
     // 連続クリック防止
     if (isSubmitting) return
-    
-    setError(null)
+
+    clearErrors()
     setIsSubmitting(true)
     try {
       await onDeleteCategory?.(id)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete category')
+      setFieldError('_form', err instanceof Error ? err.message : 'Failed to delete category')
     } finally {
       setIsSubmitting(false)
     }
@@ -110,9 +116,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         </div>
 
         <div className="p-6">
-          {/* Error Display */}
-          {error && (
+          {/* フォーム全体のエラー（サーバー由来等）。フィールド単位は input 直下で表示 */}
+          {errors._form && (
             <div
+              role="alert"
               className="mb-4 p-3 border rounded-md text-sm"
               style={{
                 backgroundColor: errorTone.background,
@@ -120,7 +127,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                 color: errorTone.text
               }}
             >
-              {error}
+              {errors._form}
             </div>
           )}
 
@@ -130,21 +137,28 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               <h3 className="text-lg font-medium mb-4 text-gray-900">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
               </h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">
                     Category Name
                   </label>
                   <input
+                    id="category-name"
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="input w-full"
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value })
+                      if (errors.name) setFieldError('name', undefined)
+                    }}
+                    onBlur={() => validateField('name', formData.name)}
+                    className={`input w-full ${errors.name ? 'input-error' : ''}`}
                     placeholder="e.g., Hiking Poles, Hydration"
                     maxLength={50}
-                    required
+                    aria-invalid={errors.name ? true : undefined}
+                    aria-describedby={errors.name ? 'category-name-error' : undefined}
                     disabled={isSubmitting}
                   />
+                  <FieldError id="category-name-error" message={errors.name} />
                 </div>
 
                 <div>
@@ -156,7 +170,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       <button
                         key={color.hex}
                         type="button"
-                        onClick={() => setFormData({ ...formData, color: color.hex })}
+                        onClick={() => {
+                          setFormData({ ...formData, color: color.hex })
+                          if (errors.color) setFieldError('color', undefined)
+                        }}
                         className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-all disabled:opacity-50 ${
                           formData.color === color.hex
                             ? 'border-2 border-gray-700 bg-gray-100'
@@ -176,6 +193,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                   <div className="mt-2 text-xs text-gray-500 font-mono">
                     Selected: {formData.color}
                   </div>
+                  <FieldError message={errors.color} />
                 </div>
 
                 <div className="flex space-x-2">

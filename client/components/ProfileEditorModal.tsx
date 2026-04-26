@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
 import type { ProfileSettings } from '../hooks/useProfile';
 import { useImageUpload } from '../hooks/useImageUpload';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { profileSchema } from '../utils/validation';
+import { FieldError } from './ui/FieldError';
 
 /**
  * Profile 編集フォーム本体（モーダル chrome なし）。
@@ -98,44 +101,76 @@ interface ProfileEditorFormProps {
   onUpdate: <K extends keyof ProfileSettings>(key: K, value: ProfileSettings[K]) => void;
 }
 
-export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, onUpdate }) => (
-  <div className="space-y-3">
-    <div className="space-y-1.5">
-      <SectionLabel>Header</SectionLabel>
-      <input
-        className="input w-full"
-        placeholder="Packboard"
-        value={profile.headerTitle}
-        onChange={(e) => onUpdate('headerTitle', e.target.value)}
-      />
-      <ImageDropZone
-        imageUrl={profile.headerImageUrl}
-        onSelect={(base64) => onUpdate('headerImageUrl', base64)}
-        onRemove={() => onUpdate('headerImageUrl', '')}
-        inputId="profile-header-image"
-        height="max-h-20"
-      />
+export const ProfileEditorForm: React.FC<ProfileEditorFormProps> = ({ profile, onUpdate }) => {
+  // autosave 構成のため onChange 時は親の onUpdate にそのまま流し、
+  // インライン validation は onBlur のタイミングで実行する
+  const { errors, validateField, setFieldError } = useFormValidation(profileSchema);
+
+  const handleImageSelect = (base64: string) => {
+    onUpdate('headerImageUrl', base64);
+    // 画像選択時に同期検証（100KB 制約）
+    validateField('headerImageUrl', base64);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <SectionLabel>Header</SectionLabel>
+        <input
+          className={`input w-full ${errors.headerTitle ? 'input-error' : ''}`}
+          placeholder="Packboard"
+          value={profile.headerTitle}
+          onChange={(e) => onUpdate('headerTitle', e.target.value)}
+          onBlur={(e) => validateField('headerTitle', e.target.value)}
+          maxLength={40}
+          aria-invalid={errors.headerTitle ? true : undefined}
+        />
+        <FieldError message={errors.headerTitle} />
+        <ImageDropZone
+          imageUrl={profile.headerImageUrl}
+          onSelect={handleImageSelect}
+          onRemove={() => {
+            onUpdate('headerImageUrl', '');
+            setFieldError('headerImageUrl', undefined);
+          }}
+          inputId="profile-header-image"
+          height="max-h-20"
+        />
+        <FieldError message={errors.headerImageUrl} />
+      </div>
+      <div className="space-y-1.5">
+        <SectionLabel>Profile</SectionLabel>
+        <input
+          className={`input w-full ${errors.displayName ? 'input-error' : ''}`}
+          placeholder="Display name"
+          value={profile.displayName}
+          onChange={(e) => onUpdate('displayName', e.target.value)}
+          onBlur={(e) => validateField('displayName', e.target.value)}
+          maxLength={50}
+          aria-invalid={errors.displayName ? true : undefined}
+        />
+        <FieldError message={errors.displayName} />
+        <input
+          className={`input w-full ${errors.handle ? 'input-error' : ''}`}
+          placeholder="@handle"
+          value={profile.handle}
+          onChange={(e) => onUpdate('handle', e.target.value)}
+          onBlur={(e) => validateField('handle', e.target.value)}
+          maxLength={30}
+          aria-invalid={errors.handle ? true : undefined}
+        />
+        <FieldError message={errors.handle} />
+        <textarea
+          className={`input w-full min-h-[64px] ${errors.bio ? 'input-error' : ''}`}
+          placeholder="Bio"
+          value={profile.bio}
+          onChange={(e) => onUpdate('bio', e.target.value)}
+          onBlur={(e) => validateField('bio', e.target.value)}
+          maxLength={280}
+          aria-invalid={errors.bio ? true : undefined}
+        />
+        <FieldError message={errors.bio} />
+      </div>
     </div>
-    <div className="space-y-1.5">
-      <SectionLabel>Profile</SectionLabel>
-      <input
-        className="input w-full"
-        placeholder="Display name"
-        value={profile.displayName}
-        onChange={(e) => onUpdate('displayName', e.target.value)}
-      />
-      <input
-        className="input w-full"
-        placeholder="@handle"
-        value={profile.handle}
-        onChange={(e) => onUpdate('handle', e.target.value)}
-      />
-      <textarea
-        className="input w-full min-h-[64px]"
-        placeholder="Bio"
-        value={profile.bio}
-        onChange={(e) => onUpdate('bio', e.target.value)}
-      />
-    </div>
-  </div>
-);
+  );
+};

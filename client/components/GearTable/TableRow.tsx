@@ -188,6 +188,7 @@ const TableRow: React.FC<TableRowProps> = ({
                   isEditing={true}
                   isChanged={isFieldChanged('name')}
                   className="gear-text-num"
+                  field="name"
                 />
               </div>
               <div className="w-full">
@@ -199,6 +200,7 @@ const TableRow: React.FC<TableRowProps> = ({
                   isChanged={isFieldChanged('brand')}
                   placeholder="Brand"
                   className="gear-text-num"
+                  field="brand"
                 />
               </div>
             </>
