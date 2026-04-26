@@ -4,6 +4,9 @@ import { scrapeUrl } from './scraping/scrapeOrchestrator.js';
 import { PROMPTS } from './llmPrompts.js';
 import { logger } from '../utils/logger.js';
 
+const asString = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+const asNumber = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined);
+
 /**
  * LLM Service - 最小限実装
  */
@@ -16,12 +19,10 @@ export class LLMService {
     if (!prompt || prompt.trim().length < 3) {
       return this.createFallback('入力が短すぎます');
     }
-    
+
     try {
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, prompt.trim());
       const result = this.parseJSON(response);
-      const asString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
-      const asNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
 
       return {
         name: asString(result.name) ?? 'Unknown Gear',
@@ -64,11 +65,7 @@ export class LLMService {
       const enhanceMessage = `${PROMPTS.ENHANCE_PROMPT}\n\n既存データ: ${JSON.stringify(urlData)}\n\n追加情報: ${prompt}`;
       const response = await openaiClient.chatCompletion(PROMPTS.EXTRACT_GEAR, enhanceMessage);
       const result = this.parseJSON(response);
-      
-      const asString = (v: unknown): string | undefined =>
-        typeof v === 'string' ? v : undefined
-      const asNumber = (v: unknown): number | undefined =>
-        typeof v === 'number' ? v : undefined
+
       return {
         name: asString(result.name) ?? urlData.name,
         brand: asString(result.brand) ?? urlData.brand,
