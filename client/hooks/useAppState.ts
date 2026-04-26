@@ -85,11 +85,22 @@ export const useAppState = () => {
   }, []);
 
   // 初回ロード
+  // どこかの fetch が throw しても isLoading が true のまま固定されないように、
+  // 例外をトップレベルで握りつぶし finally で必ず isLoading=false に落とす。
+  // 個別の fetch 関数も内部で setIsLoading(false) するが、
+  // fetchCategories のように isLoading を触らない関数で throw されると
+  // 永続スケルトン化するためここで保険をかける。
   useEffect(() => {
     const loadInitialData = async () => {
-      await fetchCategories();
-      await fetchGearItems();
-      await fetchWeightBreakdown();
+      try {
+        await fetchCategories();
+        await fetchGearItems();
+        await fetchWeightBreakdown();
+      } catch (err) {
+        console.error('Initial data load failed:', err);
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadInitialData();
   }, [fetchCategories, fetchGearItems, fetchWeightBreakdown]);
