@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   extractFromPrompt,
   enhanceUrlDataWithPrompt,
-  extractCategoryFromPrompt,
   extractFromUrl,
   APIError,
 } from '../services/llmService';
@@ -10,58 +9,63 @@ import { useWeightUnit } from '../contexts/WeightUnitContext';
 import { formatWeight, formatWeightLarge } from '../utils/weightUnit';
 import { formatPrice } from '../utils/formatters';
 import { useIsMobile } from '../hooks/useResponsiveSize';
+import { useOutsideClick } from '../hooks/useOutsideClick';
 import { useAdvisorChat, useAdvisorPanel, SuggestedEditWithState } from '../hooks/useAdvisorChat';
 import type { GearAdvisorContext, GearRef } from '../services/llmAdvisor';
+import type { AdvisorSession } from '../services/advisorSessionsApi';
+import CompactComparisonPanel from './CompactComparisonPanel';
 
 /**
- * ChatSidebar — Chat 中心 UX の統合サイドバー
+ * ChatSidebar — 1 本化された AI チャットサイドバー
  *
- * 2 モードを tabs で切替:
- * - **Add**: URL 貼付 or ブランド+商品名で LLM 抽出 → ギアリストに追加
- * - **Advisor**: 装備最適化の対話（base weight 削減、Big 3 分析、編集提案+Undo）
- *
- * 旧 ChatPopup / GearForm / GearInputModal / UrlBulkImportModal / GearAdvisorChat を
- * ここに集約。AppDock / ProfileHeader のトグルボタンは 1 つに統一される。
+ * Chat は Advisor パイプライン（SSE / DB 永続化 / suggestedEdits / gearRefs）で統一。
+ * 入力欄左の「+」から Import gear / Compare を呼び出す。
+ * Compare を押すと現在スコープのギアをピックし、チャット内にミニ比較パネルが挿入される。
  */
 
 // ==================== 共通定義 ====================
 
-type ChatMode = 'add' | 'advisor';
+type InputMode = 'chat' | 'import' | 'compare';
 
-interface AddChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-type PromptType = 'url' | 'add_gear' | 'add_category' | 'url_with_prompt' | 'multiple_urls' | 'general';
+type PromptType = 'url' | 'add_gear' | 'url_with_prompt' | 'multiple_urls' | 'general';
 
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Add モード: LLM 抽出結果を親にコールバック */
+  /** Import gear: LLM 抽出結果を親にコールバック（親で DB 保存 + 通知） */
   onGearExtracted?: (gearData: any) => void;
   categories?: any[];
   existingItemCount?: number;
-  /** Advisor モード: コンテキスト / 編集 apply / gear ジャンプ */
+  /** Advisor: コンテキスト / 編集 apply / gear ジャンプ */
   advisorContext?: GearAdvisorContext;
   onApplyEdit?: (gearId: string, field: string, value: unknown) => Promise<void>;
   onFocusGear?: (gearId: string) => void;
+  /** Import の進捗・エラーを親の通知システムに流すコールバック */
+  onNotify?: (type: 'success' | 'error' | 'info', message: string) => void;
+  /**
+   * FloatingChatInput から届いた初回プロンプト。
+   * nonce で同一テキストの連続送信を別イベントとして扱う。
+   */
+  initialAdvisorPrompt?: { text: string; nonce: number } | null;
+  /** initialAdvisorPrompt を消費したら呼ぶ */
+  onAdvisorPromptConsumed?: () => void;
 }
 
 const TIME_FMT = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' });
 
-// ==================== Add モードのヘルパー ====================
+/** 履歴ドロップダウン用の相対時間表記 */
+const formatRelativeTime = (iso: string): string => {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return '';
+  const diffSec = Math.max(0, (Date.now() - t) / 1000);
+  if (diffSec < 60) return 'just now';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h`;
+  if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d`;
+  return new Date(iso).toLocaleDateString();
+};
 
-const buildInitialAddMessage = (hasItems: boolean): AddChatMessage => ({
-  id: 'initial-add',
-  role: 'assistant',
-  content: hasItems
-    ? 'Paste a URL, describe a product ("Arc\'teryx Beta AR"), or ask to create a category. I will extract the details and add it to your list.'
-    : '👋 Welcome! Add your first gear by:\n\n• Pasting a product URL (single or multiple)\n• Typing a brand + product name\n  e.g. "Patagonia Houdini 100g"\n• Describing a category\n  e.g. "Shelter category"\n\nI will extract the details and add it to your list.',
-  timestamp: new Date(),
-});
+// ==================== Import helpers ====================
 
 const extractMultipleUrls = (text: string): string[] => {
   const urlRegex = /https?:\/\/[^\s]+/g;
@@ -80,18 +84,16 @@ const BRAND_PATTERNS = [
 const containsBrand = (prompt: string): boolean =>
   BRAND_PATTERNS.some((brand) => prompt.toLowerCase().includes(brand.toLowerCase()));
 
-const classifyPrompt = (prompt: string): PromptType => {
+const classifyImportPrompt = (prompt: string): PromptType => {
   const urls = extractMultipleUrls(prompt);
-  const lowerPrompt = prompt.toLowerCase();
   if (urls.length > 1) return 'multiple_urls';
   if (urls.length === 1 && prompt.length > urls[0].length + 10) return 'url_with_prompt';
   if (urls.length === 1 && /^https?:\/\/.+$/.test(prompt.trim())) return 'url';
-  if (lowerPrompt.includes('category') || lowerPrompt.includes('カテゴリ')) return 'add_category';
   if (containsBrand(prompt)) return 'add_gear';
   return 'general';
 };
 
-// ==================== Advisor モードのサブコンポーネント ====================
+// ==================== Advisor サブコンポーネント ====================
 
 const QUICK_PROMPTS = [
   { icon: '⚡', label: 'Reduce base weight', prompt: 'How can I reduce my base weight? Focus on the heaviest items and suggest specific lighter alternatives.' },
@@ -123,10 +125,8 @@ const GearRefChip: React.FC<{ ref_: GearRef; onClick: (gearId: string) => void }
     type="button"
     onClick={() => onClick(ref_.gearId)}
     title={`Jump to ${ref_.gearName}`}
-    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-               bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
-               border border-gray-200 dark:border-gray-600
-               hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+    className="glass-header-chip h-badge px-2 gap-1 text-xs font-medium"
+    style={{ color: 'var(--ink-secondary)' }}
   >
     <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="11" cy="11" r="8" />
@@ -147,35 +147,30 @@ const SuggestedEditCard: React.FC<{
   const isApplied = edit._applied === true;
   const isBusy = applyingKey === editKey;
   return (
-    <div className={`p-3 rounded-md mt-2 shadow-sm border text-xs
-                     ${isApplied
-                       ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'}`}>
-      <p className="font-semibold mb-1 text-gray-500 dark:text-gray-400">
+    <div className="card p-3 mt-2 text-xs">
+      <p className="font-semibold mb-1" style={{ color: 'var(--ink-muted)' }}>
         Suggestion: {edit.gearName}
       </p>
-      <p className="mb-1 text-gray-800 dark:text-gray-200">
-        <span className="text-gray-500 dark:text-gray-400">{FIELD_LABELS[edit.field] ?? edit.field}: </span>
-        <span className="line-through text-gray-400 dark:text-gray-500">{formatEditValue(edit.field, edit.currentValue, weightUnit)}</span>
+      <p className="mb-1" style={{ color: 'var(--ink-primary)' }}>
+        <span style={{ color: 'var(--ink-muted)' }}>{FIELD_LABELS[edit.field] ?? edit.field}: </span>
+        <span className="line-through" style={{ color: 'var(--ink-disabled)' }}>{formatEditValue(edit.field, edit.currentValue, weightUnit)}</span>
         {' → '}
         <span className="font-medium">{formatEditValue(edit.field, edit.suggestedValue, weightUnit)}</span>
       </p>
-      <p className="mb-2 text-gray-500 dark:text-gray-400">{edit.reason}</p>
+      <p className="mb-2" style={{ color: 'var(--ink-muted)' }}>{edit.reason}</p>
       {isApplied ? (
-        <div className="flex gap-2">
-          <span className="flex-1 py-1.5 rounded-lg text-xs font-medium text-center
-                           bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2">
+          <span
+            className="flex-1 inline-flex items-center justify-center h-badge rounded-badge text-2xs font-medium uppercase tracking-wide"
+            style={{ background: 'var(--surface-level-2)', color: 'var(--ink-muted)' }}
+          >
             Applied
           </span>
           <button
             type="button"
             disabled={isBusy}
             onClick={onUndo}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium
-                       text-gray-600 dark:text-gray-300
-                       border border-gray-300 dark:border-gray-600
-                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-secondary btn-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isBusy ? 'Undoing…' : 'Undo'}
           </button>
@@ -185,9 +180,7 @@ const SuggestedEditCard: React.FC<{
           type="button"
           disabled={isBusy}
           onClick={onApply}
-          className="w-full py-1.5 rounded-lg text-xs font-medium transition-opacity
-                     hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed
-                     bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900"
+          className="btn-primary btn-xs w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isBusy ? 'Applying…' : 'Apply change'}
         </button>
@@ -205,7 +198,7 @@ const FALLBACK_ADVISOR_CONTEXT: GearAdvisorContext = {
   packName: null,
 };
 
-const noopApplyEdit = async () => { /* no-op: Advisor mode 不要時の placeholder */ };
+const noopApplyEdit = async () => { /* no-op: onApplyEdit 未指定時の placeholder */ };
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
   isOpen,
@@ -216,245 +209,194 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   advisorContext,
   onApplyEdit,
   onFocusGear,
+  onNotify,
+  initialAdvisorPrompt,
+  onAdvisorPromptConsumed,
 }) => {
   const { unit: weightUnit } = useWeightUnit();
   const isMobile = useIsMobile();
-  const [mode, setMode] = useState<ChatMode>('add');
 
-  // --- Add モード ローカル state ---
-  const [addMessages, setAddMessages] = useState<AddChatMessage[]>(() => [
-    buildInitialAddMessage(existingItemCount > 0),
-  ]);
-  const [addInput, setAddInput] = useState('');
-  const [addIsLoading, setAddIsLoading] = useState(false);
-  const addMessagesEndRef = useRef<HTMLDivElement>(null);
-  const addInputRef = useRef<HTMLTextAreaElement>(null);
-
-  // existingItemCount は非同期で後からロードされるため、ユーザーがまだ
-  // 発話していない（初回メッセージ 1 件だけの）状態であれば welcome 文言を
-  // items 数に追従させる。
-  useEffect(() => {
-    setAddMessages((prev) => {
-      if (prev.length === 1 && prev[0].id === 'initial-add') {
-        return [buildInitialAddMessage(existingItemCount > 0)];
-      }
-      return prev;
-    });
-  }, [existingItemCount]);
-
-  // --- Advisor モード hook （常に呼び出す：hook 順序安定のため） ---
+  // --- Advisor hook ---
   const advisor = useAdvisorChat(
     advisorContext ?? FALLBACK_ADVISOR_CONTEXT,
     onApplyEdit ?? noopApplyEdit,
   );
-  const { messagesEndRef: advisorMessagesEndRef, inputRef: advisorInputRef } =
-    useAdvisorPanel(isOpen && mode === 'advisor', advisor.messages);
+  const { messagesEndRef, inputRef } = useAdvisorPanel(isOpen, advisor.messages);
+  const advisorLastAssistantId = advisor.messages.filter((m) => m.role === 'assistant').at(-1)?.id;
 
-  const isAdvisorAvailable = !!advisorContext && !!onApplyEdit;
+  // --- 入力モード ---
+  const [inputMode, setInputMode] = useState<InputMode>('chat');
+  const [importText, setImportText] = useState('');
+  const [importBusy, setImportBusy] = useState(false);
+  const [compareSelection, setCompareSelection] = useState<Set<string>>(() => new Set());
 
-  // Add モード: 自動スクロール + オープン時フォーカス
-  useEffect(() => {
-    if (mode === 'add') {
-      addMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [addMessages, mode]);
+  // --- + ポップオーバー ---
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const plusMenuRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(plusMenuRef, () => setPlusMenuOpen(false), plusMenuOpen);
 
-  useEffect(() => {
-    if (isOpen && mode === 'add') {
-      setTimeout(() => addInputRef.current?.focus(), 150);
-    }
-  }, [isOpen, mode]);
+  // --- 履歴ドロップダウン ---
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historySessions, setHistorySessions] = useState<AdvisorSession[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(historyRef, () => setHistoryOpen(false), historyOpen);
 
-  // ==================== Add モード: 送信処理 ====================
-  const handleAddSend = async () => {
-    if (!addInput.trim() || addIsLoading) return;
-
-    const userMessage: AddChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: addInput.trim(),
-      timestamp: new Date(),
-    };
-    setAddMessages((prev) => [...prev, userMessage]);
-    const currentInput = addInput.trim();
-    setAddInput('');
-    setAddIsLoading(true);
-
+  // advisor オブジェクト全体を依存に取ると毎レンダー再 fetch されてしまうため、
+  // 安定参照の listSessions だけを抜き出して依存に置く。
+  const advisorListSessions = advisor.listSessions;
+  const refreshHistory = useCallback(async () => {
+    setHistoryLoading(true);
     try {
-      let assistantResponse = '';
-      let shouldExtractGear = false;
-      let mockGearData: any = null;
-      const promptType = classifyPrompt(currentInput);
-
-      switch (promptType) {
-        case 'url':
-          try {
-            const extractedData = await extractFromUrl(currentInput, categories);
-            const matchedCategory = categories.find((cat) => cat.name === extractedData.suggestedCategory);
-            assistantResponse = `Extracted from URL!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? formatPrice(extractedData.priceCents) : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
-            shouldExtractGear = true;
-            mockGearData = {
-              name: extractedData.name, brand: extractedData.brand, productUrl: currentInput,
-              categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
-              weightGrams: extractedData.weightGrams, priceCents: extractedData.priceCents,
-              season: '', priority: 3,
-            };
-          } catch (error) {
-            assistantResponse = error instanceof APIError
-              ? `URL parse error: ${error.message}`
-              : `URL parse error: ${error instanceof Error ? error.message : 'Failed to extract'}`;
-          }
-          break;
-
-        case 'add_gear':
-          try {
-            const extractedData = await extractFromPrompt(currentInput, categories);
-            const matchedCategory = categories.find((cat) => cat.name === extractedData.suggestedCategory);
-            assistantResponse = `Gear info extracted!\n\nProduct: ${extractedData.name}\nBrand: ${extractedData.brand || 'Unknown'}\nWeight: ${extractedData.weightGrams ? formatWeight(extractedData.weightGrams, weightUnit) : 'Estimating...'}\nPrice: ${extractedData.priceCents ? formatPrice(extractedData.priceCents) : 'Estimating...'}\nCategory: ${extractedData.suggestedCategory}\n\nAdded to your list.`;
-            shouldExtractGear = true;
-            mockGearData = {
-              name: extractedData.name, brand: extractedData.brand, productUrl: '',
-              categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
-              weightGrams: extractedData.weightGrams, priceCents: extractedData.priceCents,
-              season: '', priority: 3,
-            };
-          } catch (error) {
-            assistantResponse = error instanceof APIError
-              ? `Extraction error: ${error.message}`
-              : `Extraction error: ${error instanceof Error ? error.message : 'Please use "Brand + Product" format.'}`;
-          }
-          break;
-
-        case 'add_category':
-          try {
-            const categoryData = await extractCategoryFromPrompt(currentInput);
-            assistantResponse = categoryData
-              ? `Category created!\n\nCategory: ${categoryData.englishName}\nJapanese: ${categoryData.name}`
-              : 'Could not identify category. Example: "Shelter category"';
-          } catch (error) {
-            assistantResponse = error instanceof APIError
-              ? `Category error: ${error.message}`
-              : `Category error: ${error instanceof Error ? error.message : 'Failed to create'}`;
-          }
-          break;
-
-        case 'url_with_prompt':
-          try {
-            const urlMatch = currentInput.match(/(https?:\/\/[^\s]+)/);
-            if (urlMatch) {
-              const url = urlMatch[1];
-              const urlData = await extractFromUrl(url, categories);
-              const enhancedData = await enhanceUrlDataWithPrompt(urlData, currentInput);
-              const matchedCategory = categories.find((cat) => cat.name === enhancedData.suggestedCategory);
-              assistantResponse = `Processed URL with extra info!\n\nProduct: ${enhancedData.name}\nBrand: ${enhancedData.brand}\nWeight: ${formatWeight(enhancedData.weightGrams ?? null, weightUnit)}\nPrice: ${formatPrice(enhancedData.priceCents)}\nCategory: ${enhancedData.suggestedCategory}\n\nAdded to your list.`;
-              shouldExtractGear = true;
-              mockGearData = {
-                name: enhancedData.name, brand: enhancedData.brand, productUrl: url,
-                categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
-                weightGrams: enhancedData.weightGrams, priceCents: enhancedData.priceCents,
-                season: '', priority: 3,
-              };
-            } else {
-              assistantResponse = 'URL not detected. Example: "https://… + 230g"';
-            }
-          } catch (error) {
-            assistantResponse = error instanceof APIError
-              ? `URL+info error: ${error.message}`
-              : `URL+info error: ${error instanceof Error ? error.message : 'Failed to process'}`;
-          }
-          break;
-
-        case 'multiple_urls':
-          try {
-            const urls = extractMultipleUrls(currentInput);
-            assistantResponse = `${urls.length} URLs detected. Processing in parallel...\n\n`;
-            const results = await Promise.allSettled(urls.map((url) => extractFromUrl(url, categories)));
-            const successResults: any[] = [];
-            const failedUrls: string[] = [];
-            results.forEach((result, index) => {
-              if (result.status === 'fulfilled') {
-                const data = result.value;
-                const isFallback = data.source === 'fallback' ||
-                  !data.name || data.name.includes('Failed') || data.name.includes('Product from');
-                if (!isFallback) successResults.push({ url: urls[index], data });
-                else failedUrls.push(urls[index]);
-              } else {
-                failedUrls.push(urls[index]);
-              }
-            });
-            if (successResults.length > 0) {
-              assistantResponse += `✅ Success: ${successResults.length} items\n\n`;
-              successResults.forEach((item, idx) => {
-                assistantResponse += `${idx + 1}. ${item.data.name}\n`;
-                assistantResponse += `   Brand: ${item.data.brand || 'Unknown'}\n`;
-                assistantResponse += `   Weight: ${item.data.weightGrams ? formatWeight(item.data.weightGrams, weightUnit) : '?'}\n`;
-                assistantResponse += `   Price: ${item.data.priceCents ? formatPrice(item.data.priceCents) : '?'}\n\n`;
-              });
-              shouldExtractGear = true;
-              mockGearData = successResults.map((item) => {
-                const matchedCategory = categories.find((cat) => cat.name === item.data.suggestedCategory);
-                return {
-                  name: item.data.name, brand: item.data.brand, productUrl: item.url,
-                  imageUrl: item.data.imageUrl, categoryId: matchedCategory?.id,
-                  requiredQuantity: 1, ownedQuantity: 0,
-                  weightGrams: item.data.weightGrams, priceCents: item.data.priceCents,
-                  season: '', priority: 3,
-                };
-              });
-            }
-            if (failedUrls.length > 0) {
-              assistantResponse += `\n❌ Failed: ${failedUrls.length}\n`;
-              failedUrls.forEach((url, idx) => {
-                assistantResponse += `  ${idx + 1}. ${url.substring(0, 50)}...\n`;
-              });
-            }
-            assistantResponse += `\n${successResults.length} items added.`;
-          } catch (error) {
-            assistantResponse = error instanceof APIError
-              ? `Batch error: ${error.message}`
-              : `Batch error: ${error instanceof Error ? error.message : 'Unexpected error'}`;
-          }
-          break;
-
-        default:
-          assistantResponse =
-            'Tell me more:\n\n• "Brand + Product name" (e.g. "Arc\'teryx Beta AR")\n• Paste a product URL\n• "Shelter category" to create a category';
-          break;
-      }
-
-      if (shouldExtractGear && mockGearData && onGearExtracted) {
-        if (Array.isArray(mockGearData)) {
-          mockGearData.forEach((gear) => onGearExtracted(gear));
-        } else {
-          onGearExtracted(mockGearData);
-        }
-      }
-
-      setAddMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: 'assistant', content: assistantResponse, timestamp: new Date() },
-      ]);
-    } catch (error) {
-      const msg = error instanceof APIError
-        ? `System error: ${error.message}${error.status ? ` (HTTP ${error.status})` : ''}`
-        : `Error: ${error instanceof Error ? error.message : 'unknown'}`;
-      setAddMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: 'assistant', content: msg, timestamp: new Date() },
-      ]);
+      const list = await advisorListSessions(20);
+      setHistorySessions(list);
     } finally {
-      setAddIsLoading(false);
+      setHistoryLoading(false);
+    }
+  }, [advisorListSessions]);
+
+  // 履歴ドロップダウンを開いたら一覧をフェッチ
+  useEffect(() => {
+    if (historyOpen) void refreshHistory();
+  }, [historyOpen, refreshHistory]);
+
+  // サイドバーが閉じたらモードをリセット
+  useEffect(() => {
+    if (!isOpen) {
+      setPlusMenuOpen(false);
+      setHistoryOpen(false);
+      setInputMode('chat');
+      setImportText('');
+      setCompareSelection(new Set());
+    }
+  }, [isOpen]);
+
+  const gearItemsForCompare = advisorContext?.items ?? [];
+  const itemsById = useMemo(() => {
+    const map = new Map(gearItemsForCompare.map((item) => [item.id, item]));
+    return map;
+  }, [gearItemsForCompare]);
+
+  // FloatingChatInput からの初回プロンプトを Advisor に自動送信。
+  // nonce で同じテキストの再送も別イベント扱いし、同一 nonce は二重送信しない。
+  const lastConsumedNonceRef = useRef<number | null>(null);
+  const advisorReady = !!advisorContext && !!onApplyEdit;
+  useEffect(() => {
+    if (!isOpen || !initialAdvisorPrompt || !advisorReady) return;
+    if (lastConsumedNonceRef.current === initialAdvisorPrompt.nonce) return;
+    lastConsumedNonceRef.current = initialAdvisorPrompt.nonce;
+    void advisor.sendText(initialAdvisorPrompt.text);
+    onAdvisorPromptConsumed?.();
+  }, [isOpen, initialAdvisorPrompt, advisorReady, advisor, onAdvisorPromptConsumed]);
+
+  // ==================== Import 送信 ====================
+
+  const runImport = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || importBusy) return;
+    setImportBusy(true);
+    const promptType = classifyImportPrompt(trimmed);
+    try {
+      if (promptType === 'url') {
+        const data = await extractFromUrl(trimmed, categories);
+        const matchedCategory = categories.find((cat) => cat.name === data.suggestedCategory);
+        onGearExtracted?.({
+          name: data.name, brand: data.brand, productUrl: trimmed,
+          categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
+          weightGrams: data.weightGrams, priceCents: data.priceCents,
+          season: '', priority: 3,
+        });
+        onNotify?.('success', `Imported: ${data.name}`);
+      } else if (promptType === 'url_with_prompt') {
+        const urlMatch = trimmed.match(/(https?:\/\/[^\s]+)/);
+        if (!urlMatch) {
+          onNotify?.('error', 'URL not detected');
+          return;
+        }
+        const url = urlMatch[1];
+        const urlData = await extractFromUrl(url, categories);
+        const enhanced = await enhanceUrlDataWithPrompt(urlData, trimmed);
+        const matchedCategory = categories.find((cat) => cat.name === enhanced.suggestedCategory);
+        onGearExtracted?.({
+          name: enhanced.name, brand: enhanced.brand, productUrl: url,
+          categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
+          weightGrams: enhanced.weightGrams, priceCents: enhanced.priceCents,
+          season: '', priority: 3,
+        });
+        onNotify?.('success', `Imported: ${enhanced.name}`);
+      } else if (promptType === 'multiple_urls') {
+        const urls = extractMultipleUrls(trimmed);
+        const results = await Promise.allSettled(urls.map((u) => extractFromUrl(u, categories)));
+        let okCount = 0;
+        results.forEach((r, idx) => {
+          if (r.status !== 'fulfilled') return;
+          const data = r.value;
+          const isFallback = data.source === 'fallback' ||
+            !data.name || data.name.includes('Failed') || data.name.includes('Product from');
+          if (isFallback) return;
+          const matchedCategory = categories.find((cat) => cat.name === data.suggestedCategory);
+          onGearExtracted?.({
+            name: data.name, brand: data.brand, productUrl: urls[idx],
+            imageUrl: data.imageUrl, categoryId: matchedCategory?.id,
+            requiredQuantity: 1, ownedQuantity: 0,
+            weightGrams: data.weightGrams, priceCents: data.priceCents,
+            season: '', priority: 3,
+          });
+          okCount += 1;
+        });
+        if (okCount > 0) onNotify?.('success', `Imported ${okCount} item${okCount > 1 ? 's' : ''}`);
+        if (okCount < urls.length) onNotify?.('error', `${urls.length - okCount} of ${urls.length} URLs could not be parsed`);
+      } else if (promptType === 'add_gear') {
+        const data = await extractFromPrompt(trimmed, categories);
+        const matchedCategory = categories.find((cat) => cat.name === data.suggestedCategory);
+        onGearExtracted?.({
+          name: data.name, brand: data.brand, productUrl: '',
+          categoryId: matchedCategory?.id, requiredQuantity: 1, ownedQuantity: 0,
+          weightGrams: data.weightGrams, priceCents: data.priceCents,
+          season: '', priority: 3,
+        });
+        onNotify?.('success', `Imported: ${data.name}`);
+      } else {
+        onNotify?.('error', 'Paste a product URL or type "Brand + Product name"');
+        return;
+      }
+      setImportText('');
+      setInputMode('chat');
+    } catch (err) {
+      const msg = err instanceof APIError
+        ? err.message
+        : err instanceof Error ? err.message : 'Import failed';
+      onNotify?.('error', `Import error: ${msg}`);
+    } finally {
+      setImportBusy(false);
     }
   };
 
-  const handleAddKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddSend();
-    }
+  // ==================== Compare 送信 ====================
+
+  const handleCompareSubmit = () => {
+    if (compareSelection.size < 2) return;
+    advisor.appendComparison([...compareSelection]);
+    setCompareSelection(new Set());
+    setInputMode('chat');
   };
 
-  // ==================== Advisor モード: ヘッダー情報 ====================
+  const toggleCompareSelect = (id: string) => {
+    setCompareSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < 4) next.add(id);
+      return next;
+    });
+  };
+
+  const exitSubMode = () => {
+    setInputMode('chat');
+    setImportText('');
+    setCompareSelection(new Set());
+  };
+
+  // ==================== Header 情報 ====================
   const advisorHeaderInfo = useMemo(() => {
     if (!advisorContext) return null;
     const scope = advisorContext.packName
@@ -467,148 +409,216 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     return `${scope}${base}${ul}`;
   }, [advisorContext, weightUnit]);
 
-  const advisorLastAssistantId = advisor.messages.filter((m) => m.role === 'assistant').at(-1)?.id;
+  // ==================== Input: キー操作 ====================
+  const handleChatKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (inputMode === 'import') void runImport(importText);
+      else advisor.handleSend();
+    }
+  };
+
+  const canCompare = gearItemsForCompare.length >= 2;
 
   // ==================== Render ====================
-  // Bottom sheet: 画面下部から transform translateY でスライドイン。
-  // backdrop は透過 + blur で、背景の chart / table が見えたまま操作できる。
+  // 右側スライドイン: デスクトップは 400px 固定、モバイルはフル幅 + backdrop。
+  // PacksPage 側で開放時に `paddingRight: 400px` のガターを確保して本体を縮める。
   return (
     <>
-      {isOpen && (
+      {isMobile && isOpen && (
         <div
-          className="fixed inset-0 z-[39] bg-black/30 backdrop-blur-sm transition-opacity duration-300"
+          className="fixed inset-0 z-[39] bg-black/30 transition-opacity duration-300"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
       <aside
-        className="fixed left-0 right-0 bottom-0 z-40 flex flex-col
-                   bg-white dark:bg-gray-900
-                   border-t border-gray-200 dark:border-gray-700
-                   shadow-xl
+        className="fixed top-0 right-0 h-full z-40 flex flex-col
                    transition-transform duration-300 ease-in-out"
         style={{
-          height: isMobile ? '85vh' : 'min(70vh, 640px)',
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-          borderTopLeftRadius: 'var(--radius-surface)',
-          borderTopRightRadius: 'var(--radius-surface)',
+          width: isMobile ? '100%' : '400px',
+          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          background: 'var(--surface-level-0)',
+          borderLeft: 'var(--border-default)',
+          boxShadow: 'var(--shadow-lg)',
         }}
         aria-label="Gear chat assistant"
       >
-        {/* Grabber bar (装飾): 下部シートであることを視覚的に示す */}
-        <div className="flex items-center justify-center pt-2 pb-1 shrink-0" aria-hidden="true">
-          <div className="h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
-        </div>
-
-        {/* ヘッダー: mode tabs + close */}
-        <div className="flex items-center justify-between px-3 py-2 shrink-0
-                        bg-white dark:bg-gray-800
-                        border-b border-gray-200 dark:border-gray-700">
-          <div role="tablist" aria-label="Chat mode" className="inline-flex items-center gap-0.5 p-0.5 rounded-md bg-gray-100 dark:bg-gray-700">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'add'}
-              onClick={() => setMode('add')}
-              className={`px-3 h-8 inline-flex items-center rounded text-xs font-semibold transition-colors
-                          ${mode === 'add'
-                            ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100'}`}
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'advisor'}
-              disabled={!isAdvisorAvailable}
-              onClick={() => setMode('advisor')}
-              title={!isAdvisorAvailable ? 'Advisor requires gear context' : 'Optimization advisor'}
-              className={`px-3 h-8 inline-flex items-center rounded text-xs font-semibold transition-colors
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                          ${mode === 'advisor'
-                            ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100'}`}
-            >
-              Advisor
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close chat"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-md
-                       text-gray-500 dark:text-gray-400
-                       hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        {/* ヘッダー */}
+        <div
+          className="flex items-center justify-between px-3 py-2 shrink-0"
+          style={{ background: 'var(--surface-level-0)', borderBottom: 'var(--border-divider)' }}
+        >
+          <div
+            className="inline-flex items-center h-control px-3 text-sm font-semibold"
+            style={{ color: 'var(--ink-primary)' }}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            AI Chat
+          </div>
+          <div className="flex items-center gap-1">
+            {/* History ドロップダウン */}
+            <div className="relative" ref={historyRef}>
+              <button
+                type="button"
+                onClick={() => setHistoryOpen((v) => !v)}
+                aria-label="Chat history"
+                aria-expanded={historyOpen}
+                title="History"
+                className="icon-btn"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="9" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
+                </svg>
+              </button>
+              {historyOpen && (
+                <div
+                  role="menu"
+                  className="card absolute right-0 top-full mt-1 w-72 max-h-[60vh] overflow-y-auto z-20"
+                  style={{ borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-lg)' }}
+                >
+                  {/* 新規チャット */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => { advisor.startNewSession(); setHistoryOpen(false); }}
+                    className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors"
+                    style={{ color: 'var(--ink-primary)', borderBottom: 'var(--border-divider)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-level-1)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                  >
+                    <span className="font-medium">+ New chat</span>
+                  </button>
+                  {historyLoading && (
+                    <div className="px-3 py-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
+                      Loading…
+                    </div>
+                  )}
+                  {!historyLoading && historySessions.length === 0 && (
+                    <div className="px-3 py-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
+                      No past sessions yet
+                    </div>
+                  )}
+                  {!historyLoading && historySessions.map((s) => {
+                    const active = advisor.currentSessionId === s.id;
+                    return (
+                      <div
+                        key={s.id}
+                        role="menuitem"
+                        className="group flex items-center gap-2 px-3 py-2 text-xs cursor-pointer transition-colors"
+                        style={{
+                          color: 'var(--ink-primary)',
+                          background: active ? 'var(--surface-level-1)' : 'transparent',
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-level-1)'; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = active ? 'var(--surface-level-1)' : 'transparent'; }}
+                        onClick={() => { void advisor.loadSession(s.id); setHistoryOpen(false); }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate font-medium">{s.title || 'Untitled'}</div>
+                          <div className="text-2xs" style={{ color: 'var(--ink-muted)' }}>
+                            {formatRelativeTime(s.updated_at)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Delete ${s.title || 'session'}`}
+                          title="Delete"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await advisor.removeSession(s.id);
+                            await refreshHistory();
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 inline-flex items-center justify-center rounded-control shrink-0"
+                          style={{ color: 'var(--ink-muted)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-primary)'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-muted)'; }}
+                        >
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close chat"
+              className="icon-btn"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        {/* サブヘッダー: mode 別のコンテキスト情報 */}
-        {mode === 'advisor' && advisorHeaderInfo && (
-          <div className="px-4 py-2 shrink-0 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-            {advisorHeaderInfo}
-          </div>
-        )}
-        {mode === 'add' && (
-          <div className="px-4 py-2 shrink-0 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-            {existingItemCount > 0 ? `${existingItemCount} items in your list` : 'Add gear by URL or name'}
-          </div>
-        )}
+        {/* サブヘッダー */}
+        <div
+          className="px-4 py-2 shrink-0 text-xs"
+          style={{ color: 'var(--ink-muted)', borderBottom: 'var(--border-divider)' }}
+        >
+          {advisorHeaderInfo ?? (existingItemCount > 0
+            ? `${existingItemCount} items in your list`
+            : 'No gear yet — add with + → Import')}
+        </div>
 
         {/* メッセージ一覧 */}
-        {mode === 'add' ? (
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {addMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex items-end ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[92%] p-3 text-xs leading-relaxed shadow-sm whitespace-pre-wrap
-                                 ${message.role === 'user'
-                                   ? 'rounded-lg rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                                   : 'rounded-lg rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
-                  <div>{message.content}</div>
-                  <div className={`text-2xs mt-1 opacity-50 select-none ${message.role === 'user' ? 'text-right' : ''}`}>
-                    {TIME_FMT.format(message.timestamp)}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {advisor.messages.map((message) => {
+            // 比較パネルメッセージ
+            if (message.comparison) {
+              const items = message.comparison.itemIds
+                .map((id) => itemsById.get(id))
+                .filter((x): x is NonNullable<typeof x> => !!x);
+              if (items.length < 2) return null;
+              return (
+                <div key={message.id} className="flex justify-start">
+                  <div className="max-w-[92%] w-full">
+                    <CompactComparisonPanel
+                      items={items}
+                      weightUnit={weightUnit}
+                      onFocusGear={onFocusGear}
+                    />
                   </div>
                 </div>
-              </div>
-            ))}
-            {addIsLoading && (
-              <div className="flex items-end justify-start">
-                <div className="p-3 rounded-lg rounded-bl-sm flex items-center gap-2
-                                bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 dark:border-gray-500 border-t-transparent animate-spin" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Analyzing…</span>
-                </div>
-              </div>
-            )}
-            <div ref={addMessagesEndRef} />
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {advisor.messages.map((message) => (
+              );
+            }
+
+            const isUser = message.role === 'user';
+            return (
               <div
                 key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div className="max-w-[92%]">
-                  <div className={`p-3 text-xs leading-relaxed shadow-sm
-                                   ${message.role === 'user'
-                                     ? 'rounded-lg rounded-br-sm bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900'
-                                     : 'rounded-lg rounded-bl-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-700'}`}>
+                  <div
+                    className={`has-noise p-3 text-xs leading-relaxed rounded-control ${isUser ? 'rounded-br-sm' : 'rounded-bl-sm'}`}
+                    data-noise={isUser ? 'control' : undefined}
+                    style={isUser
+                      ? { background: 'var(--mondrian-black)', color: 'var(--ink-inverse)' }
+                      : { background: 'var(--surface-level-1)', color: 'var(--ink-primary)', border: 'var(--border-divider)' }
+                    }
+                  >
                     <div className="whitespace-pre-wrap">
                       {message.content}
                       {advisor.isStreaming && message.id === advisorLastAssistantId && (
-                        <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-gray-500 dark:bg-gray-400 animate-pulse align-text-bottom" />
+                        <span
+                          className="inline-block w-0.5 h-3.5 ml-0.5 animate-pulse align-text-bottom"
+                          style={{ background: 'currentColor' }}
+                        />
                       )}
                     </div>
                     {message.content && (
-                      <div className={`text-2xs mt-1 opacity-50 select-none ${message.role === 'user' ? 'text-right' : ''}`}>
+                      <div
+                        className={`text-2xs mt-1 select-none ${isUser ? 'text-right' : ''}`}
+                        style={{ color: isUser ? 'var(--ink-inverse)' : 'var(--ink-muted)', opacity: isUser ? 0.6 : 1 }}
+                      >
                         {TIME_FMT.format(message.timestamp)}
                       </div>
                     )}
@@ -639,113 +649,224 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   )}
                 </div>
               </div>
-            ))}
-            {advisor.isLoading && !advisor.isStreaming && (
-              <div className="flex justify-start">
-                <div className="p-3 rounded-lg rounded-bl-sm flex items-center gap-2
-                                bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 dark:border-gray-500 border-t-transparent animate-spin" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Analyzing…</span>
-                </div>
+            );
+          })}
+          {advisor.isLoading && !advisor.isStreaming && (
+            <div className="flex justify-start">
+              <div
+                className="has-noise p-3 rounded-control rounded-bl-sm flex items-center gap-2"
+                style={{ background: 'var(--surface-level-1)', border: 'var(--border-divider)' }}
+              >
+                <div
+                  className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{ borderColor: 'var(--ink-muted)', borderTopColor: 'transparent' }}
+                />
+                <span className="text-xs" style={{ color: 'var(--ink-muted)' }}>Analyzing…</span>
               </div>
-            )}
-            <div ref={advisorMessagesEndRef} />
-          </div>
-        )}
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
         {/* 入力エリア */}
-        <div className="shrink-0 px-4 py-3
-                        bg-white dark:bg-gray-800
-                        border-t border-gray-200 dark:border-gray-700">
-          {mode === 'add' ? (
-            <>
-              <div className="flex items-end gap-2">
-                <textarea
-                  ref={addInputRef}
-                  value={addInput}
-                  onChange={(e) => setAddInput(e.target.value)}
-                  onKeyDown={handleAddKeyDown}
-                  placeholder="Paste URL or describe gear… (Shift+Enter for new line)"
-                  disabled={addIsLoading}
-                  rows={2}
-                  className="flex-1 px-3 py-2 text-xs rounded-lg resize-none
-                             bg-white dark:bg-gray-900
-                             text-gray-800 dark:text-gray-100
-                             border border-gray-200 dark:border-gray-600
-                             focus:outline-none focus:ring-2 focus:ring-gray-400
-                             disabled:opacity-50"
-                />
+        <div
+          className="shrink-0 px-4 py-3"
+          style={{ background: 'var(--surface-level-0)', borderTop: 'var(--border-divider)' }}
+        >
+          {/* Compare picker overlay */}
+          {inputMode === 'compare' && (
+            <div className="card mb-2 overflow-hidden">
+              <div
+                className="flex items-center justify-between px-3 h-control text-xs"
+                style={{ borderBottom: 'var(--border-divider)' }}
+              >
+                <span className="font-medium" style={{ color: 'var(--ink-primary)' }}>
+                  Select items to compare ({compareSelection.size}/4)
+                </span>
                 <button
                   type="button"
-                  onClick={handleAddSend}
-                  disabled={!addInput.trim() || addIsLoading}
-                  className="h-9 px-4 rounded-lg text-xs font-medium
-                             bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900
-                             hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed
-                             transition-opacity"
+                  onClick={exitSubMode}
+                  className="transition-colors"
+                  style={{ color: 'var(--ink-muted)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-primary)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-muted)'; }}
                 >
-                  Send
+                  Cancel
                 </button>
               </div>
-            </>
-          ) : (
-            <>
-              {/* Advisor クイックプロンプト */}
-              <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 scrollbar-thin">
-                {QUICK_PROMPTS.map((qp) => (
-                  <button
-                    key={qp.label}
-                    type="button"
-                    disabled={advisor.isLoading}
-                    onClick={() => advisor.sendText(qp.prompt)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium
-                               whitespace-nowrap shrink-0
-                               bg-white dark:bg-gray-700
-                               text-gray-700 dark:text-gray-200
-                               border border-gray-200 dark:border-gray-600
-                               hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500
-                               disabled:opacity-40 disabled:cursor-not-allowed
-                               transition-all"
-                  >
-                    <span>{qp.icon}</span>
-                    <span>{qp.label}</span>
-                  </button>
-                ))}
+              <div className="max-h-48 overflow-y-auto">
+                {gearItemsForCompare.length === 0 && (
+                  <div className="px-3 py-3 text-xs" style={{ color: 'var(--ink-muted)' }}>
+                    No items to compare.
+                  </div>
+                )}
+                {gearItemsForCompare.map((item) => {
+                  const checked = compareSelection.has(item.id);
+                  const atLimit = compareSelection.size >= 4 && !checked;
+                  return (
+                    <label
+                      key={item.id}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer transition-colors
+                                  ${atLimit ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      style={atLimit ? undefined : { color: 'var(--ink-primary)' }}
+                      onMouseEnter={atLimit ? undefined : (e) => { (e.currentTarget as HTMLLabelElement).style.background = 'var(--surface-level-1)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLLabelElement).style.background = 'transparent'; }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={atLimit}
+                        onChange={() => toggleCompareSelect(item.id)}
+                        className="h-3.5 w-3.5 rounded-control"
+                        style={{ accentColor: 'var(--mondrian-black)' }}
+                      />
+                      <span className="flex-1 truncate">{item.name}</span>
+                      <span className="shrink-0 tabular-nums" style={{ color: 'var(--ink-muted)' }}>
+                        {typeof item.weightGrams === 'number' ? formatWeight(item.weightGrams, weightUnit) : '—'}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
-              <div className="flex items-end gap-2">
-                <textarea
-                  ref={advisorInputRef}
-                  value={advisor.input}
-                  onChange={(e) => advisor.setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      advisor.handleSend();
-                    }
-                  }}
-                  placeholder="Ask about your gear… (Shift+Enter for new line)"
+              <div
+                className="px-3 py-2 flex justify-end"
+                style={{ borderTop: 'var(--border-divider)' }}
+              >
+                <button
+                  type="button"
+                  disabled={compareSelection.size < 2}
+                  onClick={handleCompareSubmit}
+                  className="btn-primary btn-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Compare ({compareSelection.size})
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Import mode header */}
+          {inputMode === 'import' && (
+            <div className="mb-2 flex items-center justify-between text-xs" style={{ color: 'var(--ink-secondary)' }}>
+              <span className="font-medium">Import gear — paste URL or describe</span>
+              <button
+                type="button"
+                onClick={exitSubMode}
+                style={{ color: 'var(--ink-muted)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-primary)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--ink-muted)'; }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Quick prompts (chat mode only) */}
+          {inputMode === 'chat' && (
+            <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 scrollbar-thin">
+              {QUICK_PROMPTS.map((qp) => (
+                <button
+                  key={qp.label}
+                  type="button"
                   disabled={advisor.isLoading}
-                  rows={2}
-                  className="flex-1 px-3 py-2 text-xs rounded-lg resize-none
-                             bg-white dark:bg-gray-900
-                             text-gray-800 dark:text-gray-100
-                             border border-gray-200 dark:border-gray-600
-                             focus:outline-none focus:ring-2 focus:ring-gray-400
-                             disabled:opacity-50"
-                />
+                  onClick={() => advisor.sendText(qp.prompt)}
+                  className="glass-header-chip h-control px-3 gap-1.5 text-xs font-medium whitespace-nowrap shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ color: 'var(--ink-secondary)' }}
+                >
+                  <span>{qp.icon}</span>
+                  <span>{qp.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input row — compare mode では入力欄を隠す */}
+          {inputMode !== 'compare' && (
+            <div className="flex items-end gap-2">
+              {/* + ボタン + ポップオーバー */}
+              <div className="relative" ref={plusMenuRef}>
                 <button
                   type="button"
-                  onClick={advisor.handleSend}
-                  disabled={!advisor.input.trim() || advisor.isLoading}
-                  className="h-9 px-4 rounded-lg text-xs font-medium
-                             bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900
-                             hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed
-                             transition-opacity"
+                  onClick={() => setPlusMenuOpen((v) => !v)}
+                  aria-label="Open attach menu"
+                  aria-expanded={plusMenuOpen}
+                  disabled={importBusy || advisor.isLoading}
+                  className="icon-btn disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Send
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
                 </button>
+                {plusMenuOpen && (
+                  <div
+                    role="menu"
+                    className="card absolute bottom-full left-0 mb-1 w-44 overflow-hidden z-10"
+                    style={{ borderRadius: 'var(--radius-control)', boxShadow: 'var(--shadow-md)' }}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => { setInputMode('import'); setPlusMenuOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors"
+                      style={{ color: 'var(--ink-primary)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-level-1)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                    >
+                      <span>🔗</span>
+                      <span>Import gear</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      disabled={!canCompare}
+                      onClick={() => { setInputMode('compare'); setPlusMenuOpen(false); }}
+                      title={canCompare ? 'Compare gear items' : 'Need at least 2 items to compare'}
+                      className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ color: 'var(--ink-primary)' }}
+                      onMouseEnter={canCompare ? (e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-level-1)'; } : undefined}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                    >
+                      <span>⚖</span>
+                      <span>Compare</span>
+                    </button>
+                  </div>
+                )}
               </div>
-            </>
+
+              <textarea
+                ref={inputRef}
+                value={inputMode === 'import' ? importText : advisor.input}
+                onChange={(e) => (
+                  inputMode === 'import'
+                    ? setImportText(e.target.value)
+                    : advisor.setInput(e.target.value)
+                )}
+                onKeyDown={handleChatKeyDown}
+                placeholder={inputMode === 'import'
+                  ? 'Paste URL or describe gear (Enter to import)'
+                  : 'Ask about your gear… (Shift+Enter for new line)'}
+                disabled={importBusy || advisor.isLoading}
+                rows={2}
+                className="flex-1 px-3 py-2 text-xs rounded-control resize-none focus:outline-none disabled:opacity-50"
+                style={{
+                  background: 'var(--surface-level-0)',
+                  color: 'var(--ink-primary)',
+                  border: '1px solid var(--stroke-subtle)',
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => (inputMode === 'import' ? runImport(importText) : advisor.handleSend())}
+                disabled={
+                  inputMode === 'import'
+                    ? (!importText.trim() || importBusy)
+                    : (!advisor.input.trim() || advisor.isLoading)
+                }
+                className="btn-primary h-control px-4 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {inputMode === 'import' ? (importBusy ? 'Importing…' : 'Import') : 'Send'}
+              </button>
+            </div>
           )}
         </div>
       </aside>

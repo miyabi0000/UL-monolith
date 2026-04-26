@@ -13,6 +13,7 @@ import PackInfoSection from './PackInfoSection';
 import NotificationPopup from './NotificationPopup';
 import SkeletonLoader from './ui/SkeletonLoader';
 import ChatSidebar from './ChatSidebar';
+import FloatingChatInput from './FloatingChatInput';
 
 // 旧 GearForm / CategoryManager / ChatPopup / UrlBulkImportModal / GearInputModal
 // および Login モーダルは ChatSidebar 一本化 & Landing 導入で廃止済み。
@@ -58,6 +59,9 @@ export default function InventoryWorkspace({
 }: InventoryWorkspaceProps) {
   const {
     showChat, setShowChat,
+    pendingAdvisorPrompt,
+    launchAdvisor,
+    consumePendingAdvisorPrompt,
     gearItems,
     categories,
     isLoading,
@@ -316,7 +320,7 @@ export default function InventoryWorkspace({
         )}
       </div>
 
-      {/* Chat 中心 UX: Add / Advisor 統合サイドバー */}
+      {/* Chat 中心 UX: 1 本化サイドバー（+ → Import gear / Compare）*/}
       <ChatSidebar
         isOpen={showChat}
         onClose={() => setShowChat(false)}
@@ -326,7 +330,17 @@ export default function InventoryWorkspace({
         onFocusGear={handleFocusGear}
         categories={categories}
         existingItemCount={gearItems.length}
+        onNotify={(type, msg) => {
+          if (type === 'success') showSuccess(msg);
+          else if (type === 'error') showError(msg);
+          else showSuccess(msg);
+        }}
+        initialAdvisorPrompt={pendingAdvisorPrompt}
+        onAdvisorPromptConsumed={consumePendingAdvisorPrompt}
       />
+
+      {/* 常時表示のガラスフローティング入力 — Chat の主入口 */}
+      <FloatingChatInput chatOpen={showChat} onSubmit={launchAdvisor} />
 
       <NotificationPopup
         messages={messages}

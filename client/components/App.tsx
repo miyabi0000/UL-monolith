@@ -15,6 +15,8 @@ export default function App() {
   const { user, isAuthenticated, logout, loginWithEmail } = useAuth();
   const appState = useAppState();
   const { setShowChat } = appState;
+  // App.tsx は AppDock (PackDetailPage) の Chat ボタン用に setShowChat だけ参照する。
+  // PacksPage 側は FloatingChatInput で起動するため onShowChat は不要。
 
   const { messages, removeNotification, showError } = useNotifications();
 
@@ -68,7 +70,6 @@ export default function App() {
               isAuthenticated={isAuthenticated}
               userName={user?.name}
               onLogout={logout}
-              onShowChat={() => setShowChat((prev) => !prev)}
             />
           }
         />

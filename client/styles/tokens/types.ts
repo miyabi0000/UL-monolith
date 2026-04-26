@@ -226,4 +226,22 @@ export type ThemeColors = {
     tableNum: string;
     tableMicro: string;
   };
+  /**
+   * Noise / paper grain — `.card` / `.btn-*` / `.glass-header-chip` / `.has-noise`
+   * の ::after に乗せるマット質感の token。
+   *  - url: SVG feTurbulence の data URL
+   *  - opacity.surface  : 大面 (card / modal) — 控えめ
+   *  - opacity.control  : ボタン / chip — 中
+   *  - opacity.prominent: primary CTA — 強め
+   *  - blendMode        : 'multiply' (light) / 'screen' (dark)
+   */
+  noise: {
+    url: string;
+    opacity: {
+      surface: string;
+      control: string;
+      prominent: string;
+    };
+    blendMode: 'multiply' | 'screen';
+  };
 };

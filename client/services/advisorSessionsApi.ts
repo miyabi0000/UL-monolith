@@ -20,6 +20,13 @@ export interface AdvisorMessageRow {
   createdAt: string;
 }
 
+export interface MessagesPage {
+  /** 最新→古い順（DESC）。表示時は逆順にする */
+  messages: AdvisorMessageRow[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 // --- API ラッパー ---
 
 /** 最新 1 セッションを取得（無ければ null） */
@@ -34,11 +41,25 @@ export async function fetchLatestSession(): Promise<AdvisorSession | null> {
   return sessions.length > 0 ? sessions[0] : null;
 }
 
-export interface MessagesPage {
-  /** 最新→古い順（DESC）。表示時は逆順にする */
-  messages: AdvisorMessageRow[];
-  hasMore: boolean;
-  nextCursor: string | null;
+/** セッション一覧を更新日時降順で取得 (デフォルト 20 件、最大 50) */
+export async function fetchSessions(limit = 20): Promise<AdvisorSession[]> {
+  const res = await callAPIWithRetry(
+    `/advisor/sessions?limit=${Math.min(limit, 50)}`,
+    {},
+    API_CONFIG.timeout.standard,
+    'GET',
+  );
+  return (res.data as AdvisorSession[]) ?? [];
+}
+
+/** セッションを削除（CASCADE で配下メッセージも消える） */
+export async function deleteSession(sessionId: string): Promise<void> {
+  await callAPIWithRetry(
+    `/advisor/sessions/${sessionId}`,
+    {},
+    API_CONFIG.timeout.standard,
+    'DELETE',
+  );
 }
 
 /**
