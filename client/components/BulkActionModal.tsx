@@ -4,6 +4,9 @@ import { STATUS_TONES } from '../utils/designSystem';
 import { useWeightUnit } from '../contexts/WeightUnitContext';
 import { convertToGrams } from '../utils/weightUnit';
 import SeasonBar from './SeasonBar';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { bulkUpdateSchema } from '../utils/validation';
+import { FieldError } from './ui/FieldError';
 
 interface BulkActionModalProps {
   isOpen: boolean;
@@ -29,6 +32,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
   const [updateField, setUpdateField] = useState<'category' | 'priority' | 'owned' | 'required' | 'seasons' | 'weight' | 'price'>('category');
   const [updateValue, setUpdateValue] = useState<string>('');
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
+  const { errors, validate, clearErrors } = useFormValidation(bulkUpdateSchema);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,38 +47,43 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     }
 
     if (action === 'update') {
-      const data: Record<string, unknown> = {};
+      // discriminated union で field/value を一括検証。NaN や空送信もここで弾く
+      const candidate =
+        updateField === 'seasons'
+          ? { field: 'seasons' as const, value: selectedSeasons }
+          : { field: updateField, value: updateValue };
+      const result = validate(candidate);
+      if (!result.ok) return;
 
-      switch (updateField) {
+      const parsed = result.data;
+      const data: Record<string, unknown> = {};
+      switch (parsed.field) {
         case 'category':
-          data.categoryId = updateValue;
+          data.categoryId = parsed.value;
           break;
         case 'priority':
-          data.priority = parseInt(updateValue);
+          data.priority = parsed.value;
           break;
         case 'owned':
-          data.ownedQuantity = parseInt(updateValue);
+          data.ownedQuantity = parsed.value;
           break;
         case 'required':
-          data.requiredQuantity = parseInt(updateValue);
+          data.requiredQuantity = parsed.value;
           break;
         case 'seasons':
-          data.seasons = selectedSeasons;
+          data.seasons = parsed.value;
           break;
-        case 'weight': {
-          const num = parseFloat(updateValue);
-          data.weightGrams = isNaN(num) ? undefined : convertToGrams(num, unit);
+        case 'weight':
+          // schema 段階では単位付き数値、ここでグラムへ変換
+          data.weightGrams = convertToGrams(parsed.value, unit);
           break;
-        }
         case 'price':
-          data.priceCents = parseInt(updateValue);
+          data.priceCents = parsed.value;
           break;
       }
 
-      if (Object.keys(data).length > 0) {
-        onBulkUpdate(data);
-        onClose();
-      }
+      onBulkUpdate(data);
+      onClose();
     }
   };
 
@@ -83,6 +92,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
     setUpdateField('category');
     setUpdateValue('');
     setSelectedSeasons([]);
+    clearErrors();
   };
 
   React.useEffect(() => {
@@ -102,7 +112,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="p-6 space-y-4">
           {/* Action Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -147,6 +157,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     setUpdateField(e.target.value as any);
                     setUpdateValue('');
                     setSelectedSeasons([]);
+                    clearErrors();
                   }}
                   className="input w-full"
                 >
@@ -167,9 +178,9 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                 {updateField === 'category' ? (
                   <select
                     value={updateValue}
-                    onChange={(e) => setUpdateValue(e.target.value)}
-                    className="input w-full"
-                    required
+                    onChange={(e) => { setUpdateValue(e.target.value); if (errors.value) clearErrors(); }}
+                    aria-invalid={errors.value ? true : undefined}
+                    className={`input w-full ${errors.value ? 'input-error' : ''}`}
                   >
                     <option value="">Select Category</option>
                     {categories.map(category => (
@@ -181,9 +192,9 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                 ) : updateField === 'priority' ? (
                   <select
                     value={updateValue}
-                    onChange={(e) => setUpdateValue(e.target.value)}
-                    className="input w-full"
-                    required
+                    onChange={(e) => { setUpdateValue(e.target.value); if (errors.value) clearErrors(); }}
+                    aria-invalid={errors.value ? true : undefined}
+                    className={`input w-full ${errors.value ? 'input-error' : ''}`}
                   >
                     <option value="">Select Priority</option>
                     <option value="1">1 - Highest</option>
@@ -196,7 +207,7 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                   <SeasonBar
                     seasons={selectedSeasons}
                     isEditing={true}
-                    onChange={setSelectedSeasons}
+                    onChange={(s) => { setSelectedSeasons(s); if (errors.value) clearErrors(); }}
                     size="md"
                   />
                 ) : updateField === 'weight' ? (
@@ -205,33 +216,35 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
                     min="0"
                     step={unit === 'oz' ? 0.1 : 1}
                     value={updateValue}
-                    onChange={(e) => setUpdateValue(e.target.value)}
-                    className="input w-full"
+                    onChange={(e) => { setUpdateValue(e.target.value); if (errors.value) clearErrors(); }}
+                    aria-invalid={errors.value ? true : undefined}
+                    className={`input w-full ${errors.value ? 'input-error' : ''}`}
                     placeholder={`Weight (${unit})`}
-                    required
                   />
                 ) : updateField === 'price' ? (
                   <input
                     type="number"
                     min="0"
                     value={updateValue}
-                    onChange={(e) => setUpdateValue(e.target.value)}
-                    className="input w-full"
+                    onChange={(e) => { setUpdateValue(e.target.value); if (errors.value) clearErrors(); }}
+                    aria-invalid={errors.value ? true : undefined}
+                    className={`input w-full ${errors.value ? 'input-error' : ''}`}
                     placeholder="Price (yen)"
-                    required
                   />
                 ) : (
                   <input
                     type="number"
                     min="0"
-                    max="10"
+                    max="100"
                     value={updateValue}
-                    onChange={(e) => setUpdateValue(e.target.value)}
-                    className="input w-full"
+                    onChange={(e) => { setUpdateValue(e.target.value); if (errors.value) clearErrors(); }}
+                    aria-invalid={errors.value ? true : undefined}
+                    className={`input w-full ${errors.value ? 'input-error' : ''}`}
                     placeholder={updateField === 'owned' ? 'Owned Quantity' : 'Required Quantity'}
-                    required
                   />
                 )}
+                <FieldError message={errors.value} />
+                {errors._form && <FieldError message={errors._form} />}
               </div>
             </>
           )}
@@ -272,7 +285,11 @@ const BulkActionModal: React.FC<BulkActionModalProps> = ({
             <button
               type="submit"
               className={action === 'delete' ? 'btn-danger' : 'btn-primary'}
-              disabled={action === 'update' && !['seasons'].includes(updateField) && !updateValue}
+              disabled={
+                action === 'update' &&
+                ((updateField === 'seasons' && selectedSeasons.length === 0) ||
+                  (updateField !== 'seasons' && !updateValue))
+              }
             >
               {action === 'delete' ? 'Execute Delete' : 'Execute Update'}
             </button>

@@ -1,4 +1,7 @@
 import React, { useRef } from 'react'
+import { useFormValidation } from '../../../hooks/useFormValidation'
+import { imageInputSchema } from '../../../utils/validation'
+import { FieldError } from '../../ui/FieldError'
 
 interface ImageEditModalProps {
   urlInput: string
@@ -20,6 +23,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
   onClose,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { errors, validate, validateField, setFieldError } = useFormValidation(imageInputSchema)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -29,9 +33,17 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string
         onUrlInputChange(dataUrl)
+        // ファイル選択時に同期検証
+        setFieldError('imageUrl', undefined)
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleSaveClick = () => {
+    const result = validate({ imageUrl: urlInput })
+    if (!result.ok) return
+    onSave()
   }
 
   return (
@@ -41,16 +53,23 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
 
         {/* URL 入力 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="image-url-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Image URL
           </label>
           <input
+            id="image-url-input"
             type="url"
             value={urlInput}
-            onChange={(e) => onUrlInputChange(e.target.value)}
+            onChange={(e) => {
+              onUrlInputChange(e.target.value)
+              if (errors.imageUrl) setFieldError('imageUrl', undefined)
+            }}
+            onBlur={(e) => validateField('imageUrl', e.target.value)}
             placeholder="https://example.com/image.jpg"
-            className="w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400"
+            aria-invalid={errors.imageUrl ? true : undefined}
+            className={`w-full px-3 py-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 ${errors.imageUrl ? 'input-error' : ''}`}
           />
+          <FieldError message={errors.imageUrl} />
         </div>
 
         {/* ファイルアップロード */}
@@ -110,8 +129,9 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({
             Cancel
           </button>
           <button
-            onClick={onSave}
-            className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-800 text-white rounded"
+            onClick={handleSaveClick}
+            disabled={!!errors.imageUrl}
+            className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-800 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save
           </button>

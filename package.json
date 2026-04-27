@@ -34,7 +34,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.9.6",
     "recharts": "^2.8.0",
-    "stripe": "^17.3.0"
+    "stripe": "^17.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",

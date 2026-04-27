@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { Pack } from '../utils/types'
 import { useOutsideClick } from '../hooks/useOutsideClick'
+import { useFormValidation } from '../hooks/useFormValidation'
+import { packSchema } from '../utils/validation'
+import { FieldError } from './ui/FieldError'
 
 interface PackInfoSectionProps {
   pack: Pack | null
@@ -42,6 +45,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
   const [isPublic, setIsPublic] = useState(pack?.isPublic ?? false)
 
   const menuRef = useRef<HTMLDivElement>(null)
+  const { errors, validate, validateField, clearErrors } = useFormValidation(packSchema)
 
   // pack 変更時に下書きを同期
   useEffect(() => {
@@ -52,7 +56,8 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     // パック切替時は編集モードから抜ける
     setIsEditing(false)
     setMenuOpen(false)
-  }, [pack?.id])
+    clearErrors()
+  }, [pack?.id, clearErrors])
 
   useOutsideClick(menuRef, () => setMenuOpen(false), menuOpen)
 
@@ -62,17 +67,22 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     description.trim() !== (pack?.description ?? '') ||
     isPublic !== (pack?.isPublic ?? false)
 
-  const canSave = !!onUpdate && hasChanges && name.trim() !== ''
+  // canSave はインラインエラー有無を含めて判定
+  const hasFieldErrors = !!errors.name || !!errors.routeName || !!errors.description
+  const canSave = !!onUpdate && hasChanges && name.trim() !== '' && !hasFieldErrors
 
   const handleSave = () => {
-    if (!canSave || !onUpdate) return
+    if (!onUpdate) return
+    const result = validate({ name, routeName, description })
+    if (!result.ok) return
     onUpdate({
-      name: name.trim(),
-      routeName: routeName.trim() || undefined,
-      description: description.trim() || undefined,
+      name: result.data.name,
+      routeName: result.data.routeName,
+      description: result.data.description,
       isPublic,
     })
     setIsEditing(false)
+    clearErrors()
   }
 
   const handleCancel = () => {
@@ -81,6 +91,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     setDescription(pack?.description ?? '')
     setIsPublic(pack?.isPublic ?? false)
     setIsEditing(false)
+    clearErrors()
   }
 
   // 公開時のみ「公開ページを開く」「公開リンクをコピー」を表示
@@ -176,40 +187,55 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
       {isEditing && (
         <div className="mt-2 grid gap-2 p-2 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
           <div>
-            <label className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
+            <label htmlFor="pack-name" className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
               Name
             </label>
             <input
-              className="input w-full text-xs"
+              id="pack-name"
+              className={`input w-full text-xs ${errors.name ? 'input-error' : ''}`}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onBlur={() => validateField('name', name)}
               placeholder="Pack name"
+              maxLength={80}
+              aria-invalid={errors.name ? true : undefined}
             />
+            <FieldError message={errors.name} />
           </div>
           <div>
-            <label className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
+            <label htmlFor="pack-route" className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
               Map location / URL
             </label>
             <input
-              className="input w-full text-xs"
+              id="pack-route"
+              className={`input w-full text-xs ${errors.routeName ? 'input-error' : ''}`}
               value={routeName}
               onChange={(e) => setRouteName(e.target.value)}
+              onBlur={() => validateField('routeName', routeName)}
               placeholder="e.g. 高尾山 or https://maps.google.com/..."
+              maxLength={200}
+              aria-invalid={errors.routeName ? true : undefined}
             />
+            <FieldError message={errors.routeName} />
             <p className="mt-0.5 text-3xs text-gray-400 dark:text-gray-500">
               Google Maps で検索可能な地名/URL。空欄時は Route Map を非表示。
             </p>
           </div>
           <div>
-            <label className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
+            <label htmlFor="pack-description" className="text-2xs uppercase tracking-wide text-gray-500 dark:text-gray-400 block mb-1">
               Description
             </label>
             <textarea
-              className="input w-full min-h-[60px] text-xs"
+              id="pack-description"
+              className={`input w-full min-h-[60px] text-xs ${errors.description ? 'input-error' : ''}`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onBlur={() => validateField('description', description)}
               placeholder="説明"
+              maxLength={500}
+              aria-invalid={errors.description ? true : undefined}
             />
+            <FieldError message={errors.description} />
           </div>
           <label className="flex items-start gap-2 cursor-pointer select-none">
             <input

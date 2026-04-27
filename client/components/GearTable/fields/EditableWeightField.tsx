@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDebouncedInput } from '../../../hooks/useDebouncedInput'
 import { convertFromGrams, convertToGrams, formatWeight, WeightUnit } from '../../../utils/weightUnit'
 import { useWeightUnit } from '../../../contexts/WeightUnitContext'
 import { BaseFieldProps } from './types'
 import { ERROR_TONE } from './styles'
+import { gearWeightFieldSchema } from '../../../utils/validation'
 
 interface EditableWeightFieldProps extends BaseFieldProps {
   weightGrams: number | null | undefined
@@ -41,19 +42,45 @@ const EditableWeightFieldInner: React.FC<EditableWeightFieldProps & { unit: Weig
     },
   })
 
+  // onBlur 時の局所バリデーション結果（範囲外/NaN）。エラー時は title で補完
+  const [validationError, setValidationError] = useState<string | undefined>(undefined)
+
+  const handleBlurWithValidation = () => {
+    handleBlur()
+    if (!localValue) {
+      setValidationError(undefined)
+      return
+    }
+    const num = parseFloat(localValue)
+    if (!Number.isFinite(num)) {
+      setValidationError('Please enter a valid number.')
+      return
+    }
+    const grams = convertToGrams(num, unit)
+    const r = gearWeightFieldSchema.safeParse(grams)
+    setValidationError(r.success ? undefined : r.error.issues[0]?.message)
+  }
+
   if (isEditing) {
+    const showError = !!validationError
+    const baseStyle = isChanged || showError ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined
     return (
       <input
         type="number"
         min="0"
         step={unit === 'oz' ? 0.1 : 1}
         value={localValue}
-        onChange={(e) => handleChange(e.target.value)}
+        onChange={(e) => {
+          handleChange(e.target.value)
+          if (validationError) setValidationError(undefined)
+        }}
         onFocus={handleFocus}
-        onBlur={handleBlur}
+        onBlur={handleBlurWithValidation}
         placeholder={unit === 'oz' ? '0.0' : '0'}
-        className="w-14 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border"
-        style={isChanged ? { borderColor: ERROR_TONE.solid, color: ERROR_TONE.text } : undefined}
+        title={validationError}
+        aria-invalid={showError ? true : undefined}
+        className={`w-14 mx-auto block gear-input-num gear-glass-control px-1 py-0.5 rounded border focus:outline-none focus:ring-2 focus:ring-gray-500 box-border ${showError ? 'input-error' : ''}`}
+        style={baseStyle}
       />
     )
   }

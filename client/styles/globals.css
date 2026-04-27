@@ -535,6 +535,23 @@
     outline-offset: 1px;
   }
 
+  /* バリデーション失敗時の入力枠 — --state-danger-* トークンに統一。
+   * .input と組み合わせて使う。focus 時は赤 outline で「未保存」(ERROR_TONE 単独枠)
+   * との視覚差を出す。 */
+  .input-error {
+    border-color: var(--state-danger-border) !important;
+  }
+  .input-error:focus-visible {
+    outline: 2px solid var(--state-danger-border);
+    outline-offset: 1px;
+  }
+
+  /* フィールド下の赤テキスト。FieldError コンポーネントから利用 */
+  .form-error-text {
+    color: var(--state-danger-fg);
+    line-height: 1.3;
+  }
+
   /* Mondrian Grid — レイアウト額装ユーティリティ
    * ワークスペース等の大区画を Mondrian Orange の枠線で囲う */
   .mondrian-grid {

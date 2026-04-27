@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { emailSchema } from '../utils/validation';
+import { FieldError } from './ui/FieldError';
 
 interface LandingProps {
   /** Called on submit. Must resolve to true on success, false on failure. */
@@ -19,32 +22,36 @@ interface LandingProps {
 export default function Landing({ onLogin }: LandingProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { errors, validate, validateField, setFieldError, clearErrors } =
+    useFormValidation(emailSchema);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    clearErrors();
 
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError('Please enter your email address.');
-      return;
-    }
+    const result = validate({ email });
+    if (!result.ok) return;
 
     setIsLoading(true);
     try {
-      const success = await onLogin(trimmed);
+      const success = await onLogin(result.data.email);
       if (!success) {
-        setError('Sign-in failed. Please check your email address and try again.');
+        setFieldError(
+          '_form',
+          'Sign-in failed. Please check your email address and try again.',
+        );
       }
       // On success, AuthContext updates user and App unmounts this component.
     } catch (err) {
       console.error('Landing login error:', err);
-      setError('Something went wrong. Please try again in a moment.');
+      setFieldError('_form', 'Something went wrong. Please try again in a moment.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // _form エラー（送信失敗）または email フィールドエラーを 1 箇所に集約表示
+  const displayedError = errors._form ?? errors.email;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-mondrian-canvas">
@@ -84,9 +91,10 @@ export default function Landing({ onLogin }: LandingProps) {
           </li>
         </ul>
 
-        {/* Email sign-in form */}
+        {/* Email sign-in form. zod 一本化のため noValidate でブラウザ検証を抑止 */}
         <form
           onSubmit={handleSubmit}
+          noValidate
           className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
         >
           <label
@@ -103,10 +111,16 @@ export default function Landing({ onLogin }: LandingProps) {
               autoComplete="email"
               autoFocus
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                // 入力中はエラーを消す（再送信時に再検証）
+                if (errors.email || errors._form) clearErrors();
+              }}
+              onBlur={() => validateField('email', email)}
               placeholder="you@example.com"
-              className="input flex-1 rounded-md px-3 py-2 focus:outline-none"
-              required
+              aria-invalid={errors.email ? true : undefined}
+              aria-describedby={displayedError ? 'landing-email-error' : undefined}
+              className={`input flex-1 rounded-md px-3 py-2 focus:outline-none ${errors.email ? 'input-error' : ''}`}
               disabled={isLoading}
             />
             <button
@@ -118,18 +132,14 @@ export default function Landing({ onLogin }: LandingProps) {
             </button>
           </div>
 
-          {error && (
-            <div
-              role="alert"
-              className="mt-3 text-sm p-2 rounded-md border border-gray-300 bg-gray-100 text-gray-900"
-            >
-              {error}
-            </div>
-          )}
+          {/* インラインエラー（フィールド or フォーム全体） */}
+          <FieldError id="landing-email-error" message={displayedError} />
 
-          <p className="mt-3 text-xs text-gray-500">
-            No password needed. We sign you in with your email address.
-          </p>
+          {!displayedError && (
+            <p className="mt-3 text-xs text-gray-500">
+              No password needed. We sign you in with your email address.
+            </p>
+          )}
         </form>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { chatMessageSchema } from '../utils/validation';
 
 /**
  * FloatingChatInput — 画面下にガラス透明で常駐する Advisor 入力欄。
@@ -24,9 +25,10 @@ const FloatingChatInput: React.FC<Props> = ({ onSubmit, chatOpen }) => {
   if (chatOpen) return null;
 
   const submit = () => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onSubmit(trimmed);
+    // chatMessageSchema は trim + min 1 / max 2000 を強制
+    const result = chatMessageSchema.safeParse({ text: value });
+    if (!result.success) return;
+    onSubmit(result.data.text);
     setValue('');
     inputRef.current?.blur();
   };
