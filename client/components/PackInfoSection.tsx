@@ -8,7 +8,7 @@ import { FieldError } from './ui/FieldError'
 interface PackInfoSectionProps {
   pack: Pack | null
   itemCount: number
-  onUpdate?: (updates: { name: string; routeName?: string; description?: string }) => void
+  onUpdate?: (updates: { name: string; routeName?: string; description?: string; isPublic?: boolean }) => void
   onDelete?: () => void
   onCopyLink?: () => void
   onOpenPublic?: () => void
@@ -42,6 +42,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
   const [name, setName] = useState(pack?.name ?? '')
   const [routeName, setRouteName] = useState(pack?.routeName ?? '')
   const [description, setDescription] = useState(pack?.description ?? '')
+  const [isPublic, setIsPublic] = useState(pack?.isPublic ?? false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const { errors, validate, validateField, clearErrors } = useFormValidation(packSchema)
@@ -51,6 +52,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     setName(pack?.name ?? '')
     setRouteName(pack?.routeName ?? '')
     setDescription(pack?.description ?? '')
+    setIsPublic(pack?.isPublic ?? false)
     // パック切替時は編集モードから抜ける
     setIsEditing(false)
     setMenuOpen(false)
@@ -62,7 +64,8 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
   const hasChanges =
     name.trim() !== (pack?.name ?? '') ||
     routeName.trim() !== (pack?.routeName ?? '') ||
-    description.trim() !== (pack?.description ?? '')
+    description.trim() !== (pack?.description ?? '') ||
+    isPublic !== (pack?.isPublic ?? false)
 
   // canSave はインラインエラー有無を含めて判定
   const hasFieldErrors = !!errors.name || !!errors.routeName || !!errors.description
@@ -76,6 +79,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
       name: result.data.name,
       routeName: result.data.routeName,
       description: result.data.description,
+      isPublic,
     })
     setIsEditing(false)
     clearErrors()
@@ -85,9 +89,15 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
     setName(pack?.name ?? '')
     setRouteName(pack?.routeName ?? '')
     setDescription(pack?.description ?? '')
+    setIsPublic(pack?.isPublic ?? false)
     setIsEditing(false)
     clearErrors()
   }
+
+  // 公開時のみ「公開ページを開く」「公開リンクをコピー」を表示
+  const showShareActions = !!pack?.isPublic
+  const showOpenPublic = showShareActions && !!onOpenPublic
+  const showCopyLink = showShareActions && !!onCopyLink
 
   if (!pack) return null
 
@@ -101,7 +111,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
         </h3>
 
         {/* ⋯ (three-dots) メニュー */}
-        {(onUpdate || onDelete || onCopyLink || onOpenPublic) && (
+        {(onUpdate || onDelete || showCopyLink || showOpenPublic) && (
           <div className="relative" ref={menuRef}>
             <button
               type="button"
@@ -132,7 +142,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
                     Edit
                   </button>
                 )}
-                {onOpenPublic && (
+                {showOpenPublic && onOpenPublic && (
                   <button
                     type="button"
                     role="menuitem"
@@ -142,7 +152,7 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
                     Open public page
                   </button>
                 )}
-                {onCopyLink && (
+                {showCopyLink && onCopyLink && (
                   <button
                     type="button"
                     role="menuitem"
@@ -227,6 +237,20 @@ const PackInfoSection: React.FC<PackInfoSectionProps> = ({
             />
             <FieldError message={errors.description} />
           </div>
+          <label className="flex items-start gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-3.5 w-3.5"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+            />
+            <span className="min-w-0">
+              <span className="block text-xs text-gray-700 dark:text-gray-200">Make this pack public</span>
+              <span className="block text-3xs text-gray-400 dark:text-gray-500">
+                ON にするとリンクを知っている人なら誰でも閲覧できます。OFF の場合 /p/&lt;id&gt; を開いても 404 になります。
+              </span>
+            </span>
+          </label>
           <div className="flex items-center justify-end gap-2">
             <button
               type="button"

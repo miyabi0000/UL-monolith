@@ -31,11 +31,14 @@ const buildSystemPrompt = (ctx: GearContext): string => {
     : `現在のスコープ: 全ギアリスト (${ctx.items.length}アイテム)`;
 
   const weightInfo = ctx.weightBreakdown
-    ? [
-        `ベースウェイト: ${ctx.weightBreakdown.baseWeight ?? 0}g (${((ctx.weightBreakdown.baseWeight ?? 0) / 1000).toFixed(2)}kg)`,
-        `Big3合計: ${ctx.weightBreakdown.big3 ?? 0}g`,
-        `UL分類: ${ctx.ulStatus?.classification ?? '不明'}`,
-      ].join(' / ')
+    ? (() => {
+        const baseWeight = ctx.weightBreakdown.baseWeight ?? 0;
+        return [
+          `ベースウェイト: ${baseWeight}g (${(baseWeight / 1000).toFixed(2)}kg)`,
+          `Big3合計: ${ctx.weightBreakdown.big3 ?? 0}g`,
+          `UL分類: ${ctx.ulStatus?.classification ?? '不明'}`,
+        ].join(' / ');
+      })()
     : null;
 
   const gearLines = ctx.items.map((item) => {
