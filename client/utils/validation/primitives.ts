@@ -21,18 +21,18 @@ export const requiredText = (max: number) =>
         .max(max, VM.tooLong(max)),
     );
 
-/** 任意テキスト。空文字は undefined 化。trim 後の長さチェック。 */
+/** 任意テキスト。未入力 / 空文字 / null は undefined 化。trim 後の長さチェック。 */
 export const optionalText = (max: number) =>
   z
-    .string()
-    .transform((s) => s.trim())
+    .union([z.string(), z.undefined(), z.null()])
+    .transform((s) => (s == null ? '' : s.trim()))
     .pipe(z.string().max(max, VM.tooLong(max)))
     .transform((v) => (v === '' ? undefined : v));
 
-/** 任意 http(s) URL。空文字は undefined 化。 */
+/** 任意 http(s) URL。未入力 / 空文字 / null は undefined 化。 */
 export const optionalHttpUrl = z
-  .string()
-  .transform((s) => s.trim())
+  .union([z.string(), z.undefined(), z.null()])
+  .transform((s) => (s == null ? '' : s.trim()))
   .superRefine((val, ctx) => {
     if (val === '') return;
     try {
@@ -48,12 +48,12 @@ export const optionalHttpUrl = z
 
 /**
  * 画像 URL — http(s) と data:image/* の両方を許容。
- * 上限 max 文字（base64 サイズチェックに利用）。
+ * 上限 max 文字（base64 サイズチェックに利用）。未入力 / null は undefined 化。
  */
 export const imageUrlOrDataUri = (max?: number) =>
   z
-    .string()
-    .transform((s) => s.trim())
+    .union([z.string(), z.undefined(), z.null()])
+    .transform((s) => (s == null ? '' : s.trim()))
     .superRefine((val, ctx) => {
       if (val === '') return;
       if (/^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(val)) {
